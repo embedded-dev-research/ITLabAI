@@ -10,3 +10,16 @@ jobs:
     - uses: DoozyX/clang-format-lint-action@v0.15
       with:
         source: '.'
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - name: Build
+      run: |
+        cmake -S . -B build
+        cmake --build build
+    - name: Test
+      run: |
+        cmake --build build -t test
