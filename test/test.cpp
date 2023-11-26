@@ -1,4 +1,5 @@
 #include <thread>
+
 #include "gtest/gtest.h"
 #include "timer.hpp"
 
