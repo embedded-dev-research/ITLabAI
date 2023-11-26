@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "timer.hpp"
+#include <thread>
 
 TEST(basic, basic_test) {
   // Arrange

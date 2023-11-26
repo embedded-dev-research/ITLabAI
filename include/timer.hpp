@@ -3,8 +3,8 @@
 #pragma once
 #include <chrono>
 
-template<typename DurationContainerType, typename DurationType, class Function,
-         class... Args>
+template <typename DurationContainerType, typename DurationType, class Function,
+          class... Args>
 DurationContainerType elapsed_time(Function&& func, Args&&... args) {
   auto chronotimer = std::chrono::high_resolution_clock();
   auto duration = std::chrono::duration<DurationContainerType, DurationType>();
@@ -17,7 +17,8 @@ DurationContainerType elapsed_time(Function&& func, Args&&... args) {
 
 template <typename DurationContainerType, typename DurationType, class Function,
           class... Args>
-DurationContainerType elapsed_time_avg(const size_t iters, Function&& func, Args&&... args) {
+DurationContainerType elapsed_time_avg(const size_t iters, Function&& func,
+                                       Args&&... args) {
   auto chronotimer = std::chrono::high_resolution_clock();
   auto duration = std::chrono::duration<DurationContainerType, DurationType>();
   auto start = chronotimer.now();
