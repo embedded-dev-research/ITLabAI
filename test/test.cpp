@@ -1,7 +1,7 @@
 #include <thread>
 
 #include "gtest/gtest.h"
-#include "timer.hpp"
+#include "benchmarking.hpp"
 
 TEST(basic, basic_test) {
   // Arrange
@@ -52,4 +52,32 @@ TEST(timer, is_elapsed_time_avg_returns_nearly_correct_time) {
   EXPECT_GE(res_time, 400);
   EXPECT_LE(res_time, 600);
 }
+
+// ==========================
+
+// ==========================
+// Accuracy tests
+
+TEST(accuracy, max_accuracy_test) {
+  double a[10] = {9.0, 2.0, 1.0, 4.0, 7.0, 10.5, -12.0, 11.0, 0.0, -2.5};
+  double b[10] = {9.0, 2.0, 1.0, 4.0, 7.0, 10.5, -12.0, 11.0, 0.0, -2.5};
+  double acc = accuracy<double>(a, b, 10);
+  EXPECT_EQ(acc, 0.0);
+}
+
+TEST(accuracy, bad_accuracy_test) {
+  double a[10] = {9.0, 2.0, 1.0, 4.0, 7.0, 10.5, -12.0, 11.0, 0.0, -2.5};
+  double b[10] = {0.0, -6.0, 12.0, 44.0, -7.0, 11.0, 12.0, 0.0, 0.0, -7.0};
+  double acc = accuracy<double>(a, b, 10);
+  EXPECT_EQ(acc, 122.0);
+}
+
+TEST(accuracy, throws_when_bad_pointer) {
+  double *a = nullptr;
+  double *b = new double[5];
+  EXPECT_ANY_THROW(accuracy<double>(a, b, 5));
+  EXPECT_ANY_THROW(accuracy<double>(b, a, 5));
+  delete[] b;
+}
+
 // ==========================
