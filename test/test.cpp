@@ -1,7 +1,7 @@
 #include <thread>
 
-#include "gtest/gtest.h"
 #include "benchmarking.hpp"
+#include "gtest/gtest.h"
 
 TEST(basic, basic_test) {
   // Arrange

@@ -33,7 +33,7 @@ DurationContainerType elapsed_time_avg(const size_t iters, Function&& func,
 // asking for parallel implementation btw
 
 template <typename T>
-T accuracy(T *test, T *ref, size_t size) {
+T accuracy(T* test, T* ref, size_t size) {
   if (test == nullptr || ref == nullptr) {
     throw std::invalid_argument("Bad pointer");
   }
@@ -48,4 +48,3 @@ T accuracy(T *test, T *ref, size_t size) {
   }
   return res;
 }
-
