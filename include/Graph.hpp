@@ -57,13 +57,13 @@ class Graph {
     a->addNext(b);
     b->addPrev(a);
   }
+  void addNode(Node* node) {
+    adjList.push_back(node);
+    V++;
+  }
   bool areNodesConnected(Node* node1, Node* node2) { 
     return node1->isConnected(node2);
   }
   bool areNodeNext(Node* node1, Node* node2) { return node1->isNext(node2); }
   bool areNodePrev(Node* node1, Node* node2) { return node1->isPrev(node2); }
-  void addNode(Node* node) { 
-    adjList.push_back(node);
-    V++;
-  }
 };
