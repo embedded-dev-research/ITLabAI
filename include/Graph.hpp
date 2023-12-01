@@ -1,33 +1,78 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <string>
 
 class Node {
  public:
   int abc;
-  std::vector<int> ConnectedNode;
-  Node(int a = 0) { abc = a; }
-  void addconnect(int connectedGraph) {
-    ConnectedNode.push_back(connectedGraph);
+  std::vector<Node*> prevNodes;
+  std::vector<Node*> nextNodes;
+  std::string type;
+  Node(std::string type) : layerType(type) {
   }
-  std::vector<int> CheckConnectedNode() { return ConnectedNode; }
+  void addPrev(Node* node) {
+    prevNodes.push_back(node);
+  }
+  void addNext(Node* node) {
+    nextNodes.push_back(node);
+  }
+  bool isConnected(Node* otherNode) {
+    for (Node* node : nextNodes) {
+      if (node == otherNode) {
+        return true;
+      }
+    }
+    for (Node* node : prevNodes) {
+      if (node == otherNode) {
+        return true;
+      }
+    }
+    return false;
+  }
+  bool isNext(Node* otherNode) {
+    for (Node* node : nextNodes) {
+      if (node == otherNode) {
+        return true;
+      }
+    }
+    return false;
+  }
+  bool isPrev(Node* otherNode) {
+    for (Node* node : prevNodes) {
+      if (node == otherNode) {
+        return true;
+      }
+    }
+    return false;
+  }
 };
 
 class Graph {
  public:
   int V;
-  std::vector<Node> adjList;
-  Graph(int vertices) : V(vertices) { adjList.resize(V); }
-  void addEdge(int a, int b) { adjList[a].addconnect(b); }
-  bool checkconnect(int a, int b) {
-    std::vector<int> vec = adjList[a].CheckConnectedNode();
-    bool found = false;
-    for (const auto& element : vec) {
-      if (element == b) {
-        found = true;
-        break;
-      }
+  std::vector<Node*> adjList;
+  Graph(int vertices) : V(vertices) {
+    if (V < 0) {
+      throw out_of_range("out_of_range");
     }
-    return found;
+    adjList.resize(V); 
+  }
+  void addEdge(Node* a,Node* b) { 
+    a->addNext(b);
+    b->addPrev(a);
+  }
+  bool areNodesConnected(Node* node1, Node* node2) {
+    return node1->isConnected(node2);
+  }
+  bool areNodeNext(Node* node1, Node* node2) {
+    return node1->isNext(node2);
+  }
+  bool areNodePrev(Node* node1, Node* node2) {
+    return node1->isPrev(node2);
+  }
+  void addNode(Node* node) { 
+    adjList.push_back(node);
+    V++;
   }
 };
