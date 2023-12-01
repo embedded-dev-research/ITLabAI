@@ -53,7 +53,6 @@ class Graph {
     }
     adjList.resize(V);
   }
-  
   void addEdge(Node* a, Node* b) { 
     a->addNext(b);
     b->addPrev(a);
@@ -63,7 +62,6 @@ class Graph {
   }
   bool areNodeNext(Node* node1, Node* node2) { return node1->isNext(node2); }
   bool areNodePrev(Node* node1, Node* node2) { return node1->isPrev(node2); }
-  
   void addNode(Node* node) { 
     adjList.push_back(node);
     V++;
