@@ -53,8 +53,7 @@ class Graph {
     }
     adjList.resize(V);
   }
-
-  void addEdge(Node* a, Node* b) { 
+  void addEdge(Node* a, Node* b) {
     a->addNext(b);
     b->addPrev(a);
   }
@@ -62,8 +61,7 @@ class Graph {
     adjList.push_back(node);
     V++;
   }
-  
-  bool areNodesConnected(Node* node1, Node* node2) { 
+  bool areNodesConnected(Node* node1, Node* node2) {
     return node1->isConnected(node2);
   }
   bool areNodeNext(Node* node1, Node* node2) { return node1->isNext(node2); }
