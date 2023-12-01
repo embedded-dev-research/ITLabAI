@@ -21,12 +21,13 @@ class Graph {
   void addEdge(int a, int b) { adjList[a].addconnect(b); }
   bool checkconnect(int a, int b) {
     std::vector<int> vec = adjList[a].CheckConnectedNode();
-    auto it = std::find(vec.begin(), vec.end(), b);
-
-    if (it != vec.end()) {
-      return true;
-    } else {
-      return false;
+    bool found = false;
+    for (const auto& element : vec) {
+      if (element == b) {
+        found = true;
+        break;
+      }
     }
+    return found;
   }
 };
