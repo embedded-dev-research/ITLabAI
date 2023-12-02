@@ -65,7 +65,7 @@ int main() {
       cout << i + 1 << ") " << arr[i] << endl;
     }
   } else if (choice == '3') {
-#pragma omp parallel for num_threads(ITERS)
+    #pragma omp parallel for num_threads(ITERS)
     for (int i = 0; i < ITERS; i++) {
       counter3(i, n, arr);
     }
