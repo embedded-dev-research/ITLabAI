@@ -1,7 +1,7 @@
 #include <thread>
 
-#include "perf/benchmarking.hpp"
 #include "gtest/gtest.h"
+#include "perf/benchmarking.hpp"
 
 TEST(basic, basic_test) {
   // Arrange
@@ -52,7 +52,6 @@ TEST(timer, is_elapsed_time_omp_avg_returns_positive_value) {
   EXPECT_GE(res_time, 0.0);
 }
 
-
 // +- 100 ms
 // chrono
 TEST(timer, is_elapsed_time_returns_nearly_correct_time) {
@@ -101,8 +100,10 @@ TEST(accuracy, max_accuracy_test) {
 }
 
 TEST(accuracy, bad_accuracy_test) {
-  double a[10] = {9.0, 2.5, 1.0, 4.0, 7.0, 10.48, -12.0, 10.494, 0.0, -2.240001};
-  double b[10] = {0.0, -6.0, 12.0, 44.006, -7.0, 11.0, 12.0, 0.0, 0.0, -6.990001};
+  double a[10] = {9.0,   2.5,   1.0,    4.0, 7.0,
+                  10.48, -12.0, 10.494, 0.0, -2.240001};
+  double b[10] = {0.0,  -6.0, 12.0, 44.006, -7.0,
+                  11.0, 12.0, 0.0,  0.0,    -6.990001};
   double acc = accuracy<double>(a, b, 10);
   EXPECT_NEAR(acc, 122.27, 1e-5);
 }

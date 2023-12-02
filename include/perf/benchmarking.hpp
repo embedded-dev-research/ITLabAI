@@ -1,9 +1,10 @@
 // Using chrono for good measurements and parallelism support
 
 #pragma once
+#include <omp.h>
+
 #include <chrono>
 #include <stdexcept>
-#include <omp.h>
 
 template <typename DurationContainerType, typename DurationType, class Function,
           typename... Args>
@@ -44,7 +45,8 @@ DurationContainerType elapsed_time_avg(const size_t iters, Function&& func,
 
 // returns time in seconds
 template <class Function, typename... Args>
-double elapsed_time_omp_avg(const size_t iters, Function&& func, Args&&... args) {
+double elapsed_time_omp_avg(const size_t iters, Function&& func,
+                            Args&&... args) {
   double start = omp_get_wtime();
   for (size_t i = 0; i < iters; i++) {
     func(args...);
@@ -87,4 +89,3 @@ T accuracy_norm(T* test, T* ref, size_t size) {
   // typename T should have friend sqrt() function
   return sqrt(res);
 }
-
