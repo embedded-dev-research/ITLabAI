@@ -1,5 +1,5 @@
-#include <thread>
 #include <random>
+#include <thread>
 
 #include "gtest/gtest.h"
 #include "perf/benchmarking.hpp"
@@ -121,7 +121,7 @@ TEST(accuracy, bad_accuracy_test_L) {
   double a[5000];
   double b[5000];
   for (size_t i = 0; i < N; i++) {
-    a[i] = ((double)rand()/RAND_MAX - 1.0) * 100; // [-100;100]
+    a[i] = ((double)rand() / RAND_MAX - 1.0) * 100;  // [-100;100]
   }
   for (size_t i = 0; i < N; i++) {
     b[i] = ((double)rand() / RAND_MAX - 1.0) * 100;  // [-100;100]
