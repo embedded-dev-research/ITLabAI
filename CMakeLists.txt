@@ -12,5 +12,4 @@ add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(test)
 
-file(GLOB_RECURSE ALL_SOURCES_FILES src/*.cpp include/*.h include/*.hpp)
-add_library(app_libs STATIC ${ALL_SOURCES_FILES})
+add_library(perf_lib STATIC "${PERF_HEADERS}" "${PERF_SRC}")
