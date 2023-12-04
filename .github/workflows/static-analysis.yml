@@ -1,0 +1,19 @@
+name: Static analysis
+
+on: [pull_request]
+
+jobs:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: ZedThree/clang-tidy-review@v0.14.0
+      with:
+        build_dir: build
+        cmake_command: cmake -S . -B build
+        config_file: .clang-tidy
+        exclude: 3rdparty
+        split_workflow: true
+        lgtm_comment_body: ""
