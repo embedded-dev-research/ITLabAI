@@ -1,5 +1,5 @@
-#include "gtest/gtest.h"
 #include "Graph/Graph.hpp"
+#include "gtest/gtest.h"
 
 TEST(basic, basic_test) {
   // Arrange

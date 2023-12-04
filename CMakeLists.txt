@@ -12,4 +12,4 @@ add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(test)
 
-add_library(graph_lib STATIC "${GRAPH_HEADERS}")
+add_library(graph_lib STATIC ${GRAPH_HEADERS})
