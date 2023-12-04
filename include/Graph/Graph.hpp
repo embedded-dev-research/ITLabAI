@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 class Node {
  public:
@@ -49,13 +50,14 @@ class Graph {
   std::vector<Node*> adjList;
   Graph(int vertices) : V(vertices) {
     if (V < 0) {
-      throw "out_of_range";
+      throw std::out_of_range("Vertices cannot be less than zero");
+      ;
     }
     adjList.resize(V);
   }
-  void addEdge(Node* a, Node* b) {
-    a->addNext(b);
-    b->addPrev(a);
+  void addEdge(Node* prev, Node* next) {
+    prev->addNext(next);
+    next->addPrev(prev);
   }
   void addNode(Node* node) {
     adjList.push_back(node);

@@ -1,5 +1,5 @@
-#include "../include/Graph.hpp"
 #include "gtest/gtest.h"
+#include "Graph/Graph.hpp"
 
 TEST(basic, basic_test) {
   // Arrange
@@ -12,7 +12,7 @@ TEST(basic, basic_test) {
   // Assert
   ASSERT_EQ(5, c);
 }
-TEST(graph, basic_test1) {
+TEST(graph, check_conection) {
   Graph graph(1);
   Node a("Convolution");
   graph.addNode(&a);
@@ -23,7 +23,7 @@ TEST(graph, basic_test1) {
   graph.addEdge(&a, &b);
   ASSERT_EQ(graph.areNodesConnected(&a, &b), 1);
 }
-TEST(graph, basic_test2) {
+TEST(graph, check_next) {
   Graph graph(1);
   Node a("Convolution");
   graph.addNode(&a);
@@ -34,7 +34,7 @@ TEST(graph, basic_test2) {
   graph.addEdge(&a, &b);
   ASSERT_EQ(graph.areNodeNext(&a, &b), 1);
 }
-TEST(graph, basic_test3) {
+TEST(graph, check_prev) {
   Graph graph(1);
   Node a("Convolution");
   graph.addNode(&a);
@@ -45,7 +45,7 @@ TEST(graph, basic_test3) {
   graph.addEdge(&a, &b);
   ASSERT_EQ(graph.areNodePrev(&a, &b), 0);
 }
-TEST(graph, basic_test4) {
+TEST(graph, check_conection_when_not_conection) {
   Graph graph(1);
   Node a("Convolution");
   graph.addNode(&a);
@@ -56,7 +56,7 @@ TEST(graph, basic_test4) {
   graph.addEdge(&a, &b);
   ASSERT_EQ(graph.areNodesConnected(&a, &c), 0);
 }
-TEST(graph, basic_test5) {
+TEST(graph, check_conection_when_not_conection2) {
   Graph graph(1);
   Node a("Convolution");
   graph.addNode(&a);
