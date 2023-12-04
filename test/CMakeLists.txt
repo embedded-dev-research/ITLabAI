@@ -1,9 +1,5 @@
 file(GLOB TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-find_package(OpenMP REQUIRED)
-
-add_executable(run_test ${TEST_SRC_FILES})
-
 if(APPLE)
 	if(CMAKE_C_COMPILER_ID MATCHES "Clang")
 		set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
@@ -22,8 +18,12 @@ if(APPLE)
 		set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
 	endif()
 endif()
-target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
 
+find_package(OpenMP REQUIRED)
+
+add_executable(run_test ${TEST_SRC_FILES})
+
+target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
 
 target_link_libraries(run_test PUBLIC gtest_main)
 add_test(UnitTests ${CMAKE_CURRENT_BINARY_DIR}/run_test)
