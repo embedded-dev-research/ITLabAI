@@ -2,6 +2,7 @@ file(GLOB TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 if(APPLE)
 	if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+		set(OpenMP_CXX_INCLUDE_DIRS "/usr/local/opt/libomp/include" CACHE STRING "" FORCE)
 		set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
 		set(OpenMP_C_FLAGS "-fopenmp=libomp -Xpreprocessor -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
 		set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5" CACHE STRING "" FORCE)
