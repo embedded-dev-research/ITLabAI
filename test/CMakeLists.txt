@@ -21,10 +21,12 @@ if(APPLE)
 endif()
 
 find_package(OpenMP REQUIRED)
+message("${OpenMP_CXX_INCLUDE_DIRS}")
 
 add_executable(run_test ${TEST_SRC_FILES})
 
 target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
+message("${OpenMP_CXX_INCLUDE_DIRS}")
 
 target_link_libraries(run_test PUBLIC gtest_main)
 add_test(UnitTests ${CMAKE_CURRENT_BINARY_DIR}/run_test)
