@@ -17,7 +17,6 @@ if(APPLE)
 		set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
 		set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES} CACHE STRING "" FORCE)
 	endif()
-	include_directories("${OPENMP_INCLUDES}")
 endif()
 
 find_package(OpenMP REQUIRED)

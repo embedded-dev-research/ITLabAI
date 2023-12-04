@@ -1,7 +1,7 @@
 // Using chrono for good measurements and parallelism support
 
 #pragma once
-#include <omp.h>
+#include "omp.h"
 
 #include <chrono>
 #include <stdexcept>
