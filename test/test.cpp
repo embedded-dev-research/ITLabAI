@@ -121,14 +121,14 @@ TEST(accuracy, bad_accuracy_test_L) {
   double a[5000];
   double b[5000];
   for (size_t i = 0; i < N; i++) {
-    a[i] = ((double)rand() / RAND_MAX - 1.0) * 100;  // [-100;100]
+    a[i] = (static_cast<double>(rand()) / RAND_MAX - 1.0) * 100;  // [-100;100]
   }
   for (size_t i = 0; i < N; i++) {
-    b[i] = ((double)rand() / RAND_MAX - 1.0) * 100;  // [-100;100]
+    b[i] = (static_cast<double>(rand()) / RAND_MAX - 1.0) * 100;  // [-100;100]
   }
   double actual_acc = 0.0;
   for (size_t i = 0; i < N; i++) {
-    actual_acc += abs(a[i] - b[i]);
+    actual_acc += std::abs(a[i] - b[i]);
   }
   double acc = accuracy<double>(a, b, 5000);
   EXPECT_NEAR(acc, actual_acc, 1e-5);
@@ -155,16 +155,16 @@ TEST(accuracy, bad_accuracy_norm_test_L) {
   double a[5000];
   double b[5000];
   for (size_t i = 0; i < N; i++) {
-    a[i] = ((double)rand() / RAND_MAX - 1.0) * 100;  // [-100;100]
+    a[i] = (static_cast<double>(rand()) / RAND_MAX - 1.0) * 100;  // [-100;100]
   }
   for (size_t i = 0; i < N; i++) {
-    b[i] = ((double)rand() / RAND_MAX - 1.0) * 100;  // [-100;100]
+    b[i] = (static_cast<double>(rand()) / RAND_MAX - 1.0) * 100;  // [-100;100]
   }
   double actual_acc = 0.0;
   for (size_t i = 0; i < N; i++) {
     actual_acc += (a[i] - b[i]) * (a[i] - b[i]);
   }
-  actual_acc = sqrt(actual_acc);
+  actual_acc = std::sqrt(actual_acc);
   double acc = accuracy_norm<double>(a, b, 5000);
   EXPECT_NEAR(acc, actual_acc, 1e-5);
 }
