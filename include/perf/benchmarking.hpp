@@ -4,6 +4,7 @@
 #include <omp.h>
 
 #include <chrono>
+#include <cmath>
 #include <stdexcept>
 
 template <typename DurationContainerType, typename DurationType, class Function,
@@ -64,10 +65,7 @@ T accuracy(T* test, T* ref, size_t size) {
   T differ;
   T res = T(0);
   for (size_t i = 0; i < size; i++) {
-    differ = test[i] - ref[i];
-    if (differ < T(0)) {
-      differ = -differ;
-    }
+    differ = std::abs<(test[i] - ref[i]);
     res = res + differ;
   }
   return res;
@@ -83,9 +81,9 @@ T accuracy_norm(T* test, T* ref, size_t size) {
   T differ;
   T res = T(0);
   for (size_t i = 0; i < size; i++) {
-    differ = (test[i] - ref[i]) * (test[i] - ref[i]);
+    differ = std::pow(test[i] - ref[i], 2);
     res = res + differ;
   }
   // typename T should have friend sqrt() function
-  return sqrt(res);
+  return std::sqrt(res);
 }
