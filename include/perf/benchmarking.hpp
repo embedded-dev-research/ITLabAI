@@ -65,7 +65,7 @@ T accuracy(T* test, T* ref, size_t size) {
   T differ;
   T res = T(0);
   for (size_t i = 0; i < size; i++) {
-    differ = std::abs<(test[i] - ref[i]);
+    differ = std::abs(test[i] - ref[i]);
     res = res + differ;
   }
   return res;
