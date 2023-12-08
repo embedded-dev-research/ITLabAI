@@ -6,7 +6,6 @@
 #include <chrono>
 #include <cmath>
 #include <stdexcept>
-#include <iostream>
 
 template <typename DurationContainerType, typename DurationType, class Function,
           typename... Args>
@@ -99,7 +98,7 @@ public:
 
   template <class Function, typename... Args>
   ThroughputContainer get_tp(size_t items, Function&& f, Args&&... a) {
-    time = elapsed_time<DurationContainer, std::ratio<1, 1>>(f, a...);
+    time = elapsed_time<DurationContainer, std::ratio<1, 1> >(f, a...);
     throughput = ThroughputContainer(static_cast<double>(items) / time);
     return throughput;
   }
@@ -114,7 +113,7 @@ public:
   template <class Function, typename... Args>
   ThroughputContainer get_tp_avg(size_t items, size_t iterations,
                                  Function&& f, Args&&... a) {
-    time = elapsed_time_avg<DurationContainer, std::ratio<1, 1>>(iterations, f, a...);
+    time = elapsed_time_avg<DurationContainer, std::ratio<1, 1> >(iterations, f, a...);
     throughput = ThroughputContainer(static_cast<double>(items) / time);
     return throughput;
   }
