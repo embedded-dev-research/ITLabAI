@@ -5,7 +5,9 @@
 
 #include <chrono>
 #include <cmath>
+#include <numeric>
 #include <stdexcept>
+#include <vector>
 
 template <typename DurationContainerType, typename DurationType, class Function,
           typename... Args>
@@ -58,32 +60,32 @@ double elapsed_time_omp_avg(const size_t iters, Function&& func,
 
 // as "Manhattan" norm of error-vector
 template <typename T>
-T accuracy(T* test, T* ref, size_t size) {
+T accuracy(T* test, T* ref, const size_t size) {
   if (test == nullptr || ref == nullptr) {
     throw std::invalid_argument("Bad pointer");
   }
-  T differ;
-  T res = T(0);
+  std::vector<T> differ(size);
   for (size_t i = 0; i < size; i++) {
-    differ = std::abs(test[i] - ref[i]);
-    res = res + differ;
+    differ[i] = std::abs(test[i] - ref[i]);
   }
+  // sum of differences
+  T res = std::accumulate(differ.begin(), differ.end(), T(0));
   return res;
 }
 
 // as Euclidean norm of error-vector
 // assume that (T)*(T)>=T(0); (T)*(T)=T(0) <=> multiplying 0s
 template <typename T>
-T accuracy_norm(T* test, T* ref, size_t size) {
+T accuracy_norm(T* test, T* ref, const size_t size) {
   if (test == nullptr || ref == nullptr) {
     throw std::invalid_argument("Bad pointer");
   }
-  T differ;
-  T res = T(0);
+  std::vector<T> differ(size);
   for (size_t i = 0; i < size; i++) {
-    differ = std::pow(test[i] - ref[i], 2);
-    res = res + differ;
+    differ[i] = (test[i] - ref[i]) * (test[i] - ref[i]);
   }
+  // sum of squares
+  T res = std::accumulate(differ.begin(), differ.end(), T(0));
   // typename T should have friend sqrt() function
   return std::sqrt(res);
 }
