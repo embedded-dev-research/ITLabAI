@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cmath>
 #include <stdexcept>
+#include <iostream>
 
 template <typename DurationContainerType, typename DurationType, class Function,
           typename... Args>
@@ -87,3 +88,46 @@ T accuracy_norm(T* test, T* ref, size_t size) {
   // typename T should have friend sqrt() function
   return std::sqrt(res);
 }
+
+template <typename ThroughputContainer, typename DurationContainer>
+class Throughput {
+public:
+  Throughput() {
+    time = DurationContainer(0);
+    throughput = ThroughputContainer(0);
+  }
+
+  template <class Function, typename... Args>
+  ThroughputContainer get_tp(size_t items, Function&& f, Args&&... a) {
+    time = elapsed_time<DurationContainer, std::ratio<1, 1>>(f, a...);
+    throughput = ThroughputContainer(static_cast<double>(items) / time);
+    return throughput;
+  }
+
+  template <class Function, typename... Args>
+  ThroughputContainer get_tp_omp(size_t items, Function&& f, Args&&... a) {
+    time = DurationContainer(elapsed_time_omp(f, a...));
+    throughput = ThroughputContainer(static_cast<double>(items) / time);
+    return throughput;
+  }
+
+  template <class Function, typename... Args>
+  ThroughputContainer get_tp_avg(size_t items, size_t iterations,
+                                 Function&& f, Args&&... a) {
+    time = elapsed_time_avg<DurationContainer, std::ratio<1, 1>>(iterations, f, a...);
+    throughput = ThroughputContainer(static_cast<double>(items) / time);
+    return throughput;
+  }
+
+  template <class Function, typename... Args>
+  ThroughputContainer get_tp_omp_avg(size_t items, size_t iterations,
+                                     Function&& f, Args&&... a) {
+    time = DurationContainer(elapsed_time_omp_avg(iterations, f, a...));
+    throughput = ThroughputContainer(static_cast<double>(items) / time);
+    return throughput;
+  }
+
+ private:
+  DurationContainer time;
+  ThroughputContainer throughput;
+};

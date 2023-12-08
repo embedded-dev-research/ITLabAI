@@ -1,5 +1,6 @@
 #include <random>
 #include <thread>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "perf/benchmarking.hpp"
@@ -183,6 +184,63 @@ TEST(accuracy, accuracy_norm_throws_when_bad_pointer) {
   EXPECT_ANY_THROW(accuracy_norm<double>(a, b, 5));
   EXPECT_ANY_THROW(accuracy_norm<double>(b, a, 5));
   delete[] b;
+}
+
+// ==========================
+
+// ==========================
+// Throughput tests
+
+template <typename T>
+std::vector<std::vector<T>> matrix_sum(
+    const std::vector<std::vector<T>> &first,
+    const std::vector<std::vector<T>> &second) {
+  std::vector<std::vector<T>> sum = first;
+  for (size_t i = 0; i < first.size(); i++) {
+    for (size_t j = 0; j < first.size(); j++) {
+      sum[i][j] = sum[i][j] + second[i][j];
+    }
+  }
+  return sum;
+}
+
+template <typename T>
+std::vector<std::vector<T>> matrix_mul(
+    const std::vector<std::vector<T>> &first,
+    const std::vector<std::vector<T>> &second) {
+  std::vector<std::vector<T>> mul(first.size(), std::vector<T>(first.size(), T(0)));
+  for (size_t i = 0; i < first.size(); i++) {
+    for (size_t k = 0; k < first.size(); k++) {
+      for (size_t j = 0; j < first.size(); j++) {
+        mul[i][j] = mul[i][j] + first[i][k] * second[k][j];
+      }
+    }
+  }
+  return mul;
+}
+
+TEST(throughput, matrix_operations_throughput_is_positive) {
+  size_t n = 200;
+  std::vector<std::vector<int>> a(n, std::vector<int>(n, 0));
+  std::vector<std::vector<int>> b(n, std::vector<int>(n, 0));
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < n; j++) {
+      a[i][j] = i + j;
+      b[i][j] = i - j;
+    }
+  }
+  Throughput<double, double> a1;
+  double throughput;
+  throughput = a1.get_tp(2 * n * n, matrix_sum<int>, a, b);
+  EXPECT_GE(throughput, 0);
+  throughput = a1.get_tp_avg(2 * n * n, 50, matrix_sum<int>, a, b);
+  EXPECT_GE(throughput, 0);
+  throughput = a1.get_tp_omp(2 * n * n, matrix_sum<int>, a, b);
+  EXPECT_GE(throughput, 0);
+  throughput = a1.get_tp_omp_avg(2 * n * n, 50, matrix_sum<int>, a, b);
+  EXPECT_GE(throughput, 0);
+  throughput = a1.get_tp(2 * n * n * n, matrix_mul<int>, a, b);
+  EXPECT_GE(throughput, 0);
 }
 
 // ==========================
