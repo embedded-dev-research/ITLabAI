@@ -90,7 +90,7 @@ T accuracy_norm(T* test, T* ref, size_t size) {
 
 template <typename ThroughputContainer, typename DurationContainer>
 class Throughput {
-public:
+ public:
   Throughput() {
     time = DurationContainer(0);
     throughput = ThroughputContainer(0);
@@ -111,9 +111,10 @@ public:
   }
 
   template <class Function, typename... Args>
-  ThroughputContainer get_tp_avg(size_t items, size_t iterations,
-                                 Function&& f, Args&&... a) {
-    time = elapsed_time_avg<DurationContainer, std::ratio<1, 1> >(iterations, f, a...);
+  ThroughputContainer get_tp_avg(size_t items, size_t iterations, Function&& f,
+                                 Args&&... a) {
+    time = elapsed_time_avg<DurationContainer, std::ratio<1, 1> >(iterations, f,
+                                                                  a...);
     throughput = ThroughputContainer(static_cast<double>(items) / time);
     return throughput;
   }

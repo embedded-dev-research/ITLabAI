@@ -208,7 +208,8 @@ template <typename T>
 std::vector<std::vector<T>> matrix_mul(
     const std::vector<std::vector<T>> &first,
     const std::vector<std::vector<T>> &second) {
-  std::vector<std::vector<T>> mul(first.size(), std::vector<T>(first.size(), T(0)));
+  std::vector<std::vector<T>> mul(first.size(),
+                                  std::vector<T>(first.size(), T(0)));
   for (size_t i = 0; i < first.size(); i++) {
     for (size_t k = 0; k < first.size(); k++) {
       for (size_t j = 0; j < first.size(); j++) {
