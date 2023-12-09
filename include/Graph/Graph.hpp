@@ -15,10 +15,8 @@ class Layer {
   std::vector<std::vector<double>> weights;
 
  public:
-  Layer() {
-
-  }
-  Layer(int inputs, int neurons) : numInputs(inputs), numNeurons(neurons) {
+  Layer() {}
+  /*Layer(int inputs, int neurons) : numInputs(inputs), numNeurons(neurons) {
     weights.resize(numNeurons, std::vector<double>(numInputs));
     initializeWeights();
   }
@@ -29,9 +27,7 @@ class Layer {
       }
     }
   }
-  double activationFunction(double x) {
-    return 1.0 / (1.0 + exp(-x));
-  }
+  double activationFunction(double x) { return 1.0; }
   std::vector<double> forwardPropagation(const std::vector<double>& inputs) {
     std::vector<double> output(numNeurons, 0.0);
     for (int i = 0; i < numNeurons; ++i) {
@@ -42,7 +38,7 @@ class Layer {
       output[i] = activationFunction(neuronOutput);
     }
     return output;
-  }
+  }*/
 };
 
 class Graph {
@@ -61,11 +57,10 @@ class Graph {
     V = 0;
   }
   void addEdge(int i, int j) {
-    if (i== j) {
+    if (i == j) {
       throw std::out_of_range("i=j cant add edge");
     }
-    for (int ind = 1; ind < arrayV.size()-i-1;ind++)
-     arrayV[i + ind]++;
+    for (int ind = 1; ind < arrayV.size() - i - 1; ind++) arrayV[i + ind]++;
     arrayE.insert(arrayE.begin() + arrayV[i], j);
     arrayV[V] = arrayE.size();
   }
@@ -73,29 +68,28 @@ class Graph {
     layers.push_back(lay);
     if (V == 0) {
       arrayV.push_back(0);
-    }
-    else {
-    arrayV[V] = arrayV[V - 1];
-    arrayV.push_back(arrayE.size());
+    } else {
+      arrayV[V] = arrayV[V - 1];
+      arrayV.push_back(arrayE.size());
     }
     V++;
   }
   bool areLayerNext(int ind1, int ind2) {
     for (int i = arrayV[ind1]; i < arrayV[ind1 + 1]; i++) {
-    if (arrayE[i] == ind2) {
+      if (arrayE[i] == ind2) {
         return true;
-    }
+      }
     }
     return false;
   }
   void checkarrays() { 
-    for (size_t i = 0; i < arrayV.size()-1; ++i) {
-    std::cout << arrayV[i] << " ";
+    for (size_t i = 0; i < arrayV.size() - 1; ++i) {
+      std::cout << arrayV[i] << " ";
     }
-    std::cout << " " << arrayV[arrayV.size()-1];
+    std::cout << " " << arrayV[arrayV.size() - 1];
     std::cout << "\n";
     for (size_t i = 0; i < arrayE.size(); ++i) {
-    std::cout << arrayE[i] << " ";
+      std::cout << arrayE[i] << " ";
     }
     std::cout << "\n";
   }
