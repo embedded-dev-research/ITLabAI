@@ -47,6 +47,7 @@ class Graph {
   std::vector<Layer> layers;
   std::vector<int> arrayV;
   std::vector<int> arrayE;
+
  public:
   Graph(int vertices) : BiggestSize(vertices) {
     if (BiggestSize < 0) {
@@ -82,7 +83,7 @@ class Graph {
     }
     return false;
   }
-  void checkarrays() { 
+  void checkarrays() {
     for (size_t i = 0; i < arrayV.size() - 1; ++i) {
       std::cout << arrayV[i] << " ";
     }
