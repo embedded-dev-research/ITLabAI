@@ -13,57 +13,62 @@ TEST(basic, basic_test) {
   ASSERT_EQ(5, c);
 }
 TEST(graph, check_conection) {
-  Graph graph(1);
-  Node a("Convolution");
-  graph.addNode(&a);
-  Node b("Const");
-  graph.addNode(&b);
-  Node c("Parameter");
-  graph.addNode(&c);
-  graph.addEdge(&a, &b);
-  ASSERT_EQ(graph.areNodesConnected(&a, &b), 1);
+  Graph graph(5);
+  Layer a1;
+  Layer a2;
+  Layer a3;
+  graph.addLayer(a1);
+  graph.addLayer(a2);
+  graph.addLayer(a3);
+  graph.addEdge(0, 1);
+  graph.addEdge(0, 2);
+  ASSERT_EQ(graph.areLayerNext(0, 1), 1);
 }
-TEST(graph, check_next) {
-  Graph graph(1);
-  Node a("Convolution");
-  graph.addNode(&a);
-  Node b("Const");
-  graph.addNode(&b);
-  Node c("Parameter");
-  graph.addNode(&c);
-  graph.addEdge(&a, &b);
-  ASSERT_EQ(graph.areNodeNext(&a, &b), 1);
-}
-TEST(graph, check_prev) {
-  Graph graph(1);
-  Node a("Convolution");
-  graph.addNode(&a);
-  Node b("Const");
-  graph.addNode(&b);
-  Node c("Parameter");
-  graph.addNode(&c);
-  graph.addEdge(&a, &b);
-  ASSERT_EQ(graph.areNodePrev(&a, &b), 0);
+TEST(graph, check_conection1) {
+  Graph graph(5);
+  Layer a1;
+  Layer a2;
+  Layer a3;
+  graph.addLayer(a1);
+  graph.addLayer(a2);
+  graph.addLayer(a3);
+  graph.addEdge(0, 1);
+  graph.addEdge(0, 2);
+  ASSERT_EQ(graph.areLayerNext(0, 2), 1);
 }
 TEST(graph, check_conection_when_not_conection) {
-  Graph graph(1);
-  Node a("Convolution");
-  graph.addNode(&a);
-  Node b("Const");
-  graph.addNode(&b);
-  Node c("Parameter");
-  graph.addNode(&c);
-  graph.addEdge(&a, &b);
-  ASSERT_EQ(graph.areNodesConnected(&a, &c), 0);
+  Graph graph(5);
+  Layer a1;
+  Layer a2;
+  Layer a3;
+  graph.addLayer(a1);
+  graph.addLayer(a2);
+  graph.addLayer(a3);
+  graph.addEdge(0, 1);
+  graph.addEdge(0, 2);
+  ASSERT_EQ(graph.areLayerNext(1, 0), 0);
 }
 TEST(graph, check_conection_when_not_conection2) {
-  Graph graph(1);
-  Node a("Convolution");
-  graph.addNode(&a);
-  Node b("Const");
-  graph.addNode(&b);
-  Node c("Parameter");
-  graph.addNode(&c);
-  graph.addEdge(&a, &b);
-  ASSERT_EQ(graph.areNodesConnected(&c, &b), 0);
+  Graph graph(5);
+  Layer a1;
+  Layer a2;
+  Layer a3;
+  graph.addLayer(a1);
+  graph.addLayer(a2);
+  graph.addLayer(a3);
+  graph.addEdge(0, 1);
+  graph.addEdge(0, 2);
+  ASSERT_EQ(graph.areLayerNext(1, 1), 0);
+}
+TEST(graph, check_conection_when_not_conection3) {
+  Graph graph(5);
+  Layer a1;
+  Layer a2;
+  Layer a3;
+  graph.addLayer(a1);
+  graph.addLayer(a2);
+  graph.addLayer(a3);
+  graph.addEdge(0, 1);
+  graph.addEdge(0, 2);
+  ASSERT_EQ(graph.areLayerNext(2, 1), 0);
 }

@@ -4,68 +4,99 @@
 #include <string>
 #include <vector>
 
-class Node {
+class Layer {
+ private:
+  int id;
+  std::string name;
+  std::string type;
+  std::string version;
+  int numInputs;
+  int numNeurons;
+  std::vector<std::vector<double>> weights;
+
  public:
-  int abc;
-  std::vector<Node*> prevNodes;
-  std::vector<Node*> nextNodes;
-  std::string Type;
-  Node(std::string type) : Type(type) {}
-  void addPrev(Node* node) { prevNodes.push_back(node); }
-  void addNext(Node* node) { nextNodes.push_back(node); }
-  bool isConnected(Node* otherNode) {
-    for (Node* node : nextNodes) {
-      if (node == otherNode) {
-        return true;
-      }
-    }
-    for (Node* node : prevNodes) {
-      if (node == otherNode) {
-        return true;
-      }
-    }
-    return false;
+  Layer() {
+
   }
-  bool isNext(Node* otherNode) {
-    for (Node* node : nextNodes) {
-      if (node == otherNode) {
-        return true;
-      }
-    }
-    return false;
+  Layer(int inputs, int neurons) : numInputs(inputs), numNeurons(neurons) {
+    weights.resize(numNeurons, std::vector<double>(numInputs));
+    initializeWeights();
   }
-  bool isPrev(Node* otherNode) {
-    for (Node* node : prevNodes) {
-      if (node == otherNode) {
-        return true;
+  void initializeWeights() {
+    for (int i = 0; i < numNeurons; ++i) {
+      for (int j = 0; j < numInputs; ++j) {
+        weights[i][j] = ((double)rand() / RAND_MAX) - 0.5;
       }
     }
-    return false;
+  }
+  double activationFunction(double x) {
+    return 1.0 / (1.0 + exp(-x));
+  }
+  std::vector<double> forwardPropagation(const std::vector<double>& inputs) {
+    std::vector<double> output(numNeurons, 0.0);
+    for (int i = 0; i < numNeurons; ++i) {
+      double neuronOutput = 0.0;
+      for (int j = 0; j < numInputs; ++j) {
+        neuronOutput += weights[i][j] * inputs[j];
+      }
+      output[i] = activationFunction(neuronOutput);
+    }
+    return output;
   }
 };
 
 class Graph {
- public:
+  int BiggestSize;
   int V;
-  std::vector<Node*> adjList;
-  Graph(int vertices) : V(vertices) {
-    if (V < 0) {
+  std::vector<Layer> layers;
+  std::vector<int> arrayV;
+  std::vector<int> arrayE;
+ public:
+  Graph(int vertices) : BiggestSize(vertices) {
+    if (BiggestSize < 0) {
       throw std::out_of_range("Vertices cannot be less than zero");
-      ;
     }
-    adjList.resize(V);
+    layers.resize(BiggestSize);
+    arrayV.push_back(0);
+    V = 0;
   }
-  void addEdge(Node* prev, Node* next) {
-    prev->addNext(next);
-    next->addPrev(prev);
+  void addEdge(int i, int j) {
+    if (i== j) {
+      throw std::out_of_range("i=j cant add edge");
+    }
+    for (int ind = 1; ind < arrayV.size()-i-1;ind++)
+     arrayV[i + ind]++;
+    arrayE.insert(arrayE.begin() + arrayV[i], j);
+    arrayV[V] = arrayE.size();
   }
-  void addNode(Node* node) {
-    adjList.push_back(node);
+  void addLayer(Layer lay) {
+    layers.push_back(lay);
+    if (V == 0) {
+      arrayV.push_back(0);
+    }
+    else {
+    arrayV[V] = arrayV[V - 1];
+    arrayV.push_back(arrayE.size());
+    }
     V++;
   }
-  bool areNodesConnected(Node* node1, Node* node2) {
-    return node1->isConnected(node2);
+  bool areLayerNext(int ind1, int ind2) {
+    for (int i = arrayV[ind1]; i < arrayV[ind1 + 1]; i++) {
+    if (arrayE[i] == ind2) {
+        return true;
+    }
+    }
+    return false;
   }
-  bool areNodeNext(Node* node1, Node* node2) { return node1->isNext(node2); }
-  bool areNodePrev(Node* node1, Node* node2) { return node1->isPrev(node2); }
+  void checkarrays() { 
+    for (size_t i = 0; i < arrayV.size()-1; ++i) {
+    std::cout << arrayV[i] << " ";
+    }
+    std::cout << " " << arrayV[arrayV.size()-1];
+    std::cout << "\n";
+    for (size_t i = 0; i < arrayE.size(); ++i) {
+    std::cout << arrayE[i] << " ";
+    }
+    std::cout << "\n";
+  }
 };
