@@ -26,7 +26,7 @@ class FCLayer {
     }
     weights[i][j] = value;
   }
-  vector<ValueType> get_output() const noexcept { return outputValues; }
+  vector<ValueType> get_output() const { return outputValues; }
   ValueType get_weight(size_t i, size_t j) const {
     if (i >= outputSize || j >= inputSize) {
       throw out_of_range("Bad weight index");
