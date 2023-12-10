@@ -1,13 +1,13 @@
 // Using chrono for good measurements and parallelism support
 
 #pragma once
-#include <omp.h>
+#include <omp.h> // test
 
-#include <chrono>
-#include <cmath>
-#include <numeric>
-#include <stdexcept>
-#include <vector>
+#include <chrono> // test
+#include <cmath> // test
+#include <numeric> // test
+#include <stdexcept> // test
+#include <vector> // test
 
 template <typename DurationContainerType, typename DurationType, class Function,
           typename... Args>
