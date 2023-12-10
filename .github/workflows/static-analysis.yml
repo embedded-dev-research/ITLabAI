@@ -12,8 +12,8 @@ jobs:
     - uses: ZedThree/clang-tidy-review@v0.14.0
       with:
         build_dir: build
-        cmake_command: cmake -S . -B build
+        cmake_command: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
         config_file: .clang-tidy
         exclude: 3rdparty
-        split_workflow: true
+        split_workflow: false
         lgtm_comment_body: ""
