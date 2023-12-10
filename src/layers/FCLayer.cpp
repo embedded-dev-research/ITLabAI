@@ -48,7 +48,7 @@ FCLayer& FCLayer::operator=(const FCLayer& sec) {
 
 void FCLayer::load_input(const vector<ValueType>& input) {
   if (inputSize == 0) {
-    throw exception("Layer wasn't initialized normally");
+    throw runtime_error("Layer wasn't initialized normally");
   }
   if (input.size() != inputSize) {
     throw invalid_argument("Incorrect input size");
@@ -58,7 +58,7 @@ void FCLayer::load_input(const vector<ValueType>& input) {
 
 void FCLayer::run() {
   if (outputSize == 0 || inputSize == 0) {
-    throw exception("Layer wasn't initialized normally");
+    throw runtime_error("Layer wasn't initialized normally");
   }
   outputValues = mat_vec_mul(weights, inputValues);
   for (size_t i = 0; i < outputSize; i++) {
