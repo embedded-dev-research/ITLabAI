@@ -1,6 +1,6 @@
 #include "layers/FCLayer.hpp"
 
-vector<ValueType> mat_vec_mul(const vector<vector<ValueType> > &mat,
+vector<ValueType> mat_vec_mul(const vector<vector<ValueType> >& mat,
                               const vector<ValueType>& vec) {
   vector<ValueType> res(mat.size());
   ValueType elem;
@@ -15,8 +15,8 @@ vector<ValueType> mat_vec_mul(const vector<vector<ValueType> > &mat,
 }
 
 FCLayer::FCLayer(const vector<ValueType>& input,
-        const vector<vector<ValueType> >& input_weights,
-        const vector<ValueType>& input_bias)
+                 const vector<vector<ValueType> >& input_weights,
+                 const vector<ValueType>& input_bias)
     : inputValues(input),
       outputValues(input_bias.size()),
       weights(input_weights),

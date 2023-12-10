@@ -2,7 +2,6 @@
 #include <stdexcept>
 #include <vector>
 
-
 typedef double ValueType;
 
 using namespace std;
@@ -11,8 +10,8 @@ vector<ValueType> mat_vec_mul(const vector<vector<ValueType> >& mat,
                               const vector<ValueType>& vec);
 
 class FCLayer {
-public:
-  FCLayer(): inputValues(), outputValues(), weights(), bias() {
+ public:
+  FCLayer() : inputValues(), outputValues(), weights(), bias() {
     inputSize = 0;
     outputSize = 0;
   }
@@ -47,6 +46,7 @@ public:
     return bias[i];
   }
   void run();
+
  private:
   vector<ValueType> inputValues;
   size_t inputSize;
