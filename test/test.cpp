@@ -1,8 +1,8 @@
-#include <random> // test
-#include <thread> // test
+#include <random>
+#include <thread>
 
-#include "gtest/gtest.h" // test
-#include "perf/benchmarking.hpp" // test
+#include "gtest/gtest.h"
+#include "perf/benchmarking.hpp"
 
 TEST(basic, basic_test) {
   // Arrange
