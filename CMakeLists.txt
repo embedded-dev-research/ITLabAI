@@ -13,3 +13,4 @@ add_subdirectory(src)
 add_subdirectory(test)
 
 add_library(perf_lib STATIC "${PERF_HEADERS}" "${PERF_SRC}")
+add_library(layers_lib STATIC "${LAYERS_HEADERS}" "${LAYERS_SRC}")
