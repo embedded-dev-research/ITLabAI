@@ -77,7 +77,7 @@ TEST(timer, is_elapsed_time_omp_returns_nearly_correct_time) {
   double res_time;
   res_time = elapsed_time_omp(waitfor_function, a);
   EXPECT_GE(res_time, 0.15);
-  EXPECT_GE(res_time, 1.25);
+  EXPECT_LE(res_time, 1.25);
 }
 TEST(timer, is_elapsed_time_omp_avg_returns_nearly_correct_time) {
   const size_t a = 250;
@@ -85,7 +85,7 @@ TEST(timer, is_elapsed_time_omp_avg_returns_nearly_correct_time) {
   double res_time;
   res_time = elapsed_time_omp_avg(b, waitfor_function, a);
   EXPECT_GE(res_time, 0.15);
-  EXPECT_GE(res_time, 1.25);
+  EXPECT_LE(res_time, 1.25);
 }
 
 // ==========================
