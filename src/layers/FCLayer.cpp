@@ -23,6 +23,9 @@ FCLayer::FCLayer(const vector<ValueType>& input,
       bias(input_bias) {
   inputSize = input.size();
   outputSize = input_bias.size();
+  if (inputSize == 0 || outputSize == 0) {
+    throw invalid_argument("Bad input/bias");
+  }
   // make weights isize x osize
   for (size_t i = 0; i < weights.size(); i++) {
     while (weights[i].size() < inputSize) {

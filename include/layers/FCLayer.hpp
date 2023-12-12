@@ -45,6 +45,8 @@ class FCLayer {
     }
     return bias[i];
   }
+  size_t get_input_size() { return inputSize; }
+  size_t get_output_size() { return outputSize; }
   void run();
 
  private:

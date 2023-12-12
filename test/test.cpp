@@ -48,6 +48,25 @@ TEST(fclayer, calculates_correctly2) {
   EXPECT_NEAR(output[2], 1.0, 1e-5);
 }
 
+TEST(fclayer, throws_when_empty_input) {
+  const vector<ValueType> a1 = {2.0, 1.5};
+  const vector<ValueType> a2 = {0.1, 1.9};
+  const vector<ValueType> a3 = {0.0, 5.5};
+  vector<vector<ValueType> > weights = {a1, a2, a3};
+  vector<ValueType> input;
+  vector<ValueType> bias = {0.5, 0.5, 1.0};
+  ASSERT_ANY_THROW(FCLayer(input, weights, bias));
+}
+TEST(fclayer, throws_when_empty_bias) {
+  const vector<ValueType> a1 = {2.0, 1.5};
+  const vector<ValueType> a2 = {0.1, 1.9};
+  const vector<ValueType> a3 = {0.0, 5.5};
+  vector<vector<ValueType> > weights = {a1, a2, a3};
+  vector<ValueType> input = {0.5, 0.5};
+  vector<ValueType> bias;
+  ASSERT_ANY_THROW(FCLayer(input, weights, bias));
+}
+
 // ==========================
 
 // ==========================
