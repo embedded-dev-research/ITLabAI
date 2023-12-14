@@ -36,7 +36,7 @@ class FCLayer : public Layer<ValueType> {
   FCLayer& operator=(const FCLayer& sec);
   void set_weight(size_t i, size_t j, const ValueType& value) {
     if (i >= outputSize || j >= inputSize) {
-      throw std::out_of_range("Bad weight index");
+      throw std::out_of_range("Bad weight index for FCLayer");
     }
     weights[i][j] = value;
   }
@@ -111,7 +111,7 @@ template <typename ValueType>
 std::vector<ValueType> FCLayer<ValueType>::run(
     const std::vector<ValueType>& input) {
   if (outputSize == 0 || inputSize == 0) {
-    throw std::runtime_error("Layer wasn't initialized normally");
+    throw std::runtime_error("FCLayer wasn't initialized normally");
   }
   if (input.size() != inputSize) {
     throw std::invalid_argument("Input size doesn't fit FCLayer");
