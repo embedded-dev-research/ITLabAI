@@ -25,7 +25,7 @@ class Layer {
 };
 
 template <typename ValueType>
-class FCLayer { //: public Layer<ValueType> {
+class FCLayer : public Layer<ValueType> {
  public:
   FCLayer() : weights(), bias() {
     inputSize = 0;
@@ -76,8 +76,7 @@ template <typename ValueType>
 FCLayer<ValueType>::FCLayer(
     const std::vector<std::vector<ValueType> >& input_weights,
     const std::vector<ValueType>& input_bias)
-    : weights(input_weights),
-      bias(input_bias) {
+    : weights(input_weights), bias(input_bias) {
   if (input_weights.size() == 0) {
     throw std::invalid_argument("Empty weights for FCLayer");
   }
@@ -109,7 +108,8 @@ FCLayer<ValueType>& FCLayer<ValueType>::operator=(const FCLayer& sec) {
 }
 
 template <typename ValueType>
-std::vector<ValueType> FCLayer<ValueType>::run(const std::vector<ValueType>& input) {
+std::vector<ValueType> FCLayer<ValueType>::run(
+    const std::vector<ValueType>& input) {
   if (outputSize == 0 || inputSize == 0) {
     throw std::runtime_error("Layer wasn't initialized normally");
   }
