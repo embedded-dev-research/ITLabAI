@@ -2,60 +2,123 @@
 #include <stdexcept>
 #include <vector>
 
-typedef double ValueType;
+template <typename ValueType>
+std::vector<ValueType> mat_vec_mul(
+    const std::vector<std::vector<ValueType> >& mat,
+    const std::vector<ValueType>& vec) {
+  std::vector<ValueType> res(mat.size());
+  ValueType elem;
+  for (size_t i = 0; i < mat.size(); i++) {
+    elem = ValueType(0);
+    for (size_t j = 0; j < vec.size(); j++) {
+      elem += mat[i][j] * vec[j];
+    }
+    res[i] = elem;
+  }
+  return res;
+}
 
-using namespace std;
-
-vector<ValueType> mat_vec_mul(const vector<vector<ValueType> >& mat,
-                              const vector<ValueType>& vec);
-
-class FCLayer {
+template <typename ValueType>
+class Layer {
  public:
-  FCLayer() : inputValues(), outputValues(), weights(), bias() {
+  virtual std::vector<ValueType> run(const std::vector<ValueType>& input) = 0;
+};
+
+template <typename ValueType>
+class FCLayer { //: public Layer<ValueType> {
+ public:
+  FCLayer() : weights(), bias() {
     inputSize = 0;
     outputSize = 0;
   }
-  FCLayer(const vector<ValueType>& input,
-          const vector<vector<ValueType> >& input_weights,
-          const vector<ValueType>& input_bias);
+  FCLayer(const std::vector<std::vector<ValueType> >& input_weights,
+          const std::vector<ValueType>& input_bias);
   FCLayer& operator=(const FCLayer& sec);
-  void load_input(const vector<ValueType>& input);
   void set_weight(size_t i, size_t j, const ValueType& value) {
     if (i >= outputSize || j >= inputSize) {
-      throw out_of_range("Bad weight index");
+      throw std::out_of_range("Bad weight index");
     }
     weights[i][j] = value;
   }
-  vector<ValueType> get_output() const { return outputValues; }
   ValueType get_weight(size_t i, size_t j) const {
     if (i >= outputSize || j >= inputSize) {
-      throw out_of_range("Bad weight index");
+      throw std::out_of_range("Bad weight index for FCLayer");
     }
     return weights[i][j];
   }
   void set_bias(size_t i, const ValueType& value) {
     if (i >= outputSize) {
-      throw out_of_range("Bad bias index");
+      throw std::out_of_range("Bad bias index for FCLayer");
     }
     bias[i] = value;
   }
   ValueType get_bias(size_t i) const {
     if (i >= outputSize) {
-      throw out_of_range("Bad bias index");
+      throw std::out_of_range("Bad bias index for FCLayer");
     }
     return bias[i];
   }
   size_t get_input_size() { return inputSize; }
   size_t get_output_size() { return outputSize; }
-  void run();
+  std::vector<ValueType> run(const std::vector<ValueType>& input);
 
  private:
-  vector<ValueType> inputValues;
   size_t inputSize;
-  vector<ValueType> outputValues;
   size_t outputSize;
-  vector<vector<ValueType> > weights;
-  vector<ValueType> bias;
+  std::vector<std::vector<ValueType> > weights;
+  std::vector<ValueType> bias;
 };
 
-// weights * inputValeus + bias = outputValues
+// weights * inputValues + bias = outputValues
+
+// constructor for FCLayer
+template <typename ValueType>
+FCLayer<ValueType>::FCLayer(
+    const std::vector<std::vector<ValueType> >& input_weights,
+    const std::vector<ValueType>& input_bias)
+    : weights(input_weights),
+      bias(input_bias) {
+  if (input_weights.size() == 0) {
+    throw std::invalid_argument("Empty weights for FCLayer");
+  }
+  inputSize = input_weights[0].size();
+  outputSize = input_bias.size();
+  if (inputSize == 0 || outputSize == 0) {
+    throw std::invalid_argument("Bad weights/bias size for FCLayer");
+  }
+  // make weights isize x osize, filling empty with 0s
+  for (size_t i = 0; i < weights.size(); i++) {
+    while (weights[i].size() < inputSize) {
+      weights[i].push_back(ValueType(0));
+    }
+  }
+  const std::vector<ValueType> empty(inputSize, ValueType(0));
+  while (weights.size() < outputSize) {
+    weights.push_back(empty);
+  }
+  //
+}
+
+template <typename ValueType>
+FCLayer<ValueType>& FCLayer<ValueType>::operator=(const FCLayer& sec) {
+  inputSize = sec.inputSize;
+  outputSize = sec.outputSize;
+  weights = sec.weights;
+  bias = sec.bias;
+  return *this;
+}
+
+template <typename ValueType>
+std::vector<ValueType> FCLayer<ValueType>::run(const std::vector<ValueType>& input) {
+  if (outputSize == 0 || inputSize == 0) {
+    throw std::runtime_error("Layer wasn't initialized normally");
+  }
+  if (input.size() != inputSize) {
+    throw std::invalid_argument("Input size doesn't fit FCLayer");
+  }
+  std::vector<ValueType> outputValues = mat_vec_mul(weights, input);
+  for (size_t i = 0; i < outputSize; i++) {
+    outputValues[i] += bias[i];
+  }
+  return outputValues;
+}

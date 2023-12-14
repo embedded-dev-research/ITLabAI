@@ -21,50 +21,69 @@ TEST(basic, basic_test) {
 // Fully Connected layer
 
 TEST(fclayer, calculates_correctly1) {
-  const vector<ValueType> a1 = {2.0, 1.5};
-  const vector<ValueType> a2 = {0.1, 1.9};
-  const vector<ValueType> a3 = {0.0, 5.5};
-  vector<vector<ValueType> > weights = {a1, a2, a3};
-  vector<ValueType> bias = {0.5, 0.5, 1.0};
-  FCLayer layer({1, 2}, weights, bias);
-  layer.run();
-  vector<ValueType> output = layer.get_output();
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  std::vector<double> output = layer.run({1, 2});
   EXPECT_NEAR(output[0], 5.5, 1e-5);
   EXPECT_NEAR(output[1], 4.4, 1e-5);
   EXPECT_NEAR(output[2], 12.0, 1e-5);
 }
 
 TEST(fclayer, calculates_correctly2) {
-  const vector<ValueType> a1 = {2.0, 1.5};
-  const vector<ValueType> a2 = {0.1, 1.9};
-  const vector<ValueType> a3 = {0.0, 5.5};
-  vector<vector<ValueType> > weights = {a1, a2, a3};
-  vector<ValueType> bias = {0.5, 0.5, 1.0};
-  FCLayer layer({0.5, 0.0}, weights, bias);
-  layer.run();
-  vector<ValueType> output = layer.get_output();
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  std::vector<double> output = layer.run({0.5, 0.0});
   EXPECT_NEAR(output[0], 1.5, 1e-5);
   EXPECT_NEAR(output[1], 0.55, 1e-5);
   EXPECT_NEAR(output[2], 1.0, 1e-5);
 }
 
+TEST(fclayer, throws_when_greater_input_size) {
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> input = {2.0, 1.0, 0.0};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  ASSERT_ANY_THROW(layer.run(input));
+}
+TEST(fclayer, throws_when_less_input_size) {
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> input = {2.0};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  ASSERT_ANY_THROW(layer.run(input));
+}
+
 TEST(fclayer, throws_when_empty_input) {
-  const vector<ValueType> a1 = {2.0, 1.5};
-  const vector<ValueType> a2 = {0.1, 1.9};
-  const vector<ValueType> a3 = {0.0, 5.5};
-  vector<vector<ValueType> > weights = {a1, a2, a3};
-  vector<ValueType> input;
-  vector<ValueType> bias = {0.5, 0.5, 1.0};
-  ASSERT_ANY_THROW(FCLayer(input, weights, bias));
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> input;
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  ASSERT_ANY_THROW(layer.run(input));
 }
 TEST(fclayer, throws_when_empty_bias) {
-  const vector<ValueType> a1 = {2.0, 1.5};
-  const vector<ValueType> a2 = {0.1, 1.9};
-  const vector<ValueType> a3 = {0.0, 5.5};
-  vector<vector<ValueType> > weights = {a1, a2, a3};
-  vector<ValueType> input = {0.5, 0.5};
-  vector<ValueType> bias;
-  ASSERT_ANY_THROW(FCLayer(input, weights, bias));
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias;
+  ASSERT_ANY_THROW(FCLayer<double>(weights, bias));
 }
 
 // ==========================
