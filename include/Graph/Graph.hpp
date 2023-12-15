@@ -1,9 +1,9 @@
 #pragma once
 #include <iostream>
+#include <queue>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <queue>
 
 class Layer {
  private:
@@ -26,12 +26,12 @@ class Layer {
         for (size_t i = 0; i < primer.size(); ++i) {
           primer[i] += 1;
         }
-      break;
+        break;
       case 2:
         for (size_t i = 0; i < primer.size(); ++i) {
           primer[i] *= 2;
         }
-      break;
+        break;
     }
   }
   std::vector<int> Out() { return primer; }
@@ -133,12 +133,14 @@ class Graph {
         for (int i = res.size() - 1; i >= 0; --i) {
           std::cout << res[i] << " ";
         }*/
-        std::reverse(res.begin(), res.end());
+        for(size_t i = 0; i < res.size() / 2; ++i) {
+          std::swap(res[i], res[res.size() - i - 1]);
+        }
         return res;
       }
-      for (int ind = arrayV[current]; ind < arrayV[current+1]; ind++) {
-          int neighbor = arrayE[ind];
-          if (!visited[neighbor]) {
+      for (int ind = arrayV[current]; ind < arrayV[current + 1]; ind++) {
+        int neighbor = arrayE[ind];
+        if (!visited[neighbor]) {
           q.push(neighbor);
           visited[neighbor] = true;
           parent[neighbor] = current;
@@ -147,12 +149,12 @@ class Graph {
     }
   }
   std::vector<int> TraversalGraph(std::vector<int> startvec,
-      std::vector<int> pathlayers) {
+                                  std::vector<int> pathlayers) {
     std::vector<int> res=startvec;
     for (size_t i = 0; i < pathlayers.size(); ++i) {
       layers[pathlayers[i]].In(res);
       layers[pathlayers[i]].Work();
-      res=layers[pathlayers[i]].Out();
+      res = layers[pathlayers[i]].Out();
     }
     return res;
   }
