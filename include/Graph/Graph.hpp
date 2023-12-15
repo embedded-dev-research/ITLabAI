@@ -133,7 +133,7 @@ class Graph {
         for (int i = res.size() - 1; i >= 0; --i) {
           std::cout << res[i] << " ";
         }*/
-        for(size_t i = 0; i < res.size() / 2; ++i) {
+        for (size_t i = 0; i < res.size() / 2; ++i) {
           std::swap(res[i], res[res.size() - i - 1]);
         }
         return res;
@@ -150,7 +150,7 @@ class Graph {
   }
   std::vector<int> TraversalGraph(std::vector<int> startvec,
                                   std::vector<int> pathlayers) {
-    std::vector<int> res=startvec;
+    std::vector<int> res = startvec;
     for (size_t i = 0; i < pathlayers.size(); ++i) {
       layers[pathlayers[i]].In(res);
       layers[pathlayers[i]].Work();
