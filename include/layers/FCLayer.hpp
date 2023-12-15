@@ -27,7 +27,7 @@ class Layer {
 template <typename ValueType>
 class FCLayer : public Layer<ValueType> {
  public:
-  FCLayer() : weights(), bias(), inputSize(0), outputSize(0){}
+  FCLayer() : weights(), bias(), inputSize(0), outputSize(0) {}
   FCLayer(const std::vector<std::vector<ValueType> >& input_weights,
           const std::vector<ValueType>& input_bias);
   FCLayer& operator=(const FCLayer& sec);
