@@ -20,20 +20,7 @@ class Layer {
   Layer(int id1, int type1) : id(id1), type(type1) {}
   int checkID() { return id; }
   void In(std::vector<int> a) { primer = a; }
-  void Work() {
-    switch (type) {
-      case 1:
-        for (size_t i = 0; i < primer.size(); ++i) {
-          primer[i] += 1;
-        }
-        break;
-      case 2:
-        for (size_t i = 0; i < primer.size(); ++i) {
-          primer[i] *= 2;
-        }
-        break;
-    }
-  }
+  void Work() {}
   std::vector<int> Out() { return primer; }
 };
 
@@ -43,7 +30,8 @@ class Graph {
   std::vector<Layer> layers;
   std::vector<int> arrayV;
   std::vector<int> arrayE;
-
+  int start;
+  int end;
  public:
   Graph(int vertices) : BiggestSize(vertices) {
     if (BiggestSize < 0) {
@@ -52,72 +40,34 @@ class Graph {
     arrayV.push_back(0);
     V = 0;
   }
-  void addEdge(int i, int j) {
-    if (i == j) {
-      throw std::out_of_range("i=j cant add edge");
-    }
-    for (int ind = 1; ind < arrayV.size() - i - 1; ind++) arrayV[i + ind]++;
-    arrayE.insert(arrayE.begin() + arrayV[i], j);
-    arrayV[V] = arrayE.size();
-  }
-  void addLayer(Layer lay) {
+  void input(Layer lay, int end1, std::vector<int> vec) {
     layers.push_back(lay);
-    if (V == 0) {
-      arrayV.push_back(0);
-    } else {
-      arrayV[V] = arrayV[V - 1];
-      arrayV.push_back(arrayE.size());
-    }
+    arrayV.push_back(0);
+    start = lay.checkID();
+    end = end1;
     V++;
   }
-  bool areLayerNext(int ind1, int ind2) {
-    for (int i = arrayV[ind1]; i < arrayV[ind1 + 1]; i++) {
-      if (arrayE[i] == ind2) {
+  void conection(Layer layPrev, Layer layNext) {
+    layers.push_back(layNext);
+    arrayV[V] = arrayV[V - 1];
+    arrayV.push_back(arrayE.size());
+    if (layPrev.checkID() == layNext.checkID()) {
+      throw std::out_of_range("i=j cant add edge");
+    }
+    for (int ind = 1; ind < arrayV.size() - layPrev.checkID() - 1; ind++)
+      arrayV[layPrev.checkID() + ind]++;
+    arrayE.insert(arrayE.begin() + arrayV[layPrev.checkID()],
+                  layNext.checkID());
+    V++;
+    arrayV[V] = arrayE.size();
+  }
+  bool areLayerNext(Layer layPrev, Layer layNext) {
+    for (int i = arrayV[layPrev.checkID()]; i < arrayV[layPrev.checkID() + 1];
+         i++) {
+      if (arrayE[i] == layNext.checkID()) {
         return true;
       }
     }
     return false;
-  }
-  std::vector<int> BreadthFirstSearch(int start, int last) {
-    std::queue<int> q;
-    std::vector<bool> visited(V, false);
-    std::vector<int> parent(V, -1);
-    std::vector<int> res;
-    q.push(start);
-    visited[start] = true;
-
-    while (!q.empty()) {
-      int current = q.front();
-      q.pop();
-      if (current == last) {
-        int node = current;
-        while (node != -1) {
-          res.push_back(node);
-          node = parent[node];
-        }
-        for (size_t i = 0; i < res.size() / 2; ++i) {
-          std::swap(res[i], res[res.size() - i - 1]);
-        }
-        return res;
-      }
-      for (int ind = arrayV[current]; ind < arrayV[current + 1]; ind++) {
-        int neighbor = arrayE[ind];
-        if (!visited[neighbor]) {
-          q.push(neighbor);
-          visited[neighbor] = true;
-          parent[neighbor] = current;
-        }
-      }
-    }
-  }
-  std::vector<int> TraversalGraph(std::vector<int> startvec,
-                                  std::vector<int> pathlayers) {
-    std::vector<int> res = startvec;
-    for (size_t i = 0; i < pathlayers.size(); ++i) {
-      layers[pathlayers[i]].In(res);
-      layers[pathlayers[i]].Work();
-      res = layers[pathlayers[i]].Out();
-    }
-    return res;
   }
 };

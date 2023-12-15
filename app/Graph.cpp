@@ -12,20 +12,12 @@ int main() {
   Layer a2(1, 2);
   Layer a3(2, 1);
   Layer a4(3, 2);
-  graph.addLayer(a1);
-  graph.addLayer(a2);
-  graph.addLayer(a3);
-  graph.addLayer(a4);
-  graph.addEdge(0, 1);
-  graph.addEdge(1, 2);
-  graph.addEdge(0, 3);
-  cout << graph.areLayerNext(0, 1) << "\n";
-  cout << graph.areLayerNext(2, 0) << "\n";
-  std::vector<int> VecForSearch = graph.BreadthFirstSearch(0, 2);
-  std::vector<int> vecres = graph.TraversalGraph(vec, VecForSearch);
-  cout << "\n";
-  for (size_t i = 0; i < vecres.size(); ++i) {
-    std::cout << vecres[i] << " ";
-  }
+  graph.input(a1, 3, vec);
+  graph.conection(a1, a2);
+  graph.conection(a2, a3);
+  graph.conection(a1, a4);
+  cout << graph.areLayerNext(a1, a2) << "\n";
+  cout << graph.areLayerNext(a2, a1) << "\n";
+  cout << graph.areLayerNext(a1, a3) << "\n";
   return 0;
 }
