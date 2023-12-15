@@ -3,19 +3,38 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <queue>
 
 class Layer {
  private:
   int id;
   std::string name;
-  std::string type;
+  int type;
   std::string version;
   int numInputs;
   int numNeurons;
-  std::vector<std::vector<double>> weights;
+  std::vector<int> primer;
 
  public:
-  Layer() {}
+  Layer() : id(0), type(1) {}
+  Layer(int id1, int type1) : id(id1), type(type1) {}
+  int checkID() { return id; }
+  void In(std::vector<int> a) { primer = a; }
+  void Work() {
+    switch (type) {
+      case 1:
+        for (size_t i = 0; i < primer.size(); ++i) {
+          primer[i] += 1;
+        }
+      break;
+      case 2:
+        for (size_t i = 0; i < primer.size(); ++i) {
+          primer[i] *= 2;
+        }
+      break;
+    }
+  }
+  std::vector<int> Out() { return primer; }
   /*Layer(int inputs, int neurons) : numInputs(inputs), numNeurons(neurons) {
     weights.resize(numNeurons, std::vector<double>(numInputs));
     initializeWeights();
@@ -53,7 +72,6 @@ class Graph {
     if (BiggestSize < 0) {
       throw std::out_of_range("Vertices cannot be less than zero");
     }
-    layers.resize(BiggestSize);
     arrayV.push_back(0);
     V = 0;
   }
@@ -83,7 +101,7 @@ class Graph {
     }
     return false;
   }
-  void checkarrays() {
+  void checkArrays() {
     for (size_t i = 0; i < arrayV.size() - 1; ++i) {
       std::cout << arrayV[i] << " ";
     }
@@ -93,5 +111,49 @@ class Graph {
       std::cout << arrayE[i] << " ";
     }
     std::cout << "\n";
+  }
+  std::vector<int> BreadthFirstSearch(int start, int last) {
+    std::queue<int> q;
+    std::vector<bool> visited(V, false);
+    std::vector<int> parent(V, -1);
+    std::vector<int> res;
+    q.push(start);
+    visited[start] = true;
+
+    while (!q.empty()) {
+      int current = q.front();
+      q.pop();
+      if (current == last) {
+        int node = current;
+        while (node != -1) {
+          res.push_back(node);
+          node = parent[node];
+        }
+        /*std::cout << "iz " << start << " v " << last << " : ";
+        for (int i = res.size() - 1; i >= 0; --i) {
+          std::cout << res[i] << " ";
+        }*/
+        std::reverse(res.begin(), res.end());
+        return res;
+      }
+      for (int ind = arrayV[current]; ind < arrayV[current+1]; ind++) {
+          int neighbor = arrayE[ind];
+          if (!visited[neighbor]) {
+          q.push(neighbor);
+          visited[neighbor] = true;
+          parent[neighbor] = current;
+        }
+      }
+    }
+  }
+  std::vector<int> TraversalGraph(std::vector<int> startvec,
+      std::vector<int> pathlayers) {
+    std::vector<int> res=startvec;
+    for (size_t i = 0; i < pathlayers.size(); ++i) {
+      layers[pathlayers[i]].In(res);
+      layers[pathlayers[i]].Work();
+      res=layers[pathlayers[i]].Out();
+    }
+    return res;
   }
 };
