@@ -27,10 +27,7 @@ class Layer {
 template <typename ValueType>
 class FCLayer : public Layer<ValueType> {
  public:
-  FCLayer() : weights(), bias() {
-    inputSize = 0;
-    outputSize = 0;
-  }
+  FCLayer() : weights(), bias(), inputSize(0), outputSize(0){}
   FCLayer(const std::vector<std::vector<ValueType> >& input_weights,
           const std::vector<ValueType>& input_bias);
   FCLayer& operator=(const FCLayer& sec);
@@ -87,14 +84,10 @@ FCLayer<ValueType>::FCLayer(
   }
   // make weights isize x osize, filling empty with 0s
   for (size_t i = 0; i < weights.size(); i++) {
-    while (weights[i].size() < inputSize) {
-      weights[i].push_back(ValueType(0));
-    }
+    weights[i].resize(inputSize, ValueType(0));
   }
   const std::vector<ValueType> empty(inputSize, ValueType(0));
-  while (weights.size() < outputSize) {
-    weights.push_back(empty);
-  }
+  weights.resize(outputSize, empty);
   //
 }
 
