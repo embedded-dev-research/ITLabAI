@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include <queue>
 #include <stdexcept>
 #include <string>
@@ -35,29 +34,6 @@ class Layer {
     }
   }
   std::vector<int> Out() { return primer; }
-  /*Layer(int inputs, int neurons) : numInputs(inputs), numNeurons(neurons) {
-    weights.resize(numNeurons, std::vector<double>(numInputs));
-    initializeWeights();
-  }
-  void initializeWeights() {
-    for (int i = 0; i < numNeurons; ++i) {
-      for (int j = 0; j < numInputs; ++j) {
-        weights[i][j] = ((double)rand() / RAND_MAX) - 0.5;
-      }
-    }
-  }
-  double activationFunction(double x) { return 1.0; }
-  std::vector<double> forwardPropagation(const std::vector<double>& inputs) {
-    std::vector<double> output(numNeurons, 0.0);
-    for (int i = 0; i < numNeurons; ++i) {
-      double neuronOutput = 0.0;
-      for (int j = 0; j < numInputs; ++j) {
-        neuronOutput += weights[i][j] * inputs[j];
-      }
-      output[i] = activationFunction(neuronOutput);
-    }
-    return output;
-  }*/
 };
 
 class Graph {
@@ -101,17 +77,6 @@ class Graph {
     }
     return false;
   }
-  void checkArrays() {
-    for (size_t i = 0; i < arrayV.size() - 1; ++i) {
-      std::cout << arrayV[i] << " ";
-    }
-    std::cout << " " << arrayV[arrayV.size() - 1];
-    std::cout << "\n";
-    for (size_t i = 0; i < arrayE.size(); ++i) {
-      std::cout << arrayE[i] << " ";
-    }
-    std::cout << "\n";
-  }
   std::vector<int> BreadthFirstSearch(int start, int last) {
     std::queue<int> q;
     std::vector<bool> visited(V, false);
@@ -129,10 +94,6 @@ class Graph {
           res.push_back(node);
           node = parent[node];
         }
-        /*std::cout << "iz " << start << " v " << last << " : ";
-        for (int i = res.size() - 1; i >= 0; --i) {
-          std::cout << res[i] << " ";
-        }*/
         for (size_t i = 0; i < res.size() / 2; ++i) {
           std::swap(res[i], res[res.size() - i - 1]);
         }

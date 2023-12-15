@@ -1,7 +1,6 @@
 #include "Graph/Graph.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <string>
 #include <vector>
 using namespace std;
@@ -20,7 +19,6 @@ int main() {
   graph.addEdge(0, 1);
   graph.addEdge(1, 2);
   graph.addEdge(0, 3);
-  graph.checkArrays();
   cout << graph.areLayerNext(0, 1) << "\n";
   cout << graph.areLayerNext(2, 0) << "\n";
   std::vector<int> VecForSearch = graph.BreadthFirstSearch(0, 2);
