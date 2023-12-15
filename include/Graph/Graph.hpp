@@ -32,6 +32,7 @@ class Graph {
   std::vector<int> arrayE;
   int start;
   int end;
+
  public:
   Graph(int vertices) : BiggestSize(vertices) {
     if (BiggestSize < 0) {
