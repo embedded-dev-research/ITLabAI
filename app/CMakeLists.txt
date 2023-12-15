@@ -1,4 +1,4 @@
-add_executable(Reader reader_img_main.cpp)
+add_executable(Reader reader_img.cpp)
 
 target_include_directories(Reader PRIVATE ../include)
 
