@@ -64,6 +64,11 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: true
+    - name: Download OpenCV
+      run: |
+        mkdir external
+        cd external
+        curl -o opencv-4.8.0-windows.exe https://objects.githubusercontent.com/github-production-release-asset-2e65be/5108051/909c7495-778f-473e-986f-15771fd5aba4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20231216%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20231216T140901Z&X-Amz-Expires=300&X-Amz-Signature=ab337f901c5f9eeedd2a0b0b4bbba3a56a69abb373fb3b8401076599d589331d&X-Amz-SignedHeaders=host&actor_id=129722895&key_id=0&repo_id=5108051&response-content-disposition=attachment%3B%20filename%3Dopencv-4.8.0-windows.exe&response-content-type=application%2Foctet-stream
     - name: Build
       run: |
         cmake -S . -B build
