@@ -1,7 +1,6 @@
 ﻿#include "Reader_img.hpp"
 using namespace std;
 using namespace cv;
-
 void read(std::string path)
 {
   Mat image = imread(path);
