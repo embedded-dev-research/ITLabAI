@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <string>
 #include <vector>
-using namespace std;
 
 int main() {
   std::vector<int> vec = {1, 2, 3, 4};
@@ -16,8 +15,8 @@ int main() {
   graph.conection(a1, a2);
   graph.conection(a2, a3);
   graph.conection(a1, a4);
-  cout << graph.areLayerNext(a1, a2) << "\n";
-  cout << graph.areLayerNext(a2, a1) << "\n";
-  cout << graph.areLayerNext(a1, a3) << "\n";
+  std::cout << graph.areLayerNext(a1, a2) << "\n";
+  std::cout << graph.areLayerNext(a2, a1) << "\n";
+  std::cout << graph.areLayerNext(a1, a3) << "\n";
   return 0;
 }
