@@ -3,4 +3,4 @@
 	url = https://github.com/google/googletest
 [submodule "3rdparty/opencv/opencv"]
 	path = 3rdparty/opencv/opencv
-	url = https://github.com/opencv/opencv
+	url = https://github.com/opencv/opencv.git
