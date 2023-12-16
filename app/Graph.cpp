@@ -12,9 +12,9 @@ int main() {
   Layer a3(2, 1);
   Layer a4(3, 2);
   graph.input(a1, 3, vec);
-  graph.conection(a1, a2);
-  graph.conection(a2, a3);
-  graph.conection(a1, a4);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
   std::cout << graph.areLayerNext(a1, a2) << "\n";
   std::cout << graph.areLayerNext(a2, a1) << "\n";
   std::cout << graph.areLayerNext(a1, a3) << "\n";

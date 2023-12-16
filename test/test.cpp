@@ -12,7 +12,7 @@ TEST(basic, basic_test) {
   // Assert
   ASSERT_EQ(5, c);
 }
-TEST(graph, check_conection) {
+TEST(graph, check_connection) {
   std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
   Layer a1(0, 1);
@@ -20,12 +20,12 @@ TEST(graph, check_conection) {
   Layer a3(2, 1);
   Layer a4(3, 2);
   graph.input(a1, 3, vec);
-  graph.conection(a1, a2);
-  graph.conection(a2, a3);
-  graph.conection(a1, a4);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
   ASSERT_EQ(graph.areLayerNext(a1, a2), 1);
 }
-TEST(graph, check_conection1) {
+TEST(graph, check_connection1) {
   std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
   Layer a1(0, 1);
@@ -33,12 +33,12 @@ TEST(graph, check_conection1) {
   Layer a3(2, 1);
   Layer a4(3, 2);
   graph.input(a1, 3, vec);
-  graph.conection(a1, a2);
-  graph.conection(a2, a3);
-  graph.conection(a1, a4);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
   ASSERT_EQ(graph.areLayerNext(a1, a4), 1);
 }
-TEST(graph, check_conection_when_not_conection) {
+TEST(graph, check_connection_when_not_connection) {
   std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
   Layer a1(0, 1);
@@ -46,12 +46,12 @@ TEST(graph, check_conection_when_not_conection) {
   Layer a3(2, 1);
   Layer a4(3, 2);
   graph.input(a1, 3, vec);
-  graph.conection(a1, a2);
-  graph.conection(a2, a3);
-  graph.conection(a1, a4);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
   ASSERT_EQ(graph.areLayerNext(a1, a3), 0);
 }
-TEST(graph, check_conection_when_not_conection2) {
+TEST(graph, check_connection_when_not_connection2) {
   std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
   Layer a1(0, 1);
@@ -59,12 +59,12 @@ TEST(graph, check_conection_when_not_conection2) {
   Layer a3(2, 1);
   Layer a4(3, 2);
   graph.input(a1, 3, vec);
-  graph.conection(a1, a2);
-  graph.conection(a2, a3);
-  graph.conection(a1, a4);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
   ASSERT_EQ(graph.areLayerNext(a1, a1), 0);
 }
-TEST(graph, check_conection_when_not_conection3) {
+TEST(graph, check_connection_when_not_connection3) {
   std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
   Layer a1(0, 1);
@@ -72,8 +72,8 @@ TEST(graph, check_conection_when_not_conection3) {
   Layer a3(2, 1);
   Layer a4(3, 2);
   graph.input(a1, 3, vec);
-  graph.conection(a1, a2);
-  graph.conection(a2, a3);
-  graph.conection(a1, a4);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
   ASSERT_EQ(graph.areLayerNext(a2, a4), 0);
 }

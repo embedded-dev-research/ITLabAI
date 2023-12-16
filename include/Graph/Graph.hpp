@@ -48,7 +48,7 @@ class Graph {
     end = end1;
     V++;
   }
-  void conection(Layer layPrev, Layer layNext) {
+  void makeConnection(Layer layPrev, Layer layNext) {
     layers.push_back(layNext);
     arrayV[V] = arrayV[V - 1];
     arrayV.push_back(arrayE.size());
