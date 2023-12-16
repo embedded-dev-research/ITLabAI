@@ -4,8 +4,8 @@ using namespace cv;
 void read(std::string path) {
   Mat image = imread(path);
   if (image.empty()) {
-	throw "Could not open or find the image";
-	cin.get();
+    throw "Could not open or find the image";
+    cin.get();
   }
   String windowName = "Image";
   namedWindow(windowName);

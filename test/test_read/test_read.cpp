@@ -11,7 +11,7 @@ TEST(basic, basic_test) {
   ASSERT_EQ(5, c);
 }
 
-TEST(Read_img, can_read_image) { 
+TEST(Read_img, can_read_image) {
   ASSERT_NO_THROW(Mat image = imread("image.jpg"););
 }
 TEST(Read_img, can_show_image) {
