@@ -4,7 +4,8 @@ add_library(MyInclude STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 set_target_properties(MyInclude PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(MyInclude PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(OpenCV_DIR C:\\sema\\opencv\\build )
+set(OpenCV_DIR "${CMAKE_SOURCE_DIR}/../opencv/build")
+
 find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 target_link_libraries( MyInclude ${OpenCV_LIBS} )
