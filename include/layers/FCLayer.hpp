@@ -21,7 +21,7 @@ std::vector<ValueType> mat_vec_mul(
 template <typename ValueType>
 class Layer {
  public:
-  virtual std::vector<ValueType> run(const std::vector<ValueType>& input) = 0;
+  virtual std::vector<ValueType> run(const std::vector<ValueType>& input) const = 0;
 };
 
 template <typename ValueType>
@@ -55,9 +55,13 @@ class FCLayer : public Layer<ValueType> {
     }
     return bias[i];
   }
-  size_t get_input_size() { return inputSize; }
-  size_t get_output_size() { return outputSize; }
-  std::vector<ValueType> run(const std::vector<ValueType>& input);
+  size_t get_input_size() const { return inputSize; }
+  size_t get_output_size() const { return outputSize; }
+  // weights width x height
+  std::pair<size_t, size_t> get_dims() const {
+    return std::pair<size_t, size_t>(outputSize, inputSize);
+  }
+  std::vector<ValueType> run(const std::vector<ValueType>& input) const;
 
  private:
   size_t inputSize;
@@ -102,7 +106,7 @@ FCLayer<ValueType>& FCLayer<ValueType>::operator=(const FCLayer& sec) {
 
 template <typename ValueType>
 std::vector<ValueType> FCLayer<ValueType>::run(
-    const std::vector<ValueType>& input) {
+    const std::vector<ValueType>& input) const {
   if (outputSize == 0 || inputSize == 0) {
     throw std::runtime_error("FCLayer wasn't initialized normally");
   }
