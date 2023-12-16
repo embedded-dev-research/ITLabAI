@@ -1,4 +1,4 @@
 #pragma once
-#include <opencv2\opencv.hpp>
 #include <iostream>
+#include <opencv2\opencv.hpp>
 void read(std::string path);
