@@ -100,8 +100,8 @@ TEST(fclayer, set_get_weight_is_correct) {
   }
   for (size_t i = 0; i < weights.size(); i++) {
     for (size_t j = 0; j < weights[0].size(); j++) {
-      layer.set_weight(i, j, i+j);
-      EXPECT_NEAR(layer.get_weight(i, j), i+j, 1e-5);
+      layer.set_weight(i, j, i + j);
+      EXPECT_NEAR(layer.get_weight(i, j), i + j, 1e-5);
     }
   }
 }

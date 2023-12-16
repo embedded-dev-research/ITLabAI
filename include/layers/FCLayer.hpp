@@ -21,7 +21,8 @@ std::vector<ValueType> mat_vec_mul(
 template <typename ValueType>
 class Layer {
  public:
-  virtual std::vector<ValueType> run(const std::vector<ValueType>& input) const = 0;
+  virtual std::vector<ValueType> run(
+      const std::vector<ValueType>& input) const = 0;
 };
 
 template <typename ValueType>
