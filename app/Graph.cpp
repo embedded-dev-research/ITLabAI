@@ -15,8 +15,8 @@ int main() {
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
   graph.makeConnection(a1, a4);
-  std::cout << graph.areLayerNext(a1, a2) << "\n";
-  std::cout << graph.areLayerNext(a2, a1) << "\n";
-  std::cout << graph.areLayerNext(a1, a3) << "\n";
+  graph.areLayerNext(a1, a2);
+  graph.areLayerNext(a2, a1);
+  graph.areLayerNext(a1, a3);
   return 0;
 }

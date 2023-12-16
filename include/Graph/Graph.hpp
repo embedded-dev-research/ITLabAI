@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include <queue>
 #include <stdexcept>
 #include <string>
@@ -16,11 +15,9 @@ class Layer {
   std::vector<int> primer;
 
  public:
-  Layer() : id(0), type(1) {}
   Layer(int id1, int type1) : id(id1), type(type1) {}
   int checkID() { return id; }
-  void In(std::vector<int> a) { primer = a; }
-  void Work() {}
+  void In(const std::vector<int>& a) { primer = a; }
   std::vector<int> Out() { return primer; }
 };
 
