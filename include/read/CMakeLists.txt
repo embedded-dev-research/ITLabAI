@@ -4,7 +4,7 @@ add_library(MyInclude STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 set_target_properties(MyInclude PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(MyInclude PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-set(OpenCV_DIR "${CMAKE_SOURCE_DIR}/../opencv/build")
+set(OpenCV_DIR "${CMAKE_SOURCE_DIR}/3rdparty/opencv/opencv/build/install/x64/vc17/lib" )
 
 find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
