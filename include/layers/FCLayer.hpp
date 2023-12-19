@@ -71,7 +71,7 @@ class FCLayer : public Layer<ValueType> {
   }
   std::vector<ValueType> run(const std::vector<ValueType>& input) const;
 
- protected:
+ private:
   std::vector<std::vector<ValueType> > weights;
   std::vector<ValueType> bias;
 };
@@ -119,9 +119,9 @@ std::vector<ValueType> FCLayer<ValueType>::run(
   if (input.size() != this->inputSize) {
     throw std::invalid_argument("Input size doesn't fit FCLayer");
   }
-  std::vector<ValueType> outputValues = mat_vec_mul(weights, input);
+  std::vector<ValueType> output_values = mat_vec_mul(weights, input);
   for (size_t i = 0; i < this->outputSize; i++) {
-    outputValues[i] += bias[i];
+    output_values[i] += bias[i];
   }
-  return outputValues;
+  return output_values;
 }
