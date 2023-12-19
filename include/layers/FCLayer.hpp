@@ -23,12 +23,25 @@ class Layer {
  public:
   virtual std::vector<ValueType> run(
       const std::vector<ValueType>& input) const = 0;
+  size_t get_input_size() const { return inputSize; }
+  size_t get_output_size() const { return outputSize; }
+  // weights width x height
+  std::pair<size_t, size_t> get_dims() const {
+    return std::pair<size_t, size_t>(outputSize, inputSize);
+  }
+ protected:
+  size_t inputSize;
+  size_t outputSize;
 };
 
 template <typename ValueType>
 class FCLayer : public Layer<ValueType> {
  public:
-  FCLayer() : weights(), bias(), inputSize(0), outputSize(0) {}
+  FCLayer() : weights(), bias() {
+    // from base class
+    inputSize = 0;
+    outputSize = 0;
+  }
   FCLayer(const std::vector<std::vector<ValueType> >& input_weights,
           const std::vector<ValueType>& input_bias);
   FCLayer& operator=(const FCLayer& sec);
@@ -56,17 +69,9 @@ class FCLayer : public Layer<ValueType> {
     }
     return bias[i];
   }
-  size_t get_input_size() const { return inputSize; }
-  size_t get_output_size() const { return outputSize; }
-  // weights width x height
-  std::pair<size_t, size_t> get_dims() const {
-    return std::pair<size_t, size_t>(outputSize, inputSize);
-  }
   std::vector<ValueType> run(const std::vector<ValueType>& input) const;
 
- private:
-  size_t inputSize;
-  size_t outputSize;
+ protected:
   std::vector<std::vector<ValueType> > weights;
   std::vector<ValueType> bias;
 };
