@@ -29,6 +29,7 @@ class Layer {
   std::pair<size_t, size_t> get_dims() const {
     return std::pair<size_t, size_t>(outputSize, inputSize);
   }
+
  protected:
   size_t inputSize;
   size_t outputSize;
