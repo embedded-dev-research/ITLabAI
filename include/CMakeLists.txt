@@ -1,2 +1,4 @@
 add_subdirectory(Graph)
 set(GRAPH_HEADERS "${GRAPH_HEADER}" PARENT_SCOPE)
+add_subdirectory(perf)
+set(PERF_HEADERS "${PERF_HEADERS}" PARENT_SCOPE)
