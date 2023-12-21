@@ -19,7 +19,7 @@ TEST(graph, check_connection) {
   Layer a2(1, 2);
   Layer a3(2, 1);
   Layer a4(3, 2);
-  graph.input(a1, 3, vec);
+  graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
   graph.makeConnection(a1, a4);
@@ -32,7 +32,7 @@ TEST(graph, check_connection1) {
   Layer a2(1, 2);
   Layer a3(2, 1);
   Layer a4(3, 2);
-  graph.input(a1, 3, vec);
+  graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
   graph.makeConnection(a1, a4);
@@ -45,7 +45,7 @@ TEST(graph, check_connection_when_not_connection) {
   Layer a2(1, 2);
   Layer a3(2, 1);
   Layer a4(3, 2);
-  graph.input(a1, 3, vec);
+  graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
   graph.makeConnection(a1, a4);
@@ -58,7 +58,7 @@ TEST(graph, check_connection_when_not_connection2) {
   Layer a2(1, 2);
   Layer a3(2, 1);
   Layer a4(3, 2);
-  graph.input(a1, 3, vec);
+  graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
   graph.makeConnection(a1, a4);
@@ -71,7 +71,7 @@ TEST(graph, check_connection_when_not_connection3) {
   Layer a2(1, 2);
   Layer a3(2, 1);
   Layer a4(3, 2);
-  graph.input(a1, 3, vec);
+  graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
   graph.makeConnection(a1, a4);

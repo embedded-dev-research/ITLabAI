@@ -16,7 +16,7 @@ class Layer {
 
  public:
   Layer(int id1, int type1) : id(id1), type(type1) {}
-  int checkID() { return id; }
+  int checkID() const { return id; }
   void In(const std::vector<int>& a) { primer = a; }
   std::vector<int> Out() { return primer; }
 };
@@ -38,14 +38,13 @@ class Graph {
     arrayV.push_back(0);
     V = 0;
   }
-  void input(Layer lay, int end1, std::vector<int> vec) {
+  void setInput(const Layer& lay, const std::vector<int>& vec) {
     layers.push_back(lay);
     arrayV.push_back(0);
     start = lay.checkID();
-    end = end1;
     V++;
   }
-  void makeConnection(Layer layPrev, Layer layNext) {
+  void makeConnection(const Layer& layPrev, const Layer& layNext) {
     layers.push_back(layNext);
     arrayV[V] = arrayV[V - 1];
     arrayV.push_back(arrayE.size());
@@ -59,7 +58,7 @@ class Graph {
     V++;
     arrayV[V] = arrayE.size();
   }
-  bool areLayerNext(Layer layPrev, Layer layNext) {
+  bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
     for (int i = arrayV[layPrev.checkID()]; i < arrayV[layPrev.checkID() + 1];
          i++) {
       if (arrayE[i] == layNext.checkID()) {
