@@ -44,7 +44,8 @@ class Graph {
     start_ = lay.checkID();
     V_++;
   }
-  void makeConnection(const LayerExample& layPrev, const LayerExample& layNext) {
+  void makeConnection(const LayerExample& layPrev,
+                      const LayerExample& layNext) {
     layers_.push_back(layNext);
     arrayV_[V_] = arrayV_[V_ - 1];
     arrayV_.push_back(arrayE_.size());
