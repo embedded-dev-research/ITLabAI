@@ -54,7 +54,7 @@ class Graph {
     for (int ind = 1; ind < arrayV_.size() - layPrev.checkID() - 1; ind++)
       arrayV_[layPrev.checkID() + ind]++;
     arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.checkID()],
-                  layNext.checkID());
+                   layNext.checkID());
     V_++;
     arrayV_[V_] = arrayE_.size();
   }
