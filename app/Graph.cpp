@@ -7,10 +7,10 @@
 int main() {
   std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  Layer a1(0, 1);
-  Layer a2(1, 2);
-  Layer a3(2, 1);
-  Layer a4(3, 2);
+  LayerExample a1(0, 1);
+  LayerExample a2(1, 2);
+  LayerExample a3(2, 1);
+  LayerExample a4(3, 2);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
