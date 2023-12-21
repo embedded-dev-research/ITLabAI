@@ -5,7 +5,7 @@
 #include <vector>
 
 int main() {
-  const std::vector<int> vec = {1, 2, 3, 4};
+  const std::vector<int> vec{1, 2, 3, 4};
   Graph graph(5);
   LayerExample a1(0, 1);
   LayerExample a2(1, 2);
