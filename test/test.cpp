@@ -1,6 +1,7 @@
-#include "Graph/Graph.hpp"
 #include <random>
 #include <thread>
+
+#include "Graph/Graph.hpp"
 #include "gtest/gtest.h"
 #include "perf/benchmarking.hpp"
 
@@ -16,7 +17,7 @@ TEST(basic, basic_test) {
   ASSERT_EQ(5, c);
 }
 TEST(graph, check_connection) {
-  std::vector<int> vec = {1, 2, 3, 4};
+  const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
   Layer a1(0, 1);
   Layer a2(1, 2);
@@ -29,7 +30,7 @@ TEST(graph, check_connection) {
   ASSERT_EQ(graph.areLayerNext(a1, a2), 1);
 }
 TEST(graph, check_connection1) {
-  std::vector<int> vec = {1, 2, 3, 4};
+  const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
   Layer a1(0, 1);
   Layer a2(1, 2);
@@ -42,7 +43,7 @@ TEST(graph, check_connection1) {
   ASSERT_EQ(graph.areLayerNext(a1, a4), 1);
 }
 TEST(graph, check_connection_when_not_connection) {
-  std::vector<int> vec = {1, 2, 3, 4};
+  const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
   Layer a1(0, 1);
   Layer a2(1, 2);
@@ -55,7 +56,7 @@ TEST(graph, check_connection_when_not_connection) {
   ASSERT_EQ(graph.areLayerNext(a1, a3), 0);
 }
 TEST(graph, check_connection_when_not_connection2) {
-  std::vector<int> vec = {1, 2, 3, 4};
+  const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
   Layer a1(0, 1);
   Layer a2(1, 2);
@@ -68,7 +69,7 @@ TEST(graph, check_connection_when_not_connection2) {
   ASSERT_EQ(graph.areLayerNext(a1, a1), 0);
 }
 TEST(graph, check_connection_when_not_connection3) {
-  std::vector<int> vec = {1, 2, 3, 4};
+  const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
   Layer a1(0, 1);
   Layer a2(1, 2);
