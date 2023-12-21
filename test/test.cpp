@@ -2,6 +2,7 @@
 #include <thread>
 
 #include "gtest/gtest.h"
+#include "layers/FCLayer.hpp"
 #include "perf/benchmarking.hpp"
 
 TEST(basic, basic_test) {
@@ -15,6 +16,151 @@ TEST(basic, basic_test) {
   // Assert
   ASSERT_EQ(5, c);
 }
+
+// ==========================
+// Fully Connected layer
+
+TEST(fclayer, calculates_correctly1) {
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  std::vector<double> output = layer.run({1, 2});
+  EXPECT_NEAR(output[0], 5.5, 1e-5);
+  EXPECT_NEAR(output[1], 4.4, 1e-5);
+  EXPECT_NEAR(output[2], 12.0, 1e-5);
+}
+
+TEST(fclayer, calculates_correctly2) {
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  std::vector<double> output = layer.run({0.5, 0.0});
+  EXPECT_NEAR(output[0], 1.5, 1e-5);
+  EXPECT_NEAR(output[1], 0.55, 1e-5);
+  EXPECT_NEAR(output[2], 1.0, 1e-5);
+}
+
+TEST(fclayer, throws_when_greater_input_size) {
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> input = {2.0, 1.0, 0.0};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  ASSERT_ANY_THROW(layer.run(input));
+}
+TEST(fclayer, throws_when_less_input_size) {
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> input = {2.0};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  ASSERT_ANY_THROW(layer.run(input));
+}
+
+TEST(fclayer, throws_when_empty_input) {
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> input;
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  ASSERT_ANY_THROW(layer.run(input));
+}
+TEST(fclayer, throws_when_empty_bias) {
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias;
+  ASSERT_ANY_THROW(FCLayer<double>(weights, bias));
+}
+
+TEST(fclayer, set_get_weight_is_correct) {
+  const std::vector<double> a1 = {2.0, 1.5, 3.5};
+  const std::vector<double> a2 = {0.1, 1.9, 2.6};
+  const std::vector<double> a3 = {0.0, 5.5, 1.7};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  for (size_t i = 0; i < weights.size(); i++) {
+    for (size_t j = 0; j < weights[0].size(); j++) {
+      EXPECT_NEAR(layer.get_weight(i, j), weights[i][j], 1e-5);
+    }
+  }
+  for (size_t i = 0; i < weights.size(); i++) {
+    for (size_t j = 0; j < weights[0].size(); j++) {
+      layer.set_weight(i, j, i + j);
+      EXPECT_NEAR(layer.get_weight(i, j), i + j, 1e-5);
+    }
+  }
+}
+TEST(fclayer, set_get_bias_is_correct) {
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  for (size_t i = 0; i < bias.size(); i++) {
+    EXPECT_NEAR(layer.get_bias(i), bias[i], 1e-5);
+  }
+  for (size_t i = 0; i < bias.size(); i++) {
+    layer.set_bias(i, i);
+    EXPECT_NEAR(layer.get_bias(i), i, 1e-5);
+  }
+}
+
+TEST(fclayer, set_get_weight_throws_when_out_of_range) {
+  const std::vector<double> a1 = {2.0, 1.5, 3.5};
+  const std::vector<double> a2 = {0.1, 1.9, 2.6};
+  const std::vector<double> a3 = {0.0, 5.5, 1.7};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  ASSERT_ANY_THROW(layer.get_weight(4, 0));
+  ASSERT_ANY_THROW(layer.get_weight(0, 4));
+  ASSERT_ANY_THROW(layer.set_weight(4, 0, 1.3));
+  ASSERT_ANY_THROW(layer.set_weight(0, 4, 1.3));
+}
+TEST(fclayer, set_get_bias_throws_when_out_of_range) {
+  const std::vector<double> a1 = {2.0, 1.5, 3.5};
+  const std::vector<double> a2 = {0.1, 1.9, 2.6};
+  const std::vector<double> a3 = {0.0, 5.5, 1.7};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  ASSERT_ANY_THROW(layer.get_bias(4));
+  ASSERT_ANY_THROW(layer.set_bias(4, 1.3));
+}
+
+TEST(fclayer, get_dims_test1) {
+  const std::vector<double> a1 = {2.0, 1.5};
+  const std::vector<double> a2 = {0.1, 1.9};
+  const std::vector<double> a3 = {0.0, 5.5};
+  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  FCLayer<double> layer(weights, bias);
+  EXPECT_EQ(layer.get_dims().first, 3);
+  EXPECT_EQ(layer.get_dims().second, 2);
+}
+TEST(fclayer, get_dims_test2) {
+  FCLayer<double> layer;
+  EXPECT_EQ(layer.get_dims().first, 0);
+  EXPECT_EQ(layer.get_dims().second, 0);
+}
+
+// ==========================
 
 // ==========================
 // Timer tests
