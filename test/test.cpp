@@ -1,7 +1,7 @@
 #include <random>
 #include <thread>
-
 #include <vector>
+
 #include "gtest/gtest.h"
 #include "layers/FCLayer.hpp"
 #include "perf/benchmarking.hpp"
@@ -355,7 +355,7 @@ std::vector<std::vector<T> > matrix_mul(
     const std::vector<std::vector<T> > &first,
     const std::vector<std::vector<T> > &second) {
   std::vector<std::vector<T> > mul(first.size(),
-                                  std::vector<T>(first.size(), T(0)));
+                                   std::vector<T>(first.size(), T(0)));
   for (size_t i = 0; i < first.size(); i++) {
     for (size_t k = 0; k < first.size(); k++) {
       for (size_t j = 0; j < first.size(); j++) {
@@ -377,7 +377,7 @@ TEST(throughput, matrix_operations_throughput_is_positive) {
     }
   }
   double tp;
-  tp = throughput<double, std::ratio<1,1> >(matrix_sum<int>, a, b);
+  tp = throughput<double, std::ratio<1, 1> >(matrix_sum<int>, a, b);
   EXPECT_GE(tp, 0);
   tp = throughput_avg<double, std::ratio<1, 1> >(50, matrix_sum<int>, a, b);
   EXPECT_GE(tp, 0);
