@@ -376,18 +376,17 @@ TEST(throughput, matrix_operations_throughput_is_positive) {
       b[i][j] = i - j;
     }
   }
-  Throughput<double, double> a1;
-  double throughput;
-  throughput = a1.get_tp(2 * n * n, matrix_sum<int>, a, b);
-  EXPECT_GE(throughput, 0);
-  throughput = a1.get_tp_avg(2 * n * n, 50, matrix_sum<int>, a, b);
-  EXPECT_GE(throughput, 0);
-  throughput = a1.get_tp_omp(2 * n * n, matrix_sum<int>, a, b);
-  EXPECT_GE(throughput, 0);
-  throughput = a1.get_tp_omp_avg(2 * n * n, 50, matrix_sum<int>, a, b);
-  EXPECT_GE(throughput, 0);
-  throughput = a1.get_tp(2 * n * n * n, matrix_mul<int>, a, b);
-  EXPECT_GE(throughput, 0);
+  double tp;
+  tp = throughput<double, std::ratio<1,1> >(matrix_sum<int>, a, b);
+  EXPECT_GE(tp, 0);
+  tp = throughput_avg<double, std::ratio<1, 1> >(50, matrix_sum<int>, a, b);
+  EXPECT_GE(tp, 0);
+  tp = throughput_omp(matrix_sum<int>, a, b);
+  EXPECT_GE(tp, 0);
+  tp = throughput_omp_avg(50, matrix_sum<int>, a, b);
+  EXPECT_GE(tp, 0);
+  tp = throughput<double, std::ratio<1, 1> >(matrix_mul<int>, a, b);
+  EXPECT_GE(tp, 0);
 }
 
 // ==========================

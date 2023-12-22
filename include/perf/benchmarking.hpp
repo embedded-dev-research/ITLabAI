@@ -45,7 +45,6 @@ DurationContainerType elapsed_time_avg(const size_t iters, Function&& func,
   duration = (end - start) / iters;
   return duration.count();
 }
-// asking for parallel implementation btw
 
 // returns time in seconds
 template <class Function, typename... Args>
@@ -57,6 +56,31 @@ double elapsed_time_omp_avg(const size_t iters, Function&& func,
   }
   double end = omp_get_wtime();
   return (end - start) / iters;
+}
+
+template <typename ThroughputContainerType, typename DurationType,
+          class Function, typename... Args>
+ThroughputContainerType throughput(Function&& func, Args&&... args) {
+  return ThroughputContainerType(1) /
+         elapsed_time<ThroughputContainerType, DurationType>(func, args...);
+}
+
+template <class Function, typename... Args>
+double throughput_omp(Function&& func, Args&&... args) {
+  return 1 / elapsed_time_omp(func, args...);
+}
+
+template <typename ThroughputContainerType, typename DurationType,
+          class Function, typename... Args>
+ThroughputContainerType throughput_avg(const size_t iters, Function&& func,
+                                       Args&&... args) {
+  return ThroughputContainerType(1) /
+         elapsed_time_avg<ThroughputContainerType, DurationType>(iters, func, args...);
+}
+
+template <class Function, typename... Args>
+double throughput_omp_avg(const size_t iters, Function&& func, Args&&... args) {
+  return 1 / elapsed_time_omp_avg(iters, func, args...);
 }
 
 // as "Manhattan" norm of error-vector
