@@ -1,7 +1,7 @@
 #include <random>
 #include <thread>
 
-#include "Graph/Graph.hpp"
+#include "graph/graph.hpp"
 #include "gtest/gtest.h"
 #include "layers/FCLayer.hpp"
 #include "perf/benchmarking.hpp"
