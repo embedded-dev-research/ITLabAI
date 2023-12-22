@@ -5,7 +5,6 @@
 
 #include <chrono>
 #include <cmath>
-#include <stdexcept>
 #include <numeric>
 #include <stdexcept>
 #include <vector>
@@ -75,7 +74,8 @@ template <typename ThroughputContainerType, typename DurationType,
 ThroughputContainerType throughput_avg(const size_t iters, Function&& func,
                                        Args&&... args) {
   return ThroughputContainerType(1) /
-         elapsed_time_avg<ThroughputContainerType, DurationType>(iters, func, args...);
+         elapsed_time_avg<ThroughputContainerType, DurationType>(iters, func,
+                                                                 args...);
 }
 
 template <class Function, typename... Args>

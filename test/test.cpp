@@ -338,10 +338,10 @@ TEST(accuracy, accuracy_norm_throws_when_bad_pointer) {
 // Throughput tests
 
 template <typename T>
-std::vector<std::vector<T>> matrix_sum(
-    const std::vector<std::vector<T>> &first,
-    const std::vector<std::vector<T>> &second) {
-  std::vector<std::vector<T>> sum = first;
+std::vector<std::vector<T> > matrix_sum(
+    const std::vector<std::vector<T> > &first,
+    const std::vector<std::vector<T> > &second) {
+  std::vector<std::vector<T> > sum = first;
   for (size_t i = 0; i < first.size(); i++) {
     for (size_t j = 0; j < first.size(); j++) {
       sum[i][j] = sum[i][j] + second[i][j];
@@ -351,10 +351,10 @@ std::vector<std::vector<T>> matrix_sum(
 }
 
 template <typename T>
-std::vector<std::vector<T>> matrix_mul(
-    const std::vector<std::vector<T>> &first,
-    const std::vector<std::vector<T>> &second) {
-  std::vector<std::vector<T>> mul(first.size(),
+std::vector<std::vector<T> > matrix_mul(
+    const std::vector<std::vector<T> > &first,
+    const std::vector<std::vector<T> > &second) {
+  std::vector<std::vector<T> > mul(first.size(),
                                   std::vector<T>(first.size(), T(0)));
   for (size_t i = 0; i < first.size(); i++) {
     for (size_t k = 0; k < first.size(); k++) {
@@ -368,8 +368,8 @@ std::vector<std::vector<T>> matrix_mul(
 
 TEST(throughput, matrix_operations_throughput_is_positive) {
   size_t n = 200;
-  std::vector<std::vector<int>> a(n, std::vector<int>(n, 0));
-  std::vector<std::vector<int>> b(n, std::vector<int>(n, 0));
+  std::vector<std::vector<int> > a(n, std::vector<int>(n, 0));
+  std::vector<std::vector<int> > b(n, std::vector<int>(n, 0));
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < n; j++) {
       a[i][j] = i + j;
