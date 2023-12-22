@@ -1,6 +1,7 @@
 #include <random>
 #include <thread>
 
+#include "graph/graph.hpp"
 #include "gtest/gtest.h"
 #include "layers/FCLayer.hpp"
 #include "perf/benchmarking.hpp"
@@ -15,6 +16,71 @@ TEST(basic, basic_test) {
 
   // Assert
   ASSERT_EQ(5, c);
+}
+TEST(graph, check_connection) {
+  const std::vector<int> vec = {1, 2, 3, 4};
+  Graph graph(5);
+  LayerExample a1(0, 1);
+  LayerExample a2(1, 2);
+  LayerExample a3(2, 1);
+  LayerExample a4(3, 2);
+  graph.setInput(a1, vec);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
+  ASSERT_EQ(graph.areLayerNext(a1, a2), 1);
+}
+TEST(graph, check_connection1) {
+  const std::vector<int> vec = {1, 2, 3, 4};
+  Graph graph(5);
+  LayerExample a1(0, 1);
+  LayerExample a2(1, 2);
+  LayerExample a3(2, 1);
+  LayerExample a4(3, 2);
+  graph.setInput(a1, vec);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
+  ASSERT_EQ(graph.areLayerNext(a1, a4), 1);
+}
+TEST(graph, check_connection_when_not_connection) {
+  const std::vector<int> vec = {1, 2, 3, 4};
+  Graph graph(5);
+  LayerExample a1(0, 1);
+  LayerExample a2(1, 2);
+  LayerExample a3(2, 1);
+  LayerExample a4(3, 2);
+  graph.setInput(a1, vec);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
+  ASSERT_EQ(graph.areLayerNext(a1, a3), 0);
+}
+TEST(graph, check_connection_when_not_connection2) {
+  const std::vector<int> vec = {1, 2, 3, 4};
+  Graph graph(5);
+  LayerExample a1(0, 1);
+  LayerExample a2(1, 2);
+  LayerExample a3(2, 1);
+  LayerExample a4(3, 2);
+  graph.setInput(a1, vec);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
+  ASSERT_EQ(graph.areLayerNext(a1, a1), 0);
+}
+TEST(graph, check_connection_when_not_connection3) {
+  const std::vector<int> vec = {1, 2, 3, 4};
+  Graph graph(5);
+  LayerExample a1(0, 1);
+  LayerExample a2(1, 2);
+  LayerExample a3(2, 1);
+  LayerExample a4(3, 2);
+  graph.setInput(a1, vec);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a1, a4);
+  ASSERT_EQ(graph.areLayerNext(a2, a4), 0);
 }
 
 // ==========================
