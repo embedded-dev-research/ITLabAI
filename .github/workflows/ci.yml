@@ -22,7 +22,23 @@ jobs:
         cmake --build build
     - name: Test
       run: |
-        cmake --build build -t test
+        CTEST_OUTPUT_ON_FAILURE=1 cmake --build build -t test
+  build-linux-clang:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - name: Install prerequisites
+      run: |
+        sudo apt install clang libomp-dev
+    - name: Build
+      run: |
+        cmake -S . -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+        cmake --build build
+    - name: Test
+      run: |
+        CTEST_OUTPUT_ON_FAILURE=1 cmake --build build -t test
   build-macos:
     runs-on: macos-latest
     steps:
@@ -41,7 +57,7 @@ jobs:
         cmake --build build
     - name: Test
       run: |
-        cmake --build build -t test
+        CTEST_OUTPUT_ON_FAILURE=1 cmake --build build -t test
   build-windows:
     runs-on: windows-latest
     steps:
@@ -55,4 +71,4 @@ jobs:
     - name: Test
       run: |
         cd build
-        ctest
+        ctest --output-on-failure

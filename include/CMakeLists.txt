@@ -1,2 +1,4 @@
 add_subdirectory(perf)
 set(PERF_HEADERS "${PERF_HEADERS}" PARENT_SCOPE)
+add_subdirectory(layers)
+set(LAYERS_HEADERS "${LAYERS_HEADERS}" PARENT_SCOPE)
