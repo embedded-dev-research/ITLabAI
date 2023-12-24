@@ -338,28 +338,23 @@ TEST(accuracy, accuracy_norm_throws_when_bad_pointer) {
 // Throughput tests
 
 template <typename T>
-std::vector<std::vector<T> > matrix_sum(
-    const std::vector<std::vector<T> > &first,
-    const std::vector<std::vector<T> > &second) {
-  std::vector<std::vector<T> > sum = first;
+std::vector<T> matrix_sum(const std::vector<T> &first,
+                                        const std::vector<T> &second) {
+  std::vector<T> res(first);
   for (size_t i = 0; i < first.size(); i++) {
-    for (size_t j = 0; j < first.size(); j++) {
-      sum[i][j] = sum[i][j] + second[i][j];
-    }
+    res[i] += second[i];
   }
-  return sum;
+  return res;
 }
 
 template <typename T>
-std::vector<std::vector<T> > matrix_mul(
-    const std::vector<std::vector<T> > &first,
-    const std::vector<std::vector<T> > &second) {
-  std::vector<std::vector<T> > mul(first.size(),
-                                   std::vector<T>(first.size(), T(0)));
-  for (size_t i = 0; i < first.size(); i++) {
-    for (size_t k = 0; k < first.size(); k++) {
-      for (size_t j = 0; j < first.size(); j++) {
-        mul[i][j] = mul[i][j] + first[i][k] * second[k][j];
+std::vector<T> matrix_mul(const size_t n, const std::vector<T> &first,
+    const std::vector<T> &second) {
+  std::vector<T> mul(n*n, T(0));
+  for (size_t i = 0; i < n; i++) {
+    for (size_t k = 0; k < n; k++) {
+      for (size_t j = 0; j < n; j++) {
+        mul[n*i+j] += first[n*i+k] * second[n*k+j];
       }
     }
   }
@@ -367,13 +362,15 @@ std::vector<std::vector<T> > matrix_mul(
 }
 
 TEST(throughput, matrix_operations_throughput_is_positive) {
-  size_t n = 200;
-  std::vector<std::vector<int> > a(n, std::vector<int>(n, 0));
-  std::vector<std::vector<int> > b(n, std::vector<int>(n, 0));
+  size_t n = 400;
+  std::vector<int> a(n*n);
+  std::vector<int> b(n*n);
+  size_t ptr = 0;
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < n; j++) {
-      a[i][j] = i + j;
-      b[i][j] = i - j;
+      a[ptr] = i + j;
+      b[ptr] = i - j;
+      ptr++;
     }
   }
   double tp;
@@ -385,7 +382,7 @@ TEST(throughput, matrix_operations_throughput_is_positive) {
   EXPECT_GE(tp, 0);
   tp = throughput_omp_avg(50, matrix_sum<int>, a, b);
   EXPECT_GE(tp, 0);
-  tp = throughput<double, std::ratio<1, 1> >(matrix_mul<int>, a, b);
+  tp = throughput<double, std::ratio<1, 1> >(matrix_mul<int>, n, a, b);
   EXPECT_GE(tp, 0);
 }
 
