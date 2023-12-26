@@ -1,9 +1,3 @@
 [submodule "3rdparty/googletest"]
 	path = 3rdparty/googletest
 	url = https://github.com/google/googletest
-[submodule "3rdparty/opencv"]
-	path = 3rdparty/opencv
-	url = https://github.com/opencv/opencv
-[submodule "3rdpaty/opencv"]
-	path = 3rdpaty/opencv
-	url = https://github.com/opencv/opencv.git
