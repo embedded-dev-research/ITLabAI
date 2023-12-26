@@ -10,7 +10,7 @@ execute_process(
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/opencv/build"
 )
 set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/Reader_img.hpp")
-set(SRC_FILES "${CMAKE_SOURCE_DIR}/../itlab_2023/src/read/Reader_img.cpp")
+set(SRC_FILES "${CMAKE_SOURCE_DIR}/src/read/Reader_img.cpp")
 add_library(MyInclude STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 
 set_target_properties(MyInclude PROPERTIES LINKER_LANGUAGE CXX)
