@@ -17,6 +17,22 @@ TEST(basic, basic_test) {
   // Assert
   ASSERT_EQ(5, c);
 }
+TEST(bfs, check_result_vec) {
+  const std::vector<int> vec = {1, 2, 3, 4};
+  Graph graph(5);
+  LayerExample a1(0, 1);
+  LayerExample a2(1, 2);
+  LayerExample a3(2, 1);
+  LayerExample a4(3, 2);
+  graph.setInput(a1, vec);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a4);
+  graph.makeConnection(a1, a3);
+  graph.inference();
+  std::vector<int> vec1 = graph.getOutput();
+  const std::vector<int> vec2 = {4, 5, 6, 7};
+  ASSERT_EQ(vec1, vec2);
+}
 TEST(graph, check_connection) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);

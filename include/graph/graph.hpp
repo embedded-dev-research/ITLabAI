@@ -18,6 +18,11 @@ class LayerExample {
   LayerExample(int id1, int type1) : id_(id1), type_(type1) {}
   int checkID() const { return id_; }
   void In(const std::vector<int>& a) { primer_ = a; }
+  void Work() {
+    for (int i = 0; i < primer_.size(); ++i) {
+      primer_[i] += 1;
+    }
+  }
   std::vector<int> Out() { return primer_; }
 };
 
@@ -27,6 +32,7 @@ class Graph {
   std::vector<LayerExample> layers_;
   std::vector<int> arrayV_;
   std::vector<int> arrayE_;
+  std::vector<int> outvector_;
   int start_;
   int end_;
 
@@ -41,6 +47,7 @@ class Graph {
   void setInput(const LayerExample& lay, const std::vector<int>& vec) {
     layers_.push_back(lay);
     arrayV_.push_back(0);
+    outvector_ = vec;
     start_ = lay.checkID();
     V_++;
   }
@@ -68,4 +75,42 @@ class Graph {
     }
     return false;
   }
+  void inference() {
+    std::queue<int> q;
+    std::vector<bool> visited(V_, false);
+    std::vector<int> parent(V_, -1);
+    std::vector<int> traversal;
+    end_ = V_-1;
+    q.push(start_);
+    visited[start_] = true;
+    while (!q.empty()) {
+      int current = q.front();
+      q.pop();
+      if (current == end_) {
+        int node = current;
+        while (node != -1) {
+          traversal.push_back(node);
+          node = parent[node];
+        }
+        for (size_t i = 0; i < traversal.size() / 2; ++i) {
+          std::swap(traversal[i], traversal[traversal.size() - i - 1]);
+        }
+        break;
+      }
+      for (int ind = arrayV_[current]; ind < arrayV_[current + 1]; ind++) {
+        int neighbor = arrayE_[ind];
+        if (!visited[neighbor]) {
+          q.push(neighbor);
+          visited[neighbor] = true;
+          parent[neighbor] = current;
+        }
+      }
+    }
+    for (size_t i = 0; i < traversal.size(); ++i) {
+      layers_[traversal[i]].In(outvector_);
+      layers_[traversal[i]].Work();
+      outvector_ = layers_[traversal[i]].Out();
+    }
+  }
+  std::vector<int> getOutput() { return outvector_; }
 };
