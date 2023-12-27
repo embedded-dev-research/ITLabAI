@@ -80,7 +80,7 @@ class Graph {
     std::vector<bool> visited(V_, false);
     std::vector<int> parent(V_, -1);
     std::vector<int> traversal;
-    end_ = V_-1;
+    end_ = V_ - 1;
     q.push(start_);
     visited[start_] = true;
     while (!q.empty()) {
