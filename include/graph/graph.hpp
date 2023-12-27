@@ -19,8 +19,8 @@ class LayerExample {
   int checkID() const { return id_; }
   void In(const std::vector<int>& a) { primer_ = a; }
   void Work() {
-    for (int i = 0; i < primer_.size(); ++i) {
-      primer_[i] += 1;
+    for (int & i : primer_) {
+      i += 1;
     }
   }
   std::vector<int> Out() { return primer_; }
