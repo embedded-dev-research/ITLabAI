@@ -12,11 +12,10 @@
 template <typename DurationContainerType, typename DurationType, class Function,
           typename... Args>
 DurationContainerType elapsed_time(Function&& func, Args&&... args) {
-  auto chronotimer = std::chrono::high_resolution_clock();
   auto duration = std::chrono::duration<DurationContainerType, DurationType>();
-  auto start = chronotimer.now();
+  auto start = std::chrono::high_resolution_clock::now();
   func(args...);
-  auto end = chronotimer.now();
+  auto end = std::chrono::high_resolution_clock::now();
   duration = end - start;
   return duration.count();
 }
@@ -34,13 +33,12 @@ template <typename DurationContainerType, typename DurationType, class Function,
           typename... Args>
 DurationContainerType elapsed_time_avg(const size_t iters, Function&& func,
                                        Args&&... args) {
-  auto chronotimer = std::chrono::high_resolution_clock();
   auto duration = std::chrono::duration<DurationContainerType, DurationType>();
-  auto start = chronotimer.now();
+  auto start = std::chrono::high_resolution_clock::now();
   for (size_t i = 0; i < iters; i++) {
     func(args...);
   }
-  auto end = chronotimer.now();
+  auto end = std::chrono::high_resolution_clock::now();
   duration = (end - start) / iters;
   return duration.count();
 }
