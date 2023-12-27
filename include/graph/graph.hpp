@@ -106,10 +106,10 @@ class Graph {
         }
       }
     }
-    for (size_t i = 0; i < traversal.size(); ++i) {
-      layers_[traversal[i]].In(outvector_);
-      layers_[traversal[i]].Work();
-      outvector_ = layers_[traversal[i]].Out();
+    for (int i : traversal) {
+      layers_[i].In(outvector_);
+      layers_[i].Work();
+      outvector_ = layers_[i].Out();
     }
   }
   std::vector<int> getOutput() { return outvector_; }
