@@ -1,9 +1,9 @@
 #pragma once
+#include <algorithm>
 #include <queue>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 enum LayerType {
   kInput,

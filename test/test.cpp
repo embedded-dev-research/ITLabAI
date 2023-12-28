@@ -132,20 +132,20 @@ TEST(fclayer, throws_when_greater_input_size) {
   const std::vector<double> a2 = {0.1, 1.9};
   const std::vector<double> a3 = {0.0, 5.5};
   std::vector<std::vector<double> > weights = {a1, a2, a3};
-  std::vector<double> kInput = {2.0, 1.0, 0.0};
+  std::vector<double> input = {2.0, 1.0, 0.0};
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
-  ASSERT_ANY_THROW(layer.run(kInput));
+  ASSERT_ANY_THROW(layer.run(input));
 }
 TEST(fclayer, throws_when_less_input_size) {
   const std::vector<double> a1 = {2.0, 1.5};
   const std::vector<double> a2 = {0.1, 1.9};
   const std::vector<double> a3 = {0.0, 5.5};
   std::vector<std::vector<double> > weights = {a1, a2, a3};
-  std::vector<double> kInput = {2.0};
+  std::vector<double> input = {2.0};
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
-  ASSERT_ANY_THROW(layer.run(kInput));
+  ASSERT_ANY_THROW(layer.run(input));
 }
 
 TEST(fclayer, throws_when_empty_input) {
@@ -153,10 +153,10 @@ TEST(fclayer, throws_when_empty_input) {
   const std::vector<double> a2 = {0.1, 1.9};
   const std::vector<double> a3 = {0.0, 5.5};
   std::vector<std::vector<double> > weights = {a1, a2, a3};
-  std::vector<double> kInput;
+  std::vector<double> input;
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
-  ASSERT_ANY_THROW(layer.run(kInput));
+  ASSERT_ANY_THROW(layer.run(input));
 }
 TEST(fclayer, throws_when_empty_bias) {
   const std::vector<double> a1 = {2.0, 1.5};
