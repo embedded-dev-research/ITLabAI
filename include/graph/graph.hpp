@@ -3,15 +3,16 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 enum LayerType {
-  input,
-  pooling,
-  normalization,
-  dropout,
-  element_wise,
-  convolution,
-  fully_connected
+  kInput,
+  kPooling,
+  kNormalization,
+  kDropout,
+  kElementWise,
+  kConvolution,
+  kFullyConnected
 };
 
 class LayerExample {

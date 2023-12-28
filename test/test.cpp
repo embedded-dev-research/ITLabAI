@@ -20,10 +20,10 @@ TEST(basic, basic_test) {
 TEST(bfs, check_result_vec) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, input);
-  LayerExample a2(1, fully_connected);
-  LayerExample a3(2, fully_connected);
-  LayerExample a4(3, dropout);
+  LayerExample a1(0, kInput);
+  LayerExample a2(1, kFullyConnected);
+  LayerExample a3(2, kFullyConnected);
+  LayerExample a4(3, kDropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a4);
@@ -35,10 +35,10 @@ TEST(bfs, check_result_vec) {
 TEST(graph, check_connection) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, input);
-  LayerExample a2(1, fully_connected);
-  LayerExample a3(2, fully_connected);
-  LayerExample a4(3, dropout);
+  LayerExample a1(0, kInput);
+  LayerExample a2(1, kFullyConnected);
+  LayerExample a3(2, kFullyConnected);
+  LayerExample a4(3, kDropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -48,10 +48,10 @@ TEST(graph, check_connection) {
 TEST(graph, check_connection1) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, input);
-  LayerExample a2(1, fully_connected);
-  LayerExample a3(2, fully_connected);
-  LayerExample a4(3, dropout);
+  LayerExample a1(0, kInput);
+  LayerExample a2(1, kFullyConnected);
+  LayerExample a3(2, kFullyConnected);
+  LayerExample a4(3, kDropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -61,10 +61,10 @@ TEST(graph, check_connection1) {
 TEST(graph, check_connection_when_not_connection) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, input);
-  LayerExample a2(1, fully_connected);
-  LayerExample a3(2, fully_connected);
-  LayerExample a4(3, dropout);
+  LayerExample a1(0, kInput);
+  LayerExample a2(1, kFullyConnected);
+  LayerExample a3(2, kFullyConnected);
+  LayerExample a4(3, kDropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -74,10 +74,10 @@ TEST(graph, check_connection_when_not_connection) {
 TEST(graph, check_connection_when_not_connection2) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, input);
-  LayerExample a2(1, fully_connected);
-  LayerExample a3(2, fully_connected);
-  LayerExample a4(3, dropout);
+  LayerExample a1(0, kInput);
+  LayerExample a2(1, kFullyConnected);
+  LayerExample a3(2, kFullyConnected);
+  LayerExample a4(3, kDropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -87,10 +87,10 @@ TEST(graph, check_connection_when_not_connection2) {
 TEST(graph, check_connection_when_not_connection3) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, input);
-  LayerExample a2(1, fully_connected);
-  LayerExample a3(2, fully_connected);
-  LayerExample a4(3, dropout);
+  LayerExample a1(0, kInput);
+  LayerExample a2(1, kFullyConnected);
+  LayerExample a3(2, kFullyConnected);
+  LayerExample a4(3, kDropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -132,20 +132,20 @@ TEST(fclayer, throws_when_greater_input_size) {
   const std::vector<double> a2 = {0.1, 1.9};
   const std::vector<double> a3 = {0.0, 5.5};
   std::vector<std::vector<double> > weights = {a1, a2, a3};
-  std::vector<double> input = {2.0, 1.0, 0.0};
+  std::vector<double> kInput = {2.0, 1.0, 0.0};
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
-  ASSERT_ANY_THROW(layer.run(input));
+  ASSERT_ANY_THROW(layer.run(kInput));
 }
 TEST(fclayer, throws_when_less_input_size) {
   const std::vector<double> a1 = {2.0, 1.5};
   const std::vector<double> a2 = {0.1, 1.9};
   const std::vector<double> a3 = {0.0, 5.5};
   std::vector<std::vector<double> > weights = {a1, a2, a3};
-  std::vector<double> input = {2.0};
+  std::vector<double> kInput = {2.0};
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
-  ASSERT_ANY_THROW(layer.run(input));
+  ASSERT_ANY_THROW(layer.run(kInput));
 }
 
 TEST(fclayer, throws_when_empty_input) {
@@ -153,10 +153,10 @@ TEST(fclayer, throws_when_empty_input) {
   const std::vector<double> a2 = {0.1, 1.9};
   const std::vector<double> a3 = {0.0, 5.5};
   std::vector<std::vector<double> > weights = {a1, a2, a3};
-  std::vector<double> input;
+  std::vector<double> kInput;
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
-  ASSERT_ANY_THROW(layer.run(input));
+  ASSERT_ANY_THROW(layer.run(kInput));
 }
 TEST(fclayer, throws_when_empty_bias) {
   const std::vector<double> a1 = {2.0, 1.5};
