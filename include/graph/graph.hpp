@@ -4,6 +4,16 @@
 #include <string>
 #include <vector>
 
+enum LayerType {
+  input,
+  pooling,
+  normalization,
+  dropout,
+  element_wise,
+  convolution,
+  fully_connected
+};
+
 class LayerExample {
  private:
   int id_;
@@ -18,15 +28,7 @@ class LayerExample {
   LayerExample(int id1, LayerType type1) : id_(id1), type_(type1) {}
   int checkID() const { return id_; }
   void In(const std::vector<int>& a) { primer_ = a; }
-<<<<<<< HEAD
   void Work() {}
-=======
-  void Work() {
-    for (int& i : primer_) {
-      i += 1;
-    }
-  }
->>>>>>> 09d25dad48a3bd843c26e3776156d9ba13b5262a
   std::vector<int> Out() { return primer_; }
 };
 
