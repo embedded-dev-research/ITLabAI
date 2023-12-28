@@ -20,26 +20,25 @@ TEST(basic, basic_test) {
 TEST(bfs, check_result_vec) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, 1);
-  LayerExample a2(1, 2);
-  LayerExample a3(2, 1);
-  LayerExample a4(3, 2);
+  LayerExample a1(0, input);
+  LayerExample a2(1, fully_connected);
+  LayerExample a3(2, fully_connected);
+  LayerExample a4(3, dropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a4);
   graph.makeConnection(a1, a3);
   graph.inference();
   std::vector<int> vec1 = graph.getOutput();
-  const std::vector<int> vec2 = {4, 5, 6, 7};
-  ASSERT_EQ(vec1, vec2);
+  ASSERT_EQ(vec1, vec);
 }
 TEST(graph, check_connection) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, 1);
-  LayerExample a2(1, 2);
-  LayerExample a3(2, 1);
-  LayerExample a4(3, 2);
+  LayerExample a1(0, input);
+  LayerExample a2(1, fully_connected);
+  LayerExample a3(2, fully_connected);
+  LayerExample a4(3, dropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -49,10 +48,10 @@ TEST(graph, check_connection) {
 TEST(graph, check_connection1) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, 1);
-  LayerExample a2(1, 2);
-  LayerExample a3(2, 1);
-  LayerExample a4(3, 2);
+  LayerExample a1(0, input);
+  LayerExample a2(1, fully_connected);
+  LayerExample a3(2, fully_connected);
+  LayerExample a4(3, dropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -62,10 +61,10 @@ TEST(graph, check_connection1) {
 TEST(graph, check_connection_when_not_connection) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, 1);
-  LayerExample a2(1, 2);
-  LayerExample a3(2, 1);
-  LayerExample a4(3, 2);
+  LayerExample a1(0, input);
+  LayerExample a2(1, fully_connected);
+  LayerExample a3(2, fully_connected);
+  LayerExample a4(3, dropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -75,10 +74,10 @@ TEST(graph, check_connection_when_not_connection) {
 TEST(graph, check_connection_when_not_connection2) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, 1);
-  LayerExample a2(1, 2);
-  LayerExample a3(2, 1);
-  LayerExample a4(3, 2);
+  LayerExample a1(0, input);
+  LayerExample a2(1, fully_connected);
+  LayerExample a3(2, fully_connected);
+  LayerExample a4(3, dropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -88,10 +87,10 @@ TEST(graph, check_connection_when_not_connection2) {
 TEST(graph, check_connection_when_not_connection3) {
   const std::vector<int> vec = {1, 2, 3, 4};
   Graph graph(5);
-  LayerExample a1(0, 1);
-  LayerExample a2(1, 2);
-  LayerExample a3(2, 1);
-  LayerExample a4(3, 2);
+  LayerExample a1(0, input);
+  LayerExample a2(1, fully_connected);
+  LayerExample a3(2, fully_connected);
+  LayerExample a4(3, dropout);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
