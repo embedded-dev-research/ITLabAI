@@ -4,16 +4,6 @@
 #include <string>
 #include <vector>
 
-enum LayerType {
-  input,
-  pooling,
-  normalization,
-  dropout,
-  element_wise,
-  convolution,
-  fully_connected
-};
-
 class LayerExample {
  private:
   int id_;
@@ -28,7 +18,15 @@ class LayerExample {
   LayerExample(int id1, LayerType type1) : id_(id1), type_(type1) {}
   int checkID() const { return id_; }
   void In(const std::vector<int>& a) { primer_ = a; }
+<<<<<<< HEAD
   void Work() {}
+=======
+  void Work() {
+    for (int& i : primer_) {
+      i += 1;
+    }
+  }
+>>>>>>> 09d25dad48a3bd843c26e3776156d9ba13b5262a
   std::vector<int> Out() { return primer_; }
 };
 
@@ -110,10 +108,10 @@ class Graph {
         }
       }
     }
-    for (size_t i = 0; i < traversal.size(); ++i) {
-      layers_[traversal[i]].In(outvector_);
-      layers_[traversal[i]].Work();
-      outvector_ = layers_[traversal[i]].Out();
+    for (int i : traversal) {
+      layers_[i].In(outvector_);
+      layers_[i].Work();
+      outvector_ = layers_[i].Out();
     }
   }
   std::vector<int> getOutput() { return outvector_; }
