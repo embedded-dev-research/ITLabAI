@@ -1,14 +1,9 @@
-﻿#include "Reader_img.hpp"
-using namespace std;
-using namespace cv;
-
-void read(std::string path)
-{
+﻿#include "reader_img.hpp"
+void read(std::string path) {
   Mat image = imread(path);
-  if (image.empty())
-  {
-	throw "Could not open or find the image";
-	cin.get();
+  if (image.empty()) {
+    throw "Could not open or find the image";
+    cin.get();
   }
   String windowName = "Image";
   namedWindow(windowName);
