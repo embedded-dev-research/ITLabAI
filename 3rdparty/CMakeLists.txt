@@ -1,2 +1,2 @@
 add_subdirectory(googletest)
-add_subdirectory(opencv)
+add_subdirectory(opencv_new)
