@@ -23,48 +23,48 @@ class Layer {
  public:
   virtual std::vector<ValueType> run(
       const std::vector<ValueType>& input) const = 0;
-  size_t get_input_size() const { return inputSize; }
-  size_t get_output_size() const { return outputSize; }
+  size_t get_input_size() const { return inputSize_; }
+  size_t get_output_size() const { return outputSize_; }
   // weights width x height
   std::pair<size_t, size_t> get_dims() const {
-    return std::pair<size_t, size_t>(outputSize, inputSize);
+    return std::pair<size_t, size_t>(outputSize_, inputSize_);
   }
 
  protected:
-  size_t inputSize;
-  size_t outputSize;
+  size_t inputSize_;
+  size_t outputSize_;
 };
 
 template <typename ValueType>
 class FCLayer : public Layer<ValueType> {
  public:
   FCLayer() : weights_(), bias_() {
-    this->inputSize = 0;
-    this->outputSize = 0;
+    this->inputSize_ = 0;
+    this->outputSize_ = 0;
   };
   FCLayer(const std::vector<std::vector<ValueType> >& input_weights,
           const std::vector<ValueType>& input_bias);
   FCLayer& operator=(const FCLayer& sec);
   void set_weight(size_t i, size_t j, const ValueType& value) {
-    if (i >= this->outputSize || j >= this->inputSize) {
+    if (i >= this->outputSize_ || j >= this->inputSize_) {
       throw std::out_of_range("Bad weight index for FCLayer");
     }
     weights_[i][j] = value;
   }
   ValueType get_weight(size_t i, size_t j) const {
-    if (i >= this->outputSize || j >= this->inputSize) {
+    if (i >= this->outputSize_ || j >= this->inputSize_) {
       throw std::out_of_range("Bad weight index for FCLayer");
     }
     return weights_[i][j];
   }
   void set_bias(size_t i, const ValueType& value) {
-    if (i >= this->outputSize) {
+    if (i >= this->outputSize_) {
       throw std::out_of_range("Bad bias index for FCLayer");
     }
     bias_[i] = value;
   }
   ValueType get_bias(size_t i) const {
-    if (i >= this->outputSize) {
+    if (i >= this->outputSize_) {
       throw std::out_of_range("Bad bias index for FCLayer");
     }
     return bias_[i];
@@ -87,24 +87,24 @@ FCLayer<ValueType>::FCLayer(
   if (input_weights.size() == 0) {
     throw std::invalid_argument("Empty weights for FCLayer");
   }
-  this->inputSize = input_weights[0].size();
-  this->outputSize = input_bias.size();
-  if (this->inputSize == 0 || this->outputSize == 0) {
+  this->inputSize_ = input_weights[0].size();
+  this->outputSize_ = input_bias.size();
+  if (this->inputSize_ == 0 || this->outputSize_ == 0) {
     throw std::invalid_argument("Bad weights/bias size for FCLayer");
   }
   // make weights isize x osize, filling empty with 0s
   for (size_t i = 0; i < weights_.size(); i++) {
-    weights_[i].resize(this->inputSize, ValueType(0));
+    weights_[i].resize(this->inputSize_, ValueType(0));
   }
-  const std::vector<ValueType> empty(this->inputSize, ValueType(0));
-  weights_.resize(this->outputSize, empty);
+  const std::vector<ValueType> empty(this->inputSize_, ValueType(0));
+  weights_.resize(this->outputSize_, empty);
   //
 }
 
 template <typename ValueType>
 FCLayer<ValueType>& FCLayer<ValueType>::operator=(const FCLayer& sec) {
-  this->inputSize = sec.inputSize;
-  this->outputSize = sec.outputSize;
+  this->inputSize_ = sec.inputSize_;
+  this->outputSize_ = sec.outputSize_;
   weights_ = sec.weights_;
   bias_ = sec.bias_;
   return *this;
@@ -113,14 +113,14 @@ FCLayer<ValueType>& FCLayer<ValueType>::operator=(const FCLayer& sec) {
 template <typename ValueType>
 std::vector<ValueType> FCLayer<ValueType>::run(
     const std::vector<ValueType>& input) const {
-  if (this->outputSize == 0 || this->inputSize == 0) {
+  if (this->outputSize_ == 0 || this->inputSize_ == 0) {
     throw std::runtime_error("FCLayer wasn't initialized normally");
   }
-  if (input.size() != this->inputSize) {
+  if (input.size() != this->inputSize_) {
     throw std::invalid_argument("Input size doesn't fit FCLayer");
   }
   std::vector<ValueType> output_values = mat_vec_mul(weights_, input);
-  for (size_t i = 0; i < this->outputSize; i++) {
+  for (size_t i = 0; i < this->outputSize_; i++) {
     output_values[i] += bias_[i];
   }
   return output_values;
