@@ -2,11 +2,11 @@
 #include <stdexcept>
 #include <vector>
 
-template<typename T>
+template <typename T>
 class Shape2D {
  public:
   Shape2D() : data_(), width_(), height_() {}
-  Shape2D(size_t height, size_t width = 1) : data_(width*height) {
+  Shape2D(size_t height, size_t width = 1) : data_(width * height) {
     this->width_ = width;
     this->height_ = height;
   }
@@ -16,12 +16,13 @@ class Shape2D {
     this->height_ = height;
     data_.resize(width_ * height_, T(0));
   }
-  Shape2D(const std::vector<T>& data) : data_(data), width_(1), height_(data.size()) {}
-  Shape2D(const Shape2D &c) : data_(c.data_) {
+  Shape2D(const std::vector<T>& data)
+      : data_(data), width_(1), height_(data.size()) {}
+  Shape2D(const Shape2D& c) : data_(c.data_) {
     this->width_ = c.width_;
     this->height_ = c.height_;
   }
-  Shape2D& operator=(const Shape2D &c) {
+  Shape2D& operator=(const Shape2D& c) {
     this->data_ = c.data_;
     this->width_ = c.width_;
     this->height_ = c.height_;
@@ -47,6 +48,7 @@ class Shape2D {
     this->height_ = height;
     data_.resize(width_ * height_, T(0));
   }
+
  private:
   std::vector<T> data_;
   size_t width_;
@@ -71,8 +73,7 @@ Shape2D<ValueType> mat_vec_mul(const Shape2D<ValueType>& mat,
 template <typename ValueType>
 class Layer {
  public:
-  virtual Shape2D<ValueType> run(
-      const Shape2D<ValueType>& input) const = 0;
+  virtual Shape2D<ValueType> run(const Shape2D<ValueType>& input) const = 0;
   size_t get_input_size() const { return inputSize_; }
   size_t get_output_size() const { return outputSize_; }
   // weights width x height
@@ -98,12 +99,8 @@ class FCLayer : public Layer<ValueType> {
   void set_weight(size_t i, size_t j, const ValueType& value) {
     weights_.set(i, j, value);
   }
-  ValueType get_weight(size_t i, size_t j) const {
-    return weights_.get(i, j);
-  }
-  void set_bias(size_t i, const ValueType& value) {
-    bias_.set(i, 0, value);
-  }
+  ValueType get_weight(size_t i, size_t j) const { return weights_.get(i, j); }
+  void set_bias(size_t i, const ValueType& value) { bias_.set(i, 0, value); }
   ValueType get_bias(size_t i) const { return bias_.get(i, 0); }
   Shape2D<ValueType> run(const Shape2D<ValueType>& input) const;
 
@@ -116,9 +113,8 @@ class FCLayer : public Layer<ValueType> {
 
 // constructor for FCLayer
 template <typename ValueType>
-FCLayer<ValueType>::FCLayer(
-    const Shape2D<ValueType>& input_weights,
-    const Shape2D<ValueType>& input_bias)
+FCLayer<ValueType>::FCLayer(const Shape2D<ValueType>& input_weights,
+                            const Shape2D<ValueType>& input_bias)
     : weights_(input_weights), bias_(input_bias) {
   if (input_weights.size() == 0) {
     throw std::invalid_argument("Empty weights for FCLayer");
