@@ -88,95 +88,81 @@ TEST(graph, check_connection_when_not_connection3) {
 // Fully Connected layer
 
 TEST(fclayer, calculates_correctly1) {
-  const std::vector<double> a1 = {2.0, 1.5};
-  const std::vector<double> a2 = {0.1, 1.9};
-  const std::vector<double> a3 = {0.0, 5.5};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape2D<double> weights(3, 2, a1);
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
-  std::vector<double> output = layer.run({1, 2});
-  EXPECT_NEAR(output[0], 5.5, 1e-5);
-  EXPECT_NEAR(output[1], 4.4, 1e-5);
-  EXPECT_NEAR(output[2], 12.0, 1e-5);
+  std::vector<double> input = {1, 2};
+  Shape2D<double> output = layer.run(input);
+  EXPECT_NEAR(output.get(0), 5.5, 1e-5);
+  EXPECT_NEAR(output.get(1), 4.4, 1e-5);
+  EXPECT_NEAR(output.get(2), 12.0, 1e-5);
 }
 
 TEST(fclayer, calculates_correctly2) {
-  const std::vector<double> a1 = {2.0, 1.5};
-  const std::vector<double> a2 = {0.1, 1.9};
-  const std::vector<double> a3 = {0.0, 5.5};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape2D<double> weights(3, 2, a1);
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
-  std::vector<double> output = layer.run({0.5, 0.0});
-  EXPECT_NEAR(output[0], 1.5, 1e-5);
-  EXPECT_NEAR(output[1], 0.55, 1e-5);
-  EXPECT_NEAR(output[2], 1.0, 1e-5);
+  std::vector<double> input = {0.5, 0.0};
+  Shape2D<double> output = layer.run(input);
+  EXPECT_NEAR(output.get(0), 1.5, 1e-5);
+  EXPECT_NEAR(output.get(1), 0.55, 1e-5);
+  EXPECT_NEAR(output.get(2), 1.0, 1e-5);
 }
 
 TEST(fclayer, throws_when_greater_input_size) {
-  const std::vector<double> a1 = {2.0, 1.5};
-  const std::vector<double> a2 = {0.1, 1.9};
-  const std::vector<double> a3 = {0.0, 5.5};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
-  std::vector<double> input = {2.0, 1.0, 0.0};
+  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape2D<double> weights(3, 2, a1);
   std::vector<double> bias = {0.5, 0.5, 1.0};
+  std::vector<double> input = {2.0, 1.0, 0.0};
   FCLayer<double> layer(weights, bias);
   ASSERT_ANY_THROW(layer.run(input));
 }
 TEST(fclayer, throws_when_less_input_size) {
-  const std::vector<double> a1 = {2.0, 1.5};
-  const std::vector<double> a2 = {0.1, 1.9};
-  const std::vector<double> a3 = {0.0, 5.5};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
-  std::vector<double> input = {2.0};
+  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape2D<double> weights(3, 2, a1);
   std::vector<double> bias = {0.5, 0.5, 1.0};
+  std::vector<double> input = {2.0};
   FCLayer<double> layer(weights, bias);
   ASSERT_ANY_THROW(layer.run(input));
 }
 
 TEST(fclayer, throws_when_empty_input) {
-  const std::vector<double> a1 = {2.0, 1.5};
-  const std::vector<double> a2 = {0.1, 1.9};
-  const std::vector<double> a3 = {0.0, 5.5};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
-  std::vector<double> input;
+  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape2D<double> weights(3, 2, a1);
   std::vector<double> bias = {0.5, 0.5, 1.0};
+  std::vector<double> input;
   FCLayer<double> layer(weights, bias);
   ASSERT_ANY_THROW(layer.run(input));
 }
 TEST(fclayer, throws_when_empty_bias) {
-  const std::vector<double> a1 = {2.0, 1.5};
-  const std::vector<double> a2 = {0.1, 1.9};
-  const std::vector<double> a3 = {0.0, 5.5};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape2D<double> weights(3, 2, a1);
   std::vector<double> bias;
   ASSERT_ANY_THROW(FCLayer<double>(weights, bias));
 }
 
 TEST(fclayer, set_get_weight_is_correct) {
-  const std::vector<double> a1 = {2.0, 1.5, 3.5};
-  const std::vector<double> a2 = {0.1, 1.9, 2.6};
-  const std::vector<double> a3 = {0.0, 5.5, 1.7};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape2D<double> weights(3, 2, a1);
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
-  for (size_t i = 0; i < weights.size(); i++) {
-    for (size_t j = 0; j < weights[0].size(); j++) {
-      EXPECT_NEAR(layer.get_weight(i, j), weights[i][j], 1e-5);
+  for (size_t i = 0; i < weights.get_height(); i++) {
+    for (size_t j = 0; j < weights.get_width(); j++) {
+      EXPECT_NEAR(layer.get_weight(i, j), weights.get(i, j), 1e-5);
     }
   }
-  for (size_t i = 0; i < weights.size(); i++) {
-    for (size_t j = 0; j < weights[0].size(); j++) {
+  for (size_t i = 0; i < weights.get_height(); i++) {
+    for (size_t j = 0; j < weights.get_width(); j++) {
       layer.set_weight(i, j, i + j);
       EXPECT_NEAR(layer.get_weight(i, j), i + j, 1e-5);
     }
   }
 }
 TEST(fclayer, set_get_bias_is_correct) {
-  const std::vector<double> a1 = {2.0, 1.5};
-  const std::vector<double> a2 = {0.1, 1.9};
-  const std::vector<double> a3 = {0.0, 5.5};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape2D<double> weights(3, 2, a1);
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
   for (size_t i = 0; i < bias.size(); i++) {
@@ -189,10 +175,8 @@ TEST(fclayer, set_get_bias_is_correct) {
 }
 
 TEST(fclayer, set_get_weight_throws_when_out_of_range) {
-  const std::vector<double> a1 = {2.0, 1.5, 3.5};
-  const std::vector<double> a2 = {0.1, 1.9, 2.6};
-  const std::vector<double> a3 = {0.0, 5.5, 1.7};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  const std::vector<double> a1 = {2.0, 1.5, 3.5, 0.1, 1.9, 2.6, 0.0, 5.5, 1.7};
+  Shape2D<double> weights(3, 3, a1);
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
   ASSERT_ANY_THROW(layer.get_weight(4, 0));
@@ -201,10 +185,8 @@ TEST(fclayer, set_get_weight_throws_when_out_of_range) {
   ASSERT_ANY_THROW(layer.set_weight(0, 4, 1.3));
 }
 TEST(fclayer, set_get_bias_throws_when_out_of_range) {
-  const std::vector<double> a1 = {2.0, 1.5, 3.5};
-  const std::vector<double> a2 = {0.1, 1.9, 2.6};
-  const std::vector<double> a3 = {0.0, 5.5, 1.7};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  const std::vector<double> a1 = {2.0, 1.5, 3.5, 0.1, 1.9, 2.6, 0.0, 5.5, 1.7};
+  Shape2D<double> weights(3, 3, a1);
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
   ASSERT_ANY_THROW(layer.get_bias(4));
@@ -212,10 +194,8 @@ TEST(fclayer, set_get_bias_throws_when_out_of_range) {
 }
 
 TEST(fclayer, get_dims_test1) {
-  const std::vector<double> a1 = {2.0, 1.5};
-  const std::vector<double> a2 = {0.1, 1.9};
-  const std::vector<double> a3 = {0.0, 5.5};
-  std::vector<std::vector<double> > weights = {a1, a2, a3};
+  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape2D<double> weights(3, 2, a1);
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayer<double> layer(weights, bias);
   EXPECT_EQ(layer.get_dims().first, 3);

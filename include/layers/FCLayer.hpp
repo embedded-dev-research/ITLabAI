@@ -2,18 +2,68 @@
 #include <stdexcept>
 #include <vector>
 
-template <typename ValueType>
-std::vector<ValueType> mat_vec_mul(
-    const std::vector<std::vector<ValueType> >& mat,
-    const std::vector<ValueType>& vec) {
-  std::vector<ValueType> res(mat.size());
-  ValueType elem;
-  for (size_t i = 0; i < mat.size(); i++) {
-    elem = ValueType(0);
-    for (size_t j = 0; j < vec.size(); j++) {
-      elem += mat[i][j] * vec[j];
+template<typename T>
+class Shape2D {
+ public:
+  Shape2D() : data_(), width_(), height_() {}
+  Shape2D(size_t height, size_t width = 1) : data_(width*height) {
+    this->width_ = width;
+    this->height_ = height;
+  }
+  Shape2D(size_t height, size_t width, const std::vector<T>& data)
+      : data_(data) {
+    this->width_ = width;
+    this->height_ = height;
+    data_.resize(width_ * height_, T(0));
+  }
+  Shape2D(const std::vector<T>& data) : data_(data), width_(1), height_(data.size()) {}
+  Shape2D(const Shape2D &c) : data_(c.data_) {
+    this->width_ = c.width_;
+    this->height_ = c.height_;
+  }
+  Shape2D& operator=(const Shape2D &c) {
+    this->data_ = c.data_;
+    this->width_ = c.width_;
+    this->height_ = c.height_;
+    return *this;
+  }
+  T get(size_t i, size_t j = 0) const {
+    if (i >= height_ || j >= width_) {
+      throw std::out_of_range("Bad shape index");
     }
-    res[i] = elem;
+    return data_[i * width_ + j];
+  }
+  void set(size_t i, size_t j, const T& value) {
+    if (i >= height_ || j >= width_) {
+      throw std::out_of_range("Bad shape index");
+    }
+    data_[i * width_ + j] = value;
+  }
+  size_t get_width() const { return width_; }
+  size_t get_height() const { return height_; }
+  size_t size() const { return width_ * height_; }
+  void resize(size_t height, size_t width) {
+    this->width_ = width;
+    this->height_ = height;
+    data_.resize(width_ * height_, T(0));
+  }
+ private:
+  std::vector<T> data_;
+  size_t width_;
+  size_t height_;
+};
+
+template <typename ValueType>
+Shape2D<ValueType> mat_vec_mul(const Shape2D<ValueType>& mat,
+                               const Shape2D<ValueType>& vec) {
+  Shape2D<ValueType> res(mat.get_height());
+  ValueType elem;
+  for (size_t i = 0; i < mat.get_height(); i++) {
+    elem = ValueType(0);
+    for (size_t j = 0; j < vec.get_height(); j++) {
+      elem += mat.get(i, j) * vec.get(j, 0);
+    }
+    res.set(i, 0, elem);
   }
   return res;
 }
@@ -21,8 +71,8 @@ std::vector<ValueType> mat_vec_mul(
 template <typename ValueType>
 class Layer {
  public:
-  virtual std::vector<ValueType> run(
-      const std::vector<ValueType>& input) const = 0;
+  virtual Shape2D<ValueType> run(
+      const Shape2D<ValueType>& input) const = 0;
   size_t get_input_size() const { return inputSize_; }
   size_t get_output_size() const { return outputSize_; }
   // weights width x height
@@ -42,38 +92,24 @@ class FCLayer : public Layer<ValueType> {
     this->inputSize_ = 0;
     this->outputSize_ = 0;
   };
-  FCLayer(const std::vector<std::vector<ValueType> >& input_weights,
-          const std::vector<ValueType>& input_bias);
+  FCLayer(const Shape2D<ValueType>& input_weights,
+          const Shape2D<ValueType>& input_bias);
   FCLayer& operator=(const FCLayer& sec);
   void set_weight(size_t i, size_t j, const ValueType& value) {
-    if (i >= this->outputSize_ || j >= this->inputSize_) {
-      throw std::out_of_range("Bad weight index for FCLayer");
-    }
-    weights_[i][j] = value;
+    weights_.set(i, j, value);
   }
   ValueType get_weight(size_t i, size_t j) const {
-    if (i >= this->outputSize_ || j >= this->inputSize_) {
-      throw std::out_of_range("Bad weight index for FCLayer");
-    }
-    return weights_[i][j];
+    return weights_.get(i, j);
   }
   void set_bias(size_t i, const ValueType& value) {
-    if (i >= this->outputSize_) {
-      throw std::out_of_range("Bad bias index for FCLayer");
-    }
-    bias_[i] = value;
+    bias_.set(i, 0, value);
   }
-  ValueType get_bias(size_t i) const {
-    if (i >= this->outputSize_) {
-      throw std::out_of_range("Bad bias index for FCLayer");
-    }
-    return bias_[i];
-  }
-  std::vector<ValueType> run(const std::vector<ValueType>& input) const;
+  ValueType get_bias(size_t i) const { return bias_.get(i, 0); }
+  Shape2D<ValueType> run(const Shape2D<ValueType>& input) const;
 
  private:
-  std::vector<std::vector<ValueType> > weights_;
-  std::vector<ValueType> bias_;
+  Shape2D<ValueType> weights_;
+  Shape2D<ValueType> bias_;
 };
 
 // weights * inputValues + bias = outputValues
@@ -81,23 +117,19 @@ class FCLayer : public Layer<ValueType> {
 // constructor for FCLayer
 template <typename ValueType>
 FCLayer<ValueType>::FCLayer(
-    const std::vector<std::vector<ValueType> >& input_weights,
-    const std::vector<ValueType>& input_bias)
+    const Shape2D<ValueType>& input_weights,
+    const Shape2D<ValueType>& input_bias)
     : weights_(input_weights), bias_(input_bias) {
   if (input_weights.size() == 0) {
     throw std::invalid_argument("Empty weights for FCLayer");
   }
-  this->inputSize_ = input_weights[0].size();
-  this->outputSize_ = input_bias.size();
+  this->inputSize_ = input_weights.get_width();
+  this->outputSize_ = input_bias.get_height();
   if (this->inputSize_ == 0 || this->outputSize_ == 0) {
     throw std::invalid_argument("Bad weights/bias size for FCLayer");
   }
   // make weights isize x osize, filling empty with 0s
-  for (size_t i = 0; i < weights_.size(); i++) {
-    weights_[i].resize(this->inputSize_, ValueType(0));
-  }
-  const std::vector<ValueType> empty(this->inputSize_, ValueType(0));
-  weights_.resize(this->outputSize_, empty);
+  weights_.resize(this->outputSize_, this->inputSize_);
   //
 }
 
@@ -111,17 +143,17 @@ FCLayer<ValueType>& FCLayer<ValueType>::operator=(const FCLayer& sec) {
 }
 
 template <typename ValueType>
-std::vector<ValueType> FCLayer<ValueType>::run(
-    const std::vector<ValueType>& input) const {
+Shape2D<ValueType> FCLayer<ValueType>::run(
+    const Shape2D<ValueType>& input) const {
   if (this->outputSize_ == 0 || this->inputSize_ == 0) {
     throw std::runtime_error("FCLayer wasn't initialized normally");
   }
-  if (input.size() != this->inputSize_) {
+  if (input.get_height() != this->inputSize_) {
     throw std::invalid_argument("Input size doesn't fit FCLayer");
   }
-  std::vector<ValueType> output_values = mat_vec_mul(weights_, input);
+  Shape2D<ValueType> output_values = mat_vec_mul(weights_, input);
   for (size_t i = 0; i < this->outputSize_; i++) {
-    output_values[i] += bias_[i];
+    output_values.set(i, 0, output_values.get(i, 0) + bias_.get(i, 0));
   }
   return output_values;
 }
