@@ -340,10 +340,9 @@ TEST(accuracy, accuracy_norm_throws_when_bad_pointer) {
 template <typename T>
 std::vector<T> matrix_sum(const std::vector<T> &first,
                           const std::vector<T> &second) {
-  std::vector<T> res(first);
-  for (size_t i = 0; i < first.size(); i++) {
-    res[i] += second[i];
-  }
+  std::vector<T> res(first.size());
+  std::transform(first.begin(), first.end(), second.begin(), res.begin(),
+                 std::plus<T>());
   return res;
 }
 
