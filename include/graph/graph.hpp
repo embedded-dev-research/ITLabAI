@@ -29,7 +29,7 @@ class LayerExample {
  public:
   LayerExample(LayerType type1) : type_(type1) {}
   int checkID() const { return id_; }
-  void giveID(int id1){ id_ = id1; }
+  void giveID(int id1) { id_ = id1; }
   void In(const std::vector<int>& a) { primer_ = a; }
   void Work() {}
   std::vector<int> Out() { return primer_; }
@@ -121,7 +121,7 @@ class Graph {
     }
     outvector_->assign(startvec_.begin(), startvec_.end());
   }
-  void setOutput(const LayerExample& lay, std::vector<int> &vec) {
+  void setOutput(const LayerExample& lay, std::vector<int>& vec) {
     end_ = lay.checkID();
     outvector_ = &vec;
   }
