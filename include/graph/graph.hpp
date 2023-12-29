@@ -12,7 +12,8 @@ enum LayerType {
   kDropout,
   kElementWise,
   kConvolution,
-  kFullyConnected
+  kFullyConnected,
+  kOutput
 };
 
 class LayerExample {
@@ -26,8 +27,9 @@ class LayerExample {
   std::vector<int> primer_;
 
  public:
-  LayerExample(int id1, LayerType type1) : id_(id1), type_(type1) {}
+  LayerExample(LayerType type1) : type_(type1) {}
   int checkID() const { return id_; }
+  void giveID(int id1){ id_=id1; }
   void In(const std::vector<int>& a) { primer_ = a; }
   void Work() {}
   std::vector<int> Out() { return primer_; }
@@ -39,7 +41,8 @@ class Graph {
   std::vector<LayerExample> layers_;
   std::vector<int> arrayV_;
   std::vector<int> arrayE_;
-  std::vector<int> outvector_;
+  std::vector<int> startvec_;
+  std::vector<int> *outvector_;
   int start_;
   int end_;
 
@@ -51,15 +54,17 @@ class Graph {
     arrayV_.push_back(0);
     V_ = 0;
   }
-  void setInput(const LayerExample& lay, const std::vector<int>& vec) {
+  void setInput(LayerExample& lay, const std::vector<int>& vec) {
+    lay.giveID(0);
     layers_.push_back(lay);
     arrayV_.push_back(0);
-    outvector_ = vec;
+    startvec_ = vec;
     start_ = lay.checkID();
     V_++;
   }
   void makeConnection(const LayerExample& layPrev,
-                      const LayerExample& layNext) {
+                      LayerExample& layNext) {
+    layNext.giveID(V_);
     layers_.push_back(layNext);
     arrayV_[V_] = arrayV_[V_ - 1];
     arrayV_.push_back(arrayE_.size());
@@ -87,7 +92,6 @@ class Graph {
     std::vector<bool> visited(V_, false);
     std::vector<int> parent(V_, -1);
     std::vector<int> traversal;
-    end_ = V_ - 1;
     q.push(start_);
     visited[start_] = true;
     while (!q.empty()) {
@@ -112,10 +116,14 @@ class Graph {
       }
     }
     for (int i : traversal) {
-      layers_[i].In(outvector_);
+      layers_[i].In(startvec_);
       layers_[i].Work();
-      outvector_ = layers_[i].Out();
+      startvec_ = layers_[i].Out();
     }
+    outvector_->assign(startvec_.begin(), startvec_.end());
   }
-  std::vector<int> getOutput() { return outvector_; }
+  void setOutput(const LayerExample& lay,std::vector<int> &vec) {
+    end_ = lay.checkID();
+    outvector_ = &vec;
+  }
 };
