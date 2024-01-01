@@ -1,12 +1,13 @@
 #pragma once
 #include <algorithm>
+#include <initializer_list>
 #include <numeric>
 #include <stdexcept>
 #include <vector>
 
 class Shape {
  public:
-  Shape() {}
+  Shape() = default;
   Shape(size_t dims_count) : dims_(dims_count, 0) {}
   Shape(const std::vector<size_t>& dims) : dims_(dims) {}
   Shape(const Shape& c) = default;
