@@ -128,8 +128,7 @@ template <typename ValueType>
 FCLayer<ValueType>::FCLayer(const std::vector<ValueType>& input_weights,
                             const Shape& input_weights_shape,
                             const std::vector<ValueType>& input_bias)
-    : weights_(input_weights),
-      bias_(input_bias) {
+    : weights_(input_weights), bias_(input_bias) {
   this->inputShape_ = Shape(1);
   this->outputShape_ = Shape(1);
   if (input_weights.empty()) {
@@ -168,7 +167,8 @@ std::vector<ValueType> FCLayer<ValueType>::run(
     throw std::invalid_argument("Input size doesn't fit FCLayer");
   }
   Shape cur_w_shape({this->outputShape_[0], this->inputShape_[0]});
-  std::vector<ValueType> output_values = mat_vec_mul(weights_, cur_w_shape, input, this->inputShape_);
+  std::vector<ValueType> output_values =
+      mat_vec_mul(weights_, cur_w_shape, input, this->inputShape_);
   std::transform(output_values.begin(), output_values.end(), bias_.begin(),
                  output_values.begin(), std::plus<ValueType>());
   return output_values;
