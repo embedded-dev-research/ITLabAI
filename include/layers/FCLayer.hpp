@@ -42,13 +42,12 @@ class Shape {
 template <typename ValueType>
 std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
                                    const Shape& mat_shape,
-                                   const std::vector<ValueType>& vec,
-                                   const Shape& vec_shape) {
+                                   const std::vector<ValueType>& vec) {
   if (mat_shape.dims() != 2) {
     throw std::invalid_argument("Not a matrix in argument");
   }
-  if (vec_shape.dims() != 1) {
-    throw std::invalid_argument("Not a vector in argument");
+  if (vec.size() != mat_shape[1]) {
+    throw std::invalid_argument("Bad vector size");
   }
   Shape res_shape(1);
   res_shape[0] = mat_shape[0];
@@ -56,7 +55,7 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
   ValueType elem;
   for (size_t i = 0; i < mat_shape[0]; i++) {
     elem = ValueType(0);
-    for (size_t j = 0; j < vec_shape[0]; j++) {
+    for (size_t j = 0; j < mat_shape[1]; j++) {
       elem += mat[i * mat_shape[1] + j] * vec[j];
     }
     res[i] = elem;
@@ -167,7 +166,7 @@ std::vector<ValueType> FCLayer<ValueType>::run(
   }
   Shape cur_w_shape({this->outputShape_[0], this->inputShape_[0]});
   std::vector<ValueType> output_values =
-      mat_vec_mul(weights_, cur_w_shape, input, this->inputShape_);
+      mat_vec_mul(weights_, cur_w_shape, input);
   std::transform(output_values.begin(), output_values.end(), bias_.begin(),
                  output_values.begin(), std::plus<ValueType>());
   return output_values;
