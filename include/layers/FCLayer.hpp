@@ -166,7 +166,7 @@ std::vector<ValueType> FCLayer<ValueType>::run(
   if (input.size() != this->inputShape_[0]) {
     throw std::invalid_argument("Input size doesn't fit FCLayer");
   }
-  Shape cur_w_shape({this->outputShape_[0], this->inputShape_[0]});
+  Shape cur_w_shape(std::vector<size_t>({this->outputShape_[0], this->inputShape_[0]}));
   std::vector<ValueType> output_values =
       mat_vec_mul(weights_, cur_w_shape, input, this->inputShape_);
   std::transform(output_values.begin(), output_values.end(), bias_.begin(),
