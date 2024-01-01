@@ -6,17 +6,14 @@
 
 class Shape {
  public:
-  Shape() : dims_() {}
+  Shape() {}
   Shape(size_t dims_count) : dims_(dims_count, 0) {}
   Shape(const std::vector<size_t>& dims) : dims_(dims) {}
-  Shape(const Shape& c) : dims_(c.dims_) {}
-  Shape& operator=(const Shape& c) {
-    this->dims_ = c.dims_;
-    return *this;
-  }
-  const size_t operator[](size_t i) const { return dims_[i]; }
+  Shape(const Shape& c) = default;
+  Shape& operator=(const Shape& c) = default;
+  size_t operator[](size_t i) const { return dims_[i]; }
   size_t& operator[](size_t i) { return dims_[i]; }
-  const size_t at(size_t i) const {
+  size_t at(size_t i) const {
     if (i >= dims_.size()) {
       throw std::out_of_range("Bad shape index");
     }
@@ -28,10 +25,10 @@ class Shape {
     }
     return dims_[i];
   }
-  void resize(const std::vector<size_t> new_size) { dims_ = new_size; }
+  void resize(const std::vector<size_t>& new_size) { dims_ = new_size; }
   size_t count() const {
     return std::accumulate(dims_.begin(), dims_.end(), size_t(1),
-                           std::multiplies<size_t>());
+                           std::multiplies<>());
   }
   size_t dims() const { return dims_.size(); }
   size_t get_index(const std::vector<size_t>& coords) const;
@@ -166,7 +163,7 @@ std::vector<ValueType> FCLayer<ValueType>::run(
   if (input.size() != this->inputShape_[0]) {
     throw std::invalid_argument("Input size doesn't fit FCLayer");
   }
-  Shape cur_w_shape = {this->outputShape_[0], this->inputShape_[0]};
+  Shape cur_w_shape({this->outputShape_[0], this->inputShape_[0]});
   std::vector<ValueType> output_values =
       mat_vec_mul(weights_, cur_w_shape, input, this->inputShape_);
   std::transform(output_values.begin(), output_values.end(), bias_.begin(),

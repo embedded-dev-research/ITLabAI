@@ -9,7 +9,7 @@ size_t Shape::get_index(const std::vector<size_t>& coords) const {
   for (size_t i = 0; i < coords.size(); i++) {
     // to get to the i line
     mulbuf = std::accumulate(dims_.begin() + (i + 1), dims_.end(), size_t(1),
-                             std::multiplies<size_t>());
+                             std::multiplies<>());
     if (coords[i] >= dims_[i]) {
       throw std::out_of_range("Out of shape");
     }
