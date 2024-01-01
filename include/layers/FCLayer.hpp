@@ -91,25 +91,25 @@ class FCLayer : public Layer<ValueType> {
           const std::vector<ValueType>& input_bias);
   FCLayer& operator=(const FCLayer& sec);
   void set_weight(size_t i, size_t j, const ValueType& value) {
-    if (i >= outputShape_[0] || j >= inputShape_[0]) {
+    if (i >= this->outputShape_[0] || j >= this->inputShape_[0]) {
       throw std::out_of_range("Invalid weight index");
     }
-    weights_[i * inputShape_[0] + j] = value;
+    weights_[i * this->inputShape_[0] + j] = value;
   }
   ValueType get_weight(size_t i, size_t j) const {
-    if (i >= outputShape_[0] || j >= inputShape_[0]) {
+    if (i >= this->outputShape_[0] || j >= this->inputShape_[0]) {
       throw std::out_of_range("Invalid weight index");
     }
-    return weights_[i * inputShape_[0] + j];
+    return weights_[i * this->inputShape_[0] + j];
   }
   void set_bias(size_t i, const ValueType& value) {
-    if (i >= outputShape_[0]) {
+    if (i >= this->outputShape_[0]) {
       throw std::out_of_range("Invalid bias index");
     }
     bias_[i] = value;
   }
   ValueType get_bias(size_t i) const {
-    if (i >= outputShape_[0]) {
+    if (i >= this->outputShape_[0]) {
       throw std::out_of_range("Invalid bias index");
     }
     return bias_[i];
