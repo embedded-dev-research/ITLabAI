@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <vector>
 
+// height -> width -> other dims
 class Shape {
  public:
   Shape() = default;
@@ -13,17 +14,17 @@ class Shape {
   Shape(const std::initializer_list<size_t>& l) : dims_(l) {}
   Shape(const Shape& c) = default;
   Shape& operator=(const Shape& c) = default;
-  size_t operator[](size_t i) const { return dims_[i]; }
-  size_t& operator[](size_t i) { return dims_[i]; }
+  size_t operator[](size_t i) const noexcept { return dims_[i]; }
+  size_t& operator[](size_t i) noexcept { return dims_[i]; }
   size_t at(size_t i) const {
     if (i >= dims_.size()) {
-      throw std::out_of_range("Bad shape index");
+      throw std::out_of_range("Invalid shape index");
     }
     return dims_[i];
   }
   size_t& at(size_t i) {
     if (i >= dims_.size()) {
-      throw std::out_of_range("Bad shape index");
+      throw std::out_of_range("Invalid shape index");
     }
     return dims_[i];
   }
@@ -32,7 +33,7 @@ class Shape {
     return std::accumulate(dims_.begin(), dims_.end(), size_t(1),
                            std::multiplies<>());
   }
-  size_t dims() const { return dims_.size(); }
+  size_t dims() const noexcept { return dims_.size(); }
   size_t get_index(const std::vector<size_t>& coords) const;
 
  private:
@@ -47,7 +48,7 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
     throw std::invalid_argument("Not a matrix in argument");
   }
   if (vec.size() != mat_shape[1]) {
-    throw std::invalid_argument("Bad vector size");
+    throw std::invalid_argument("Invalid vector size");
   }
   Shape res_shape(1);
   res_shape[0] = mat_shape[0];
@@ -56,6 +57,7 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
   for (size_t i = 0; i < mat_shape[0]; i++) {
     elem = ValueType(0);
     for (size_t j = 0; j < mat_shape[1]; j++) {
+      // due to 1d indexing
       elem += mat[i * mat_shape[1] + j] * vec[j];
     }
     res[i] = elem;
@@ -134,12 +136,12 @@ FCLayer<ValueType>::FCLayer(const std::vector<ValueType>& input_weights,
   }
   if (input_weights_shape.dims() != 2 ||
       input_weights_shape[0] != input_bias.size()) {
-    throw std::invalid_argument("Weights shape error");
+    throw std::invalid_argument("Invalid weights shape");
   }
   this->inputShape_[0] = input_weights_shape[1];
   this->outputShape_[0] = input_bias.size();
   if (this->inputShape_[0] == 0 || this->outputShape_[0] == 0) {
-    throw std::invalid_argument("Bad weights/bias size for FCLayer");
+    throw std::invalid_argument("Invalid weights/bias size for FCLayer");
   }
   // make weights isize x osize, filling empty with 0s
   weights_.resize(input_weights_shape.count(), ValueType(0));
