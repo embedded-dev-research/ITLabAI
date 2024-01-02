@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <vector>
 
-// height -> width -> other dims
 class Shape {
  public:
   Shape() = default;
