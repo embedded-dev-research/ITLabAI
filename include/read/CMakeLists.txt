@@ -15,6 +15,6 @@ add_library(ReadLib STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 
 
 
-find_package( OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" )
+find_package( OpenCV CONFIG REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" )
 
-target_link_libraries( ReadLib ${OpenCV_LIBS} )
+target_link_libraries( ReadLib PRIVATE ${OpenCV_LIBS} )
