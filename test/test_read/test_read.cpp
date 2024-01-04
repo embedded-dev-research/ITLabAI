@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "reader_img.hpp"
+#include "read/reader_img.hpp"
 using namespace cv;
 TEST(Read_img, can_read_image) {
   ASSERT_NO_THROW(Mat image = imread("image.jpg"););
