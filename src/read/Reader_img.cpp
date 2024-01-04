@@ -1,8 +1,10 @@
 ﻿#include "reader_img.hpp"
+#include <stdexcept>
+using namespace cv;
 void read(std::string path) {
   Mat image = imread(path);
   if (image.empty()) {
-    throw "Could not open or find the image";
+    throw std::runtime_error("Could not open or find the image");
     cin.get();
   }
   String windowName = "Image";
