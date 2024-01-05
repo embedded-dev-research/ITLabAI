@@ -25,3 +25,9 @@ To build and run this project locally, follow these steps:
    Once the project is successfully built, open it in your preferred code editor.\
    *Note: Make sure you have CMake installed to build the project.*
 # Test Process
+   This project contains tests to verify functionality.
+   To test the project, the Google Test Framework is used as a submodule of the project.
+   ### Google Test Framework
+
+   Google Test is a powerful framework for unit testing in C++. In this project, Google Test is a submodule. When building the project, you have already       updated it, and it is ready for use.
+   ### Running tests
