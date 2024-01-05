@@ -14,16 +14,29 @@ To build and run this project locally, follow these steps:
    Navigate to the project directory and update the submodules:
    ```bash
    git submodule update --init --recursive
-3. **Build the project:**
-   Create a separate directory for building the project and compile it:
+3. **Configure the project:**
+   Create a separate directory for configure the project and compile it:
    ```bash
    mkdir build
    cd build
    cmake ..
     ```
-4. **Open in your code editor:**
-   Once the project is successfully built, open it in your preferred code editor.\
-   *Note: Make sure you have CMake installed to build the project.*
+    *Note: Make sure you have CMake installed to build the project.*
+4. **Build the project:**\
+   Next, to build the project, we will need to enter the command
+    ```bash
+   cmake --build . --config Debug
+    ```
+    If you want to build in a release, change the debug to release\
+5. **Run the project**
+   After building the project, you can find the executable file in the following path from the *build* folder
+   ```bash
+   cd bin\Debug
+    ```
+   and run the file
+    ```bash
+   Reader.exe
+    ```
 # Test Process
    This project contains tests to verify functionality.
    To test the project, the Google Test Framework is used as a submodule of the project.
