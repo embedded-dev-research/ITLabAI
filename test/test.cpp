@@ -1,10 +1,12 @@
 #include <algorithm>
+#include <cmath>
 #include <random>
 #include <thread>
 #include <vector>
 
 #include "graph/graph.hpp"
 #include "gtest/gtest.h"
+#include "layers/EWLayer.hpp"
 #include "layers/FCLayer.hpp"
 #include "perf/benchmarking.hpp"
 
@@ -234,6 +236,52 @@ TEST(fclayer, get_dims_throws_when_0dim) {
   FCLayer<double> layer;
   ASSERT_ANY_THROW(layer.get_dims().first.at(0));
   ASSERT_ANY_THROW(layer.get_dims().second.at(0));
+}
+
+// ==========================
+
+// ==========================
+// Element-wise layer tests
+
+template <typename T>
+T minus(const T &elem) {
+  return -elem;
+}
+
+template<typename T>
+T sin(const T &elem) {
+  return std::sin(elem);
+}
+
+TEST(ewlayer, works_with_minus) {
+  EWLayer<double> layer({2, 2}, minus<double>);
+  std::vector<double> input = {2.0, 3.9, 0.1, 2.3};
+  std::vector<double> converted_input = {-2.0, -3.9, -0.1, -2.3};
+  std::vector<double> output = layer.run(input);
+  for (size_t i = 0; i < 4; i++) {
+    EXPECT_NEAR(output[i], converted_input[i], 1e-5);
+  }
+}
+
+TEST(ewlayer, works_with_sin) {
+  EWLayer<double> layer({2, 2}, sin<double>);
+  std::vector<double> input = {2.0, 3.9, 0.1, 2.3};
+  std::vector<double> converted_input(4);
+  std::transform(input.begin(), input.end(), converted_input.begin(), sin<double>);
+  std::vector<double> output = layer.run(input);
+  for (size_t i = 0; i < 4; i++) {
+    EXPECT_NEAR(output[i], converted_input[i], 1e-5);
+  }
+}
+
+TEST(ewlayer, relu_test) {
+  EWLayer<double> layer({2, 2}, relu<double>);
+  std::vector<double> input = {1.0, -1.0, 2.0, -2.0};
+  std::vector<double> converted_input = {1.0, 0.0, 2.0, 0.0};
+  std::vector<double> output = layer.run(input);
+  for (size_t i = 0; i < 4; i++) {
+    EXPECT_NEAR(output[i], converted_input[i], 1e-5);
+  }
 }
 
 // ==========================
