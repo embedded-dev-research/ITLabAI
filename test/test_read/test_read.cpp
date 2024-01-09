@@ -9,4 +9,5 @@ TEST(Read_img, can_show_image) {
   String windowName = "Image";
   namedWindow(windowName);
   ASSERT_NO_THROW(imshow(windowName, image););
+  destroyWindow(windowName);
 }
