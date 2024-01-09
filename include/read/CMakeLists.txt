@@ -18,3 +18,13 @@ set_target_properties(ReadLib PROPERTIES LINKER_LANGUAGE CXX)
 find_package( OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 target_link_libraries( ReadLib ${OpenCV_LIBS} )
+
+#Скачиваем изображение
+file(DOWNLOAD
+    "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
+    "${CMAKE_CURRENT_BINARY_DIR}/image.jpg"
+    SHOW_PROGRESS
+    #EXPECTED_HASH SHA256=expected_hash_value
+    STATUS status_code
+    LOG log_file
+)
