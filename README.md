@@ -44,3 +44,12 @@ To build and run this project locally, follow these steps:
 
    Google Test is a powerful framework for unit testing in C++. In this project, Google Test is a submodule. When building the project, you have already       updated it, and it is ready for use.
    ### Running tests
+   To start the testing process locally, you need to go to the directory
+   ```bash
+   cd bin\Debug
+   ```
+   and run the following files:
+   ```bash
+   run_test.exe
+   run_test_read.exe
+   ```
