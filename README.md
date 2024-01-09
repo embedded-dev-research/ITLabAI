@@ -4,7 +4,7 @@
 # Name
 ## Short description ##
 # **Building a Project**
-To build and run this project locally, follow these steps:
+To build and run this project locally on Windows, follow these steps:
 
 1. **Clone the repository:**  
    Clone this repository to your local machine using the following command:
