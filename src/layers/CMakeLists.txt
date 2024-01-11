@@ -1,2 +1,2 @@
 file(GLOB_RECURSE layers_src *.cpp)
-set(LAYERS_SRC "${layers_src}" PARENT_SCOPE)
+add_library(layers_lib STATIC "${LAYERS_HEADERS}" "${layers_src}")
