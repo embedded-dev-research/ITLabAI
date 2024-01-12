@@ -29,4 +29,6 @@ file(DOWNLOAD
     LOG log_file
 )
 
+set(OpenCV_DLL_PATH "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin")  # Замените путем к фактической папке с .dll
+set_property(DIRECTORY APPEND PROPERTY ENVIRONMENT "PATH=${OpenCV_DLL_PATH}")
 
