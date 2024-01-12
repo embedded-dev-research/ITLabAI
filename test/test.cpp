@@ -248,12 +248,12 @@ T minus(const T &elem) {
   return -elem;
 }
 
-template<typename T>
+template <typename T>
 T sin(const T &elem) {
   return std::sin(elem);
 }
 
-template<typename T>
+template <typename T>
 T tanh(const T &elem) {
   return std::tanh(elem);
 }
