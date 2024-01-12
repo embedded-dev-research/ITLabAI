@@ -30,7 +30,7 @@ class EWLayer : public Layer<ValueType> {
 template <typename ValueType>
 std::vector<ValueType> EWLayer<ValueType>::run(
     const std::vector<ValueType>& input) const {
-  std::vector<ValueType> res(outputShape_.count());
+  std::vector<ValueType> res(this->outputShape_.count());
   std::transform(input.begin(), input.end(), res.begin(), unaryFunc_);
   return res;
 }
