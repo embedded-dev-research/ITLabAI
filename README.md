@@ -10,6 +10,7 @@ To build and run this project locally on Windows, follow these steps:
    Clone this repository to your local machine using the following command:
    ```bash
    git clone https://github.com/embedded-dev-research/itlab_2023.git
+   ```
 2. **Update submodules:**
    Navigate to the project directory and update the submodules:
    ```bash
