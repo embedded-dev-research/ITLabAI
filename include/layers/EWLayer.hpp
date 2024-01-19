@@ -3,21 +3,13 @@
 
 #include "layers/FCLayer.hpp"
 
-template <typename T>
-T relu(const T& value) {
-  if (value > T(0)) {
-    return value;
-  }
-  return T(0);
-}
-
 template <typename ValueType>
 class EWLayer : public Layer<ValueType> {
  public:
-  EWLayer(const Shape& inputShape, ValueType (*unaryFunc)(const ValueType&)) {
+  EWLayer(const Shape& shape, ValueType (*unaryFunc)(const ValueType&)) {
     unaryFunc_ = unaryFunc;
-    this->inputShape_ = inputShape;
-    this->outputShape_ = inputShape;
+    this->inputShape_ = shape;
+    this->outputShape_ = shape;
   }
   EWLayer(const EWLayer& c) = default;
   EWLayer& operator=(const EWLayer& c) = default;
