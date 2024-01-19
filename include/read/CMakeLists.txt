@@ -19,6 +19,11 @@ find_package( OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 target_link_libraries( ReadLib ${OpenCV_LIBS} )
 
+
+# Устанавливаем OpenCV в систему
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/include/opencv2" DESTINATION include)
+install(FILES ${OpenCV_LIBS} DESTINATION lib)
+
 #Скачиваем изображение
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
@@ -28,7 +33,4 @@ file(DOWNLOAD
     STATUS status_code
     LOG log_file
 )
-
-set(OpenCV_DLL_PATH "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin")  # Замените путем к фактической папке с .dll
-set_property(DIRECTORY APPEND PROPERTY ENVIRONMENT "PATH=${OpenCV_DLL_PATH}")
 
