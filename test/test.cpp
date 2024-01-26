@@ -239,35 +239,10 @@ TEST(fclayer, get_dims_throws_when_0dim) {
 }
 
 // ==========================
-
-// ==========================
 // Element-wise layer tests
 
-template <typename T>
-T minus(const T &elem) {
-  return -elem;
-}
-
-template <typename T>
-T sin(const T &elem) {
-  return std::sin(elem);
-}
-
-template <typename T>
-T tanh(const T &elem) {
-  return std::tanh(elem);
-}
-
-template <typename T>
-T relu(const T &value) {
-  if (value > T(0)) {
-    return value;
-  }
-  return T(0);
-}
-
 TEST(ewlayer, works_with_minus) {
-  EWLayer<double> layer({2, 2}, minus<double>);
+  EWLayer<double> layer({2, 2}, "minus");
   std::vector<double> input = {2.0, 3.9, 0.1, 2.3};
   std::vector<double> converted_input = {-2.0, -3.9, -0.1, -2.3};
   std::vector<double> output = layer.run(input);
@@ -277,7 +252,7 @@ TEST(ewlayer, works_with_minus) {
 }
 
 TEST(ewlayer, works_with_sin) {
-  EWLayer<double> layer({2, 2}, sin<double>);
+  EWLayer<double> layer({2, 2}, "sin");
   std::vector<double> input = {2.0, 3.9, 0.1, 2.3};
   std::vector<double> converted_input(4);
   std::transform(input.begin(), input.end(), converted_input.begin(),
@@ -289,7 +264,7 @@ TEST(ewlayer, works_with_sin) {
 }
 
 TEST(ewlayer, relu_test) {
-  EWLayer<double> layer({2, 2}, relu<double>);
+  EWLayer<double> layer({2, 2}, "relu");
   std::vector<double> input = {1.0, -1.0, 2.0, -2.0};
   std::vector<double> converted_input = {1.0, 0.0, 2.0, 0.0};
   std::vector<double> output = layer.run(input);
@@ -299,7 +274,7 @@ TEST(ewlayer, relu_test) {
 }
 
 TEST(ewlayer, tanh_test) {
-  EWLayer<double> layer({2, 2}, tanh<double>);
+  EWLayer<double> layer({2, 2}, "tanh");
   std::vector<double> input = {1.0, -1.0, 2.0, -2.0};
   std::vector<double> converted_input(4);
   std::transform(input.begin(), input.end(), converted_input.begin(),
@@ -309,8 +284,6 @@ TEST(ewlayer, tanh_test) {
     EXPECT_NEAR(output[i], converted_input[i], 1e-5);
   }
 }
-
-// ==========================
 
 // ==========================
 // Timer tests
@@ -383,8 +356,6 @@ TEST(timer, is_elapsed_time_omp_avg_returns_nearly_correct_time) {
   EXPECT_GE(res_time, 0.15);
   EXPECT_LE(res_time, 1.25);
 }
-
-// ==========================
 
 // ==========================
 // Accuracy tests
@@ -480,8 +451,6 @@ TEST(accuracy, accuracy_norm_throws_when_bad_pointer) {
   EXPECT_ANY_THROW(accuracy_norm<double>(b, a, 5));
   delete[] b;
 }
-
-// ==========================
 
 // ==========================
 // Throughput tests
@@ -581,5 +550,3 @@ TEST(throughput, matrix_operations_throughput_omp_avg_is_positive) {
   tp = throughput_omp_avg(10, matrix_mul<int>, n, a, b);
   EXPECT_GE(tp, 0);
 }
-
-// ==========================
