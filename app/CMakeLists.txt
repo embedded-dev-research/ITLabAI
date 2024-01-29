@@ -1,16 +1,12 @@
 add_executable(Reader reader_img.cpp)
 
 target_link_libraries(Reader ReadLib)
-
+if (WIN32)
 add_custom_command(TARGET Reader POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/Debug/"
         "${CMAKE_BINARY_DIR}/app/Debug/")
-
-add_custom_command(TARGET Reader POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/Debug/"
-        "${CMAKE_BINARY_DIR}/app/Release/")
+endif()
 
 #Скачиваем изображение
 file(DOWNLOAD
