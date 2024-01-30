@@ -133,7 +133,7 @@ template <typename ValueType>
 FCLayer<ValueType>::FCLayer(const std::vector<ValueType>& input_weights,
                             const Shape& input_weights_shape,
                             const std::vector<ValueType>& input_bias)
-    : weights_(input_weights), bias_(input_bias), Layer(1, 1) {
+    : weights_(input_weights), bias_(input_bias), Layer<ValueType>(1, 1) {
   if (input_weights.empty()) {
     throw std::invalid_argument("Empty weights for FCLayer");
   }

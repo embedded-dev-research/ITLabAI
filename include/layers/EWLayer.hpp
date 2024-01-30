@@ -43,7 +43,7 @@ class EWLayer : public Layer<ValueType> {
 
 template <typename ValueType>
 EWLayer<ValueType>::EWLayer(const Shape& shape, const std::string& function)
-    : Layer(shape, shape) {
+    : Layer<ValueType>(shape, shape) {
   if (function == "relu") {
     unaryFunc_ = relu<ValueType>;
   } else if (function == "tanh") {
