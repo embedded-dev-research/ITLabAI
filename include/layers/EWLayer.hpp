@@ -31,6 +31,7 @@ T relu(const T& value) {
 template <typename ValueType>
 class EWLayer : public Layer<ValueType> {
  public:
+  EWLayer() = delete;
   EWLayer(const Shape& shape, const std::string& function);
   EWLayer(const EWLayer& c) = default;
   EWLayer& operator=(const EWLayer& c) = default;
@@ -41,7 +42,8 @@ class EWLayer : public Layer<ValueType> {
 };
 
 template <typename ValueType>
-EWLayer<ValueType>::EWLayer(const Shape& shape, const std::string& function) {
+EWLayer<ValueType>::EWLayer(const Shape& shape, const std::string& function)
+    : Layer(shape, shape) {
   if (function == "relu") {
     unaryFunc_ = relu<ValueType>;
   } else if (function == "tanh") {
@@ -53,8 +55,6 @@ EWLayer<ValueType>::EWLayer(const Shape& shape, const std::string& function) {
   } else {
     throw std::invalid_argument("No such function for EWLayer");
   }
-  this->inputShape_ = shape;
-  this->outputShape_ = shape;
 }
 
 template <typename ValueType>

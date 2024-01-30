@@ -67,6 +67,11 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
 template <typename ValueType>
 class Layer {
  public:
+  Layer() = default;
+  Layer(const Shape& inputShape, const Shape& outputShape)
+      : inputShape_(inputShape), outputShape_(outputShape) {}
+  Layer(const Layer& c) = default;
+  Layer& operator=(const Layer& c) = default;
   virtual std::vector<ValueType> run(
       const std::vector<ValueType>& input) const = 0;
   Shape get_input_shape() const { return inputShape_; }
@@ -84,11 +89,12 @@ class Layer {
 template <typename ValueType>
 class FCLayer : public Layer<ValueType> {
  public:
-  FCLayer() : weights_(), bias_() {}
+  FCLayer() = delete;
   FCLayer(const std::vector<ValueType>& input_weights,
           const Shape& input_weights_shape,
           const std::vector<ValueType>& input_bias);
-  FCLayer& operator=(const FCLayer& sec);
+  FCLayer(const FCLayer& c) = default;
+  FCLayer& operator=(const FCLayer& sec) = default;
   void set_weight(size_t i, size_t j, const ValueType& value) {
     if (i >= this->outputShape_[0] || j >= this->inputShape_[0]) {
       throw std::out_of_range("Invalid weight index");
@@ -127,9 +133,7 @@ template <typename ValueType>
 FCLayer<ValueType>::FCLayer(const std::vector<ValueType>& input_weights,
                             const Shape& input_weights_shape,
                             const std::vector<ValueType>& input_bias)
-    : weights_(input_weights), bias_(input_bias) {
-  this->inputShape_ = Shape(1);
-  this->outputShape_ = Shape(1);
+    : weights_(input_weights), bias_(input_bias), Layer(1, 1) {
   if (input_weights.empty()) {
     throw std::invalid_argument("Empty weights for FCLayer");
   }
@@ -148,20 +152,8 @@ FCLayer<ValueType>::FCLayer(const std::vector<ValueType>& input_weights,
 }
 
 template <typename ValueType>
-FCLayer<ValueType>& FCLayer<ValueType>::operator=(const FCLayer& sec) {
-  this->inputShape_ = sec.inputShape_;
-  this->outputShape_ = sec.outputShape_;
-  weights_ = sec.weights_;
-  bias_ = sec.bias_;
-  return *this;
-}
-
-template <typename ValueType>
 std::vector<ValueType> FCLayer<ValueType>::run(
     const std::vector<ValueType>& input) const {
-  if (this->outputShape_[0] == 0 || this->inputShape_[0] == 0) {
-    throw std::runtime_error("FCLayer wasn't initialized normally");
-  }
   if (input.size() != this->inputShape_[0]) {
     throw std::invalid_argument("Input size doesn't fit FCLayer");
   }

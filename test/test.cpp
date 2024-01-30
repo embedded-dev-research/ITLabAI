@@ -231,11 +231,6 @@ TEST(fclayer, get_dims_returns_correctly) {
   EXPECT_EQ(layer.get_dims().first[0], 3);
   EXPECT_EQ(layer.get_dims().second[0], 2);
 }
-TEST(fclayer, get_dims_throws_when_0dim) {
-  FCLayer<double> layer;
-  ASSERT_ANY_THROW(layer.get_dims().first.at(0));
-  ASSERT_ANY_THROW(layer.get_dims().second.at(0));
-}
 
 // ==========================
 // Element-wise layer tests
