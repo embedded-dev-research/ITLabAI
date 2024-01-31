@@ -9,6 +9,8 @@ add_custom_command(TARGET run_test_read POST_BUILD
         "${CMAKE_BINARY_DIR}/test/test_read/Debug/")
 endif()
 
+install(TARGETS run_test_read DESTINATION bin)
+
 add_test(UnitTests ${CMAKE_CURRENT_BINARY_DIR}/run_test_read)
 
 #Скачиваем изображение
