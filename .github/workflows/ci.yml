@@ -18,12 +18,12 @@ jobs:
       with:
         submodules: true
 
-    - name: Cache CMake build
+     - name: Cache CMake build
       uses: actions/cache@v2
       with:
         path: |
           build
-        key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt') }}
+        key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt', '**/*.cpp', '**/*.h') }}
 
     - name: Install dependencies
       run: |
