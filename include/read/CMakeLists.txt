@@ -1,7 +1,7 @@
 # Создаем папку сборки для OpenCV
 file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build")
 
-if(UNIX AND NOT APPLE)
+if(UNIX)
 execute_process(
     COMMAND sudo apt-get update
     COMMAND sudo apt-get install -y libgtk2.0-dev pkg-config
