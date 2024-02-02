@@ -16,6 +16,11 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: true
+     - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk2.0-dev pkg-config
+        sudo apt-get install libcanberra-gtk-module
     - name: Build
       run: |
         cmake -S . -B build
