@@ -42,6 +42,8 @@ jobs:
       run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
     - name: Set display variable
       run: export DISPLAY=:99
+    - name: Delay before tests
+      run: sleep 3
 
     - name: Test
       run: cmake --build build -t test
