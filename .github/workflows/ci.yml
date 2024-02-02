@@ -20,6 +20,10 @@ jobs:
       run: |
         cmake -S . -B build
         cmake --build build
+    - name: Start Xvfb
+      run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+    - name: Set display variable
+      run: export DISPLAY=:99
     - name: Test
       run: |
         CTEST_OUTPUT_ON_FAILURE=1 cmake --build build -t test
