@@ -10,73 +10,122 @@ jobs:
     - uses: DoozyX/clang-format-lint-action@v0.15
       with:
         source: '.'
+
   build-linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
+
+    - name: Cache CMake build
+      uses: actions/cache@v2
+      with:
+        path: |
+          build
+        key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt') }}
+
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y libgtk2.0-dev pkg-config
         sudo apt-get install libcanberra-gtk-module
+
     - name: Build
       run: |
         cmake -S . -B build
         cmake --build build
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+
     - name: Start Xvfb
       run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
     - name: Set display variable
       run: export DISPLAY=:99
+
     - name: Test
-      run: |
-        CTEST_OUTPUT_ON_FAILURE=1 cmake --build build -t test
+      run: cmake --build build -t test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+
   build-linux-clang:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
+
+    - name: Cache CMake build
+      uses: actions/cache@v2
+      with:
+        path: |
+          build
+        key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt') }}
+
     - name: Install prerequisites
       run: |
         sudo apt install clang libomp-dev
+
     - name: Build
       run: |
         cmake -S . -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
         cmake --build build
+
     - name: Test
-      run: |
-        CTEST_OUTPUT_ON_FAILURE=1 cmake --build build -t test
+      run: cmake --build build -t test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+
   build-macos:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
+
+    - name: Cache CMake build
+      uses: actions/cache@v2
+      with:
+        path: |
+          build
+        key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt') }}
+
     - name: Install prerequisites
       run: |
         brew install libomp
         brew link libomp --overwrite --force
+
     - name: Build
       run: |
         cmake -S . -B build \
           -DCMAKE_C_FLAGS="-I$(brew --prefix)/opt/libomp/include" \
           -DCMAKE_CXX_FLAGS="-I$(brew --prefix)/opt/libomp/include"
         cmake --build build
+
     - name: Test
-      run: |
-        CTEST_OUTPUT_ON_FAILURE=1 cmake --build build -t test
+      run: cmake --build build -t test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+
   build-windows:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
+
+    - name: Cache CMake build
+      uses: actions/cache@v2
+      with:
+        path: |
+          build
+        key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt') }}
+
     - name: Build
       run: |
         cmake -S . -B build
         cmake --build build
+
     - name: Test
       run: |
         cd build
