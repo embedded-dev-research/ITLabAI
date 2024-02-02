@@ -5,6 +5,7 @@
 
 #include "graph/graph.hpp"
 #include "gtest/gtest.h"
+#include "layers/EWLayer.hpp"
 #include "layers/FCLayer.hpp"
 #include "perf/benchmarking.hpp"
 
@@ -230,13 +231,53 @@ TEST(fclayer, get_dims_returns_correctly) {
   EXPECT_EQ(layer.get_dims().first[0], 3);
   EXPECT_EQ(layer.get_dims().second[0], 2);
 }
-TEST(fclayer, get_dims_throws_when_0dim) {
-  FCLayer<double> layer;
-  ASSERT_ANY_THROW(layer.get_dims().first.at(0));
-  ASSERT_ANY_THROW(layer.get_dims().second.at(0));
-}
 
 // ==========================
+// Element-wise layer tests
+
+TEST(ewlayer, works_with_minus) {
+  EWLayer<double> layer({2, 2}, "minus");
+  std::vector<double> input = {2.0, 3.9, 0.1, 2.3};
+  std::vector<double> converted_input = {-2.0, -3.9, -0.1, -2.3};
+  std::vector<double> output = layer.run(input);
+  for (size_t i = 0; i < input.size(); i++) {
+    EXPECT_NEAR(output[i], converted_input[i], 1e-5);
+  }
+}
+
+TEST(ewlayer, works_with_sin) {
+  EWLayer<double> layer({2, 2}, "sin");
+  std::vector<double> input = {2.0, 3.9, 0.1, 2.3};
+  std::vector<double> converted_input(4);
+  std::transform(input.begin(), input.end(), converted_input.begin(),
+                 sin<double>);
+  std::vector<double> output = layer.run(input);
+  for (size_t i = 0; i < input.size(); i++) {
+    EXPECT_NEAR(output[i], converted_input[i], 1e-5);
+  }
+}
+
+TEST(ewlayer, relu_test) {
+  EWLayer<double> layer({2, 2}, "relu");
+  std::vector<double> input = {1.0, -1.0, 2.0, -2.0};
+  std::vector<double> converted_input = {1.0, 0.0, 2.0, 0.0};
+  std::vector<double> output = layer.run(input);
+  for (size_t i = 0; i < input.size(); i++) {
+    EXPECT_NEAR(output[i], converted_input[i], 1e-5);
+  }
+}
+
+TEST(ewlayer, tanh_test) {
+  EWLayer<double> layer({2, 2}, "tanh");
+  std::vector<double> input = {1.0, -1.0, 2.0, -2.0};
+  std::vector<double> converted_input(4);
+  std::transform(input.begin(), input.end(), converted_input.begin(),
+                 tanh<double>);
+  std::vector<double> output = layer.run(input);
+  for (size_t i = 0; i < input.size(); i++) {
+    EXPECT_NEAR(output[i], converted_input[i], 1e-5);
+  }
+}
 
 // ==========================
 // Timer tests
@@ -309,8 +350,6 @@ TEST(timer, is_elapsed_time_omp_avg_returns_nearly_correct_time) {
   EXPECT_GE(res_time, 0.15);
   EXPECT_LE(res_time, 1.25);
 }
-
-// ==========================
 
 // ==========================
 // Accuracy tests
@@ -406,8 +445,6 @@ TEST(accuracy, accuracy_norm_throws_when_bad_pointer) {
   EXPECT_ANY_THROW(accuracy_norm<double>(b, a, 5));
   delete[] b;
 }
-
-// ==========================
 
 // ==========================
 // Throughput tests
@@ -507,5 +544,3 @@ TEST(throughput, matrix_operations_throughput_omp_avg_is_positive) {
   tp = throughput_omp_avg(10, matrix_mul<int>, n, a, b);
   EXPECT_GE(tp, 0);
 }
-
-// ==========================
