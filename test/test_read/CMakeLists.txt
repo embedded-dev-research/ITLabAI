@@ -9,15 +9,8 @@ add_custom_command(TARGET run_test_read POST_BUILD
         "${CMAKE_BINARY_DIR}/test/test_read/Debug/")
 endif()
 
-if (UNIX)
-execute_process(
-    COMMAND sudo apt-get install -y xvfb
-)
-endif()
-
 add_test(UnitTests ${CMAKE_CURRENT_BINARY_DIR}/run_test_read)
 
-#Скачиваем изображение
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
     "${CMAKE_CURRENT_BINARY_DIR}/image.jpg"
