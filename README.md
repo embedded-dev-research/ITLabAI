@@ -65,7 +65,7 @@ To build and run this project locally on Windows, follow these steps:
 5. **Run the project**
    After building the project, you can find the executable file in the following path from the *build* folder
    ```bash
-   cd build\app
+   cd build/app
     ```
    and run the file
     ```bash
@@ -100,11 +100,11 @@ or
 ### *Linux*
 To start the testing process locally, you need to go to the directory
    ```bash
-   cd build\test
+   cd build/test
    ```
    or
    ```bash
-   cd build\test\test_read
+   cd build/test/test_read
    ```
    and run the following files:
    ```bash
