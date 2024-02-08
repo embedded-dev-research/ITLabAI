@@ -7,9 +7,9 @@ void read(std::string path) {
     throw std::runtime_error("Could not open or find the image");
     std::cin.get();
   }
-  String windowName = "Image";
-  namedWindow(windowName);
-  imshow(windowName, image);
+  String window_name = "Image";
+  namedWindow(window_name);
+  imshow(window_name, image);
   waitKey(0);
-  destroyWindow(windowName);
+  destroyWindow(window_name);
 }
