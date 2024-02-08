@@ -7,5 +7,4 @@ set(LAYERS_HEADERS "${layers_headers}" PARENT_SCOPE)
 file(GLOB_RECURSE perf_headers perf/*.h perf/*.hpp)
 set(PERF_HEADERS "${perf_headers}" PARENT_SCOPE)
 
-file(GLOB_RECURSE alexnet_headers alexnet/*.h alexnet/*.hpp)
-set(ALEXNET_HEADERS "${alexnet_headers}" PARENT_SCOPE)
+add_subdirectory(alexnet)
