@@ -27,13 +27,13 @@ To build and run this project locally on Windows, follow these steps:
 4. **Build the project:**
    Next, to build the project, we will need to enter the command
     ```bash
-   cmake --build . --config Debug
+   cmake --build . --config Release
     ```
     If you want to build in a release, change the debug to release
 5. **Run the project**
    After building the project, you can find the executable file in the following path from the *build* folder
    ```bash
-   cd app\Debug
+   cd app\Release
     ```
    and run the file
     ```bash
@@ -83,11 +83,11 @@ To build and run this project locally on Windows, follow these steps:
    
    To start the testing process locally, you need to go to the directory
    ```bash
-   cd test\Debug
+   cd test\Release
    ```
    or
    ```bash
-   cd test\test_read\Debug
+   cd test\test_read\Release
    ```
    and run the following files:
    ```bash
