@@ -8,7 +8,6 @@ add_custom_command(TARGET Reader POST_BUILD
         "${CMAKE_BINARY_DIR}/app/${CMAKE_BUILD_TYPE}/")
 endif()
 
-#Скачиваем изображение
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
     "${CMAKE_CURRENT_BINARY_DIR}/image.jpg"

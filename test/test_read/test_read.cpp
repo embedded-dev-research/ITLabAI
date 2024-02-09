@@ -6,6 +6,6 @@ TEST(Read_img, can_read_image) {
 }
 TEST(Read_img, can_save_image) {
   Mat image = imread("image.jpg");
-  String outputFileName = "output_image.jpg";
-  ASSERT_NO_THROW(imwrite(outputFileName, image););
+  String output_file_name = "output_image.jpg";
+  ASSERT_NO_THROW(imwrite(output_file_name, image););
 }

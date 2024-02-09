@@ -1,2 +1,2 @@
 file(GLOB_RECURSE graph_src *.cpp)
-set(GRAPH_SRC "${graph_src}" PARENT_SCOPE)
+add_library(graph_lib STATIC "${GRAPH_HEADERS}" "${graph_src}")
