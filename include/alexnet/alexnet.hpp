@@ -1,4 +1,5 @@
 #pragma once
-#include <iostream>
 #include <tensorflow/c/c_api.h>
+
+#include <iostream>
 void AlexNetSample(std::string path);

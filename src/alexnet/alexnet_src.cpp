@@ -1,8 +1,8 @@
 #include <tensorflow/c/c_api.h>
-#include <iostream>
 
+#include <iostream>
 void AlexNetSample(std::string path) {
-// Create a TensorFlow session
+  // Create a TensorFlow session
   TF_SessionOptions* sessionOptions = TF_NewSessionOptions();
   TF_Graph* graph = TF_NewGraph();
   TF_Status* status = TF_NewStatus();
@@ -10,7 +10,7 @@ void AlexNetSample(std::string path) {
   TF_Session* session = TF_NewSession(graph, sessionOptions, status);
 
   if (TF_GetCode(status) != TF_OK) {
-    std::cerr « "Error creating TensorFlow session: " « TF_Message(status) « std::endl;
+    std::cerr << "Error creating TensorFlow session: " << TF_Message(status) << std::endl;
     return 1;
   }
 
@@ -19,7 +19,7 @@ void AlexNetSample(std::string path) {
   TF_Buffer* buffer = TF_ReadFile(modelPath, status);
 
   if (TF_GetCode(status) != TF_OK) {
-    std::cerr « "Error reading model file: " « TF_Message(status) « std::endl;
+    std::cerr << "Error reading model file: " << TF_Message(status) << std::endl;
     return 1;
   }
 
@@ -30,7 +30,7 @@ void AlexNetSample(std::string path) {
   TF_DeleteBuffer(buffer);
 
   if (TF_GetCode(status) != TF_OK) {
-    std::cerr « "Error importing graph definition: " « TF_Message(status) « std::endl;
+    std::cerr << "Error importing graph definition: " << TF_Message(status) << std::endl;
     return 1;
   }
 
@@ -44,4 +44,4 @@ void AlexNetSample(std::string path) {
   TF_DeleteStatus(status);
 
   return 0;
-  }
+}
