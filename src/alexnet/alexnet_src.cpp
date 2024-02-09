@@ -11,7 +11,7 @@ void AlexNetSample(std::string path) {
 
   if (TF_GetCode(status) != TF_OK) {
     std::cerr << "Error creating TensorFlow session: " << TF_Message(status)
-            << std::endl;
+              << std::endl;
     return 1;
   }
 
@@ -21,7 +21,7 @@ void AlexNetSample(std::string path) {
 
   if (TF_GetCode(status) != TF_OK) {
     std::cerr << "Error reading model file: " << TF_Message(status)
-            << std::endl;
+              << std::endl;
     return 1;
   }
 
@@ -33,7 +33,7 @@ void AlexNetSample(std::string path) {
 
   if (TF_GetCode(status) != TF_OK) {
     std::cerr << "Error importing graph definition: " << TF_Message(status)
-            << std::endl;
+              << std::endl;
     return 1;
   }
 
