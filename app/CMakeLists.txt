@@ -4,7 +4,7 @@ target_link_libraries(Reader ReadLib)
 if (WIN32)
 add_custom_command(TARGET Reader POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/"
+        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
         "${CMAKE_BINARY_DIR}/app/${CMAKE_BUILD_TYPE}/")
 endif()
 
