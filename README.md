@@ -29,7 +29,7 @@ To build and run this project locally on Windows, follow these steps:
     ```bash
    cmake --build . --config Release
     ```
-    If you want to build in a release, change the debug to release
+    If you want to build in a debug, change the release to debug
 5. **Run the project**
    After building the project, you can find the executable file in the following path from the *build* folder
    ```bash
@@ -39,7 +39,7 @@ To build and run this project locally on Windows, follow these steps:
     ```bash
    Reader.exe
     ```
-    ### *Linux*
+### *Linux*
    To build and run this project locally on Linux, follow these steps:
 
 1. **Clone the repository:**  
@@ -93,7 +93,7 @@ To build and run this project locally on Windows, follow these steps:
    ```bash
    run_test.exe
    ```
-or
+   or
    ```bash
    run_test_read.exe
    ```
@@ -108,11 +108,11 @@ To start the testing process locally, you need to go to the directory
    ```
    and run the following files:
    ```bash
-   chmod +x run_test.exe
-   ./run_test.exe
+   chmod +x run_test
+   ./run_test
    ```
 or
    ```bash
-   chmod +x run_test_read.exe
-   ./run_test_read.exe
+   chmod +x run_test_read
+   ./run_test_read
    ```
