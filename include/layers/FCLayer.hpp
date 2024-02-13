@@ -67,7 +67,7 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
 template <typename ValueType>
 class Layer {
  public:
-  Layer() = default;
+  Layer() = delete;
   Layer(const Shape& inputShape, const Shape& outputShape)
       : inputShape_(inputShape), outputShape_(outputShape) {}
   Layer(const Layer& c) = default;
