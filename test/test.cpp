@@ -113,7 +113,8 @@ TEST(graph, check_connection_when_not_connection3) {
 TEST(bfs, check_result_vec) {
   const std::vector<double> vec_in = {1.0, 0.0, 0.0};
   std::vector<double> vec_out(3);
-  const std::vector<double> vec1 = {1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0};
+  const std::vector<double> vec1 = {1.0, 0.0, 1.0, 1.0, 1.0,
+                                    0.0, 0.0, 1.0, 1.0};
   Shape wshape({3, 3});
   std::vector<double> bias = {1.0, 1.0, 1.0};
   Graph<double> graph(5);
