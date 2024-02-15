@@ -5,6 +5,17 @@
 #include <stdexcept>
 #include <vector>
 
+enum LayerType {
+  kInput,
+  kPooling,
+  kNormalization,
+  kDropout,
+  kElementWise,
+  kConvolution,
+  kFullyConnected,
+  kOutput
+};
+
 class Shape {
  public:
   Shape() = default;
@@ -72,6 +83,8 @@ class Layer {
       : inputShape_(inputShape), outputShape_(outputShape) {}
   Layer(const Layer& c) = default;
   Layer& operator=(const Layer& c) = default;
+  int checkID() const { return id_; }
+  void giveID(int id1) { id_ = id1; }
   virtual std::vector<ValueType> run(
       const std::vector<ValueType>& input) const = 0;
   Shape get_input_shape() const { return inputShape_; }
@@ -80,6 +93,10 @@ class Layer {
   std::pair<Shape, Shape> get_dims() const {
     return std::pair<Shape, Shape>(outputShape_, inputShape_);
   }
+
+ private:
+  int id_;
+  LayerType type_;
 
  protected:
   Shape inputShape_;

@@ -20,32 +20,17 @@ TEST(basic, basic_test) {
   // Assert
   ASSERT_EQ(5, c);
 }
-TEST(bfs, check_result_vec) {
-  const std::vector<int> vec_in = {1, 2, 3, 4};
-  std::vector<int> vec_out(4);
-  Graph graph(5);
-  LayerExample a1(kInput);
-  LayerExample a2(kFullyConnected);
-  LayerExample a3(kFullyConnected);
-  LayerExample a4(kDropout);
-  LayerExample a5(kOutput);
-  graph.setInput(a1, vec_in);
-  graph.makeConnection(a1, a2);
-  graph.makeConnection(a1, a3);
-  graph.makeConnection(a2, a4);
-  graph.makeConnection(a4, a5);
-  graph.setOutput(a5, vec_out);
-  graph.inference();
-  ASSERT_EQ(vec_in, vec_out);
-}
 TEST(graph, check_connection) {
-  const std::vector<int> vec = {1, 2, 3, 4};
-  std::vector<int> vec_out(4);
-  Graph graph(5);
-  LayerExample a1(kInput);
-  LayerExample a2(kFullyConnected);
-  LayerExample a3(kFullyConnected);
-  LayerExample a4(kDropout);
+  const std::vector<double> vec = {2.0, 1.0, 0.5};
+  std::vector<double> vec_out(4);
+  const std::vector<double> vec1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape wshape({3, 2});
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  Graph<double> graph(5);
+  FCLayer<double> a1(vec1, wshape, bias);
+  FCLayer<double> a2(vec1, wshape, bias);
+  FCLayer<double> a3(vec1, wshape, bias);
+  FCLayer<double> a4(vec1, wshape, bias);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -54,13 +39,16 @@ TEST(graph, check_connection) {
   ASSERT_EQ(graph.areLayerNext(a1, a2), 1);
 }
 TEST(graph, check_connection1) {
-  const std::vector<int> vec = {1, 2, 3, 4};
-  std::vector<int> vec_out(4);
-  Graph graph(5);
-  LayerExample a1(kInput);
-  LayerExample a2(kFullyConnected);
-  LayerExample a3(kFullyConnected);
-  LayerExample a4(kDropout);
+  const std::vector<double> vec = {2.0, 1.0, 0.5};
+  std::vector<double> vec_out(4);
+  const std::vector<double> vec1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape wshape({3, 2});
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  Graph<double> graph(5);
+  FCLayer<double> a1(vec1, wshape, bias);
+  FCLayer<double> a2(vec1, wshape, bias);
+  FCLayer<double> a3(vec1, wshape, bias);
+  FCLayer<double> a4(vec1, wshape, bias);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -69,13 +57,16 @@ TEST(graph, check_connection1) {
   ASSERT_EQ(graph.areLayerNext(a1, a4), 1);
 }
 TEST(graph, check_connection_when_not_connection) {
-  const std::vector<int> vec = {1, 2, 3, 4};
-  std::vector<int> vec_out(4);
-  Graph graph(5);
-  LayerExample a1(kInput);
-  LayerExample a2(kFullyConnected);
-  LayerExample a3(kFullyConnected);
-  LayerExample a4(kDropout);
+  const std::vector<double> vec = {2.0, 1.0, 0.5};
+  std::vector<double> vec_out(4);
+  const std::vector<double> vec1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape wshape({3, 2});
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  Graph<double> graph(5);
+  FCLayer<double> a1(vec1, wshape, bias);
+  FCLayer<double> a2(vec1, wshape, bias);
+  FCLayer<double> a3(vec1, wshape, bias);
+  FCLayer<double> a4(vec1, wshape, bias);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -84,13 +75,16 @@ TEST(graph, check_connection_when_not_connection) {
   ASSERT_EQ(graph.areLayerNext(a1, a3), 0);
 }
 TEST(graph, check_connection_when_not_connection2) {
-  const std::vector<int> vec = {1, 2, 3, 4};
-  std::vector<int> vec_out(4);
-  Graph graph(5);
-  LayerExample a1(kInput);
-  LayerExample a2(kFullyConnected);
-  LayerExample a3(kFullyConnected);
-  LayerExample a4(kDropout);
+  const std::vector<double> vec = {2.0, 1.0, 0.5};
+  std::vector<double> vec_out(4);
+  const std::vector<double> vec1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape wshape({3, 2});
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  Graph<double> graph(5);
+  FCLayer<double> a1(vec1, wshape, bias);
+  FCLayer<double> a2(vec1, wshape, bias);
+  FCLayer<double> a3(vec1, wshape, bias);
+  FCLayer<double> a4(vec1, wshape, bias);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -99,19 +93,41 @@ TEST(graph, check_connection_when_not_connection2) {
   ASSERT_EQ(graph.areLayerNext(a1, a1), 0);
 }
 TEST(graph, check_connection_when_not_connection3) {
-  const std::vector<int> vec = {1, 2, 3, 4};
-  std::vector<int> vec_out(4);
-  Graph graph(5);
-  LayerExample a1(kInput);
-  LayerExample a2(kFullyConnected);
-  LayerExample a3(kFullyConnected);
-  LayerExample a4(kDropout);
+  const std::vector<double> vec = {1, 2};
+  std::vector<double> vec_out(4);
+  const std::vector<double> vec1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  Shape wshape({3, 2});
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  Graph<double> graph(5);
+  FCLayer<double> a1(vec1, wshape, bias);
+  FCLayer<double> a2(vec1, wshape, bias);
+  FCLayer<double> a3(vec1, wshape, bias);
+  FCLayer<double> a4(vec1, wshape, bias);
   graph.setInput(a1, vec);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
   graph.makeConnection(a1, a4);
   graph.setOutput(a4, vec_out);
   ASSERT_EQ(graph.areLayerNext(a2, a4), 0);
+}
+TEST(bfs, check_result_vec) {
+  const std::vector<double> vec_in = {1.0, 0.0, 0.0};
+  std::vector<double> vec_out(3);
+  const std::vector<double> vec1 = {1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0};
+  Shape wshape({3, 3});
+  std::vector<double> bias = {1.0, 1.0, 1.0};
+  Graph<double> graph(5);
+  FCLayer<double> a1(vec1, wshape, bias);
+  FCLayer<double> a2(vec1, wshape, bias);
+  FCLayer<double> a3(vec1, wshape, bias);
+  graph.setInput(a1, vec_in);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3);
+  graph.setOutput(a3, vec_out);
+  graph.inference();
+  EXPECT_NEAR(vec_out[0], 9.0, 1e-5);
+  EXPECT_NEAR(vec_out[1], 10.0, 1e-5);
+  EXPECT_NEAR(vec_out[2], 10.0, 1e-5);
 }
 
 // ==========================

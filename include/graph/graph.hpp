@@ -5,44 +5,17 @@
 #include <string>
 #include <vector>
 
-enum LayerType {
-  kInput,
-  kPooling,
-  kNormalization,
-  kDropout,
-  kElementWise,
-  kConvolution,
-  kFullyConnected,
-  kOutput
-};
+#include "layers/Layer.hpp"
 
-class LayerExample {
- private:
-  int id_;
-  std::string name_;
-  LayerType type_;
-  std::string version_;
-  int numInputs_;
-  int numNeurons_;
-  std::vector<int> primer_;
-
- public:
-  LayerExample(LayerType type1) : type_(type1) {}
-  int checkID() const { return id_; }
-  void giveID(int id1) { id_ = id1; }
-  void In(const std::vector<int>& a) { primer_ = a; }
-  void Work() {}
-  std::vector<int> Out() { return primer_; }
-};
-
+template <typename ValueType>
 class Graph {
   int BiggestSize_;
   int V_;
-  std::vector<LayerExample> layers_;
+  std::vector<Layer<ValueType>*> layers_;
   std::vector<int> arrayV_;
   std::vector<int> arrayE_;
-  std::vector<int> startvec_;
-  std::vector<int>* outvector_;
+  std::vector<ValueType> startvec_;
+  std::vector<ValueType>* outvector_;
   int start_;
   int end_;
 
@@ -54,17 +27,18 @@ class Graph {
     arrayV_.push_back(0);
     V_ = 0;
   }
-  void setInput(LayerExample& lay, const std::vector<int>& vec) {
+  void setInput(Layer<ValueType>& lay, const std::vector<ValueType>& vec) {
     lay.giveID(0);
-    layers_.push_back(lay);
+    layers_.push_back(&lay);
     arrayV_.push_back(0);
     startvec_ = vec;
     start_ = lay.checkID();
     V_++;
   }
-  void makeConnection(const LayerExample& layPrev, LayerExample& layNext) {
+  void makeConnection(const Layer<ValueType>& layPrev,
+                      Layer<ValueType>& layNext) {
     layNext.giveID(V_);
-    layers_.push_back(layNext);
+    layers_.push_back(&layNext);
     arrayV_[V_] = arrayV_[V_ - 1];
     arrayV_.push_back(arrayE_.size());
     if (layPrev.checkID() == layNext.checkID()) {
@@ -77,7 +51,8 @@ class Graph {
     V_++;
     arrayV_[V_] = arrayE_.size();
   }
-  bool areLayerNext(const LayerExample& layPrev, const LayerExample& layNext) {
+  bool areLayerNext(const Layer<ValueType>& layPrev,
+                    const Layer<ValueType>& layNext) {
     for (int i = arrayV_[layPrev.checkID()]; i < arrayV_[layPrev.checkID() + 1];
          i++) {
       if (arrayE_[i] == layNext.checkID()) {
@@ -115,13 +90,11 @@ class Graph {
       }
     }
     for (int i : traversal) {
-      layers_[i].In(startvec_);
-      layers_[i].Work();
-      startvec_ = layers_[i].Out();
+      startvec_ = layers_[i]->run(startvec_);
     }
     outvector_->assign(startvec_.begin(), startvec_.end());
   }
-  void setOutput(const LayerExample& lay, std::vector<int>& vec) {
+  void setOutput(const Layer<ValueType>& lay, std::vector<ValueType>& vec) {
     end_ = lay.checkID();
     outvector_ = &vec;
   }
