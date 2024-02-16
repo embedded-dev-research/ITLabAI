@@ -19,5 +19,4 @@ find_package( OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 target_link_libraries( ReadLib ${OpenCV_LIBS} )
 
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/include/opencv2" DESTINATION include)
-install(FILES ${OpenCV_LIBS} DESTINATION lib)
+
