@@ -76,8 +76,7 @@ std::vector<ValueType> PoolingLayer<ValueType>::run(
   if (this->inputShape_.dims() != 1) {
     if (poolingShape_.dims() == 1) {
       pshape1 = 1;
-    }
-    else {
+    } else {
       pshape1 = poolingShape_[1];
     }
     for (size_t i = 0; i < this->outputShape_[0]; i++) {
@@ -85,11 +84,11 @@ std::vector<ValueType> PoolingLayer<ValueType>::run(
         tmpheight = poolingShape_[0] * i;
         tmpwidth = pshape1 * j;
         for (size_t k = 0; k < poolingShape_[0]; k++) {
-          if (tmpheight + k >= inputShape_[0]) {
+          if (tmpheight + k >= this->inputShape_[0]) {
             continue;
           }
           for (size_t l = 0; l < pshape1; l++) {
-            if (tmpwidth + l >= inputShape_[1]) {
+            if (tmpwidth + l >= this->inputShape_[1]) {
               continue;
             }
             pooling_buf.push_back(input[this->inputShape_.get_index(
@@ -109,17 +108,16 @@ std::vector<ValueType> PoolingLayer<ValueType>::run(
         pooling_buf.clear();
       }
     }
-  }
-  else {
+  } else {
     for (size_t i = 0; i < this->outputShape_[0]; i++) {
       tmpheight = poolingShape_[0] * i;
       for (size_t k = 0; k < poolingShape_[0]; k++) {
-        if (tmpheight + k >= inputShape_[0]) {
+        if (tmpheight + k >= this->inputShape_[0]) {
           continue;
         }
         pooling_buf.push_back(
             input[this->inputShape_.get_index({tmpheight + k})]);
-        }
+      }
       switch (poolingType_) {
         case 0:
           res.push_back(avg_pooling(pooling_buf));
