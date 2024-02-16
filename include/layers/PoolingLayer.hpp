@@ -38,9 +38,9 @@ class PoolingLayer : public Layer<ValueType> {
 };
 
 template <typename ValueType>
-PoolingLayer<ValueType>::PoolingLayer(
-    const Shape& input_shape, const Shape& pooling_shape,
-    const std::string& pooling_type)
+PoolingLayer<ValueType>::PoolingLayer(const Shape& input_shape,
+                                      const Shape& pooling_shape,
+                                      const std::string& pooling_type)
     : poolingShape_(pooling_shape), Layer<ValueType>(input_shape, input_shape) {
   if (pooling_shape.dims() > input_shape.dims()) {
     throw std::invalid_argument("Pooling dims is bigger than the input dims");
