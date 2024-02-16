@@ -5,7 +5,7 @@ execute_process(
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build"
 )
 execute_process(
-    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build"
+    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" --config "${CMAKE_BUILD_TYPE}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build"
 )
 

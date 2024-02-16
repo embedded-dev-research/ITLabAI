@@ -8,6 +8,12 @@ add_custom_command(TARGET run_test_read POST_BUILD
         "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
         "${CMAKE_BINARY_DIR}/test/test_read/${CMAKE_BUILD_TYPE}/")
 endif()
+if (WIN32)
+add_custom_command(TARGET run_test_read POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/lib/Debug/"
+        "${CMAKE_BINARY_DIR}/test/test_read/${CMAKE_BUILD_TYPE}/")
+endif()
 
 add_test(UnitTests ${CMAKE_CURRENT_BINARY_DIR}/run_test_read)
 
