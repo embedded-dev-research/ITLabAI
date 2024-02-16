@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
 #include "layers/FCLayer.hpp"
+#include "layers/PoolingLayer.hpp"
 #include "perf/benchmarking.hpp"
 
 TEST(basic, basic_test) {
@@ -277,6 +278,18 @@ TEST(ewlayer, tanh_test) {
   for (size_t i = 0; i < input.size(); i++) {
     EXPECT_NEAR(output[i], converted_input[i], 1e-5);
   }
+}
+
+// ==========================
+// Pooling layer tests
+
+TEST(poolinglayer, test1) {
+  Shape inp = {4, 4};
+  Shape pool = {2, 2};
+  PoolingLayer<double> a = PoolingLayer<double>(inp, pool, "average");
+  std::vector<double> output = a.run(
+      std::vector<double>({9, 8, 7, 6, 5, 4, 3, 2, 2, 3, 4, 5, 6, 7, 8, 9}));
+  ASSERT_NO_THROW(true);
 }
 
 // ==========================
