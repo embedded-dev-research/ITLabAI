@@ -8,7 +8,7 @@ using namespace cv;
 std::string getImagePath() {
   char* workspace = getenv("GITHUB_WORKSPACE");
   if (workspace != nullptr) {
-    return std::string(workspace) + "build/test/image.jpg";
+    return std::string(workspace) + "/build/test/image.jpg";
   }
   return "../image.jpg";
 }
