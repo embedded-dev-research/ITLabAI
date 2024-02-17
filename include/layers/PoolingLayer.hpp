@@ -56,7 +56,8 @@ PoolingLayer<ValueType>::PoolingLayer(const Shape& input_shape,
   }
   if (pooling_shape.dims() > 2) {
     throw std::invalid_argument("Pooling dims is bigger than 2");
-  } else if (pooling_shape.dims() == 0) {
+  }
+  if (pooling_shape.dims() == 0) {
     throw std::invalid_argument("Pooling shape has no dimensions");
   }
   if (pooling_type == "average") {
