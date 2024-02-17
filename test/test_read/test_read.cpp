@@ -1,7 +1,8 @@
-#include "gtest/gtest.h"
-#include "read/reader_img.hpp"
 #include <cstdlib>
 #include <string>
+
+#include "gtest/gtest.h"
+#include "read/reader_img.hpp"
 using namespace cv;
 
 std::string getImagePath() {
