@@ -3,7 +3,7 @@
 #include <cmath>
 #include <string>
 
-#include "layers/FCLayer.hpp"
+#include "layers/Layer.hpp"
 
 template <typename T>
 T minus(const T& elem) {
