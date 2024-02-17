@@ -5,10 +5,7 @@
 
 #include "layers/Layer.hpp"
 
-enum PoolingType {
-    kAverage,
-    kMax
-};
+enum PoolingType { kAverage, kMax };
 
 inline bool isOutOfBounds(size_t index, size_t coord, const Shape& shape) {
   if (coord < shape.dims()) {
@@ -95,9 +92,9 @@ std::vector<ValueType> PoolingLayer<ValueType>::run(
     for (size_t j = 0; !isOutOfBounds(j, 1, this->outputShape_); j++) {
       tmpheight = poolingShape_[0] * i;
       if (poolingShape_.dims() == 1) {
-          tmpwidth = j;
+        tmpwidth = j;
       } else {
-          tmpwidth = poolingShape_[1] * j;
+        tmpwidth = poolingShape_[1] * j;
       }
       // to get matrix block for pooling
       for (size_t k = 0; !isOutOfBounds(k, 0, poolingShape_); k++) {
