@@ -18,6 +18,13 @@ TEST(poolinglayer, empty_inputs2) {
   ASSERT_ANY_THROW(std::vector<double> output = a.run(input));
 }
 
+TEST(poolinglayer, empty_inputs3) {
+  Shape inpshape = {3};
+  Shape poolshape = {0};
+  ASSERT_ANY_THROW(PoolingLayer<double> a =
+                       PoolingLayer<double>(inpshape, poolshape, "average"));
+}
+
 TEST(poolinglayer, throws_when_bigger_pooling_dims) {
   Shape inpshape = {8};
   Shape poolshape = {8, 8};
