@@ -16,9 +16,9 @@ ValueType avg_pooling(const std::vector<ValueType>& input) {
 
 template <typename ValueType>
 ValueType max_pooling(const std::vector<ValueType>& input) {
-  if (input.size() == 0) {
-    throw std::runtime_error("Zero division in avg pooling");
-  }
+  //if (input.size() == 0) {
+  //  throw std::runtime_error("Zero division in avg pooling");
+  //}
   return *(std::max_element(input.begin(), input.end()));
 }
 
