@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <stdexcept>
 
-#include "FCLayer.hpp"
+#include "Layer.hpp"
 #include "Tensor.hpp"
 
 Tensor::Tensor(const Shape& sh, const std::vector<double>& values) {
