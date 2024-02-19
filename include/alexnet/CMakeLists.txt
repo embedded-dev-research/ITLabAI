@@ -10,7 +10,7 @@ unset(TENSORFLOW_FOUND)
 find_path(TensorFlow_INCLUDE_DIR
         NAMES
         tensorflow/core
-        tensorflow/cc
+        tensorflow/c
         third_party
         HINTS
         /usr/local/include/google/tensorflow
