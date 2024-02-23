@@ -12,7 +12,6 @@ void AlexNetSample(std::string path) {
   if (TF_GetCode(status) != TF_OK) {
     std::cerr << "Error creating TensorFlow session: " << TF_Message(status)
               << std::endl;
-    return 1;
   }
 
   // Load AlexNet model (replace "path/to/alexnet/model" with the actual path)
@@ -22,7 +21,6 @@ void AlexNetSample(std::string path) {
   if (TF_GetCode(status) != TF_OK) {
     std::cerr << "Error reading model file: " << TF_Message(status)
               << std::endl;
-    return 1;
   }
 
   TF_ImportGraphDefOptions* importOptions = TF_NewImportGraphDefOptions();
@@ -34,7 +32,6 @@ void AlexNetSample(std::string path) {
   if (TF_GetCode(status) != TF_OK) {
     std::cerr << "Error importing graph definition: " << TF_Message(status)
               << std::endl;
-    return 1;
   }
 
   // Run inference (replace the following code with your inference logic)
@@ -46,5 +43,4 @@ void AlexNetSample(std::string path) {
   TF_DeleteSessionOptions(sessionOptions);
   TF_DeleteStatus(status);
 
-  return 0;
 }

@@ -4,10 +4,10 @@ set(SRC_FILES "${CMAKE_SOURCE_DIR}/src/alexnet/alexnet_src.cpp")
 
 add_library(AlexNetLib STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 
-include(FindPackageHandleStandardArgs)
+
 unset(TENSORFLOW_FOUND)
 
-find_path(TensorFlow_INCLUDE_DIR
+find_path(tensorflow_INCLUDE_DIR
         NAMES
         tensorflow/core
         tensorflow/c
@@ -15,17 +15,24 @@ find_path(TensorFlow_INCLUDE_DIR
         /usr/local/include/tensorflow
         /usr/include/tensorflow)
 
-find_library(TensorFlow_LIBRARY NAMES tensorflow
+find_library(tensorflow_LIBRARY NAMES tensorflow
         HINTS
         /usr/lib
         /usr/local/lib)
 
-
-find_package_handle_standard_args(TensorFlow DEFAULT_MSG TensorFlow_INCLUDE_DIR TensorFlow_LIBRARY)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(tensorflow DEFAULT_MSG tensorflow_INCLUDE_DIR tensorflow_LIBRARY)
 
 if(TENSORFLOW_FOUND)
-    set(TensorFlow_LIBRARIES ${TensorFlow_LIBRARY})
-    set(TensorFlow_INCLUDE_DIRS ${TensorFlow_INCLUDE_DIR})
+    set(TensorFlow_LIBRARIES ${tensorflow_LIBRARY})
+    set(TensorFlow_INCLUDE_DIRS ${tensorflow_INCLUDE_DIR})
 endif()
 
+if(TENSORFLOW_FOUND)
+message(STATUS "TensorFlow_INCLUDE_DIRS: ${tensorflow_INCLUDE_DIRS}")
+message(STATUS "TensorFlow_LIBRARIES: ${tensorflow_LIBRARIES}")
+else()
+message(STATUS "TensorFlow library not found")
+endif()
+target_include_directories(AlexNetLib PUBLIC ${TensorFlow_INCLUDE_DIRS})
 target_link_libraries( AlexNetLib ${TensorFlow_LIBRARIES} )
