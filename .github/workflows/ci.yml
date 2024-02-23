@@ -24,7 +24,7 @@ jobs:
     - name: Set TensorFlow environment variables
       run: |
         tensorflow_include_dir=$(find / -name "tensorflow" -type d 2>/dev/null | grep include)
-        tensorflow_lib_dir=$(find / -name "libtensorflow.so" -type f 2>/dev/null | xargs dirname)
+        tensorflow_lib_dir=$(find / -name "libtensorflow.so" -type f 2>/dev/null | xargs -I {} dirname {})
         echo "export tensorflow_INCLUDE_DIR=${tensorflow_include_dir}" >> $GITHUB_ENV
         echo "export tensorflow_LIBRARY=${tensorflow_lib_dir}" >> $GITHUB_ENV
     - name: Build
