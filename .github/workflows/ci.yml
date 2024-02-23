@@ -22,20 +22,15 @@ jobs:
         tar -xzvf libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
         sudo ldconfig /usr/local/lib
     - name: View
-      run: |
-        cd tensorflow
-        ls -l
+      run: ls -l
     - name: Set TensorFlow environment variables
       run: |
-        - name: Set TensorFlow environment variables
-    - run: |
         tensorflow_include_dir=$PWD/include
         tensorflow_lib_dir=$PWD/lib
         echo "tensorflow_INCLUDE_DIR=${tensorflow_include_dir}"
         echo "tensorflow_LIBRARY=${tensorflow_lib_dir}"
         echo "export tensorflow_INCLUDE_DIR=${tensorflow_include_dir}" >> $GITHUB_ENV
         echo "export tensorflow_LIBRARY=${tensorflow_lib_dir}" >> $GITHUB_ENV
-
     - name: Build
       run: |
         cmake -S . -B build
