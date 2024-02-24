@@ -83,11 +83,21 @@ jobs:
       run: |
         brew install libomp
         brew link libomp --overwrite --force
+    - name: Download and extract TensorFlow
+      run: |
+        curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-2.7.0.tar.gz
+        tar -xzvf libtensorflow-cpu-darwin-x86_64-2.7.0.tar.gz
+    - name: Set TensorFlow environment variables
+      run: |
+        echo "TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
+        echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dylib" >> $GITHUB_ENV
+        echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
+        echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dylib" >> $GI
     - name: Build
       run: |
         cmake -S . -B build \
           -DCMAKE_C_FLAGS="-I$(brew --prefix)/opt/libomp/include" \
-          -DCMAKE_CXX_FLAGS="-I$(brew --prefix)/opt/libomp/include"
+          -DCMAKE_CXX_FLAGS="-I$(brew --prefix)/opt/libomp/include" -DTensorFlow_INCLUDE_DIRS=$TensorFlow_INCLUDE_DIRS -DTensorFlow_LIBRARIES=$TensorFlow_LIBRARIES
         cmake --build build
     - name: Test
       run: |
@@ -98,9 +108,19 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: true
+    - name: Download and extract TensorFlow
+      run: |
+        curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-2.7.0.zip
+        tar -xzvf libtensorflow-cpu-windows-x86_64-2.7.0.zip
+    - name: Set TensorFlow environment variables
+      run: |
+        echo "TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
+        echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dll" >> $GITHUB_ENV
+        echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
+        echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dll" >> $GITHUB_ENV
     - name: Build
       run: |
-        cmake -S . -B build
+        cmake -S . -B build -DTensorFlow_INCLUDE_DIRS=$env:TensorFlow_INCLUDE_DIRS -DTensorFlow_LIBRARIES=$env:TensorFlow_LIBRARIES
         cmake --build build
     - name: Test
       run: |
