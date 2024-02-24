@@ -92,7 +92,7 @@ jobs:
         echo "TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
         echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dylib" >> $GITHUB_ENV
         echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
-        echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dylib" >> $GI
+        echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dylib" >> $GITHUB_ENV
     - name: Build
       run: |
         cmake -S . -B build \
