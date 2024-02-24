@@ -36,10 +36,10 @@ jobs:
         cd ..
     - name: Set TensorFlow environment variables
       run: |
-        echo "tensorflow_INCLUDE_DIR=${PWD}/include" >> $GITHUB_ENV
-        echo "tensorflow_LIBRARY=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
-        echo "export tensorflow_INCLUDE_DIR=${PWD}/include" >> $GITHUB_ENV
-        echo "export tensorflow_LIBRARY=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
+        echo "tensorflow_INCLUDE_DIR=./include" >> $GITHUB_ENV
+        echo "tensorflow_LIBRARY=./lib/libtensorflow.so" >> $GITHUB_ENV
+        echo "export tensorflow_INCLUDE_DIR=./include" >> $GITHUB_ENV
+        echo "export tensorflow_LIBRARY=./lib/libtensorflow.so" >> $GITHUB_ENV
     - name: Display TensorFlow environment variables
       run: |
         echo "tensorflow_INCLUDE_DIR: $tensorflow_INCLUDE_DIR"
