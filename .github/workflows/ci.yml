@@ -42,7 +42,7 @@ jobs:
         echo "TensorFlow_LIBRARIES: ${{ env.TensorFlow_LIBRARIES }}"
     - name: Build
       run: |
-        cmake -S . -B build
+        cmake -S . -B build -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
         cmake --build build
     - name: Test
       run: |
