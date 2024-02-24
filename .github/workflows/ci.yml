@@ -21,6 +21,10 @@ jobs:
         wget https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
         tar -xzvf libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
         sudo ldconfig /usr/local/lib
+    - name: Display TensorFlow environment variables
+      run: |
+         echo "TensorFlow_INCLUDE_DIRS: $TensorFlow_INCLUDE_DIRS"
+         echo "TensorFlow_LIBRARIES: $TensorFlow_LIBRARIES"
     - name: View
       run: |
         ls -l
@@ -36,7 +40,10 @@ jobs:
         echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
         echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
         echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
-        
+    - name: Display TensorFlow environment variables
+      run: |
+        echo "TensorFlow_INCLUDE_DIRS: $TensorFlow_INCLUDE_DIRS"
+        echo "TensorFlow_LIBRARIES: $TensorFlow_LIBRARIES"
     - name: Build
       run: |
         cmake -S . -B build
