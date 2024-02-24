@@ -37,7 +37,7 @@ jobs:
     - name: Set TensorFlow environment variables
       run: |
         echo "tensorflow_INCLUDE_DIR=./include/tensorflow" >> $GITHUB_ENV
-        echo "tensorflow_LIBRARY=./lib/libtensorflow.so" >> $GITHUB_ENV
+        echo "tensorflow_LIBRARY=./lib" >> $GITHUB_ENV
         echo "export tensorflow_INCLUDE_DIR=./include/tensorflow" >> $GITHUB_ENV
         echo "export tensorflow_LIBRARY=./lib" >> $GITHUB_ENV
     - name: Display TensorFlow environment variables
