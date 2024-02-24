@@ -23,8 +23,8 @@ jobs:
         sudo ldconfig /usr/local/lib
     - name: Display TensorFlow environment variables
       run: |
-         echo "tensorflow_INCLUDE_DIR: $TensorFlow_INCLUDE_DIR"
-         echo "tensorflow_LIBRARY: $TensorFlow_LIBRARY"
+         echo "tensorflow_INCLUDE_DIR: $tensorflow_INCLUDE_DIR"
+         echo "tensorflow_LIBRARY: $tensorflow_LIBRARY"
     - name: View
       run: |
         ls -l
@@ -42,8 +42,8 @@ jobs:
         echo "export tensorflow_LIBRARY=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
     - name: Display TensorFlow environment variables
       run: |
-        echo "tensorflow_INCLUDE_DIR: $TensorFlow_INCLUDE_DIR"
-        echo "tensorflow_LIBRARY: $TensorFlow_LIBRARY"
+        echo "tensorflow_INCLUDE_DIR: $tensorflow_INCLUDE_DIR"
+        echo "tensorflow_LIBRARY: $tensorflow_LIBRARY"
     - name: Build
       run: |
         cmake -S . -B build
