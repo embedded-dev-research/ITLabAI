@@ -28,6 +28,9 @@ class LayerExample {
 
  public:
   LayerExample(LayerType type1) : type_(type1) {}
+  LayerType getType() { return type_; }
+  int getNumInputs() const { return numInputs_; }
+  int getNumNeurons() const { return numNeurons_; }
   int checkID() const { return id_; }
   void giveID(int id1) { id_ = id1; }
   void In(const std::vector<int>& a) { primer_ = a; }
@@ -70,7 +73,9 @@ class Graph {
     if (layPrev.checkID() == layNext.checkID()) {
       throw std::out_of_range("i=j cant add edge");
     }
-    for (int ind = 1; ind < arrayV_.size() - layPrev.checkID() - 1; ind++)
+    for (int ind = 1; ind < static_cast<int>(arrayV_.size()) -
+                                static_cast<int>(layPrev.checkID()) - 1;
+         ind++)
       arrayV_[layPrev.checkID() + ind]++;
     arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.checkID()],
                    layNext.checkID());

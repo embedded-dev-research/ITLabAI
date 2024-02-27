@@ -1,9 +1,14 @@
 file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-find_package(OpenMP REQUIRED)
+if (NOT WIN32)
+    find_package(OpenMP REQUIRED)
+endif()
 
 add_executable(run_test ${TEST_SRC_FILES})
-target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX perf_lib layers_lib)
+if (NOT WIN32)
+    target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
+endif()
+target_link_libraries(run_test PUBLIC perf_lib layers_lib)
 target_link_libraries(run_test PUBLIC gtest_main)
 target_link_libraries(run_test PUBLIC ReadLib)
 
