@@ -47,9 +47,9 @@ public:
   Shape get_size() const { return shape_; }
 
   template <typename T>
-  double& operator()(const std::vector<size_t>& coords); // write
+  T& operator()(const std::vector<size_t>& coords); // write
   template <typename T>
-  double operator()(const std::vector<size_t>& coords) const; // read
+  T operator()(const std::vector<size_t>& coords) const; // read
 
   friend std::ostream& operator<<(std::ostream& out, const Tensor& t);
 };

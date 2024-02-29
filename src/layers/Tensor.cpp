@@ -25,7 +25,7 @@ std::vector<T>* Tensor::as() {
 }
 
 template <typename T>
-double& Tensor::operator()(const std::vector<size_t>& coords) {
+T& Tensor::operator()(const std::vector<size_t>& coords) {
   size_t s = shape_.get_index(coords);
   std::vector<T>* res_vector = this->as<T>();
   if (res_vector == nullptr) {
@@ -35,7 +35,7 @@ double& Tensor::operator()(const std::vector<size_t>& coords) {
 } // write
 
 template <typename T>
-double Tensor::operator()(const std::vector<size_t>& coords) const {
+T Tensor::operator()(const std::vector<size_t>& coords) const {
   size_t s = shape_.get_index(coords);
   std::vector<T>* res_vector = this->as<T>();
   if (res_vector == nullptr) {
