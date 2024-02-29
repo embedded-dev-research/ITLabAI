@@ -13,9 +13,9 @@ enum Type {
 
 template <typename T>
 Type GetTypeEnum() {
-  if (std::is_same(T, int)::value)
+  if (std::is_same<T, int>::value)
     return INT;
-  if (std::is_same(T, int)::value)
+  if (std::is_same<T, int>::value)
     return DOUBLE;
 }
 
