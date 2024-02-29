@@ -3,20 +3,22 @@
 #include <iostream>
 #include <vector>
 #include <type_traits>
+#include <stdexcept>
 
 #include "Layer.hpp"
 
 enum Type {
-  INT = 0,
-  DOUBLE,
+  kInt = 0,
+  kDouble,
 };
 
 template <typename T>
 Type GetTypeEnum() {
   if (std::is_same<T, int>::value)
-    return INT;
+    return kInt;
   if (std::is_same<T, int>::value)
-    return DOUBLE;
+    return kDouble;
+  throw std::invalid_argument("invalid type\n");
 }
 
 class Tensor {
