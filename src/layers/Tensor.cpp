@@ -5,14 +5,14 @@
 #include <stdexcept>
 
 #include "layers/Layer.hpp"
-#include "Tensor.hpp"
+#include "layers/Tensor.hpp"
 
 std::vector<uint8_t> Tensor::SetRightTypeValues() {
   if (type_ == INT) {
-    return std::vector<uint8_t>(size_.count() * sizeof(int), 0);
+    return std::vector<uint8_t>(shape_.count() * sizeof(int), 0);
   }
   if (type_ == DOUBLE) {
-    return std::vector<uint8_t>(size_.count() * sizeof(double), 0.0);
+    return std::vector<uint8_t>(shape_.count() * sizeof(double), 0.0);
   }
 }
 
@@ -26,7 +26,7 @@ std::vector<T>* Tensor::as() {
 
 template <typename T>
 double& Tensor::operator()(const std::vector<size_t>& coords) {
-  size_t s = size_.get_index(coords);
+  size_t s = shape_.get_index(coords);
   std::vector<T>* res_vector = this->as<T>();
   if (res_vector == nullptr) {
     throw std::exception("invalid type\n");
@@ -36,7 +36,7 @@ double& Tensor::operator()(const std::vector<size_t>& coords) {
 
 template <typename T>
 double Tensor::operator()(const std::vector<size_t>& coords) const {
-  size_t s = size_.get_index(coords);
+  size_t s = shape_.get_index(coords);
   std::vector<T>* res_vector = this->as<T>();
   if (res_vector == nullptr) {
     throw std::exception("invalid type\n");
@@ -46,10 +46,10 @@ double Tensor::operator()(const std::vector<size_t>& coords) const {
 
 
 std::ostream& operator<<(std::ostream& out, const Tensor& t) {
-    for (int i = 0; i < t.size_.count(); i++) {
+    for (int i = 0; i < t.shape_.count(); i++) {
       out.width(5);
       out << t.values_[i] << " ";
-      if ((i + 1) % t.size_[1] == 0)
+      if ((i + 1) % t.shape_[1] == 0)
         out << std::endl;
     }
 
