@@ -46,5 +46,12 @@ if(WIN)
     message("TensorFlow_LIBRARIES: ${TensorFlow_LIBRARIES}")
 endif()
 
+if(TENSORFLOW_FOUND)
+    message(STATUS "TensorFlow_INCLUDE_DIRS: ${tensorflow_INCLUDE_DIRS}")
+    message(STATUS "TensorFlow_LIBRARIES: ${tensorflow_LIBRARIES}")
+  else()
+    message(STATUS "TensorFlow library not found")
+  endif()
+
 target_include_directories(AlexNetLib PUBLIC ${TensorFlow_INCLUDE_DIRS})
 target_link_libraries( AlexNetLib ${TensorFlow_LIBRARIES} )
