@@ -29,7 +29,7 @@ if(UNIX)
   endif()
 
 endif()
-if(WIN)
+if(WIN32)
     set(TensorFlow_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/include")
     set(TensorFlow_LIBRARIES "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.lib")
 
@@ -41,8 +41,7 @@ if(WIN)
 endif()
 
 if(TENSORFLOW_FOUND)
-    message(STATUS "TensorFlow_INCLUDE_DIRS: ${tensorflow_INCLUDE_DIRS}")
-    message(STATUS "TensorFlow_LIBRARIES: ${tensorflow_LIBRARIES}")
+    message(STATUS "TensorFlow_Found")
   else()
     message(STATUS "TensorFlow library not found")
   endif()
