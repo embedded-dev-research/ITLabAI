@@ -111,7 +111,7 @@ jobs:
     - name: Download and extract TensorFlow
       run: |
         curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-2.7.0.zip
-        Expand-Archive -Path libtensorflow-cpu-windows-x86_64-2.7.0.zip -DestinationPath .
+        tar -xzvf libtensorflow-cpu-windows-x86_64-2.7.0.zip
     - name: Set TensorFlow environment variables
       run: |
         echo "TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
