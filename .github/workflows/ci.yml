@@ -103,8 +103,8 @@ jobs:
       run: |
         CTEST_OUTPUT_ON_FAILURE=1 cmake --build build -t test
   build-windows:
-    runs-on: windows-latest
-    steps:
+   runs-on: windows-latest
+   steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
@@ -116,8 +116,7 @@ jobs:
       run: |
         echo "TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
         echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dll" >> $GITHUB_ENV
-        echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
-        echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dll" >> $GITHUB_ENV
+        echo "::add-path::${PWD}/lib" >> $GITHUB_ENV
     - name: Build
       run: |
         cmake -S . -B build -DTensorFlow_INCLUDE_DIRS="$env:TensorFlow_INCLUDE_DIRS" -DTensorFlow_LIBRARIES="$env:TensorFlow_LIBRARIES"
