@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <iostream>
+
 #include <vector> 
 void AlexNetSample(std::string& path) {
   TF_Graph* graph = TF_NewGraph();
@@ -10,12 +11,14 @@ void AlexNetSample(std::string& path) {
   TF_Session* session = TF_NewSession(graph, sessionOptions, status);
 
   if (TF_GetCode(status) != TF_OK) {
-    std::cerr << "Error creating TensorFlow session: " << TF_Message(status) << std::endl;
+    std::cerr << "Error creating TensorFlow session: " << TF_Message(status)
+              << std::endl;
   }
 
   std::ifstream file(path, std::ios::binary);
   if (!file.is_open()) {
-    std::cerr << "Error opening model file: " << path << std::endl;
+    std::cerr << "Error opening model file: " << path
+              << std::endl;
   }
 
   file.seekg(0, std::ios::end);
@@ -33,7 +36,8 @@ void AlexNetSample(std::string& path) {
   TF_DeleteBuffer(modelBuffer);
 
   if (TF_GetCode(status) != TF_OK) {
-    std::cerr << "Error importing graph definition: " << TF_Message(status) << std::endl;
+    std::cerr << "Error importing graph definition: " << TF_Message(status) 
+              << std::endl;
   }
 
   TF_DeleteGraph(graph);
