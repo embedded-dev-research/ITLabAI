@@ -122,7 +122,7 @@ jobs:
     - name: Set TensorFlow environment variables
       run: |
         echo "TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
-        echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dll" >> $GITHUB_ENV
+        echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.lib" >> $GITHUB_ENV
         echo "::add-path::${PWD}/lib" >> $GITHUB_ENV
     - name: Build
       run: |
