@@ -128,7 +128,7 @@ jobs:
         
     - name: Build
       run: |
-        cmake -S . -B build -DTensorFlow_INCLUDE_DIRS="$env:TensorFlow_INCLUDE_DIRS" -DTensorFlow_LIBRARIES="$env:TensorFlow_LIBRARIES"
+        cmake -S . -B build 
         cmake --build build
     - name: Test
       run: |
