@@ -2,8 +2,7 @@
 
 #include <fstream>
 #include <iostream>
-
-#include <vector> 
+#include <vector>
 void AlexNetSample(std::string& path) {
   TF_Graph* graph = TF_NewGraph();
   TF_Status* status = TF_NewStatus();
@@ -17,8 +16,7 @@ void AlexNetSample(std::string& path) {
 
   std::ifstream file(path, std::ios::binary);
   if (!file.is_open()) {
-    std::cerr << "Error opening model file: " << path
-              << std::endl;
+    std::cerr << "Error opening model file: " << path << std::endl;
   }
 
   file.seekg(0, std::ios::end);
@@ -36,7 +34,7 @@ void AlexNetSample(std::string& path) {
   TF_DeleteBuffer(modelBuffer);
 
   if (TF_GetCode(status) != TF_OK) {
-    std::cerr << "Error importing graph definition: " << TF_Message(status) 
+    std::cerr << "Error importing graph definition: " << TF_Message(status)
               << std::endl;
   }
 
@@ -45,5 +43,3 @@ void AlexNetSample(std::string& path) {
   TF_DeleteSessionOptions(sessionOptions);
   TF_DeleteStatus(status);
 }
-
-
