@@ -125,7 +125,7 @@ jobs:
         echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.lib" >> $GITHUB_ENV
         echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
         echo "export TensorFlow_LIBRARIES=${PWD}/lib/tensorflow.lib" >> $GITHUB_ENV
-        echo "::add-path::${PWD}/lib" >> $GITHUB_ENV
+        
     - name: Build
       run: |
         cmake -S . -B build -DTensorFlow_INCLUDE_DIRS="$env:TensorFlow_INCLUDE_DIRS" -DTensorFlow_LIBRARIES="$env:TensorFlow_LIBRARIES"
