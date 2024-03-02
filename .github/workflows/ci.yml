@@ -122,7 +122,7 @@ jobs:
     - name: Set TensorFlow environment variables
       run: |
         echo "TensorFlow_INCLUDE_DIRS=/include"
-        echo "TensorFlow_LIBRARIES=/lib/tensorflow.lib"
+        echo "TensorFlow_LIBRARIES=/lib"
         
     - name: Build
       run: |
