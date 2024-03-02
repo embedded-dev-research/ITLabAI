@@ -111,18 +111,18 @@ jobs:
     - name: Download and extract TensorFlow
       run: |
         curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-2.7.0.zip
-        tar -xzvf libtensorflow-cpu-windows-x86_64-2.7.0.zip
-        ls
-        cd lib
-        ls
-        cd ..
-        cd include
-        ls
-        cd ..
+        Expand-Archive -Path libtensorflow-cpu-windows-x86_64-2.7.0.zip -DestinationPath tensorflow
+         ls
+
+    - name: Set up TensorFlow paths
+      run: |
+        echo "TensorFlow_INCLUDE_DIRS=tensorflow/include" >> $GITHUB_ENV
+        echo "TensorFlow_LIBRARIES=tensorflow/lib" >> $GITHUB_ENV
+       
         
     - name: Build
       run: |
-        cmake -S . -B build -DTensorFlow_INCLUDE_DIRS="%TensorFlow_INCLUDE_DIRS%" -DTensorFlow_LIBRARIES="%TensorFlow_LIBRARIES%"
+        cmake -S . -B build -DTensorFlow_INCLUDE_DIRS="$TensorFlow_INCLUDE_DIRS" -DTensorFlow_LIBRARIES="$TensorFlow_LIBRARIES"
         cmake --build build
     - name: Test
       run: |
