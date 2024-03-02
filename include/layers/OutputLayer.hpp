@@ -26,7 +26,7 @@ class OutputLayer : public Layer<ValueType> {
 };
 
 template <typename ValueType>
-OutputLayer<ValueType>::OutputLayer(const Shape &shape,
+OutputLayer<ValueType>::OutputLayer(const Shape& shape,
                                     const std::vector<std::string>& labels)
     : Layer(shape, shape) {
   if (labels.size() != shape.count()) {
@@ -37,7 +37,7 @@ OutputLayer<ValueType>::OutputLayer(const Shape &shape,
 
 template <typename ValueType>
 std::vector<ValueType> OutputLayer<ValueType>::run(
-    const std::vector<ValueType> &input) const {
+    const std::vector<ValueType>& input) const {
   if (input.size() != this->inputShape_.count()) {
     throw std::invalid_argument("Input size doesn't fit output layer shape");
   }

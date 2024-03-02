@@ -28,7 +28,8 @@ TEST(OutputLayer, can_get_topk) {
   // debug
   auto topk = a.top_k(input, k);
   for (size_t i = 0; i < topk.first.size(); i++) {
-    std::cerr << i+1 << ". " << topk.first[i] << ' ' << topk.second[i] << std::endl;
+    std::cerr << i + 1 << ". " << topk.first[i] << ' ' << topk.second[i]
+              << std::endl;
   }
   ASSERT_NO_THROW(auto topk1 = a.top_k(input, k));
 }
