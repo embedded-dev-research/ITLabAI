@@ -6,11 +6,12 @@
 using namespace cv;
 
 std::string getImagePath() {
-  char* workspace = getenv("GITHUB_WORKSPACE");
-  if (workspace != nullptr) {
-    return std::string(workspace) + "/build/test/image.jpg";
-  }
-  return "../image.jpg";
+  // char* workspace = getenv("GITHUB_WORKSPACE");
+  // if (workspace != nullptr) {
+  //  return std::string(workspace) + "/build/test/image.jpg";
+  //}
+  // return "../image.jpg";
+  return std::string(TESTS_BINARY_PATH) + "/image.jpg";
 }
 TEST(Read_img, can_read_image) {
   ASSERT_NO_THROW(Mat image = imread(getImagePath()););

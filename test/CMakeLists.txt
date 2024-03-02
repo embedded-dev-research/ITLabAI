@@ -28,3 +28,8 @@ file(DOWNLOAD
     STATUS status_code
     LOG log_file
 )
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/single_layer/imagenet-labels.txt
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+target_compile_definitions(run_test PUBLIC TESTS_BINARY_PATH="${CMAKE_CURRENT_BINARY_DIR}")
