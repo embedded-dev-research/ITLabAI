@@ -119,10 +119,6 @@ jobs:
         cd include
         ls
         cd ..
-    - name: Set TensorFlow environment variables
-      run: |
-        echo "TensorFlow_INCLUDE_DIRS=/include"
-        echo "TensorFlow_LIBRARIES=/lib"
         
     - name: Build
       run: |
