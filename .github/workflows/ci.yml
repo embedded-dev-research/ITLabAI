@@ -121,12 +121,12 @@ jobs:
         cd ..
     - name: Set TensorFlow environment variables
       run: |
-        echo "TensorFlow_INCLUDE_DIRS=/include" >> $GITHUB_ENV
-        echo "TensorFlow_LIBRARIES=/lib/tensorflow.lib" >> $GITHUB_ENV
+        echo "TensorFlow_INCLUDE_DIRS=/include"
+        echo "TensorFlow_LIBRARIES=/lib/tensorflow.lib"
         
     - name: Build
       run: |
-        cmake -S . -B build 
+        cmake -S . -B build -DTensorFlow_INCLUDE_DIRS="$env:TensorFlow_INCLUDE_DIRS" -DTensorFlow_LIBRARIES="$env:TensorFlow_LIBRARIES"
         cmake --build build
     - name: Test
       run: |
