@@ -131,7 +131,7 @@ jobs:
 
     - name: Set up TensorFlow paths
       run: |
-        echo "TensorFlow_INCLUDE_DIRS=D:\a\itlab_2023\itlab_2023\tensorflow\include\tensorflow\c\c_api.h" >> $GITHUB_ENV
+        echo "TensorFlow_INCLUDE_DIRS=tensorflow\include" >> $GITHUB_ENV
         echo "TensorFlow_LIBRARIES=tensorflow/lib" >> $GITHUB_ENV
        
         
