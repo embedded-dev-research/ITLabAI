@@ -20,9 +20,10 @@ TEST(OutputLayer, can_get_topk) {
     f.getline(buf, 256);
     labels.push_back(buf);
   }
+  delete[] buf;
   // get random nums
   for (size_t i = 0; i < labels.size(); i++) {
-    input.push_back(static_cast<float>(std::rand()) / RAND_MAX);
+    input.push_back(static_cast<float>(std::rand() / RAND_MAX));
   }
   OutputLayer<float> a({labels.size()}, labels);
   // debug
