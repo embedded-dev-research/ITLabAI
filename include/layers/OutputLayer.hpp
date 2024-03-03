@@ -28,7 +28,7 @@ class OutputLayer : public Layer<ValueType> {
 template <typename ValueType>
 OutputLayer<ValueType>::OutputLayer(const Shape& shape,
                                     const std::vector<std::string>& labels)
-    : Layer(shape, shape) {
+    : Layer<ValueType>(shape, shape) {
   if (labels.size() != shape.count()) {
     throw std::invalid_argument("Labels don't fit tensor shape");
   }
