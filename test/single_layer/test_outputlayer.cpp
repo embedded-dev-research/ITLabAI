@@ -10,7 +10,7 @@ TEST(OutputLayer, can_get_topk) {
   std::ifstream f;
   f.open(std::string(TESTS_BINARY_PATH) + "/imagenet-labels.txt", std::ios::in);
   std::vector<std::string> labels;
-  std::vector<float> input;
+  std::vector<double> input;
   char* buf = new char[257];
   if (f.fail()) {
     throw std::runtime_error("No such file");
@@ -23,9 +23,9 @@ TEST(OutputLayer, can_get_topk) {
   delete[] buf;
   // get random nums
   for (size_t i = 0; i < labels.size(); i++) {
-    input.push_back(static_cast<float>(std::rand() / RAND_MAX));
+    input.push_back(static_cast<double>(std::rand()) / RAND_MAX);
   }
-  OutputLayer<float> a({labels.size()}, labels);
+  OutputLayer<double> a({labels.size()}, labels);
   // debug
   auto topk = a.top_k(input, k);
   for (size_t i = 0; i < topk.first.size(); i++) {
