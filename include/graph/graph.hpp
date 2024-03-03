@@ -69,7 +69,7 @@ class Graph {
     layNext.giveID(V_);
     layers_.push_back(layNext);
     arrayV_[V_] = arrayV_[V_ - 1];
-    arrayV_.push_back(arrayE_.size());
+    arrayV_.push_back(static_cast<int>(arrayE_.size()));
     if (layPrev.checkID() == layNext.checkID()) {
       throw std::out_of_range("i=j cant add edge");
     }
@@ -80,7 +80,7 @@ class Graph {
     arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.checkID()],
                    layNext.checkID());
     V_++;
-    arrayV_[V_] = arrayE_.size();
+    arrayV_[V_] = static_cast<int>(arrayE_.size());
   }
   bool areLayerNext(const LayerExample& layPrev, const LayerExample& layNext) {
     for (int i = arrayV_[layPrev.checkID()]; i < arrayV_[layPrev.checkID() + 1];

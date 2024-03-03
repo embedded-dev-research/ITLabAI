@@ -71,8 +71,8 @@ TEST(fclayer, set_get_weight_is_correct) {
   }
   for (size_t i = 0; i < wshape[0]; i++) {
     for (size_t j = 0; j < wshape[1]; j++) {
-      layer.set_weight(i, j, i + j);
-      EXPECT_NEAR(layer.get_weight(i, j), i + j, 1e-5);
+      layer.set_weight(i, j, static_cast<double>(i + j));
+      EXPECT_NEAR(layer.get_weight(i, j), static_cast<double>(i + j), 1e-5);
     }
   }
 }
@@ -85,8 +85,8 @@ TEST(fclayer, set_get_bias_is_correct) {
     EXPECT_NEAR(layer.get_bias(i), bias[i], 1e-5);
   }
   for (size_t i = 0; i < bias.size(); i++) {
-    layer.set_bias(i, i);
-    EXPECT_NEAR(layer.get_bias(i), i, 1e-5);
+    layer.set_bias(i, static_cast<double>(i));
+    EXPECT_NEAR(layer.get_bias(i), static_cast<double>(i), 1e-5);
   }
 }
 
