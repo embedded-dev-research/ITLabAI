@@ -10,8 +10,8 @@ TEST(Read_img, can_read_image) {
   ASSERT_NO_THROW(Mat image = imread(image_path););
 }
 TEST(Read_img, can_save_image) {
-  const std::string imagePath = IMAGE_PATH;
-  Mat image = imread(imagePath);
+  const std::string image_path = IMAGE_PATH;
+  Mat image = imread(image_path);
   String output_file_name = "output_image.jpg";
   ASSERT_NO_THROW(imwrite(output_file_name, image););
 }
