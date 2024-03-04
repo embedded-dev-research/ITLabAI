@@ -113,7 +113,7 @@ jobs:
         curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-2.7.0.zip
         Expand-Archive -Path libtensorflow-cpu-windows-x86_64-2.7.0.zip -DestinationPath 3rdparty/tensorflow
          ls
-         cd 3party
+         cd 3rdparty
          ls
          cd ..
     - name: Build
