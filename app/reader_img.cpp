@@ -2,6 +2,6 @@
 
 #include <iostream>
 int main() {
-  std::cin >> IMAGE_PATH;
+  std::string IMAGE_PATH = IMAGE_PATH;
   read(IMAGE_PATH);
 }
