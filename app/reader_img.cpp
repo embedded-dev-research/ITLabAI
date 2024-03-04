@@ -3,6 +3,6 @@
 #include <iostream>
 int main() {
   std::string path;
-  std::cin >> path;
+  std::cin >> IMAGE_PATH;
   read(path);
 }

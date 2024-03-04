@@ -28,3 +28,5 @@ file(DOWNLOAD
     STATUS status_code
     LOG log_file
 )
+# Установка пути к изображению как макрос
+add_definitions(-DIMAGE_PATH="${CMAKE_CURRENT_BINARY_DIR}/image.jpg")
