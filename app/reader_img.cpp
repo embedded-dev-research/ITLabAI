@@ -2,5 +2,6 @@
 
 #include <iostream>
 int main() {
-  read(std::string(IMAGE1_PATH));
+  std::string imagePath = IMAGE1_PATH;
+  read(imagePath);
 }
