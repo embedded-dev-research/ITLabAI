@@ -16,7 +16,7 @@ TEST(Read_img, can_read_image) {
   ASSERT_NO_THROW(Mat image = imread(getImagePath()););
 }
 TEST(Read_img, can_save_image1) {
-  Mat image = imread("D:/proekts/itlab_2023/build/test/image.jpg");
+  Mat image = imread(getImagePath());
   String output_file_name = "output_image.jpg";
   ASSERT_NO_THROW(imwrite(output_file_name, image););
 }
