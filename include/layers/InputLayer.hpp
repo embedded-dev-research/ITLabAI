@@ -17,7 +17,7 @@ class InputLayer : public Layer<ValueType> {
  public:
   InputLayer(const int& Cpic) : Layer<ValueType>() { Count_pic_ = Cpic; }
   std::vector<ValueType> run(const std::vector<ValueType>& input) const {
-    std::vector<ValueType> a=input;
+    std::vector<ValueType> a = input;
     return a;
   }
   std::vector<int> run(const std::string& path) const {
