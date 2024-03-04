@@ -6,8 +6,8 @@
 using namespace cv;
 
 TEST(Read_img, can_read_image) {
-  const std::string imagePath = IMAGE_PATH;
-  ASSERT_NO_THROW(Mat image = imread(imagePath););
+  const std::string image_path = IMAGE_PATH;
+  ASSERT_NO_THROW(Mat image = imread(image_path););
 }
 TEST(Read_img, can_save_image) {
   const std::string imagePath = IMAGE_PATH;
