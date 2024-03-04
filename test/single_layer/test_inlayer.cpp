@@ -1,8 +1,8 @@
-#include <string>
 #include <cstdlib>
+#include <string>
 
-#include "layers/InputLayer.hpp"
 #include "gtest/gtest.h"
+#include "layers/InputLayer.hpp"
 
 std::string getPath() {
   char* workspace = getenv("GITHUB_WORKSPACE");

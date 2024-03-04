@@ -1,11 +1,11 @@
 #pragma once
 #include <algorithm>
 #include <cmath>
-#include <iostream>
-#include <string>
 #include <cstdlib>
-#include <stdexcept>
+#include <iostream>
 #include <opencv2/opencv.hpp>
+#include <stdexcept>
+#include <string>
 
 #include "layers/Layer.hpp"
 
@@ -13,6 +13,7 @@ template <typename ValueType>
 class InputLayer : public Layer<ValueType> {
  private:
   int Count_pic;
+
  public:
   InputLayer(const int& Cpic) : Layer<ValueType>() { Count_pic = Cpic; }
   std::vector<ValueType> run(const std::vector<ValueType>& input) const {
@@ -22,8 +23,7 @@ class InputLayer : public Layer<ValueType> {
   std::vector<int> run(const std::string& path) const {
     cv::Mat image = cv::imread(path);
     if (image.empty()) {
-      throw std::runtime_error(
-          "Failed to load image");
+      throw std::runtime_error("Failed to load image");
     }
     cv::Mat resized_image;
     cv::resize(image, resized_image, cv::Size(227, 227));
@@ -39,7 +39,7 @@ class InputLayer : public Layer<ValueType> {
         blue_values[i][j] = static_cast<int>(channels[0].at<uchar>(i, j));
       }
     }
-    std::vector<int> res(227 * 227 *3);
+    std::vector<int> res(227 * 227 * 3);
     int c = 0;
     for (int i = 0; i < 227; ++i) {
       for (int j = 0; j < 227; ++j) {
