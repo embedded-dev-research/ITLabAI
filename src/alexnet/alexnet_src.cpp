@@ -28,7 +28,7 @@ void AlexNetSample(std::string& path) {
   file.close();
 
   TF_Buffer* model_buffer = TF_NewBufferFromString(buffer.data(), buffer.size());
-  TF_ImportGraphDefOptions* importOptions = TF_NewImportGraphDefOptions();
+  TF_ImportGraphDefOptions* import_options = TF_NewImportGraphDefOptions();
   TF_GraphImportGraphDef(graph, modelBuffer, importOptions, status);
   TF_DeleteImportGraphDefOptions(importOptions);
   TF_DeleteBuffer(modelBuffer);
