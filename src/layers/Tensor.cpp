@@ -12,7 +12,7 @@ std::vector<uint8_t> Tensor::SetRightTypeValues() {
     return std::vector<uint8_t>(shape_.count() * sizeof(int), 0);
   }
   if (type_ == kDouble) {
-    return std::vector<uint8_t>(shape_.count() * sizeof(double), 0.0);
+    return std::vector<uint8_t>(shape_.count() * sizeof(double), 0);
   }
 }
 
@@ -59,8 +59,8 @@ Tensor initial_square_int_picture() {
   std::vector<size_t> initial_size = {224, 224};
   Tensor picture(initial_size, kInt);
 
-  for (size_t h = 0; h < picture.get_size()[0]; h++) {
-    for (size_t w = 0; w < picture.get_size()[1]; w++) {
+  for (size_t h = 0; h < picture.get_shape()[0]; h++) {
+    for (size_t w = 0; w < picture.get_shape()[1]; w++) {
       picture.operator()<int>({h, w}) = rand() % 255;
     }
   }

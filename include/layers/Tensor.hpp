@@ -35,19 +35,28 @@ class Tensor {
  public:
   Tensor(const size_t dims_count, Type type) : shape_(dims_count) {
     type_ = type;
-    SetRightTypeValues();
+    values_ = SetRightTypeValues();
   };
+  Tensor(const std::vector<uint8_t>& a, const Shape& s, Type type) {
+    type_ = type;
+    shape_ = s;
+    values_ = SetRightTypeValues();
+
+    if (a.size() != values_.size()) throw std::invalid_argument("Wrong_Length");
+    values_ = a;
+  }
   Tensor(const std::vector<size_t>& dims, Type type) : shape_(dims) {
     type_ = type;
-    SetRightTypeValues();
+    values_ = SetRightTypeValues();
   }
   Tensor(const Shape& sh, Type type) : shape_(sh) {
     type_ = type;
-    SetRightTypeValues();
+    values_ = SetRightTypeValues();
   }
   Tensor(const Tensor& t) = default;
 
-  Shape get_size() const { return shape_; }
+  Shape get_shape() const { return shape_; }
+  Type get_type() const noexcept { return type_; }
 
   template <typename T>
   T& operator()(const std::vector<size_t>& coords);  // write
