@@ -1,11 +1,11 @@
 #include "layers/Tensor.hpp"
 
+#include <cstdint>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-#include <cstdint>
 
 std::vector<uint8_t> Tensor::SetRightTypeValues() {
   if (type_ == kInt) {

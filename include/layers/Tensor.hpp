@@ -1,10 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
-#include <cstdint>
 
 #include "Layer.hpp"
 
