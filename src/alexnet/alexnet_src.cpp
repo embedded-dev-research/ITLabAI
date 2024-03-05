@@ -6,7 +6,7 @@
 void AlexNetSample(std::string& path) {
   TF_Graph* graph = TF_NewGraph();
   TF_Status* status = TF_NewStatus();
-  TF_SessionOptions* sessionOptions = TF_NewSessionOptions();
+  TF_SessionOptions* session_options = TF_NewSessionOptions();
   TF_Session* session = TF_NewSession(graph, sessionOptions, status);
 
   if (TF_GetCode(status) != TF_OK) {
