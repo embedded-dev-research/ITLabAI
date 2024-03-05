@@ -31,7 +31,7 @@ class Tensor {
 
   template <typename T>
   std::vector<T>* as();
-  
+
  public:
   Tensor(const size_t dims_count, Type type) : shape_(dims_count) {
     type_ = type;
