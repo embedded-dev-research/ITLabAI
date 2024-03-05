@@ -20,7 +20,7 @@ void AlexNetSample(std::string& path) {
   }
 
   file.seekg(0, std::ios::end);
-  size_t fileSize = file.tellg();
+  size_t file_size = file.tellg();
   file.seekg(0, std::ios::beg);
 
   std::vector<char> buffer(fileSize);
