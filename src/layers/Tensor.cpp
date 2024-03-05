@@ -1,11 +1,11 @@
-#include <iostream>
-#include <vector>
+#include "layers/Tensor.hpp"
+
 #include <ctime>
 #include <iomanip>
+#include <iostream>
 #include <stdexcept>
-
-#include "layers/Layer.hpp"
-#include "layers/Tensor.hpp"
+#include <vector>
+#include <cstdint>
 
 std::vector<uint8_t> Tensor::SetRightTypeValues() {
   if (type_ == kInt) {
@@ -18,7 +18,7 @@ std::vector<uint8_t> Tensor::SetRightTypeValues() {
 
 template <typename T>
 std::vector<T>* Tensor::as() {
-  if (GetTypeEnum<T>() == type_){
+  if (GetTypeEnum<T>() == type_) {
     return reinterpret_cast<std::vector<T>*>(&values_);
   }
   return nullptr;
@@ -32,7 +32,7 @@ T& Tensor::operator()(const std::vector<size_t>& coords) {
     throw std::invalid_argument("invalid type\n");
   }
   return (*res_vector)[s];
-} // write
+}  // write
 
 template <typename T>
 T Tensor::operator()(const std::vector<size_t>& coords) const {
@@ -42,30 +42,29 @@ T Tensor::operator()(const std::vector<size_t>& coords) const {
     throw std::invalid_argument("invalid type\n");
   }
   return (*res_vector)[s];
-} // read
+}  // read
 
 
 std::ostream& operator<<(std::ostream& out, const Tensor& t) {
-    for (size_t i = 0; i < t.shape_.count(); i++) {
-      out.width(5);
-      out << t.values_[i] << " ";
-      if ((i + 1) % t.shape_[1] == 0)
-        out << std::endl;
-    }
+  for (size_t i = 0; i < t.shape_.count(); i++) {
+    out.width(5);
+    out << t.values_[i] << " ";
+    if ((i + 1) % t.shape_[1] == 0) out << std::endl;
+  }
 
-    return out;
+  return out;
 }
 
 Tensor initial_square_int_picture() {
-    srand(time(nullptr));
-    std::vector<size_t> initial_size = {224, 224};
-    Tensor picture(initial_size, kInt);
+  srand(time(nullptr));
+  std::vector<size_t> initial_size = {224, 224};
+  Tensor picture(initial_size, kInt);
 
-    for (size_t h = 0; h < picture.get_size()[0]; h++) {
-      for (size_t w = 0; w < picture.get_size()[1]; w++) {
-        picture.operator()<int>({h, w}) = rand() % 255;
-      }
+  for (size_t h = 0; h < picture.get_size()[0]; h++) {
+    for (size_t w = 0; w < picture.get_size()[1]; w++) {
+      picture.operator()<int>({h, w}) = rand() % 255;
     }
+  }
 
-    return picture;
+  return picture;
 }

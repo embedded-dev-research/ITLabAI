@@ -1,28 +1,28 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
-#include <type_traits>
 #include <stdexcept>
+#include <type_traits>
+#include <vector>
+#include <cstdint>
 
 #include "Layer.hpp"
 
 enum Type {
   kInt = 0,
   kDouble,
+  kUnknown,
 };
 
 template <typename T>
 Type GetTypeEnum() {
-  if (std::is_same<T, int>::value)
-    return kInt;
-  if (std::is_same<T, int>::value)
-    return kDouble;
-  throw std::invalid_argument("invalid type\n");
+  if (std::is_same<T, int>::value) return kInt;
+  if (std::is_same<T, double>::value) return kDouble;
+  return kUnknown;
 }
 
 class Tensor {
-private:
+ private:
   Shape shape_;
   std::vector<uint8_t> values_;
   Type type_;
@@ -31,7 +31,7 @@ private:
 
   template <typename T>
   std::vector<T>* as();
-public:
+ public:
   Tensor(const size_t dims_count, Type type) : shape_(dims_count) {
     type_ = type;
     SetRightTypeValues();
@@ -49,9 +49,9 @@ public:
   Shape get_size() const { return shape_; }
 
   template <typename T>
-  T& operator()(const std::vector<size_t>& coords); // write
+  T& operator()(const std::vector<size_t>& coords);  // write
   template <typename T>
-  T operator()(const std::vector<size_t>& coords) const; // read
+  T operator()(const std::vector<size_t>& coords) const;  // read
 
   friend std::ostream& operator<<(std::ostream& out, const Tensor& t);
 };
