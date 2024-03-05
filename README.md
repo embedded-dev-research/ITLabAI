@@ -86,34 +86,17 @@ To build and run this project locally on Windows, follow these steps:
    ```bash
    cd test\Release
    ```
-   or
-   ```bash
-   cd test\test_read\Release
-   ```
    and run the following files:
    ```bash
    run_test.exe
-   ```
-   or
-   ```bash
-   run_test_read.exe
    ```
 ### *Linux*
 To start the testing process locally, you need to go to the directory
    ```bash
    cd build/test
    ```
-   or
-   ```bash
-   cd build/test/test_read
-   ```
    and run the following files:
    ```bash
    chmod +x run_test
    ./run_test
-   ```
-or
-   ```bash
-   chmod +x run_test_read
-   ./run_test_read
    ```
