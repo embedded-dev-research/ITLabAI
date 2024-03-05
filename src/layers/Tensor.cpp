@@ -44,7 +44,6 @@ T Tensor::operator()(const std::vector<size_t>& coords) const {
   return (*res_vector)[s];
 }  // read
 
-
 std::ostream& operator<<(std::ostream& out, const Tensor& t) {
   for (size_t i = 0; i < t.shape_.count(); i++) {
     out.width(5);
