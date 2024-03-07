@@ -8,7 +8,6 @@ add_custom_command(TARGET Reader POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
         "${CMAKE_BINARY_DIR}/app/${CMAKE_BUILD_TYPE}/")
-
 add_custom_command(TARGET alexnet POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
             "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.dll"
@@ -21,3 +20,4 @@ file(DOWNLOAD
     STATUS status_code
     LOG log_file
 )
+add_definitions(-DIMAGE1_PATH="${CMAKE_CURRENT_BINARY_DIR}/image.jpg")
