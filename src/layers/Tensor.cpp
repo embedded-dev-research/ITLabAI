@@ -14,6 +14,7 @@ std::vector<uint8_t> Tensor::SetRightTypeValues() {
   if (type_ == kDouble) {
     return std::vector<uint8_t>(shape_.count() * sizeof(double), 0);
   }
+  return std::vector<uint8_t>();
 }
 
 template <typename T>
@@ -55,7 +56,7 @@ std::ostream& operator<<(std::ostream& out, const Tensor& t) {
 }
 
 Tensor initial_square_int_picture() {
-  srand(time(nullptr));
+  srand((unsigned int)time(nullptr));
   std::vector<size_t> initial_size = {224, 224};
   Tensor picture(initial_size, kInt);
 
