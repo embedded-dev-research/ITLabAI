@@ -5,7 +5,6 @@ void read(std::string& path) {
   Mat image = imread(path);
   if (image.empty()) {
     throw std::runtime_error("Could not open or find the image");
-    std::cin.get();
   }
   String window_name = "Image";
   namedWindow(window_name);
