@@ -1,4 +1,4 @@
-#include <tensorflow/c/c_api.h>
+#include "alexnet/alexnet.hpp"
 
 #include <fstream>
 #include <iostream>
