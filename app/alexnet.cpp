@@ -2,7 +2,6 @@
 
 #include <iostream>
 int main() {
-  std::string path;
-  std::cin >> path;
-  AlexNetSample(path);
+  std::string image_path = MODEL1_PATH;
+  AlexNetSample(image_path);
 }

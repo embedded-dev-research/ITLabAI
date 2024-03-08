@@ -1,8 +1,9 @@
-#include "alexnet/alexnet.hpp"
-
 #include <fstream>
 #include <iostream>
 #include <vector>
+
+#include "alexnet/alexnet.hpp"
+
 void AlexNetSample(std::string& path) {
   TF_Graph* graph = TF_NewGraph();
   TF_Status* status = TF_NewStatus();
