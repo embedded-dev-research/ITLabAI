@@ -5,11 +5,9 @@
 #include "layers/InputLayer.hpp"
 
 TEST(input, chech_basic) {
-  char* workspace = getenv("GITHUB_WORKSPACE");
-  std::string input_file_name =
-      std::string(workspace) + "/build/test/image.jpg";
+  const std::string image_path = IMAGE_PATH;
   int n = 1;
   InputLayer<int> inlayer(n);
-  std::vector<int> output = inlayer.run(input_file_name);
+  std::vector<int> output = inlayer.run(image_path);
   ASSERT_EQ(output.size(), 227 * 227 * 3);
 }
