@@ -18,7 +18,7 @@ TEST(OutputLayer, can_get_topk) {
   // get labels
   while (!f.eof()) {
     f.getline(buf, 256);
-    labels.push_back(buf);
+    labels.emplace_back(buf);
   }
   delete[] buf;
   // get random nums
