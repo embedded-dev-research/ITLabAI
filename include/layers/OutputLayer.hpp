@@ -1,7 +1,22 @@
 #pragma once
+#include <cmath>
 #include <string>
 
 #include "layers/Layer.hpp"
+
+template <typename ValueType>
+std::vector<ValueType> softmax(const std::vector<ValueType>& vec) {
+  ValueType max_elem = *std::max_element(vec.begin(), vec.end());
+  std::vector<ValueType> res = vec;
+  for (size_t i = 0; i < res.size(); i++) {
+    res[i] = std::exp(res[i] - max_elem); // <= 1
+  }
+  ValueType sum = std::accumulate(res.begin(), res.end(), ValueType(0));
+  for (size_t i = 0; i < res.size(); i++) {
+    res[i] /= sum;
+  }
+  return res;
+}
 
 template <typename ValueType>
 bool comp_pair(std::pair<std::string, ValueType> a,

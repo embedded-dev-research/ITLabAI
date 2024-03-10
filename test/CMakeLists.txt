@@ -29,7 +29,12 @@ file(DOWNLOAD
     LOG log_file
 )
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/single_layer/imagenet-labels.txt
-     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(DOWNLOAD
+    "https://raw.githubusercontent.com/bpinaya/AlexNetRT/master/data/alexnet/imagenet-labels.txt"
+    "${CMAKE_CURRENT_BINARY_DIR}/imagenet-labels.txt"
+    SHOW_PROGRESS
+    STATUS status_code
+    LOG log_file
+)
 
 target_compile_definitions(run_test PUBLIC TESTS_BINARY_PATH="${CMAKE_CURRENT_BINARY_DIR}")

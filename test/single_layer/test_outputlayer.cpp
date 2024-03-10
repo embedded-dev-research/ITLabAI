@@ -34,3 +34,13 @@ TEST(OutputLayer, can_get_topk) {
   }
   ASSERT_NO_THROW(auto topk1 = a.top_k(input, k));
 }
+
+TEST(OutputLayer, softmax_test) {
+  std::vector<double> input = {1.0, 2.5, 4.0, 5.5};
+  std::vector<double> converted_input = {0.008657, 0.038774, 0.173774,
+                                         0.778800};
+  std::vector<double> output = softmax<double>(input);
+  for (size_t i = 0; i < output.size(); i++) {
+    EXPECT_NEAR(output[i], converted_input[i], 1e-5);
+  }
+}
