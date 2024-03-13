@@ -51,11 +51,6 @@ class Tensor {
   std::vector<T>* as();
 
  public:
-  Tensor(const size_t dims_count, Type type) : shape_(dims_count) {
-    type_ = type;
-    values_ = SetRightTypeValues();
-  };
-
   Tensor(const std::vector<uint8_t>& a, const Shape& s, Type type) {
     type_ = type;
     shape_ = s;
