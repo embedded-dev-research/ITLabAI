@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include <Shape.hpp>
+#include "layers/Shape.hpp"
 
 template <typename ValueType>
 std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,

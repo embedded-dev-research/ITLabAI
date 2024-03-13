@@ -15,11 +15,13 @@ enum Type {
 };
 
 template <typename T>
-std::vector<uint8_t> to_byte(std::vector<T>& v) {
-  uint8_t* ptr_beg = reinterpret_cast<uint8_t*>(v.data());
-  uint8_t* ptr_end = ptr_beg + v.size()*sizeof(T);
-  std::vector<uint8_t> bytes_vals(ptr_beg, ptr_end);
-  return bytes_vals;
+std::vector<uint8_t>* to_byte(std::vector<T>& v) {
+  return reinterpret_cast<std::vector<uint8_t>*>(&v);
+}
+
+template <typename T>
+const std::vector<uint8_t>* to_byte(const std::vector<T>& v) {
+  return reinterpret_cast<const std::vector<uint8_t>*>(&v);
 }
 
 template <typename T>
@@ -53,27 +55,32 @@ class Tensor {
     type_ = type;
     values_ = SetRightTypeValues();
   };
+
   Tensor(const std::vector<uint8_t>& a, const Shape& s, Type type) {
     type_ = type;
     shape_ = s;
     values_ = SetRightTypeValues();
 
-    if (a.size() != values_.size()) {
+    if (a.size() != values_.size() || type == kUnknown) {
       throw std::invalid_argument("Wrong_Length");
     }
-    // Обрабатывать случай kUnknown
     values_ = a;
   }
+
   Tensor(const std::vector<size_t>& dims, Type type) : shape_(dims) {
     type_ = type;
     values_ = SetRightTypeValues();
   }
+
   Tensor(const Shape& sh, Type type) : shape_(sh) {
     type_ = type;
     values_ = SetRightTypeValues();
   }
+
   Tensor(const Tensor& t) = default;
+
   Tensor(Tensor&& t) = default;
+  
   Tensor& operator=(Tensor&& t) = default;
 
   std::vector<uint8_t> get_values() const { return values_; }
@@ -92,15 +99,15 @@ class Tensor {
   template <typename T>
   T get(const std::vector<size_t>& coords) const;  // read
 
-  friend std::ostream& operator<<(std::ostream& out, const Tensor& t);
+  friend std::ostream& operator<<(std::ostream& out, Tensor& t);
 };
 
 template <typename T>
 std::vector<T>* Tensor::as() {
-  if (GetTypeEnum<T>() == type_) {
-    return reinterpret_cast<std::vector<T>*>(&values_);
+  if (GetTypeEnum<T>() != type_) {
+    throw std::invalid_argument("INVALID_TYPE");
   }
-  return nullptr;
+  return reinterpret_cast<std::vector<T>*>(&values_);
 }
 
 template <typename T>
@@ -127,29 +134,33 @@ std::ostream& operator<<(std::ostream& out, Tensor& t) {
 template <typename T>
 T& Tensor::get(const std::vector<size_t>& coords) {
   size_t s = shape_.get_index(coords);
-  std::vector<T> res_vector = this->as<T>();
-  if (res_vector.size() == 0) {
-    throw std::invalid_argument("invalid type\n");
+  std::vector<T>* res_vector = this->as<T>();
+
+  if ((*res_vector).size() == 0) {
+    throw std::invalid_argument("Empty tensor\n");
   }
-  return res_vector[s];
+
+  return (*res_vector)[s];
 }  // write
 
 template <typename T>
 T Tensor::get(const std::vector<size_t>& coords) const {
   size_t s = shape_.get_index(coords);
-  const std::vector<T> res_vector = this->as<T>();
-  if (res_vector.size() == 0) {
-    throw std::invalid_argument("invalid type\n");
+  const std::vector<T>* res_vector = this->as<T>();
+  
+  if ((*res_vector).size() == 0) {
+    throw std::invalid_argument("Empty tensor\n");
   }
-  return res_vector[s];
+
+  return (*res_vector)[s];
 }  // read
 
 template <typename T>
 Tensor make_tensor(const std::vector<T>& v) {
-  return Tensor(to_byte(v), {v.size()}, GetTypeEnum<T>());
+  return Tensor(*to_byte<T>(v), {v.size()}, GetTypeEnum<T>());
 }
 
 template <typename T>
 Tensor make_tensor(const std::vector<T>& v, const Shape& s) {
-  return Tensor(to_byte(v), s, GetTypeEnum<T>());
+  return Tensor(*to_byte<T>(v), s, GetTypeEnum<T>());
 }
