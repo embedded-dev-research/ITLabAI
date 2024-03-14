@@ -1,7 +1,7 @@
 #include "alexnet/alexnet.hpp"
-#include "alexnet/reader_tf_model.hpp"
-
 #include <iostream>
+
+#include "alexnet/reader_tf_model.hpp"
 int main() {
   std::string image_path = MODEL1_PATH;
   AlexNetSample(image_path);

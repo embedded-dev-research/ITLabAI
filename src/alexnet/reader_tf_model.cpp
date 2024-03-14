@@ -1,9 +1,8 @@
-﻿#include <fstream>
+﻿#include "alexnet/reader_tf_model.hpp"
+
+#include <fstream>
 #include <iostream>
 #include <vector>
-
-#include "alexnet/reader_tf_model.hpp"
-
 Graph readTFModel(const std::string& modelPath) {
   Graph graph(3);
 
@@ -43,7 +42,7 @@ Graph readTFModel(const std::string& modelPath) {
 
   TF_Operation* op;
   size_t pos = 0;
-  std::vector <int> def;
+  std::vector<int> def;
   while ((op = TF_GraphNextOperation(graphDef, &pos)) != nullptr) {
     std::string name = TF_OperationName(op);
     LayerType type;
