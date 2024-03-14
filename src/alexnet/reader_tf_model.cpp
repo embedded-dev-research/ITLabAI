@@ -7,7 +7,6 @@
 Graph readTFModel(const std::string& modelPath) {
   Graph graph(3);
 
-  // Чтение содержимого файла
   std::ifstream file(modelPath, std::ios::binary);
   if (!file.is_open()) {
     throw std::runtime_error("Failed to open file: " + modelPath);
@@ -21,12 +20,10 @@ Graph readTFModel(const std::string& modelPath) {
   file.read(buffer.data(), file_size);
   file.close();
 
-  // Загружаем модель TensorFlow из буфера
   TF_Graph* graphDef = TF_NewGraph();
   TF_Status* status = TF_NewStatus();
   TF_Buffer* tf_buffer = TF_NewBufferFromString(buffer.data(), buffer.size());
 
-  // Создаем сессию
   TF_SessionOptions* sessionOptions = TF_NewSessionOptions();
   TF_Session* session = TF_NewSession(graphDef, sessionOptions, status);
   if (TF_GetCode(status) != TF_OK) {
@@ -34,7 +31,6 @@ Graph readTFModel(const std::string& modelPath) {
                              std::string(TF_Message(status)));
   }
 
-  // Импортируем граф из буфера
   TF_ImportGraphDefOptions* importOptions = TF_NewImportGraphDefOptions();
   TF_GraphImportGraphDef(graphDef, tf_buffer, importOptions, status);
   TF_DeleteImportGraphDefOptions(importOptions);
@@ -47,11 +43,10 @@ Graph readTFModel(const std::string& modelPath) {
 
   TF_Operation* op;
   size_t pos = 0;
+  std::vector <int> def;
   while ((op = TF_GraphNextOperation(graphDef, &pos)) != nullptr) {
     std::string name = TF_OperationName(op);
-    // Определяем тип узла на основе его имени или атрибутов
     LayerType type;
-    // Определяем тип узла на основе его имени или атрибутов
     if (name.find("input") != std::string::npos) {
       type = kInput;
     } else if (name.find("pooling") != std::string::npos) {
@@ -69,20 +64,16 @@ Graph readTFModel(const std::string& modelPath) {
     } else if (name.find("output") != std::string::npos) {
       type = kOutput;
     } else {
-      // Неизвестный тип узла
       throw std::runtime_error("Unknown node type: " + name);
     }
-    // Создаем экземпляр узла и добавляем его в граф
     LayerExample layer(type);
-    graph.setInput(layer, /* передать данные узла */);
+    graph.setInput(layer, def);
   }
 
-  // Освобождаем ресурсы
   TF_DeleteSession(session, status);
   TF_DeleteSessionOptions(sessionOptions);
   TF_DeleteStatus(status);
   TF_DeleteGraph(graphDef);
 
-  // Возвращаем построенный граф
   return graph;
 }
