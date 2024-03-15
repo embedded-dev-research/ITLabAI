@@ -7,9 +7,11 @@
 
 struct TestClass {
  public:
-  TestClass(float a) : a_('1'), b_(2) {}
+  TestClass(float a) : a_('1'), b_(a) {}
+
+ private:
   char a_;
-  int b_;
+  float b_;
 };
 
 TEST(Tensor, can_create_int_tensor) {
@@ -99,6 +101,6 @@ TEST(Tensor, cannot_create_tensor_based_on_an_unsuitable_vector_of_values) {
 
 TEST(Tensor, cannot_create_a_tensor_with_an_invalid_type) {
   Shape sh({2, 3});
-  std::vector<TestClass> vals_tensor = {4.0f, 0.3f, -2.1f, 1.9f, 6.3f, -3.0f};
+  std::vector<TestClass> vals_tensor = {4.0F, 0.3F, -2.1F, 1.9F, 6.3F, -3.0F};
   ASSERT_ANY_THROW(make_tensor<TestClass>(vals_tensor, sh););
 }
