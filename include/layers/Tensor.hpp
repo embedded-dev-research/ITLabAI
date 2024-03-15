@@ -22,8 +22,8 @@ const std::vector<uint8_t>* to_byte(const std::vector<T>& v) {
 
 template <typename T>
 Type GetTypeEnum() {
-  if (std::is_same<T, int>::value) return Type::kInt;
-  if (std::is_same<T, double>::value) return Type::kDouble;
+  if constexpr (std::is_same<T, int>::value) return Type::kInt;
+  if constexpr (std::is_same<T, double>::value) return Type::kDouble;
   return Type::kUnknown;
 }
 
