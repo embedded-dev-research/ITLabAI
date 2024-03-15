@@ -152,6 +152,11 @@ T Tensor::get(const std::vector<size_t>& coords) const {
 }  // read
 
 template <typename T>
-Tensor make_tensor(const std::vector<T>& v, const Shape& s = {v.size()}) {
+Tensor make_tensor(const std::vector<T>& v, const Shape& s) {
   return Tensor(*to_byte<T>(v), s, GetTypeEnum<T>());
+}
+
+template <typename T>
+Tensor make_tensor(const std::vector<T>& v) {
+  return Tensor(*to_byte<T>(v), {v.size()}, GetTypeEnum<T>());
 }
