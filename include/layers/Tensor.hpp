@@ -8,11 +8,7 @@
 
 #include "layers/Shape.hpp"
 
-enum Type {
-  kInt = 0,
-  kDouble,
-  kUnknown,
-};
+enum class Type { kUnknown, kInt, kDouble };
 
 template <typename T>
 std::vector<uint8_t>* to_byte(std::vector<T>& v) {
@@ -26,9 +22,9 @@ const std::vector<uint8_t>* to_byte(const std::vector<T>& v) {
 
 template <typename T>
 Type GetTypeEnum() {
-  if (std::is_same<T, int>::value) return kInt;
-  if (std::is_same<T, double>::value) return kDouble;
-  return kUnknown;
+  if (std::is_same<T, int>::value) return Type::kInt;
+  if (std::is_same<T, double>::value) return Type::kDouble;
+  return Type::kUnknown;
 }
 
 class Tensor {
@@ -38,10 +34,10 @@ class Tensor {
   Type type_;
 
   std::vector<uint8_t> Tensor::SetRightTypeValues() {
-    if (type_ == kInt) {
+    if (type_ == Type::kInt) {
       return std::vector<uint8_t>(shape_.count() * sizeof(int), 0);
     }
-    if (type_ == kDouble) {
+    if (type_ == Type::kDouble) {
       return std::vector<uint8_t>(shape_.count() * sizeof(double), 0);
     }
     return std::vector<uint8_t>();
@@ -50,13 +46,16 @@ class Tensor {
   template <typename T>
   std::vector<T>* as();
 
+  template <typename T>
+  const std::vector<T>* as() const;
+
  public:
   Tensor(const std::vector<uint8_t>& a, const Shape& s, Type type) {
     type_ = type;
     shape_ = s;
     values_ = SetRightTypeValues();
 
-    if (a.size() != values_.size() || type == kUnknown) {
+    if (a.size() != values_.size() || type == Type::kUnknown) {
       throw std::invalid_argument("Wrong_Length");
     }
     values_ = a;
@@ -83,10 +82,14 @@ class Tensor {
   Type get_type() const noexcept { return type_; }
 
   template <typename T>
-  typename std::vector<T>::const_iterator begin();
+  typename std::vector<T>::const_iterator begin() const {
+    return this->as<T>().begin();
+  }
 
   template <typename T>
-  typename std::vector<T>::const_iterator end();
+  typename std::vector<T>::const_iterator end() const {
+    return this->as<T>().end();
+  }
 
   template <typename T>
   T& get(const std::vector<size_t>& coords);  // write
@@ -94,7 +97,7 @@ class Tensor {
   template <typename T>
   T get(const std::vector<size_t>& coords) const;  // read
 
-  friend std::ostream& operator<<(std::ostream& out, Tensor& t);
+  friend std::ostream& operator<<(std::ostream& out, const Tensor& t);
 };
 
 template <typename T>
@@ -106,20 +109,18 @@ std::vector<T>* Tensor::as() {
 }
 
 template <typename T>
-typename std::vector<T>::const_iterator begin() {
-  return this->as<T>().begin();
+const std::vector<T>* Tensor::as() const {
+  if (GetTypeEnum<T>() != type_) {
+    throw std::invalid_argument("INVALID_TYPE");
+  }
+  return reinterpret_cast<const std::vector<T>*>(&values_);
 }
 
-template <typename T>
-typename std::vector<T>::const_iterator end() {
-  return this->as<T>().end();
-}
-
-std::ostream& operator<<(std::ostream& out, Tensor& t) {
+std::ostream& operator<<(std::ostream& out, const Tensor& t) {
   for (size_t i = 0; i < t.get_shape().count(); i++) {
     out.width(5);
-    if (t.get_type() == kInt) out << (*t.as<int>())[i] << " ";
-    if (t.get_type() == kDouble) out << (*t.as<double>())[i] << " ";
+    if (t.get_type() == Type::kInt) out << (*t.as<int>())[i] << " ";
+    if (t.get_type() == Type::kDouble) out << (*t.as<double>())[i] << " ";
     if ((i + 1) % t.get_shape()[1] == 0) out << std::endl;
   }
 
@@ -151,11 +152,6 @@ T Tensor::get(const std::vector<size_t>& coords) const {
 }  // read
 
 template <typename T>
-Tensor make_tensor(const std::vector<T>& v) {
-  return Tensor(*to_byte<T>(v), {v.size()}, GetTypeEnum<T>());
-}
-
-template <typename T>
-Tensor make_tensor(const std::vector<T>& v, const Shape& s) {
+Tensor make_tensor(const std::vector<T>& v, const Shape& s = {v.size()}) {
   return Tensor(*to_byte<T>(v), s, GetTypeEnum<T>());
 }
