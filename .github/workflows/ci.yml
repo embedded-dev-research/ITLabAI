@@ -136,7 +136,7 @@ jobs:
         key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt') }}
     - name: Build
       run: |
-        cmake -S . -B build 
+        cmake -S . -B build
         cmake --build build
     - name: Test
       run: |
