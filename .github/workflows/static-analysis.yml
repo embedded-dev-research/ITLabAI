@@ -21,3 +21,11 @@ jobs:
         lgtm_comment_body: ""
     - if: steps.review.outputs.total_comments > 0
       run: exit 1
+  download-tensorflow:
+    name: Download and extract TensorFlow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and extract TensorFlow
+        run: |
+          wget https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
+          tar -xzvf libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
