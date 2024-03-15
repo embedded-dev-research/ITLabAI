@@ -29,25 +29,15 @@ class InputLayer : public Layer<ValueType> {
     cv::resize(image, resized_image, cv::Size(227, 227));
     std::vector<cv::Mat> channels;
     cv::split(resized_image, channels);
-    std::vector<std::vector<int>> red_values(227, std::vector<int>(227));
-    std::vector<std::vector<int>> green_values(227, std::vector<int>(227));
-    std::vector<std::vector<int>> blue_values(227, std::vector<int>(227));
-    for (int i = 0; i < 227; ++i) {
-      for (int j = 0; j < 227; ++j) {
-        red_values[i][j] = static_cast<int>(channels[2].at<uchar>(i, j));
-        green_values[i][j] = static_cast<int>(channels[1].at<uchar>(i, j));
-        blue_values[i][j] = static_cast<int>(channels[0].at<uchar>(i, j));
-      }
-    }
     std::vector<int> res(227 * 227 * 3);
     int c = 0;
     for (int i = 0; i < 227; ++i) {
       for (int j = 0; j < 227; ++j) {
-        res[c] = red_values[i][j];
+        res[c] = static_cast<int>(channels[2].at<uchar>(i, j));
         c++;
-        res[c] = green_values[i][j];
+        res[c] = static_cast<int>(channels[1].at<uchar>(i, j));
         c++;
-        res[c] = blue_values[i][j];
+        res[c] = static_cast<int>(channels[0].at<uchar>(i, j));
         c++;
       }
     }
