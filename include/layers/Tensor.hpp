@@ -33,7 +33,7 @@ class Tensor {
   std::vector<uint8_t> values_;
   Type type_;
 
-  std::vector<uint8_t> Tensor::SetRightTypeValues() {
+  std::vector<uint8_t> SetRightTypeValues() {
     if (type_ == Type::kInt) {
       return std::vector<uint8_t>(shape_.count() * sizeof(int), 0);
     }
