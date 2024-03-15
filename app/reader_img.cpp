@@ -1,5 +1,4 @@
 #include "read/reader_img.hpp"
-#include <opencv2/opencv.hpp>
 
 #include <iostream>
 int main() {
