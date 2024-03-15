@@ -74,7 +74,7 @@ class Tensor {
   Tensor(const Tensor& t) = default;
 
   Tensor(Tensor&& t) = default;
-  
+
   Tensor& operator=(Tensor&& t) = default;
 
   std::vector<uint8_t> get_values() const { return values_; }
@@ -143,7 +143,7 @@ template <typename T>
 T Tensor::get(const std::vector<size_t>& coords) const {
   size_t s = shape_.get_index(coords);
   const std::vector<T>* res_vector = this->as<T>();
-  
+
   if ((*res_vector).size() == 0) {
     throw std::invalid_argument("Empty tensor\n");
   }
