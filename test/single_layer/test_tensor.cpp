@@ -7,10 +7,12 @@
 
 struct TestClass {
  public:
-  TestClass(float a) : a_('1'), b_(a) {}
+  TestClass(float a) : b_(a) {}
+  char get_a() { return a_; }
+  float get_b() { return b_; }
 
  private:
-  char a_;
+  char a_{'1'};
   float b_;
 };
 
