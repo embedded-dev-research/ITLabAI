@@ -23,6 +23,7 @@ jobs:
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ccache-${{ github.job }}-${{ matrix.build_type }}
+        max-size: 2G
     - name: Build
       run: |
         cmake -S . -B build \
@@ -97,9 +98,11 @@ jobs:
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ccache-${{ github.job }}
+        max-size: 2G
+        variant: sccache
     - name: Build
       run: |
-        cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
         cmake --build build
     - name: Test
       run: |
