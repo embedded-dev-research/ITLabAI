@@ -9,7 +9,7 @@
 class Shape {
  public:
   Shape() = default;
-  Shape(size_t dims_count) : dims_(dims_count, 0) {}
+  Shape(size_t dims_count) : dims_(dims_count, 1) {}
   Shape(const std::vector<size_t>& dims) : dims_(dims) {}
   Shape(const std::initializer_list<size_t>& l) : dims_(l) {}
   Shape(const Shape& c) = default;

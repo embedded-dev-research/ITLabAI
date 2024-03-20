@@ -22,22 +22,22 @@ TEST(Tensor, can_create_int_tensor) {
   ASSERT_NO_THROW(make_tensor<int>(vals_tensor, sh));
 }
 
-TEST(Tensor, can_create_double_tensor) {
+TEST(Tensor, can_create_float_tensor) {
   Shape sh({2, 3});
-  std::vector<double> vals_tensor = {4.5, -0.2, 2.1, -1.7, -6.9, 3.0};
-  ASSERT_NO_THROW(make_tensor<double>(vals_tensor, sh));
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  ASSERT_NO_THROW(make_tensor<float>(vals_tensor, sh));
 }
 
 TEST(Tensor, can_get_tensor_type) {
   Shape sh({2, 3});
-  std::vector<double> vals_tensor = {4.5, -0.2, 2.1, -1.7, -6.9, 3.0};
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
   const Tensor tensor = make_tensor(vals_tensor, sh);
-  EXPECT_EQ(tensor.get_type(), Type::kDouble);
+  EXPECT_EQ(tensor.get_type(), Type::kFloat);
 }
 
 TEST(Tensor, can_iterate_through_tensor) {
   Shape sh({2, 3});
-  std::vector<double> vals_tensor = {4.5, -0.2, 2.1, -1.7, -6.9, 3.0};
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
   size_t i = 0;
   for (auto it = vals_tensor.begin(); it != vals_tensor.end(); it++) {
     EXPECT_NEAR(*it, vals_tensor[i], 1e-5);
@@ -59,25 +59,25 @@ TEST(Tensor, check_get_negative_integer_element_from_tensor) {
   EXPECT_EQ(t.get<int>({0, 2}), -2);
 }
 
-TEST(Tensor, check_get_positive_double_element_from_tensor) {
+TEST(Tensor, check_get_positive_float_element_from_tensor) {
   Shape sh({2, 3});
-  std::vector<double> vals_tensor = {4.5, -0.2, 2.1, -1.7, -6.9, 3.0};
-  Tensor t = make_tensor<double>(vals_tensor, sh);
-  EXPECT_NEAR(t.get<double>({1, 2}), 3.0, 1e-5);
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  Tensor t = make_tensor<float>(vals_tensor, sh);
+  EXPECT_NEAR(t.get<float>({1, 2}), 3.0, 1e-5);
 }
 
-TEST(Tensor, check_get_negative_double_element_from_tensor) {
+TEST(Tensor, check_get_negative_float_element_from_tensor) {
   Shape sh({2, 3});
-  std::vector<double> vals_tensor = {4.5, -0.2, 2.1, -1.7, -6.9, 3.0};
-  Tensor t = make_tensor<double>(vals_tensor, sh);
-  EXPECT_NEAR(t.get<double>({0, 1}), -0.2, 1e-5);
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  Tensor t = make_tensor<float>(vals_tensor, sh);
+  EXPECT_NEAR(t.get<float>({0, 1}), -0.2, 1e-5);
 }
 
-TEST(Tensor, check_get_double_element_from_const_tensor) {
+TEST(Tensor, check_get_float_element_from_const_tensor) {
   Shape sh({2, 3});
-  std::vector<double> vals_tensor = {4.5, -0.2, 2.1, -1.7, -6.9, 3.0};
-  const Tensor t = make_tensor<double>(vals_tensor, sh);
-  EXPECT_NEAR(t.get<double>({0, 1}), -0.2, 1e-5);
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  const Tensor t = make_tensor<float>(vals_tensor, sh);
+  EXPECT_NEAR(t.get<float>({0, 1}), -0.2, 1e-5);
 }
 
 TEST(Tensor, check_get_operation_with_out_of_range_coordinates) {
@@ -87,12 +87,35 @@ TEST(Tensor, check_get_operation_with_out_of_range_coordinates) {
   ASSERT_ANY_THROW(t.get<int>({2, 2}));
 }
 
+TEST(Tensor, check_set_operation_with_out_of_range_coordinates) {
+  Shape sh({2, 3});
+  std::vector<int> vals_tensor = {4, 0, -2, 1, 6, -3};
+  Tensor t = make_tensor<int>(vals_tensor, sh);
+  ASSERT_ANY_THROW(t.set<int>({2, 2}, 6));
+}
+
+TEST(Tensor, check_set_integer_element_in_tensor) {
+  Shape sh({2, 3});
+  std::vector<int> vals_tensor = {4, 0, -2, 1, 6, -3};
+  Tensor t = make_tensor<int>(vals_tensor, sh);
+  t.set<int>({1, 1}, 99);
+  EXPECT_EQ(t.get<int>({1, 1}), 99);
+}
+
+TEST(Tensor, check_set_float_element_in_tensor) {
+  Shape sh({2, 3});
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  Tensor t = make_tensor<float>(vals_tensor, sh);
+  t.set<float>({1, 1}, 99.2F);
+  EXPECT_NEAR(t.get<float>({1, 1}), 99.2F, 1e-5);
+}
+
 TEST(Tensor,
      cannot_get_element_using_the_get_method_with_an_inappropriate_type) {
   Shape sh({2, 3});
   std::vector<int> vals_tensor = {4, 0, -2, 1, 6, -3};
   Tensor t = make_tensor<int>(vals_tensor, sh);
-  ASSERT_ANY_THROW(t.get<double>({0, 0}));
+  ASSERT_ANY_THROW(t.get<float>({0, 0}));
 }
 
 TEST(Tensor, cannot_create_tensor_based_on_an_unsuitable_vector_of_values) {
