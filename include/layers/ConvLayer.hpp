@@ -43,13 +43,13 @@ std::vector<ValueType> ConvolutionalLayer<ValueType>::run(
   size_t kernelSize = static_cast<int>(std::sqrt(kernel_.size()));
   size_t output_height = this->outputShape_[0];
   size_t output_width = this->outputShape_[1];
-  int input_width = static_cast<int>(std::sqrt(input_size/3));
-  if (input_size !=
-      image_width_ * image_height_ * 3) {
+  int input_width = static_cast<int>(std::sqrt(input_size / 3));
+  if (input_size != image_width_ * image_height_ * 3) {
     throw std::invalid_argument("Input size doesn't fit ConvolutionalLayer");
   }
   std::vector<ValueType> output;
-  for (int i = input_width + 1; i < static_cast<int>(input_size / 3); i += step_) {
+  for (int i = input_width + 1; i < static_cast<int>(input_size / 3);
+       i += step_) {
     for (int x = 0; x < 3; x++) {
       ValueType color = 0;
       int ckernel = 0;
@@ -62,10 +62,11 @@ std::vector<ValueType> ConvolutionalLayer<ValueType>::run(
       output.push_back(color);
     }
     if ((i + static_cast<int>((kernelSize - 1) / 2) + 1) % input_width == 0) {
-      if (i + input_width + static_cast<int>((kernelSize - 1)) == static_cast<int>(input_size / 3)) {
+      if (i + input_width + static_cast<int>((kernelSize - 1)) ==
+          static_cast<int>(input_size / 3)) {
         i += input_width + static_cast<int>((kernelSize - 1)) + 1;
       } else {
-        i += input_width * (step_ - 1) + (3- step_);
+        i += input_width * (step_ - 1) + (3 - step_);
       }
     }
   }
