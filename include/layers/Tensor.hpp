@@ -119,8 +119,7 @@ std::ostream& operator<<(std::ostream& out, const Tensor& t) {
     out.width(5);
     if (t.get_type() == Type::kInt) {
       out << (*t.as<int>())[i] << " ";
-    }
-    else if (t.get_type() == Type::kFloat) {
+    } else if (t.get_type() == Type::kFloat) {
       out << (*t.as<float>())[i] << " ";
     }
     if (t.get_shape().dims() > 1) {
