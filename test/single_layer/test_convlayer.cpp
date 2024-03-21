@@ -15,7 +15,7 @@ TEST(ConvolutionalLayerTest, Step2) {
   outsize.push_back(2);
   outsize.push_back(2);
   Shape kernel_shape(outsize);
-  std::vector<float> expected_output (12, 5);
+  std::vector<float> expected_output(12, 5);
   ConvolutionalLayer<float> conv_layer(kernel, kernel_shape, image_width,
                                        image_height, step);
   std::vector<float> output = conv_layer.run(image);
