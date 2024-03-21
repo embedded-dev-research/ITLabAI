@@ -40,7 +40,7 @@ template <typename ValueType>
 std::vector<ValueType> ConvolutionalLayer<ValueType>::run(
     const std::vector<ValueType>& input) const {
   size_t input_size = input.size();
-  size_t kernelSize = static_cast<int>(std::sqrt(kernel_.size()));
+  size_t kernel_size = static_cast<int>(std::sqrt(kernel_.size()));
   size_t output_height = this->outputShape_[0];
   size_t output_width = this->outputShape_[1];
   int input_width = static_cast<int>(std::sqrt(input_size / 3));
@@ -61,10 +61,10 @@ std::vector<ValueType> ConvolutionalLayer<ValueType>::run(
       }
       output.push_back(color);
     }
-    if ((i + static_cast<int>((kernelSize - 1) / 2) + 1) % input_width == 0) {
-      if (i + input_width + static_cast<int>((kernelSize - 1)) ==
+    if ((i + static_cast<int>((kernel_size - 1) / 2) + 1) % input_width == 0) {
+      if (i + input_width + static_cast<int>((kernel_size - 1)) ==
           static_cast<int>(input_size / 3)) {
-        i += input_width + static_cast<int>((kernelSize - 1)) + 1;
+        i += input_width + static_cast<int>((kernel_size - 1)) + 1;
       } else {
         i += input_width * (step_ - 1) + (3 - step_);
       }
