@@ -6,15 +6,22 @@ jobs:
   clang-tidy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ccache-${{ github.job }}
     - uses: ZedThree/clang-tidy-review@v0.14.0
       id: review
       with:
-        apt_packages: libomp-dev
+        apt_packages: libomp-dev,libopencv-dev
         build_dir: build
-        cmake_command: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        cmake_command: cmake -S . -B build \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
         config_file: .clang-tidy
         exclude: 3rdparty
         split_workflow: false
