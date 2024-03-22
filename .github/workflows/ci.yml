@@ -6,7 +6,7 @@ jobs:
   clang-format:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: DoozyX/clang-format-lint-action@v0.15
       with:
         source: '.'
@@ -16,7 +16,7 @@ jobs:
         build_type: [DEBUG, RELEASE]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
     - name: Download and extract TensorFlow
@@ -33,15 +33,17 @@ jobs:
       run: |
         echo "TensorFlow_INCLUDE_DIRS: ${{ env.TensorFlow_INCLUDE_DIRS }}"
         echo "TensorFlow_LIBRARIES: ${{ env.TensorFlow_LIBRARIES }}"
-    - name: Cache CMake build
-      uses: actions/cache@v4
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
       with:
-        path: |
-          build
-        key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt', '**/*.cpp', '**/*.h') }}
+        key: ccache-${{ github.job }}-${{ matrix.build_type }}
+        max-size: 2G
     - name: Build
       run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
+        cmake -S . -B build \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
         cmake --build build
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
@@ -52,15 +54,9 @@ jobs:
   build-linux-clang:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Cache CMake build
-      uses: actions/cache@v4
-      with:
-        path: |
-          build
-        key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt') }}
     - name: Install prerequisites
       run: |
         sudo apt install clang libomp-dev
@@ -74,9 +70,17 @@ jobs:
         echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
         echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
         echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ccache-${{ github.job }}
     - name: Build
       run: |
-        cmake -S . -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
+        cmake -S . -B build \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_C_COMPILER=clang \
+          -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
         cmake --build build
     - name: Test
       run: cmake --build build -t test
@@ -85,15 +89,9 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Cache CMake build
-      uses: actions/cache@v4
-      with:
-        path: |
-          build
-        key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt') }}
     - name: Install prerequisites
       run: |
         brew install libomp
@@ -108,9 +106,15 @@ jobs:
         echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dylib" >> $GITHUB_ENV
         echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
         echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.dylib" >> $GITHUB_ENV
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ccache-${{ github.job }}
     - name: Build
       run: |
         cmake -S . -B build \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_FLAGS="-I$(brew --prefix)/opt/libomp/include" \
           -DCMAKE_CXX_FLAGS="-I$(brew --prefix)/opt/libomp/include" -DTensorFlow_INCLUDE_DIRS=$TensorFlow_INCLUDE_DIRS -DTensorFlow_LIBRARIES=$TensorFlow_LIBRARIES
         cmake --build build
@@ -121,22 +125,22 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
     - name: Download and extract TensorFlow
       run: |
         curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-windows-x86_64-2.7.0.zip
         Expand-Archive -Path libtensorflow-cpu-windows-x86_64-2.7.0.zip -DestinationPath 3rdparty/tensorflow
-    - name: Cache CMake build
-      uses: actions/cache@v4
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
       with:
-        path: |
-          build
-        key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt') }}
+        key: ccache-${{ github.job }}
+        max-size: 2G
+        variant: sccache
     - name: Build
       run: |
-        cmake -S . -B build
+        cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
         cmake --build build
     - name: Test
       run: |
