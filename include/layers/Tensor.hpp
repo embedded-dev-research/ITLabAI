@@ -47,12 +47,6 @@ class Tensor {
     return std::vector<uint8_t>();
   }
 
-  template <typename T>
-  std::vector<T>* as();
-
-  template <typename T>
-  const std::vector<T>* as() const;
-
  public:
   Tensor(const std::vector<uint8_t>& a, const Shape& sh, Type type)
       : shape_(sh), type_(type) {
@@ -94,6 +88,12 @@ class Tensor {
 
   template <typename T>
   T get(const std::vector<size_t>& coords) const;  // read
+
+  template <typename T>
+  std::vector<T>* as();
+
+  template <typename T>
+  const std::vector<T>* as() const;
 
   friend std::ostream& operator<<(std::ostream& out, const Tensor& t);
 };

@@ -129,3 +129,13 @@ TEST(Tensor, cannot_create_a_tensor_with_an_invalid_type) {
   std::vector<TestClass> vals_tensor = {4.0F, 0.3F, -2.1F, 1.9F, 6.3F, -3.0F};
   ASSERT_ANY_THROW(make_tensor<TestClass>(vals_tensor, sh););
 }
+
+TEST(Tensor, can_interpret_as_test) {
+  Shape sh({2, 3});
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  const Tensor t = make_tensor<float>(vals_tensor, sh);
+  std::vector<float> tmp_tensor = *t.as<float>();
+  for (size_t i = 0; i < sh.count(); i++) {
+    EXPECT_NEAR(tmp_tensor[i], vals_tensor[i], 1e-5);
+  }
+}
