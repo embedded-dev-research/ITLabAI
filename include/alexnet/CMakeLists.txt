@@ -35,9 +35,6 @@ if(WIN32)
 
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(tensorflow DEFAULT_MSG TensorFlow_INCLUDE_DIRS TensorFlow_LIBRARIES)
-
-    #message("TensorFlow_INCLUDE_DIRS: ${TensorFlow_INCLUDE_DIRS}")
-    #message("TensorFlow_LIBRARIES: ${TensorFlow_LIBRARIES}")
 endif()
 
 if(TENSORFLOW_FOUND)
