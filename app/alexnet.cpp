@@ -3,8 +3,9 @@
 
 #include "alexnet/reader_tf_model.hpp"
 int main() {
-  std::string image_path = MODEL1_PATH;
-  AlexNetSample(image_path);
+  std::string model_path = MODEL1_PATH;
+  //AlexNetSample(model_path);
   Graph graph(3);
-  graph = readTFModel(image_path);
+  readTFModel(model_path, graph);
+
 }

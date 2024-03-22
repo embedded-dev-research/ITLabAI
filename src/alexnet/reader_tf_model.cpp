@@ -3,47 +3,51 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-Graph readTFModel(const std::string& modelPath) {
-  Graph graph(3);
 
-  std::ifstream file(modelPath, std::ios::binary);
-  if (!file.is_open()) {
-    throw std::runtime_error("Failed to open file: " + modelPath);
+void CheckStatus(TF_Status* status) {
+  if (TF_GetCode(status) != TF_OK) {
+    std::cerr << "Error: " << TF_Message(status)
+              << std::endl;
+    TF_DeleteStatus(status);
+    exit(1);
   }
+}
 
-  file.seekg(0, std::ios::end);
-  size_t file_size = file.tellg();
+Graph readTFModel(const std::string& modelPath, Graph& g) {
+
+  TF_Status* status = TF_NewStatus();
+  TF_Graph* graph = TF_NewGraph();
+  TF_SessionOptions* sessionOpts = TF_NewSessionOptions();
+  TF_Session* session = TF_NewSession(graph, sessionOpts, status);
+  CheckStatus(status);
+
+  std::ifstream file(modelPath, std::ios::binary | std::ios::ate);
+  if (!file.is_open()) {
+    std::cerr << "Error: Failed to open TensorFlow model file." << std::endl;
+    exit(1);
+  }
+  std::streamsize fileSize = file.tellg();
   file.seekg(0, std::ios::beg);
-
-  std::vector<char> buffer(file_size);
-  file.read(buffer.data(), file_size);
+  std::vector<char> buffer(fileSize);
+  if (!file.read(buffer.data(), fileSize)) {
+    std::cerr << "Error: Failed to read TensorFlow model file." << std::endl;
+    exit(1);
+  }
   file.close();
 
-  TF_Graph* graphDef = TF_NewGraph();
-  TF_Status* status = TF_NewStatus();
-  TF_Buffer* tf_buffer = TF_NewBufferFromString(buffer.data(), buffer.size());
+  TF_Buffer graphDef = {buffer.data(), static_cast<size_t>(fileSize), nullptr};
+  TF_ImportGraphDefOptions* importOpts = TF_NewImportGraphDefOptions();
+  TF_GraphImportGraphDef(graph, &graphDef, importOpts, status);
+  CheckStatus(status);
 
-  TF_SessionOptions* sessionOptions = TF_NewSessionOptions();
-  TF_Session* session = TF_NewSession(graphDef, sessionOptions, status);
-  if (TF_GetCode(status) != TF_OK) {
-    throw std::runtime_error("Failed to create TensorFlow session: " +
-                             std::string(TF_Message(status)));
-  }
+  TF_DeleteImportGraphDefOptions(importOpts);
 
-  TF_ImportGraphDefOptions* importOptions = TF_NewImportGraphDefOptions();
-  TF_GraphImportGraphDef(graphDef, tf_buffer, importOptions, status);
-  TF_DeleteImportGraphDefOptions(importOptions);
-  TF_DeleteBuffer(tf_buffer);
-
-  if (TF_GetCode(status) != TF_OK) {
-    throw std::runtime_error("Failed to import graph definition: " +
-                             std::string(TF_Message(status)));
-  }
+  TF_DeleteBuffer(&graphDef);
 
   TF_Operation* op;
-  size_t pos = 0;
+  size_t pos1 = 0;
   std::vector<int> def;
-  while ((op = TF_GraphNextOperation(graphDef, &pos)) != nullptr) {
+  while ((op = TF_GraphNextOperation(graph, &pos1)) != nullptr) {
     std::string name = TF_OperationName(op);
     LayerType type;
     if (name.find("input") != std::string::npos) {
@@ -66,13 +70,14 @@ Graph readTFModel(const std::string& modelPath) {
       throw std::runtime_error("Unknown node type: " + name);
     }
     LayerExample layer(type);
-    graph.setInput(layer, def);
+    g.setInput(layer, def);
+    std::cout << "Added layer: " << name << " of type: " << type << std::endl;
   }
 
   TF_DeleteSession(session, status);
-  TF_DeleteSessionOptions(sessionOptions);
+  TF_DeleteSessionOptions(sessionOpts);
+  TF_DeleteGraph(graph);
   TF_DeleteStatus(status);
-  TF_DeleteGraph(graphDef);
 
-  return graph;
+  return g;
 }

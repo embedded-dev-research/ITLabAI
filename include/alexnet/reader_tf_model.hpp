@@ -6,4 +6,4 @@
 #include <tensorflow/c/tf_tensor.h>
 
 #include <iostream>
-Graph readTFModel(const std::string& modelPath);
+Graph readTFModel(const std::string& modelPath, Graph& graph);
