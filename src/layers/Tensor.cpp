@@ -13,4 +13,3 @@ std::ostream& operator<<(std::ostream& out, const Tensor& t) {
     }
   }
   return out;
-}
