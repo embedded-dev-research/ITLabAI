@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "layers/Shape.hpp"
+#include "layers/Tensor.hpp"
 
 template <typename ValueType>
 std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
