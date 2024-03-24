@@ -181,8 +181,7 @@ TEST(fclayer, new_fc_layer_throws_with_incorrect_input_type) {
   Shape wshape({3, 2});
   Tensor bias = make_tensor<float>({2, 5, 6});
   FCLayer layer;
-  ASSERT_ANY_THROW(
-      layer.run(make_tensor<int>({2, 3}), output, weights, bias));
+  ASSERT_ANY_THROW(layer.run(make_tensor<int>({2, 3}), output, weights, bias));
 }
 
 TEST(fclayer, get_layer_name) {
