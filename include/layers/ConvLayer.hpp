@@ -6,7 +6,7 @@
 #include "layers/Layer.hpp"
 
 template <typename ValueType>
-class ConvolutionalLayer : public Layer<ValueType> {
+class ConvolutionalLayer : public LayerImpl<ValueType> {
  public:
   ConvolutionalLayer() = default;
   std::vector<ValueType> run(
