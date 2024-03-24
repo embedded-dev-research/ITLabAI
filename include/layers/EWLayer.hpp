@@ -4,7 +4,6 @@
 #include <string>
 
 #include "layers/Layer.hpp"
-#include "layers/Layer.hpp"
 
 template <typename T>
 T minus(const T& elem) {
