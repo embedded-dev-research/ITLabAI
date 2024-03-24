@@ -3,9 +3,17 @@
 #include <initializer_list>
 #include <numeric>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include "layers/Shape.hpp"
+#include "layers/Tensor.hpp"
+
+class Layer {
+ public:
+  Layer() = default;
+  virtual std::string get_name() = 0;
+};
 
 template <typename ValueType>
 std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
@@ -33,13 +41,13 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
 }
 
 template <typename ValueType>
-class Layer {
+class Layerimpl {
  public:
-  Layer() = default;
-  Layer(const Shape& inputShape, const Shape& outputShape)
+  Layerimpl() = default;
+  Layerimpl(const Shape& inputShape, const Shape& outputShape)
       : inputShape_(inputShape), outputShape_(outputShape) {}
-  Layer(const Layer& c) = default;
-  Layer& operator=(const Layer& c) = default;
+  Layerimpl(const Layerimpl& c) = default;
+  Layerimpl& operator=(const Layerimpl& c) = default;
   virtual std::vector<ValueType> run(
       const std::vector<ValueType>& input) const = 0;
   Shape get_input_shape() const { return inputShape_; }

@@ -7,15 +7,23 @@
 
 #include "layers/Layer.hpp"
 
-template <typename ValueType>
-class FCLayer : public Layer<ValueType> {
+class FCLayer : public Layer {
  public:
-  FCLayer() = delete;
-  FCLayer(const std::vector<ValueType>& input_weights,
+  FCLayer() = default;
+  std::string get_name() { return "Fully-connected layer"; }
+  void run(const Tensor& input, Tensor& output, const Tensor& weights,
+           const Tensor& bias);
+};
+
+template <typename ValueType>
+class FCLayerimpl : public Layerimpl<ValueType> {
+ public:
+  FCLayerimpl() = delete;
+  FCLayerimpl(const std::vector<ValueType>& input_weights,
           const Shape& input_weights_shape,
           const std::vector<ValueType>& input_bias);
-  FCLayer(const FCLayer& c) = default;
-  FCLayer& operator=(const FCLayer& sec) = default;
+  FCLayerimpl(const FCLayerimpl& c) = default;
+  FCLayerimpl& operator=(const FCLayerimpl& sec) = default;
   void set_weight(size_t i, size_t j, const ValueType& value) {
     if (i >= this->outputShape_[0] || j >= this->inputShape_[0]) {
       throw std::out_of_range("Invalid weight index");
@@ -51,10 +59,10 @@ class FCLayer : public Layer<ValueType> {
 
 // constructor for FCLayer
 template <typename ValueType>
-FCLayer<ValueType>::FCLayer(const std::vector<ValueType>& input_weights,
-                            const Shape& input_weights_shape,
-                            const std::vector<ValueType>& input_bias)
-    : Layer<ValueType>(1, 1), weights_(input_weights), bias_(input_bias) {
+FCLayerimpl<ValueType>::FCLayerimpl(const std::vector<ValueType>& input_weights,
+                                    const Shape& input_weights_shape,
+                                    const std::vector<ValueType>& input_bias)
+    : Layerimpl<ValueType>(1, 1), weights_(input_weights), bias_(input_bias) {
   if (input_weights.empty()) {
     throw std::invalid_argument("Empty weights for FCLayer");
   }
@@ -73,7 +81,7 @@ FCLayer<ValueType>::FCLayer(const std::vector<ValueType>& input_weights,
 }
 
 template <typename ValueType>
-std::vector<ValueType> FCLayer<ValueType>::run(
+std::vector<ValueType> FCLayerimpl<ValueType>::run(
     const std::vector<ValueType>& input) const {
   if (input.size() != this->inputShape_[0]) {
     throw std::invalid_argument("Input size doesn't fit FCLayer");
