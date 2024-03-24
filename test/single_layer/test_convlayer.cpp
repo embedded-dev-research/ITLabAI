@@ -4,7 +4,7 @@
 
 TEST(ConvolutionalLayerTest, Step2) {
   std::vector<float> image;
-  for (float i = 0; i < 75; ++i) {
+  for (int i = 0; i < 75; ++i) {
     image.push_back(1);
   }
   Shape sh1({2, 2});
@@ -25,7 +25,7 @@ TEST(ConvolutionalLayerTest, Step2) {
 }
 TEST(ConvolutionalLayerTest, Step1) {
   std::vector<float> image;
-  for (float i = 0; i < 75; ++i) {
+  for (int i = 0; i < 75; ++i) {
     image.push_back(1);
   }
   Shape sh1({2, 2});
