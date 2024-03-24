@@ -18,15 +18,15 @@ class ConvolutionalLayer : public Layer<ValueType> {
 };
 template <typename ValueType>
 void ConvolutionalLayer<ValueType>::run(const Tensor& input, Tensor& output,
-           const std::vector<ValueType>& kernel_, size_t step_) {
+                                        const std::vector<ValueType>& kernel_,
+                                        size_t step_) {
   std::vector<ValueType> matrix = *input.as<ValueType>();
   size_t input_size = matrix.size();
   size_t kernel_size = static_cast<int>(std::sqrt(kernel_.size()));
   int input_width = static_cast<int>(std::sqrt(input_size / 3));
   std::vector<ValueType> outputvec;
   for (int i = input_width + static_cast<int>((kernel_size - 1)/2);
-       i < static_cast<int>(input_size / 3);
-       i += static_cast<int>(step_)) {
+       i < static_cast<int>(input_size / 3); i += static_cast<int>(step_)) {
     for (int x = 0; x < 3; x++) {
       ValueType color = 0;
       int ckernel = 0;
