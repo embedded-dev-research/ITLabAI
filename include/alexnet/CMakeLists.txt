@@ -40,7 +40,7 @@ if(WIN32)
     if(EXISTS "${TensorFlow_INCLUDE_DIRS}" AND EXISTS "${TensorFlow_LIBRARIES}")
         message(STATUS "TensorFlow found")
     else()
-        message(STATUS "TensorFlow not found")
+        message(WARNING "TensorFlow not found")
     endif()
 endif()
 
