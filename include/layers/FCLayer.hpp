@@ -10,7 +10,7 @@
 class FCLayer : public Layer {
  public:
   FCLayer() = default;
-  std::string get_name() { return "Fully-connected layer"; }
+  static std::string get_name() { return "Fully-connected layer"; }
   void run(const Tensor& input, Tensor& output, const Tensor& weights,
            const Tensor& bias);
 };

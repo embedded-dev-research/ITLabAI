@@ -52,6 +52,12 @@ TEST(fclayer, throws_when_empty_input) {
   std::vector<double> input;
   ASSERT_ANY_THROW(layer.run(input));
 }
+TEST(fclayer, throws_when_empty_weights) {
+  const std::vector<double> a1;
+  Shape wshape({3, 2});
+  std::vector<double> bias = {0.5, 0.5, 1.0};
+  ASSERT_ANY_THROW(FCLayerimpl<double> layer(a1, wshape, bias));
+}
 TEST(fclayer, throws_when_empty_bias) {
   const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
   Shape wshape({3, 2});
@@ -118,7 +124,7 @@ TEST(fclayer, get_dims_returns_correctly) {
   EXPECT_EQ(layer.get_dims().second[0], 2);
 }
 
-TEST(fclayer, new_fc_layer_can_run) {
+TEST(fclayer, new_fc_layer_can_run_float) {
   const std::vector<float> a1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   const std::vector<float> a2 = {9.0F, 6.4F, 17.5F};
   Tensor weights = make_tensor<float>(a1, {3, 2});
@@ -129,6 +135,20 @@ TEST(fclayer, new_fc_layer_can_run) {
   layer.run(make_tensor<float>({2.0F, 3.0F}), output, weights, bias);
   for (size_t i = 0; i < a2.size(); i++) {
     EXPECT_NEAR((*output.as<float>())[i], a2[i], 1e-5);
+  }
+}
+
+TEST(fclayer, new_fc_layer_can_run_int) {
+  const std::vector<int> a1 = {2, 1, 0, 2, 0, 5};
+  const std::vector<int> a2 = {7, 6, 16};
+  Tensor weights = make_tensor<int>(a1, {3, 2});
+  Tensor output = make_tensor<int>({0});
+  Shape wshape({3, 2});
+  Tensor bias = make_tensor<int>({0, 0, 1});
+  FCLayer layer;
+  layer.run(make_tensor<int>({2, 3}), output, weights, bias);
+  for (size_t i = 0; i < a2.size(); i++) {
+    EXPECT_NEAR((*output.as<int>())[i], a2[i], 1e-5);
   }
 }
 
@@ -151,5 +171,20 @@ TEST(fclayer, new_fc_layer_throws_with_incorrect_bias_type) {
   Tensor bias = make_tensor<int>({2, 5, 6});
   FCLayer layer;
   ASSERT_ANY_THROW(
-      layer.run(make_tensor<float>({2.0F, 3.0F, 4.0F}), output, weights, bias));
+      layer.run(make_tensor<float>({2.0F, 3.0F}), output, weights, bias));
+}
+
+TEST(fclayer, new_fc_layer_throws_with_incorrect_input_type) {
+  const std::vector<float> a1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(a1, {3, 2});
+  Tensor output = make_tensor<float>({0});
+  Shape wshape({3, 2});
+  Tensor bias = make_tensor<float>({2, 5, 6});
+  FCLayer layer;
+  ASSERT_ANY_THROW(
+      layer.run(make_tensor<int>({2, 3}), output, weights, bias));
+}
+
+TEST(fclayer, get_layer_name) {
+  EXPECT_EQ(FCLayer::get_name(), "Fully-connected layer");
 }

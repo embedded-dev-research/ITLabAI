@@ -12,7 +12,6 @@
 class Layer {
  public:
   Layer() = default;
-  virtual std::string get_name() = 0;
 };
 
 template <typename ValueType>
