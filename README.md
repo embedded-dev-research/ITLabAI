@@ -1,4 +1,5 @@
 [![CI](https://github.com/embedded-dev-research/itlab_2023/actions/workflows/ci.yml/badge.svg)](https://github.com/embedded-dev-research/itlab_2023/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/embedded-dev-research/itlab_2023/graph/badge.svg?token=L3OS8C4BI6)](https://codecov.io/gh/embedded-dev-research/itlab_2023)
 
 # itlab_2023
 # Name
@@ -16,7 +17,10 @@ To build and run this project locally on Windows, follow these steps:
    Navigate to the project directory and update the submodules:
    ```bash
    git submodule update --init --recursive
-3. **Configure the project:**
+3. **Download tensorflow library:**
+   Download the tensorflow archive from this [link](https://www.tensorflow.org/install/lang_c?hl=ru)\
+   Unzip the archive to the tensorflow folder in folder 3rdparty
+4. **Configure the project:**
    Create a separate directory for configure the project and compile it:
    ```bash
    mkdir build
@@ -24,13 +28,13 @@ To build and run this project locally on Windows, follow these steps:
    cmake ..
     ```
     *Note: Make sure you have CMake installed to build the project.*
-4. **Build the project:**
+5. **Build the project:**
    Next, to build the project, we will need to enter the command
     ```bash
    cmake --build . --config Release
     ```
     If you want to build in a debug, change the release to debug
-5. **Run the project**
+6. **Run the project**
    After building the project, you can find the executable file in the following path from the *build* folder
    ```bash
    cd app\Release
@@ -51,19 +55,22 @@ To build and run this project locally on Windows, follow these steps:
    Navigate to the project directory and update the submodules:
    ```bash
    git submodule update --init --recursive
-3. **Configure the project:**
+3. **Download tensorflow library:**
+   Download the tensorflow archive from this [link](https://www.tensorflow.org/install/lang_c?hl=ru)\
+   Unzip the archive to the tensorflow folder in folder 3rdparty
+4. **Configure the project:**
    Create a separate directory for configure the project and compile it:
    ```bash
    cmake -S . -B build
     ```
     *Note: Make sure you have CMake installed to build the project.*
-4. **Build the project:**
+5. **Build the project:**
    Next, to build the project, we will need to enter the command
     ```bash
    cmake --build build --config Release
     ```
     If you want to build in a debug, change the release to debug
-5. **Run the project**
+6. **Run the project**
    After building the project, you can find the executable file in the following path from the *build* folder
    ```bash
    cd build/app
