@@ -143,7 +143,7 @@ TEST(fclayer, new_fc_layer_throws_when_big_input) {
       layer.run(make_tensor<float>({2.0F, 3.0F, 4.0F}), output, weights, bias));
 }
 
-TEST(fclayer, new_fc_layer_throws_with_invalid_type) {
+TEST(fclayer, new_fc_layer_throws_with_incorrect_bias_type) {
   const std::vector<float> a1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   Tensor weights = make_tensor<float>(a1, {3, 2});
   Tensor output = make_tensor<float>({0});

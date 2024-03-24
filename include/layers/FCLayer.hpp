@@ -20,8 +20,8 @@ class FCLayerimpl : public Layerimpl<ValueType> {
  public:
   FCLayerimpl() = delete;
   FCLayerimpl(const std::vector<ValueType>& input_weights,
-          const Shape& input_weights_shape,
-          const std::vector<ValueType>& input_bias);
+              const Shape& input_weights_shape,
+              const std::vector<ValueType>& input_bias);
   FCLayerimpl(const FCLayerimpl& c) = default;
   FCLayerimpl& operator=(const FCLayerimpl& sec) = default;
   void set_weight(size_t i, size_t j, const ValueType& value) {
