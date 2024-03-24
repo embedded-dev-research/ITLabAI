@@ -30,18 +30,19 @@ if(UNIX)
 
 endif()
 if(WIN32)
+
     set(TensorFlow_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/include")
     set(TensorFlow_LIBRARIES "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.lib")
 
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(tensorflow DEFAULT_MSG TensorFlow_INCLUDE_DIRS TensorFlow_LIBRARIES)
-endif()
 
-if(TENSORFLOW_FOUND)
-    message(STATUS "TensorFlow_Found")
-  else()
-    message(STATUS "TensorFlow library not found")
-  endif()
+    if(EXISTS "${TensorFlow_INCLUDE_DIRS}" AND EXISTS "${TensorFlow_LIBRARIES}")
+        message(STATUS "TensorFlow found")
+    else()
+        message(WARNING "TensorFlow not found")
+    endif()
+endif()
 
 target_include_directories(AlexNetLib PUBLIC ${TensorFlow_INCLUDE_DIRS})
 target_link_libraries( AlexNetLib ${TensorFlow_LIBRARIES} )
