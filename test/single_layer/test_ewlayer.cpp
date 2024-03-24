@@ -5,7 +5,7 @@
 #include "layers/EWLayer.hpp"
 
 TEST(ewlayer, works_with_minus) {
-  EWLayerimpl<double> layer({2, 2}, "minus");
+  EWLayerImpl<double> layer({2, 2}, "minus");
   std::vector<double> input = {2.0, 3.9, 0.1, 2.3};
   std::vector<double> converted_input = {-2.0, -3.9, -0.1, -2.3};
   std::vector<double> output = layer.run(input);
@@ -15,7 +15,7 @@ TEST(ewlayer, works_with_minus) {
 }
 
 TEST(ewlayer, works_with_sin) {
-  EWLayerimpl<double> layer({2, 2}, "sin");
+  EWLayerImpl<double> layer({2, 2}, "sin");
   std::vector<double> input = {2.0, 3.9, 0.1, 2.3};
   std::vector<double> converted_input(4);
   std::transform(input.begin(), input.end(), converted_input.begin(),
@@ -27,7 +27,7 @@ TEST(ewlayer, works_with_sin) {
 }
 
 TEST(ewlayer, relu_test) {
-  EWLayerimpl<double> layer({2, 2}, "relu");
+  EWLayerImpl<double> layer({2, 2}, "relu");
   std::vector<double> input = {1.0, -1.0, 2.0, -2.0};
   std::vector<double> converted_input = {1.0, 0.0, 2.0, 0.0};
   std::vector<double> output = layer.run(input);
@@ -37,7 +37,7 @@ TEST(ewlayer, relu_test) {
 }
 
 TEST(ewlayer, tanh_test) {
-  EWLayerimpl<double> layer({2, 2}, "tanh");
+  EWLayerImpl<double> layer({2, 2}, "tanh");
   std::vector<double> input = {1.0, -1.0, 2.0, -2.0};
   std::vector<double> converted_input(4);
   std::transform(input.begin(), input.end(), converted_input.begin(),

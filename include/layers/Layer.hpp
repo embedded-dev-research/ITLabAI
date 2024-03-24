@@ -40,13 +40,13 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
 }
 
 template <typename ValueType>
-class Layerimpl {
+class LayerImpl {
  public:
-  Layerimpl() = default;
-  Layerimpl(const Shape& inputShape, const Shape& outputShape)
+  LayerImpl() = default;
+  LayerImpl(const Shape& inputShape, const Shape& outputShape)
       : inputShape_(inputShape), outputShape_(outputShape) {}
-  Layerimpl(const Layerimpl& c) = default;
-  Layerimpl& operator=(const Layerimpl& c) = default;
+  LayerImpl(const LayerImpl& c) = default;
+  LayerImpl& operator=(const LayerImpl& c) = default;
   virtual std::vector<ValueType> run(
       const std::vector<ValueType>& input) const = 0;
   Shape get_input_shape() const { return inputShape_; }

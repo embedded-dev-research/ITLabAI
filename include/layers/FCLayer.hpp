@@ -16,14 +16,14 @@ class FCLayer : public Layer {
 };
 
 template <typename ValueType>
-class FCLayerimpl : public Layerimpl<ValueType> {
+class FCLayerImpl : public LayerImpl<ValueType> {
  public:
-  FCLayerimpl() = delete;
-  FCLayerimpl(const std::vector<ValueType>& input_weights,
+  FCLayerImpl() = delete;
+  FCLayerImpl(const std::vector<ValueType>& input_weights,
               const Shape& input_weights_shape,
               const std::vector<ValueType>& input_bias);
-  FCLayerimpl(const FCLayerimpl& c) = default;
-  FCLayerimpl& operator=(const FCLayerimpl& sec) = default;
+  FCLayerImpl(const FCLayerImpl& c) = default;
+  FCLayerImpl& operator=(const FCLayerImpl& sec) = default;
   void set_weight(size_t i, size_t j, const ValueType& value) {
     if (i >= this->outputShape_[0] || j >= this->inputShape_[0]) {
       throw std::out_of_range("Invalid weight index");
@@ -59,10 +59,10 @@ class FCLayerimpl : public Layerimpl<ValueType> {
 
 // constructor for FCLayer
 template <typename ValueType>
-FCLayerimpl<ValueType>::FCLayerimpl(const std::vector<ValueType>& input_weights,
+FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
                                     const Shape& input_weights_shape,
                                     const std::vector<ValueType>& input_bias)
-    : Layerimpl<ValueType>(1, 1), weights_(input_weights), bias_(input_bias) {
+    : LayerImpl<ValueType>(1, 1), weights_(input_weights), bias_(input_bias) {
   if (input_weights.empty()) {
     throw std::invalid_argument("Empty weights for FCLayer");
   }
@@ -81,7 +81,7 @@ FCLayerimpl<ValueType>::FCLayerimpl(const std::vector<ValueType>& input_weights,
 }
 
 template <typename ValueType>
-std::vector<ValueType> FCLayerimpl<ValueType>::run(
+std::vector<ValueType> FCLayerImpl<ValueType>::run(
     const std::vector<ValueType>& input) const {
   if (input.size() != this->inputShape_[0]) {
     throw std::invalid_argument("Input size doesn't fit FCLayer");

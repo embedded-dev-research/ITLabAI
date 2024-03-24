@@ -36,12 +36,12 @@ T relu(const T& value) {
 }
 
 template <typename ValueType>
-class EWLayerimpl : public Layerimpl<ValueType> {
+class EWLayerImpl : public LayerImpl<ValueType> {
  public:
-  EWLayerimpl() = delete;
-  EWLayerimpl(const Shape& shape, const std::string& function);
-  EWLayerimpl(const EWLayerimpl& c) = default;
-  EWLayerimpl& operator=(const EWLayerimpl& c) = default;
+  EWLayerImpl() = delete;
+  EWLayerImpl(const Shape& shape, const std::string& function);
+  EWLayerImpl(const EWLayerImpl& c) = default;
+  EWLayerImpl& operator=(const EWLayerImpl& c) = default;
   std::vector<ValueType> run(const std::vector<ValueType>& input) const;
 
  private:
@@ -49,9 +49,9 @@ class EWLayerimpl : public Layerimpl<ValueType> {
 };
 
 template <typename ValueType>
-EWLayerimpl<ValueType>::EWLayerimpl(const Shape& shape,
+EWLayerImpl<ValueType>::EWLayerImpl(const Shape& shape,
                                     const std::string& function)
-    : Layerimpl<ValueType>(shape, shape) {
+    : LayerImpl<ValueType>(shape, shape) {
   if (function == "relu") {
     unaryFunc_ = relu<ValueType>;
   } else if (function == "tanh") {
@@ -66,7 +66,7 @@ EWLayerimpl<ValueType>::EWLayerimpl(const Shape& shape,
 }
 
 template <typename ValueType>
-std::vector<ValueType> EWLayerimpl<ValueType>::run(
+std::vector<ValueType> EWLayerImpl<ValueType>::run(
     const std::vector<ValueType>& input) const {
   std::vector<ValueType> res(this->outputShape_.count());
   std::transform(input.begin(), input.end(), res.begin(), unaryFunc_);
