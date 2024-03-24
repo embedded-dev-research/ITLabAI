@@ -38,7 +38,7 @@ if(WIN32)
     find_package_handle_standard_args(tensorflow DEFAULT_MSG TensorFlow_INCLUDE_DIRS TensorFlow_LIBRARIES)
 
     if(EXISTS "${TensorFlow_INCLUDE_DIRS}" AND EXISTS "${TensorFlow_LIBRARIES}")
-        message(STATUS "TensorFlow ihyhgfhvhjvhvhvhjvfound")
+        message(STATUS "TensorFlow found")
     else()
         message(STATUS "TensorFlow not found")
     endif()
