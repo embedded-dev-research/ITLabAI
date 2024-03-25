@@ -12,7 +12,7 @@
 class InputLayer : public Layer {
  public:
   InputLayer() = default;
-  void run(const std::vector<std::string>& path, Tensor& output) {
+  static void run(const std::vector<std::string>& path, Tensor& output) {
     std::vector<int> res(path.size() * 227 * 227 * 3);
     for (int num = 0; num < static_cast<int>(path.size()); num++) {
       cv::Mat image = cv::imread(path[num]);
