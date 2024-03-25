@@ -21,16 +21,16 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
       size_t kernel_size = kernel_.get_shape()[kernel_.get_shape().dims() - 1];
       int input_width =
           static_cast<int>(input.get_shape()[input.get_shape().dims() - 2]);
-      int centerDistance = static_cast<int>((kernel_size - 1) / 2);
+      int center_distance = static_cast<int>((kernel_size - 1) / 2);
       std::vector<int> outputvec;
-      for (int i = input_width + centerDistance;
+      for (int i = input_width + center_distance;
            i < static_cast<int>(input_size); i += static_cast<int>(step_)) {
         for (int x = 0; x < 3; x++) {
           int color = 0;
           for (int coloms = -input_width; coloms < input_width + 1;
                coloms += input_width) {
             for (int str = -1; str < 2; str++) {
-              size_t kercol = static_cast<size_t>(coloms / input_width + 1);
+              auto kercol = static_cast<size_t>(coloms / input_width + 1);
               color +=
                   matrix[(i + coloms + str) * 3 + x] *
                   kernel_.get<int>({kercol, static_cast<size_t>(str + 1)});
@@ -38,17 +38,17 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
           }
           outputvec.push_back(color);
         }
-        if ((i + centerDistance + 1) % input_width == 0) {
-          if (i + input_width + centerDistance * 2 ==
+        if ((i + center_distance + 1) % input_width == 0) {
+          if (i + input_width + center_distance * 2 ==
               static_cast<int>(input_size)) {
-            i += input_width + centerDistance * 2 + 1;
+            i += input_width + center_distance * 2 + 1;
           } else {
             i += input_width * (static_cast<int>(step_) - 1) +
                  (3 - static_cast<int>(step_));
           }
         }
       }
-      size_t sizeforshape = static_cast<size_t>(
+      auto sizeforshape = static_cast<size_t>(
           ((input_width - 1 - static_cast<int>(kernel_size - 1)) /
            static_cast<int>(step_)) +
           1);
@@ -63,16 +63,16 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
       size_t kernel_size = kernel_.get_shape()[kernel_.get_shape().dims() - 1];
       int input_width =
           static_cast<int>(input.get_shape()[input.get_shape().dims() - 2]);
-      int centerDistance = static_cast<int>((kernel_size - 1) / 2);
+      int center_distance = static_cast<int>((kernel_size - 1) / 2);
       std::vector<float> outputvec;
-      for (int i = input_width + centerDistance;
+      for (int i = input_width + center_distance;
            i < static_cast<int>(input_size); i += static_cast<int>(step_)) {
         for (int x = 0; x < 3; x++) {
           float color = 0;
           for (int coloms = -input_width; coloms < input_width + 1;
                coloms += input_width) {
             for (int str = -1; str < 2; str++) {
-              size_t kercol = static_cast<size_t>(coloms / input_width + 1);
+              auto kercol = static_cast<size_t>(coloms / input_width + 1);
               color +=
                   matrix[(i + coloms + str) * 3 + x] *
                   kernel_.get<float>({kercol, static_cast<size_t>(str + 1)});
@@ -80,17 +80,17 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
           }
           outputvec.push_back(color);
         }
-        if ((i + centerDistance + 1) % input_width == 0) {
-          if (i + input_width + centerDistance * 2 ==
+        if ((i + center_distance + 1) % input_width == 0) {
+          if (i + input_width + center_distance * 2 ==
               static_cast<int>(input_size)) {
-            i += input_width + centerDistance * 2 + 1;
+            i += input_width + center_distance * 2 + 1;
           } else {
             i += input_width * (static_cast<int>(step_) - 1) +
                  (3 - static_cast<int>(step_));
           }
         }
       }
-      size_t sizeforshape = static_cast<size_t>(
+      auto sizeforshape = static_cast<size_t>(
           ((input_width - 1 - static_cast<int>(kernel_size - 1)) /
            static_cast<int>(step_)) +
           1);
