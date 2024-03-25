@@ -19,7 +19,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
       size_t input_size = input.get_shape()[input.get_shape().dims() - 2] *
                           input.get_shape()[input.get_shape().dims() - 3];
       size_t kernel_size = kernel_.get_shape()[kernel_.get_shape().dims() - 1];
-      int input_width =
+  int center_distance = static_cast<int>((kernel_size - 1) / 2);
           static_cast<int>(input.get_shape()[input.get_shape().dims() - 2]);
       int centerDistance = static_cast<int>((kernel_size - 1) / 2);
       std::vector<int> outputvec;
