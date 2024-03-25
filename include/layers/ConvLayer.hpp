@@ -88,7 +88,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
                  (3 - static_cast<int>(step_));
           }
         }
-      }
+      auto sizeforshape = static_cast<size_t>(
       size_t sizeforshape = static_cast<size_t>(
           ((input_width - 1 - static_cast<int>(kernel_size - 1)) /
            static_cast<int>(step_)) +
