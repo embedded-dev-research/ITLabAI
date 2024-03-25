@@ -6,7 +6,6 @@
 
 TEST(input, chech_basic) {
   const std::string image_path = IMAGE_PATH;
-  int n = 1;
   std::vector<std::string> paths;
   paths.push_back(image_path);
   Shape sh1({2, 2});
