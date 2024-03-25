@@ -32,9 +32,8 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
                coloms += input_width) {
             for (int str = -1; str < 2; str++) {
               auto kercol = static_cast<size_t>(coloms / input_width + 1);
-              color +=
-                  matrix[(i + coloms + str) * 3 + x] *
-                  kernel_.get<int>({kercol, static_cast<size_t>(str + 1)});
+              color += matrix[(i + coloms + str) * 3 + x] *
+                       kernel_.get<int>({kercol, static_cast<size_t>(str + 1)});
             }
           }
           outputvec.push_back(color);
