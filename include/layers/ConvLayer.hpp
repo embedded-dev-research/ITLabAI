@@ -12,7 +12,7 @@ class ConvolutionalLayer : public Layer {
            size_t step_);
 };
 void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
-                                        const Tensor& kernel_, size_t step_) {
+                             const Tensor& kernel_, size_t step_) {
   std::vector<float> matrix = *input.as<float>();
   size_t input_size = input.get_shape()[input.get_shape().dims() - 2] *
                       input.get_shape()[input.get_shape().dims() - 3];
@@ -21,8 +21,8 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
       static_cast<int>(input.get_shape()[input.get_shape().dims() - 2]);
   int centerDistance = static_cast<int>((kernel_size - 1) / 2);
   std::vector<float> outputvec;
-  for (int i = input_width + centerDistance;
-       i < static_cast<int>(input_size); i += static_cast<int>(step_)) {
+  for (int i = input_width + centerDistance; i < static_cast<int>(input_size);
+       i += static_cast<int>(step_)) {
     for (int x = 0; x < 3; x++) {
       float color = 0;
       for (int coloms = -input_width; coloms < input_width + 1;
@@ -30,7 +30,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
         for (int str = -1; str < 2; str++) {
           size_t kercol = static_cast<size_t>(coloms / input_width + 1);
           color += matrix[(i + coloms + str) * 3 + x] *
-              kernel_.get<float>({kercol, static_cast<size_t>(str + 1)});
+                   kernel_.get<float>({kercol, static_cast<size_t>(str + 1)});
         }
       }
       outputvec.push_back(color);
