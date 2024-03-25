@@ -71,7 +71,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
           for (int coloms = -input_width; coloms < input_width + 1;
                coloms += input_width) {
             for (int str = -1; str < 2; str++) {
-              size_t kercol = static_cast<size_t>(coloms / input_width + 1);
+              auto kercol = static_cast<size_t>(coloms / input_width + 1);
               color +=
                   matrix[(i + coloms + str) * 3 + x] *
                   kernel_.get<float>({kercol, static_cast<size_t>(str + 1)});
