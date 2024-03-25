@@ -12,6 +12,7 @@
 class Layer {
  public:
   Layer() = default;
+};
 
 template <typename ValueType>
 std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,

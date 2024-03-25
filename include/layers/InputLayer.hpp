@@ -9,20 +9,12 @@
 
 #include "layers/Layer.hpp"
 
-template <typename ValueType>
-class InputLayer : public Layer<ValueType> {
- private:
-  int Count_pic_;
-
+class InputLayer : public Layer {
  public:
-  InputLayer(const int& Cpic) : Layer<ValueType>() { Count_pic_ = Cpic; }
-  std::vector<ValueType> run(const std::vector<ValueType>& input) const {
-    std::vector<ValueType> a = input;
-    return a;
-  }
-  Tensor run(const std::vector<std::string>& path) const {
-    std::vector<int> res(Count_pic_ * 227 * 227 * 3);
-    for (int num = 0; num < Count_pic_; num++) {
+  InputLayer() = default;
+  void run(const std::vector<std::string>& path, Tensor& output) const {
+    std::vector<int> res(path.size() * 227 * 227 * 3);
+    for (int num = 0; num < path.size(); num++) {
       cv::Mat image = cv::imread(path[num]);
       if (image.empty()) {
         throw std::runtime_error("Failed to load image");
@@ -43,8 +35,7 @@ class InputLayer : public Layer<ValueType> {
         }
       }
     }
-    Shape sh({static_cast<size_t>(Count_pic_), 227, 227, 3});
-    const Tensor t = make_tensor<int>(res, sh);
-    return t;
+    Shape sh({static_cast<size_t>(path.size()), 227, 227, 3});
+    output = make_tensor<int>(res, sh);
   }
 };
