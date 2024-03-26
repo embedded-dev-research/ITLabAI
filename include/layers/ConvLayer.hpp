@@ -9,7 +9,7 @@ class ConvolutionalLayer : public Layer {
  public:
   ConvolutionalLayer() = default;
   static void run(const Tensor& input, Tensor& output, const Tensor& kernel_,
-           size_t step_);
+                  size_t step_);
 };
 void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
                              const Tensor& kernel_, size_t step_) {
