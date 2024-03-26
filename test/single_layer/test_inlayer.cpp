@@ -11,8 +11,7 @@ TEST(input, chech_basic) {
   Shape sh1({2, 2});
   std::vector<int> vec = {1, 2, 3, 4};
   Tensor output = make_tensor(vec, sh1);
-  InputLayer inlayer;
-  inlayer.run(paths, output);
+  InputLayer::run(paths, output);
   std::vector<int> tmp = *output.as<int>();
   ASSERT_EQ(tmp.size(), 227 * 227 * 3);
 }
