@@ -11,12 +11,17 @@ endif()
 target_link_libraries(run_test PUBLIC perf_lib layers_lib)
 target_link_libraries(run_test PUBLIC gtest_main)
 target_link_libraries(run_test PUBLIC ReadLib)
+target_link_libraries(run_test PUBLIC AlexNetLib)
 
 if (WIN32)
 add_custom_command(TARGET run_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
         "${CMAKE_BINARY_DIR}/test/${CMAKE_BUILD_TYPE}/")
+add_custom_command(TARGET run_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.dll"
+            "$<TARGET_FILE_DIR:run_test>")
 endif()
 
 add_test(UnitTests ${CMAKE_CURRENT_BINARY_DIR}/run_test)
@@ -28,7 +33,6 @@ file(DOWNLOAD
     STATUS status_code
     LOG log_file
 )
-
 file(DOWNLOAD
     "https://raw.githubusercontent.com/bpinaya/AlexNetRT/master/data/alexnet/imagenet-labels.txt"
     "${CMAKE_CURRENT_BINARY_DIR}/imagenet-labels.txt"
@@ -36,5 +40,13 @@ file(DOWNLOAD
     STATUS status_code
     LOG log_file
 )
+file(DOWNLOAD
+    "https://tinyurl.com/2w6eh53v"
+    "${CMAKE_CURRENT_BINARY_DIR}/squeeze.tflite"
+    SHOW_PROGRESS
+    STATUS status_code
+    LOG log_file
+)
 
 target_compile_definitions(run_test PUBLIC TESTS_BINARY_PATH="${CMAKE_CURRENT_BINARY_DIR}")
+add_definitions(-DMODEL_PATH="${CMAKE_CURRENT_BINARY_DIR}/squeeze.tflite")
