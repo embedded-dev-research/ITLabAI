@@ -19,52 +19,17 @@ std::vector<ValueType> softmax(const std::vector<ValueType>& vec) {
 }
 
 template <typename ValueType>
-bool comp_pair(std::pair<std::string, ValueType> a,
+bool compare_pair(std::pair<std::string, ValueType> a,
                std::pair<std::string, ValueType> b) {
   return (a.second > b.second);
 }
 
 template <typename ValueType>
-class OutputLayer : public Layer<ValueType> {
- public:
-  OutputLayer() = delete;
-  OutputLayer(const Shape& shape, const std::vector<std::string>& labels);
-  OutputLayer(const OutputLayer& c) = default;
-  OutputLayer& operator=(const OutputLayer& c) = default;
-  std::vector<ValueType> run(const std::vector<ValueType>& input) const;
-  std::vector<std::string> get_labels() const { return labels_; }
-  std::pair<std::vector<std::string>, std::vector<ValueType> > top_k(
-      const std::vector<ValueType>& input, size_t k) const;
-
- private:
-  std::vector<std::string> labels_;
-};
-
-template <typename ValueType>
-OutputLayer<ValueType>::OutputLayer(const Shape& shape,
-                                    const std::vector<std::string>& labels)
-    : Layer<ValueType>(shape, shape) {
-  if (labels.size() != shape.count()) {
-    throw std::invalid_argument("Labels don't fit tensor shape");
-  }
-  labels_ = labels;
-}
-
-template <typename ValueType>
-std::vector<ValueType> OutputLayer<ValueType>::run(
-    const std::vector<ValueType>& input) const {
-  if (input.size() != this->inputShape_.count()) {
-    throw std::invalid_argument("Input size doesn't fit output layer shape");
-  }
-  return input;
-}
-
-template <typename ValueType>
-std::pair<std::vector<std::string>, std::vector<ValueType> >
-OutputLayer<ValueType>::top_k(const std::vector<ValueType>& input,
-                              size_t k) const {
-  if (input.size() != this->inputShape_.count()) {
-    throw std::invalid_argument("Input size doesn't fit output layer shape");
+std::pair<std::vector<std::string>, std::vector<ValueType> > top_k_vec(
+    const std::vector<ValueType>& input, const std::vector<std::string>& labels,
+    size_t k) {
+  if (input.size() != labels.size()) {
+    throw std::invalid_argument("Labels size not equal input size");
   }
   if (k > input.size()) {
     throw std::invalid_argument("K cannot be bigger than input size");
@@ -72,9 +37,9 @@ OutputLayer<ValueType>::top_k(const std::vector<ValueType>& input,
   // sort values in descending order
   std::vector<std::pair<std::string, ValueType> > sort_buf(input.size());
   for (size_t i = 0; i < input.size(); i++) {
-    sort_buf[i] = make_pair(labels_[i], input[i]);
+    sort_buf[i] = make_pair(labels[i], input[i]);
   }
-  std::sort(sort_buf.begin(), sort_buf.end(), comp_pair<ValueType>);
+  std::sort(sort_buf.begin(), sort_buf.end(), compare_pair<ValueType>);
   // split vector of pairs to pairs of vectors
   std::vector<std::string> res_labels(k);
   std::vector<ValueType> res_input(k);
@@ -84,3 +49,16 @@ OutputLayer<ValueType>::top_k(const std::vector<ValueType>& input,
   }
   return make_pair(res_labels, res_input);
 }
+
+class OutputLayer : public Layer {
+ public:
+  OutputLayer() = default;
+  OutputLayer(const std::vector<std::string>& labels) : labels_(labels) {}
+  void run(const Tensor& input, Tensor& output) { output = input; }
+  std::vector<std::string> get_labels() const { return labels_; }
+  std::pair<std::vector<std::string>, Tensor> top_k(const Tensor& input,
+                                                    size_t k) const;
+
+ private:
+  std::vector<std::string> labels_;
+};
