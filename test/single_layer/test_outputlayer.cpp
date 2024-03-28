@@ -41,7 +41,7 @@ TEST(OutputLayer, can_get_topk_with_layer_float) {
   std::vector<float> input;
   // get random nums
   for (size_t i = 0; i < labels.size(); i++) {
-    input.push_back(static_cast<float>(std::rand()) / RAND_MAX);
+    input.push_back(static_cast<double>(std::rand()) / RAND_MAX);
   }
   Tensor input_tensor = make_tensor(input);
   OutputLayer layer(labels);
