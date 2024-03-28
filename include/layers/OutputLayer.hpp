@@ -34,7 +34,7 @@ std::vector<ValueType> softmax(const std::vector<ValueType>& vec) {
 
 template <typename ValueType>
 bool compare_pair(std::pair<std::string, ValueType> a,
-               std::pair<std::string, ValueType> b) {
+                  std::pair<std::string, ValueType> b) {
   return (a.second > b.second);
 }
 
