@@ -4,6 +4,20 @@
 
 #include "layers/Layer.hpp"
 
+class OutputLayer : public Layer {
+ public:
+  OutputLayer() = default;
+  OutputLayer(const std::vector<std::string>& labels) : labels_(labels) {}
+  static std::string get_name() { return "Output layer"; }
+  void run(const Tensor& input, Tensor& output) { output = input; }
+  std::vector<std::string> get_labels() const { return labels_; }
+  std::pair<std::vector<std::string>, Tensor> top_k(const Tensor& input,
+                                                    size_t k) const;
+
+ private:
+  std::vector<std::string> labels_;
+};
+
 template <typename ValueType>
 std::vector<ValueType> softmax(const std::vector<ValueType>& vec) {
   ValueType max_elem = *std::max_element(vec.begin(), vec.end());
@@ -49,16 +63,3 @@ std::pair<std::vector<std::string>, std::vector<ValueType> > top_k_vec(
   }
   return make_pair(res_labels, res_input);
 }
-
-class OutputLayer : public Layer {
- public:
-  OutputLayer() = default;
-  OutputLayer(const std::vector<std::string>& labels) : labels_(labels) {}
-  void run(const Tensor& input, Tensor& output) { output = input; }
-  std::vector<std::string> get_labels() const { return labels_; }
-  std::pair<std::vector<std::string>, Tensor> top_k(const Tensor& input,
-                                                    size_t k) const;
-
- private:
-  std::vector<std::string> labels_;
-};
