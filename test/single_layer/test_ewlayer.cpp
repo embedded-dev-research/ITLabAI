@@ -51,7 +51,7 @@ TEST(ewlayer, tanh_test) {
 TEST(ewlayer, new_ewlayer_can_relu_float) {
   EWLayer layer;
   Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F});
-  Tensor output = make_tensor<float>({0});
+  Tensor output;
   std::vector<float> converted_input = {1.0F, 0.0F, 2.0F, 0.0F};
   layer.run(input, output, "relu");
   for (size_t i = 0; i < 4; i++) {
@@ -62,7 +62,7 @@ TEST(ewlayer, new_ewlayer_can_relu_float) {
 TEST(ewlayer, new_ewlayer_can_relu_int) {
   EWLayer layer;
   Tensor input = make_tensor<int>({1, -1, 2, -2});
-  Tensor output = make_tensor<int>({0});
+  Tensor output;
   std::vector<int> converted_input = {1, 0, 2, 0};
   layer.run(input, output, "relu");
   for (size_t i = 0; i < 4; i++) {
@@ -73,7 +73,7 @@ TEST(ewlayer, new_ewlayer_can_relu_int) {
 TEST(ewlayer, new_ewlayer_throws_with_invalid_function) {
   EWLayer layer;
   Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F});
-  Tensor output = make_tensor<float>({0});
+  Tensor output;
   std::vector<float> converted_input = {1.0F, 0.0F, 2.0F, 0.0F};
   ASSERT_ANY_THROW(layer.run(input, output, "abra"));
 }
