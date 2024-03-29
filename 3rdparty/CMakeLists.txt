@@ -1,4 +1,15 @@
 add_subdirectory(googletest)
 
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/TBB/build")
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -S "${CMAKE_SOURCE_DIR}/3rdparty/TBB" -B "${CMAKE_SOURCE_DIR}/3rdparty/TBB/build" -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER} -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/TBB/build"
+)
+execute_process(
+    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_SOURCE_DIR}/3rdparty/TBB/build" --config "${CMAKE_BUILD_TYPE}"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/TBB/build"
+)
+
 option(TBB_TEST OFF)
 add_subdirectory(TBB)
