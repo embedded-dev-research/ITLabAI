@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <string>
+#include <utility>
 
 #include "layers/Layer.hpp"
 
@@ -10,9 +11,8 @@ enum PoolingType { kAverage, kMax };
 class PoolingLayer : public Layer {
  public:
   PoolingLayer() = default;
-  PoolingLayer(const Shape& pooling_shape,
-               const std::string& pooling_type = "average")
-      : poolingShape_(pooling_shape), poolingType_(pooling_type) {}
+  PoolingLayer(const Shape& pooling_shape, std::string pooling_type = "average")
+      : poolingShape_(pooling_shape), poolingType_(std::move(pooling_type)) {}
   static std::string get_name() { return "Pooling layer"; }
   void run(const Tensor& input, Tensor& output);
 

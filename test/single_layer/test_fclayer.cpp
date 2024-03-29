@@ -124,6 +124,29 @@ TEST(fclayer, get_dims_returns_correctly) {
   EXPECT_EQ(layer.get_dims().second[0], 2);
 }
 
+TEST(fclayer, matvecmul_works) {
+  std::vector<int> mat = {2, 4, 2, 3};
+  std::vector<int> vec = {1, 2};
+  Shape mat_shape({2, 2});
+  std::vector<int> true_res = {10, 8};
+  std::vector<int> res = mat_vec_mul(mat, mat_shape, vec);
+  EXPECT_EQ(res, true_res);
+}
+
+TEST(fclayer, matvecmul_throws_when_big_vector) {
+  std::vector<int> mat = {2, 4, 2, 4};
+  std::vector<int> vec = {1, 2, 3};
+  Shape mat_shape({2, 2});
+  ASSERT_ANY_THROW(mat_vec_mul(mat, mat_shape, vec));
+}
+
+TEST(fclayer, matvecmul_throws_when_not_matrix) {
+  std::vector<int> mat = {2, 4, 2, 4, 1, 3, 5, 7};
+  std::vector<int> vec = {1, 2};
+  Shape mat_shape({2, 2, 2});
+  ASSERT_ANY_THROW(mat_vec_mul(mat, mat_shape, vec));
+}
+
 TEST(fclayer, new_fc_layer_can_run_float) {
   const std::vector<float> a1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   const std::vector<float> a2 = {9.0F, 6.4F, 17.5F};

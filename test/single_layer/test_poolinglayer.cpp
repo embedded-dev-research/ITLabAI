@@ -6,8 +6,7 @@
 TEST(poolinglayer, empty_inputs1) {
   Shape inpshape = 0;
   Shape poolshape = 0;
-  ASSERT_ANY_THROW(PoolingLayerImpl<double> a = PoolingLayerImpl<double>(
-                       inpshape, poolshape, "average"));
+  ASSERT_ANY_THROW(PoolingLayerImpl<double>(inpshape, poolshape, "average"));
 }
 
 TEST(poolinglayer, empty_inputs2) {
@@ -22,15 +21,34 @@ TEST(poolinglayer, empty_inputs2) {
 TEST(poolinglayer, empty_inputs3) {
   Shape inpshape = {3};
   Shape poolshape = {0};
-  ASSERT_ANY_THROW(PoolingLayerImpl<double> a = PoolingLayerImpl<double>(
-                       inpshape, poolshape, "average"));
+  ASSERT_ANY_THROW(PoolingLayerImpl<double>(inpshape, poolshape, "average"));
+}
+
+TEST(poolinglayer, throws_when_big_input) {
+  Shape inpshape = {7};
+  Shape poolshape = {3};
+  PoolingLayerImpl<double> a =
+      PoolingLayerImpl<double>(inpshape, poolshape, "average");
+  std::vector<double> input({9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0});
+  ASSERT_ANY_THROW(a.run(input));
+}
+
+TEST(poolinglayer, throws_when_invalid_pooling_type) {
+  Shape inpshape = {7};
+  Shape poolshape = {3};
+  ASSERT_ANY_THROW(PoolingLayerImpl<double>(inpshape, poolshape, "my"));
 }
 
 TEST(poolinglayer, throws_when_bigger_pooling_dims) {
   Shape inpshape = {8};
   Shape poolshape = {8, 8};
-  ASSERT_ANY_THROW(PoolingLayerImpl<double> a = PoolingLayerImpl<double>(
-                       inpshape, poolshape, "average"));
+  ASSERT_ANY_THROW(PoolingLayerImpl<double>(inpshape, poolshape, "average"));
+}
+
+TEST(poolinglayer, pooling_throws_when_more_than_2d) {
+  Shape inpshape = {4, 4};
+  Shape poolshape = {2, 1, 3};
+  ASSERT_ANY_THROW(PoolingLayerImpl<double>(inpshape, poolshape, "average"));
 }
 
 TEST(poolinglayer, equivalent_output_when_pool_size_1) {
