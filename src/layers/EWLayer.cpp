@@ -1,7 +1,7 @@
 #include "layers/EWLayer.hpp"
 
-void EWLayer::run(const Tensor &input, Tensor &output,
-                  const std::string &function) {
+void EWLayer::run(const Tensor& input, Tensor& output,
+                  const std::string& function) {
   switch (input.get_type()) {
     case Type::kInt: {
       EWLayerImpl<int> used_impl(input.get_shape(), function);
