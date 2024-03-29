@@ -47,12 +47,6 @@ class Tensor {
     return std::vector<uint8_t>();
   }
 
-  template <typename T>
-  std::vector<T>* as();
-
-  template <typename T>
-  const std::vector<T>* as() const;
-
  public:
   Tensor(const std::vector<uint8_t>& a, const Shape& sh, Type type)
       : shape_(sh), type_(type) {
@@ -95,6 +89,12 @@ class Tensor {
   template <typename T>
   T get(const std::vector<size_t>& coords) const;  // read
 
+  template <typename T>
+  std::vector<T>* as();
+
+  template <typename T>
+  const std::vector<T>* as() const;
+
   friend std::ostream& operator<<(std::ostream& out, const Tensor& t);
 };
 
@@ -112,21 +112,6 @@ const std::vector<T>* Tensor::as() const {
     throw std::invalid_argument("Template type doesn't fit this Tensor");
   }
   return reinterpret_cast<const std::vector<T>*>(&values_);
-}
-
-std::ostream& operator<<(std::ostream& out, const Tensor& t) {
-  for (size_t i = 0; i < t.get_shape().count(); i++) {
-    out.width(5);
-    if (t.get_type() == Type::kInt) {
-      out << (*t.as<int>())[i] << " ";
-    } else if (t.get_type() == Type::kFloat) {
-      out << (*t.as<float>())[i] << " ";
-    }
-    if (t.get_shape().dims() > 1) {
-      if ((i + 1) % t.get_shape()[1] == 0) out << std::endl;
-    }
-  }
-  return out;
 }
 
 template <typename T>
