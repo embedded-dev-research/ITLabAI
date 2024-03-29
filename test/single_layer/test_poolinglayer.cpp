@@ -137,7 +137,7 @@ TEST(poolinglayer, 2d_bigger_pooling_test) {
   EXPECT_EQ(output, true_output);
 }
 
-TEST(poolinglayer, new_pooling_layer_can_run_float) {
+TEST(poolinglayer, new_pooling_layer_can_run_float_avg) {
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};
   PoolingLayer a(poolshape, "average");
@@ -146,5 +146,27 @@ TEST(poolinglayer, new_pooling_layer_can_run_float) {
   Tensor output = make_tensor<float>({0});
   a.run(make_tensor(input, inpshape), output);
   std::vector<float> true_output = {6.5F, 4.5F, 4.5F, 6.5F};
+  EXPECT_EQ(*output.as<float>(), true_output);
+}
+
+TEST(poolinglayer, new_pooling_layer_can_run_int_avg) {
+  Shape inpshape = {4, 4};
+  Shape poolshape = {2, 2};
+  PoolingLayer a(poolshape, "average");
+  std::vector<int> input({9, 8, 7, 6, 5, 4, 3, 2, 2, 3, 4, 5, 6, 7, 8, 9});
+  Tensor output = make_tensor<float>({0});
+  a.run(make_tensor(input, inpshape), output);
+  std::vector<int> true_output = {6, 4, 4, 6};
+  EXPECT_EQ(*output.as<int>(), true_output);
+}
+
+TEST(poolinglayer, new_pooling_layer_can_run_1d_pooling_float) {
+  Shape inpshape = {8};
+  Shape poolshape = {3};
+  PoolingLayer a(poolshape, "average");
+  std::vector<float> input({9.0F, 8.0F, 7.0F, 6.0F, 5.0F, 4.0F, 3.0F, 2.0F});
+  Tensor output = make_tensor<float>({0});
+  a.run(make_tensor(input, inpshape), output);
+  std::vector<float> true_output = {8.0F, 5.0F, 2.5F};
   EXPECT_EQ(*output.as<float>(), true_output);
 }

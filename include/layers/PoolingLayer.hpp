@@ -12,7 +12,7 @@ class PoolingLayer : public Layer {
   PoolingLayer() = default;
   PoolingLayer(const Shape& pooling_shape,
                const std::string& pooling_type = "average")
-      : poolingShape_(pooling_shape), poolingType_(pooling_type) {};
+      : poolingShape_(pooling_shape), poolingType_(pooling_type) {}
   static std::string get_name() { return "Pooling layer"; }
   void run(const Tensor& input, Tensor& output);
 
@@ -64,8 +64,8 @@ template <typename ValueType>
 PoolingLayerImpl<ValueType>::PoolingLayerImpl(const Shape& input_shape,
                                               const Shape& pooling_shape,
                                               const std::string& pooling_type)
-    : poolingShape_(pooling_shape),
-      LayerImpl<ValueType>(input_shape, input_shape) {
+    : LayerImpl<ValueType>(input_shape, input_shape),
+      poolingShape_(pooling_shape) {
   if (pooling_shape.dims() > input_shape.dims()) {
     throw std::invalid_argument("Pooling dims is bigger than the input dims");
   }
