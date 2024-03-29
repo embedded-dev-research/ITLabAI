@@ -113,7 +113,7 @@ TEST(OutputLayer, get_layer_name) {
   EXPECT_EQ(OutputLayer::get_name(), "Output layer");
 }
 
-TEST(OutputLayer, softmax_test) {
+TEST(OutputLayer, softmax_works) {
   std::vector<double> input = {1.0, 2.5, 4.0, 5.5};
   std::vector<double> converted_input = {0.008657, 0.038774, 0.173774,
                                          0.778800};
@@ -121,4 +121,9 @@ TEST(OutputLayer, softmax_test) {
   for (size_t i = 0; i < output.size(); i++) {
     EXPECT_NEAR(output[i], converted_input[i], 1e-5);
   }
+}
+
+TEST(OutputLayer, softmax_throws_when_empty_input) {
+  std::vector<double> input;
+  ASSERT_ANY_THROW(softmax<double>(input));
 }

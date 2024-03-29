@@ -20,6 +20,9 @@ class OutputLayer : public Layer {
 
 template <typename ValueType>
 std::vector<ValueType> softmax(const std::vector<ValueType>& vec) {
+  if (vec.empty()) {
+    throw std::invalid_argument("Empty vector in softmax");
+  }
   ValueType max_elem = *std::max_element(vec.begin(), vec.end());
   std::vector<ValueType> res = vec;
   for (size_t i = 0; i < res.size(); i++) {
