@@ -12,10 +12,10 @@ add_custom_command(TARGET alexnet POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
             "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.dll"
             "$<TARGET_FILE_DIR:alexnet>")
-add_custom_command(TARGET alexnet Reader POST_BUILD
+add_custom_command(TARGET Reader POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
             "${CMAKE_SOURCE_DIR}/3rdparty/TBB/build/msvc_19.36_cxx_64_md_debug/tbb12_debug.dll"
-            "$<TARGET_FILE_DIR:alexnet>")
+            "$<TARGET_FILE_DIR:Reader>")
 endif()
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
