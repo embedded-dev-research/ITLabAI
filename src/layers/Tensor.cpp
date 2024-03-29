@@ -14,3 +14,17 @@ std::ostream& operator<<(std::ostream& out, const Tensor& t) {
   }
   return out;
 }
+
+template <typename T>
+bool elementwiseTensorCmp(const Tensor& t1, const Tensor& t2, double threshold) {
+  if (t1.get_shape().count() != t2.get_shape().count()) return false;
+  if (t1.get_type() != t2.get_type()) return false;
+  
+  size_t size = t1.get_shape().count();
+  for (size_t i = 0; i < size; i++) {
+    if (std::abs(*(t1.as<T>())[i] - *(t2.as<T>())[i]) > threshold) {
+      return false;
+    }
+  }
+  return true;
+}
