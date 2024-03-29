@@ -28,6 +28,9 @@ class LayerExample {
 
  public:
   LayerExample(LayerType type1) : type_(type1) {}
+  LayerType getType() { return type_; }
+  int getNumInputs() const { return numInputs_; }
+  int getNumNeurons() const { return numNeurons_; }
   int checkID() const { return id_; }
   void giveID(int id1) { id_ = id1; }
   void In(const std::vector<int>& a) { primer_ = a; }
@@ -66,16 +69,18 @@ class Graph {
     layNext.giveID(V_);
     layers_.push_back(layNext);
     arrayV_[V_] = arrayV_[V_ - 1];
-    arrayV_.push_back(arrayE_.size());
+    arrayV_.push_back(static_cast<int>(arrayE_.size()));
     if (layPrev.checkID() == layNext.checkID()) {
       throw std::out_of_range("i=j cant add edge");
     }
-    for (int ind = 1; ind < arrayV_.size() - layPrev.checkID() - 1; ind++)
+    for (int ind = 1; ind < static_cast<int>(arrayV_.size()) -
+                                static_cast<int>(layPrev.checkID()) - 1;
+         ind++)
       arrayV_[layPrev.checkID() + ind]++;
     arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.checkID()],
                    layNext.checkID());
     V_++;
-    arrayV_[V_] = arrayE_.size();
+    arrayV_[V_] = static_cast<int>(arrayE_.size());
   }
   bool areLayerNext(const LayerExample& layPrev, const LayerExample& layNext) {
     for (int i = arrayV_[layPrev.checkID()]; i < arrayV_[layPrev.checkID() + 1];

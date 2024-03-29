@@ -5,6 +5,13 @@
 
 #include "layers/Layer.hpp"
 
+class EWLayer : public Layer {
+ public:
+  EWLayer() = default;
+  static std::string get_name() { return "Element-wise layer"; }
+  void run(const Tensor& input, Tensor& output, const std::string& function);
+};
+
 template <typename T>
 T minus(const T& elem) {
   return -elem;
@@ -12,12 +19,12 @@ T minus(const T& elem) {
 
 template <typename T>
 T sin(const T& elem) {
-  return std::sin(elem);
+  return static_cast<T>(std::sin(elem));
 }
 
 template <typename T>
 T tanh(const T& elem) {
-  return std::tanh(elem);
+  return static_cast<T>(std::tanh(elem));
 }
 
 template <typename T>
@@ -29,12 +36,12 @@ T relu(const T& value) {
 }
 
 template <typename ValueType>
-class EWLayer : public Layer<ValueType> {
+class EWLayerImpl : public LayerImpl<ValueType> {
  public:
-  EWLayer() = delete;
-  EWLayer(const Shape& shape, const std::string& function);
-  EWLayer(const EWLayer& c) = default;
-  EWLayer& operator=(const EWLayer& c) = default;
+  EWLayerImpl() = delete;
+  EWLayerImpl(const Shape& shape, const std::string& function);
+  EWLayerImpl(const EWLayerImpl& c) = default;
+  EWLayerImpl& operator=(const EWLayerImpl& c) = default;
   std::vector<ValueType> run(const std::vector<ValueType>& input) const;
 
  private:
@@ -42,8 +49,9 @@ class EWLayer : public Layer<ValueType> {
 };
 
 template <typename ValueType>
-EWLayer<ValueType>::EWLayer(const Shape& shape, const std::string& function)
-    : Layer<ValueType>(shape, shape) {
+EWLayerImpl<ValueType>::EWLayerImpl(const Shape& shape,
+                                    const std::string& function)
+    : LayerImpl<ValueType>(shape, shape) {
   if (function == "relu") {
     unaryFunc_ = relu<ValueType>;
   } else if (function == "tanh") {
@@ -58,7 +66,7 @@ EWLayer<ValueType>::EWLayer(const Shape& shape, const std::string& function)
 }
 
 template <typename ValueType>
-std::vector<ValueType> EWLayer<ValueType>::run(
+std::vector<ValueType> EWLayerImpl<ValueType>::run(
     const std::vector<ValueType>& input) const {
   std::vector<ValueType> res(this->outputShape_.count());
   std::transform(input.begin(), input.end(), res.begin(), unaryFunc_);
