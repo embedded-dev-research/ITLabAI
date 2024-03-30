@@ -13,6 +13,9 @@ target_link_libraries(run_test PUBLIC gtest_main)
 target_link_libraries(run_test PUBLIC ReadLib)
 target_link_libraries(run_test PUBLIC AlexNetLib)
 
+target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
+target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/AlexNet")
+
 if (WIN32)
 add_custom_command(TARGET run_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
