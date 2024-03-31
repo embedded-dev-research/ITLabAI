@@ -18,9 +18,9 @@ if(UNIX)
           HINTS
           /usr/lib
           /usr/local/lib)
-  include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(tensorflow DEFAULT_MSG tensorflow_INCLUDE_DIR tensorflow_LIBRARY)
   if(TENSORFLOW_FOUND)
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(tensorflow DEFAULT_MSG tensorflow_INCLUDE_DIR tensorflow_LIBRARY)
     set(TensorFlow_LIBRARIES ${tensorflow_LIBRARY})
     set(TensorFlow_INCLUDE_DIRS ${tensorflow_INCLUDE_DIR})
   endif()
