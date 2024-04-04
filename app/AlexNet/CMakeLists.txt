@@ -1,10 +1,3 @@
-file(GLOB_RECURSE SRC_FILES *.cpp)
-file(GLOB_RECURSE INCLUDE_HEADERS *.h *.hpp)
-
-set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/alexnet.hpp")
-set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/alexnet_src.cpp")
-add_library(AlexNetLib STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
-
 if(UNIX)
   unset(TENSORFLOW_FOUND)
   find_path(tensorflow_INCLUDE_DIR
@@ -34,6 +27,18 @@ if(WIN32)
          find_package_handle_standard_args(tensorflow DEFAULT_MSG TensorFlow_INCLUDE_DIRS TensorFlow_LIBRARIES)
     endif()
 endif()
+
+if(NOT (TENSORFLOW_FOUND AND EXISTS "${TensorFlow_INCLUDE_DIRS}" AND EXISTS "${TensorFlow_LIBRARIES}"))
+    message(WARNING "TensorFlow not found or incomplete installation. AlexNet application will not be built.")
+    return()
+endif()
+
+file(GLOB_RECURSE SRC_FILES *.cpp)
+file(GLOB_RECURSE INCLUDE_HEADERS *.h *.hpp)
+
+set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/alexnet.hpp")
+set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/alexnet_src.cpp")
+add_library(AlexNetLib STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 
 target_include_directories(AlexNetLib PUBLIC ${TensorFlow_INCLUDE_DIRS})
 target_link_libraries( AlexNetLib ${TensorFlow_LIBRARIES} )
