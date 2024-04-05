@@ -32,7 +32,7 @@ endif()
 
 if(NOT TENSORFLOW_FOUND)
     message(WARNING "TensorFlow not found or incomplete installation. AlexNet application will not be built.")
-    return()
+    
 endif()
 
 file(GLOB_RECURSE SRC_FILES *.cpp)
