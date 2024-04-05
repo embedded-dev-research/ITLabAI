@@ -44,10 +44,16 @@ jobs:
         max-size: 2G
     - name: Build
       run: |
+        if [ -z "${{ env.TensorFlow_INCLUDE_DIRS }}" ] || [ -z "${{ env.TensorFlow_LIBRARIES }}" ]; then
+          echo "TensorFlow not found. Skipping build."
+          exit 1
+        fi
         cmake -S . -B build \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} \
+          -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
         cmake --build build
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
