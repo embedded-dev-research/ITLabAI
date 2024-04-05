@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -18,8 +19,8 @@ TEST(ewlayer, works_with_sin) {
   EWLayerImpl<double> layer({2, 2}, "sin");
   std::vector<double> input = {2.0, 3.9, 0.1, 2.3};
   std::vector<double> converted_input(4);
-  std::transform(input.begin(), input.end(), converted_input.begin(),
-                 sin<double>);
+  auto sin = [](double arg) -> double { return std::sin(arg); };
+  std::transform(input.begin(), input.end(), converted_input.begin(), sin);
   std::vector<double> output = layer.run(input);
   for (size_t i = 0; i < input.size(); i++) {
     EXPECT_NEAR(output[i], converted_input[i], 1e-5);
@@ -40,8 +41,8 @@ TEST(ewlayer, tanh_test) {
   EWLayerImpl<double> layer({2, 2}, "tanh");
   std::vector<double> input = {1.0, -1.0, 2.0, -2.0};
   std::vector<double> converted_input(4);
-  std::transform(input.begin(), input.end(), converted_input.begin(),
-                 tanh<double>);
+  auto tanh = [](double arg) -> double { return std::tanh(arg); };
+  std::transform(input.begin(), input.end(), converted_input.begin(), tanh);
   std::vector<double> output = layer.run(input);
   for (size_t i = 0; i < input.size(); i++) {
     EXPECT_NEAR(output[i], converted_input[i], 1e-5);
