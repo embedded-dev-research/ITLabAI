@@ -16,6 +16,7 @@ if(UNIX)
     find_package_handle_standard_args(tensorflow DEFAULT_MSG tensorflow_INCLUDE_DIR tensorflow_LIBRARY)
     set(TensorFlow_LIBRARIES ${tensorflow_LIBRARY})
     set(TensorFlow_INCLUDE_DIRS ${tensorflow_INCLUDE_DIR})
+    set(TENSORFLOW_FOUND TRUE)
   endif()
 endif()
 
@@ -32,7 +33,7 @@ endif()
 
 if(NOT TENSORFLOW_FOUND)
     message(WARNING "TensorFlow not found or incomplete installation. AlexNet application will not be built.")
-    
+    return()
 endif()
 
 file(GLOB_RECURSE SRC_FILES *.cpp)
