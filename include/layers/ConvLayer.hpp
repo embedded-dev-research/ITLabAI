@@ -71,7 +71,8 @@ class ConvolutionalLayer : public Layer {
   size_t stride_;
   size_t pads_;
   size_t dilations_;
- public:
+
+public:
   ConvolutionalLayer() = default;
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations) {
     stride_ = step;
