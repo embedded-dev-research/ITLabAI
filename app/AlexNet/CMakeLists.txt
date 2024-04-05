@@ -1,38 +1,32 @@
 if(UNIX)
-  unset(TENSORFLOW_FOUND)
-  find_path(tensorflow_INCLUDE_DIR
-          NAMES
-          tensorflow/core
-          tensorflow/c
-          HINTS
-          /usr/local/include/tensorflow
-          /usr/include/tensorflow)
-  find_library(tensorflow_LIBRARY NAMES tensorflow
-          HINTS
-          /usr/lib
-          /usr/local/lib)
+    unset(TENSORFLOW_FOUND)
+    find_path(tensorflow_INCLUDE_DIR
+            NAMES
+            tensorflow/core
+            tensorflow/c
+            HINTS
+            /usr/local/include/tensorflow
+            /usr/include/tensorflow)
+    find_library(tensorflow_LIBRARY NAMES tensorflow
+            HINTS
+            /usr/lib
+            /usr/local/lib)
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(tensorflow DEFAULT_MSG tensorflow_INCLUDE_DIR tensorflow_LIBRARY)
-  if(TENSORFLOW_FOUND)
-    set(TensorFlow_LIBRARIES ${tensorflow_LIBRARY})
-    set(TensorFlow_INCLUDE_DIRS ${tensorflow_INCLUDE_DIR})
-  endif()
+    if(NOT TENSORFLOW_FOUND)
+        message(WARNING "TensorFlow not found. Skipping building of alexnet target.")
+        return() # Skip building the target
+    endif()
 endif()
 
 if(WIN32)
     unset(TENSORFLOW_FOUND)
     set(TensorFlow_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/include")
     set(TensorFlow_LIBRARIES "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.lib")
-    if(EXISTS "${TensorFlow_INCLUDE_DIRS}" AND EXISTS "${TensorFlow_LIBRARIES}")
-         include(FindPackageHandleStandardArgs)
-         find_package_handle_standard_args(tensorflow DEFAULT_MSG TensorFlow_INCLUDE_DIRS TensorFlow_LIBRARIES)
-         set(TENSORFLOW_FOUND TRUE)
+    if(NOT EXISTS "${TensorFlow_INCLUDE_DIRS}" OR NOT EXISTS "${TensorFlow_LIBRARIES}")
+        message(WARNING "TensorFlow not found. Skipping building of alexnet target.")
+        return() # Skip building the target
     endif()
-endif()
-
-if(NOT TENSORFLOW_FOUND)
-    message(WARNING "TensorFlow not found or incomplete installation. AlexNet application will not be built.")
-    return()
 endif()
 
 file(GLOB_RECURSE SRC_FILES *.cpp)
