@@ -30,9 +30,18 @@ void emplConv(const Tensor& input, Tensor& output, const Tensor& kernel_,
   }
   size_t input_size = input.get_shape()[input.get_shape().dims() - 2] *
                       input.get_shape()[input.get_shape().dims() - 3];
-  dilations_++;
-  size_t kernel_size = kernel_.get_shape()[kernel_.get_shape().dims() - 1];
+
+  std::vector<T> startkernel = *kernel_.as<T>();
+  size_t start_kernel_size = kernel_.get_shape()[kernel_.get_shape().dims() - 1];
+  size_t kernel_size = (1 + start_kernel_size) * dilations_ + start_kernel_size;
   int center_distance = static_cast<int>((kernel_size - 1) / 2);
+  std::vector<T> kernel(kernel_size * kernel_size, 0);
+  for (int i = 0; i < start_kernel_size; i++) {
+    for (int j = 0; j < start_kernel_size; j++) {
+      kernel[(dilations_ + i) * kernel_size + j + (j + 1) * dilations_] =
+          startkernel[i * start_kernel_size + j];
+    }
+  }
   std::vector<T> outputvec;
   for (int i = input_width + center_distance; i < static_cast<int>(input_size);
        i += static_cast<int>(stride_)) {
@@ -43,7 +52,7 @@ void emplConv(const Tensor& input, Tensor& output, const Tensor& kernel_,
         for (int str = -1; str < 2; str++) {
           auto kercol = static_cast<size_t>(coloms / input_width + 1);
           color += matrix[(i + coloms + str) * 3 + x] *
-                   kernel_.get<T>({kercol, static_cast<size_t>(str + 1)});
+                   kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
         }
       }
       outputvec.push_back(color);
