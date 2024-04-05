@@ -37,10 +37,11 @@ void emplConv(const Tensor& input, Tensor& output, const Tensor& kernel_,
   size_t kernel_size = (1 + start_kernel_size) * dilations_ + start_kernel_size;
   int center_distance = static_cast<int>((kernel_size - 1) / 2);
   std::vector<T> kernel(kernel_size * kernel_size, 0);
-  for (int i = 0; i < start_kernel_size; i++) {
-    for (int j = 0; j < start_kernel_size; j++) {
-      kernel[(dilations_ + i) * kernel_size + j + (j + 1) * dilations_] =
-          startkernel[i * start_kernel_size + j];
+  for (int i = 0; i < static_cast<int>(start_kernel_size); i++) {
+    for (int j = 0; j < static_cast<int>(start_kernel_size); j++) {
+      kernel[(dilations_ + i) * static_cast<int>(kernel_size) + j +
+             (j + 1) * dilations_] =
+          startkernel[i * static_cast<int>(start_kernel_size) + j];
     }
   }
   std::vector<T> outputvec;
