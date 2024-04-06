@@ -9,7 +9,8 @@ class EWLayer : public Layer {
  public:
   EWLayer() = default;
   static std::string get_name() { return "Element-wise layer"; }
-  void run(const Tensor& input, Tensor& output, const std::string& function);
+  static void run(const Tensor& input, Tensor& output,
+                  const std::string& function);
 };
 
 template <typename T>
