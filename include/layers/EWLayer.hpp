@@ -47,7 +47,7 @@ template <typename ValueType>
 class EWLayerImpl : public LayerImpl<ValueType> {
  public:
   EWLayerImpl() = delete;
-  EWLayerImpl(const Shape& shape, std::string& function, float alpha = 0.0F,
+  EWLayerImpl(const Shape& shape, std::string function, float alpha = 0.0F,
               float beta = 0.0F);
   EWLayerImpl(const EWLayerImpl& c) = default;
   EWLayerImpl& operator=(const EWLayerImpl& c) = default;
@@ -60,7 +60,7 @@ class EWLayerImpl : public LayerImpl<ValueType> {
 };
 
 template <typename ValueType>
-EWLayerImpl<ValueType>::EWLayerImpl(const Shape& shape, std::string& function,
+EWLayerImpl<ValueType>::EWLayerImpl(const Shape& shape, std::string function,
                                     float alpha, float beta)
     : LayerImpl<ValueType>(shape, shape),
       func_(std::move(function)),
