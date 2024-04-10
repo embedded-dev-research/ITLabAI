@@ -2,14 +2,15 @@
 #include <algorithm>
 #include <cmath>
 #include <string>
+#include <utility>
 
 #include "layers/Layer.hpp"
 
 class EWLayer : public Layer {
  public:
   EWLayer() = default;
-  EWLayer(const std::string& function, float alpha = 0.0F, float beta = 0.0F)
-      : func_(function), alpha_(alpha), beta_(beta) {}
+  EWLayer(std::string function, float alpha = 0.0F, float beta = 0.0F)
+      : func_(std::move(function)), alpha_(alpha), beta_(beta) {}
   static std::string get_name() { return "Element-wise layer"; }
   void run(const Tensor& input, Tensor& output);
 
@@ -46,8 +47,8 @@ template <typename ValueType>
 class EWLayerImpl : public LayerImpl<ValueType> {
  public:
   EWLayerImpl() = delete;
-  EWLayerImpl(const Shape& shape, const std::string& function,
-              float alpha = 0.0F, float beta = 0.0F);
+  EWLayerImpl(const Shape& shape, std::string& function, float alpha = 0.0F,
+              float beta = 0.0F);
   EWLayerImpl(const EWLayerImpl& c) = default;
   EWLayerImpl& operator=(const EWLayerImpl& c) = default;
   std::vector<ValueType> run(const std::vector<ValueType>& input) const;
@@ -59,11 +60,10 @@ class EWLayerImpl : public LayerImpl<ValueType> {
 };
 
 template <typename ValueType>
-EWLayerImpl<ValueType>::EWLayerImpl(const Shape& shape,
-                                    const std::string& function, float alpha,
-                                    float beta)
+EWLayerImpl<ValueType>::EWLayerImpl(const Shape& shape, std::string& function,
+                                    float alpha, float beta)
     : LayerImpl<ValueType>(shape, shape),
-      func_(function),
+      func_(std::move(function)),
       alpha_(alpha),
       beta_(beta) {}
 
