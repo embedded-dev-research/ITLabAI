@@ -9,6 +9,9 @@ template <typename T>
 void emplConv(const Tensor& input, Tensor& output, const Tensor& kernel_,
               size_t stride_, size_t pads_, size_t dilations_) {
   std::vector<T> startmatrix = *input.as<T>();
+  if (input.get_shape().dims() != 4) {
+    throw std::out_of_range("Input = 0");
+  }
   int input_width =
       static_cast<int>(input.get_shape()[input.get_shape().dims() - 2]);
   int input_height =
@@ -52,6 +55,9 @@ void emplConv(const Tensor& input, Tensor& output, const Tensor& kernel_,
       for (int coloms = -input_width; coloms < input_width + 1;
            coloms += input_width) {
         for (int str = -1; str < 2; str++) {
+          if (input_width == 0) {
+            throw std::out_of_range("Input = 0");
+          }
           auto kercol = static_cast<size_t>(coloms / input_width + 1);
           color += matrix[(i + coloms + str) * 3 + x] *
                    kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
@@ -92,19 +98,3 @@ class ConvolutionalLayer : public Layer {
   }
   void run(const Tensor& input, Tensor& output, const Tensor& kernel_);
 };
-void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
-                             const Tensor& kernel_) {
-  switch (input.get_type()) {
-    case Type::kInt: {
-      emplConv<int>(input, output, kernel_, stride_, pads_, dilations_);
-      break;
-    }
-    case Type::kFloat: {
-      emplConv<float>(input, output, kernel_, stride_, pads_, dilations_);
-      break;
-    }
-    default: {
-      throw std::runtime_error("No such type");
-    }
-  }
-}
