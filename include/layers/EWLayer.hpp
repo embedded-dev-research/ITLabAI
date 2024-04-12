@@ -6,6 +6,14 @@
 
 #include "layers/Layer.hpp"
 
+template <typename T>
+T relu(const T& value) {
+  if (value > T(0)) {
+    return value;
+  }
+  return T(0);
+}
+
 class EWLayer : public Layer {
  public:
   EWLayer() = default;
@@ -19,29 +27,6 @@ class EWLayer : public Layer {
   float alpha_;
   float beta_;
 };
-
-template <typename T>
-T minus(const T& elem) {
-  return -elem;
-}
-
-template <typename T>
-T mysin(const T& elem) {
-  return static_cast<T>(std::sin(elem));
-}
-
-template <typename T>
-T mytanh(const T& elem) {
-  return static_cast<T>(std::tanh(elem));
-}
-
-template <typename T>
-T relu(const T& value) {
-  if (value > T(0)) {
-    return value;
-  }
-  return T(0);
-}
 
 template <typename ValueType>
 class EWLayerImpl : public LayerImpl<ValueType> {
@@ -74,11 +59,18 @@ std::vector<ValueType> EWLayerImpl<ValueType>::run(
   if (func_ == "relu") {
     std::transform(input.begin(), input.end(), res.begin(), relu<ValueType>);
   } else if (func_ == "tanh") {
-    std::transform(input.begin(), input.end(), res.begin(), mytanh<ValueType>);
+    auto tanh = [&](const ValueType& value) -> ValueType {
+      return static_cast<ValueType>(std::tanh(value));
+    };
+    std::transform(input.begin(), input.end(), res.begin(), tanh);
   } else if (func_ == "sin") {
-    std::transform(input.begin(), input.end(), res.begin(), mysin<ValueType>);
+    auto sin = [&](const ValueType& value) -> ValueType {
+      return static_cast<ValueType>(std::sin(value));
+    };
+    std::transform(input.begin(), input.end(), res.begin(), sin);
   } else if (func_ == "minus") {
-    std::transform(input.begin(), input.end(), res.begin(), minus<ValueType>);
+    auto minus = [&](const ValueType& value) -> ValueType { return -value; };
+    std::transform(input.begin(), input.end(), res.begin(), minus);
   } else if (func_ == "linear") {
     auto linear = [&](const ValueType& value) -> ValueType {
       return value * static_cast<ValueType>(alpha_) +
