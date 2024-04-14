@@ -1,6 +1,6 @@
 #include "layers/ConvLayer.hpp"
 void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
-                             const Tensor& kernel_) {
+                             const Tensor& kernel_) const{
   switch (input.get_type()) {
     case Type::kInt: {
       emplConv<int>(input, output, kernel_, stride_, pads_, dilations_);

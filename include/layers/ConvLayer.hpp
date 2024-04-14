@@ -96,5 +96,5 @@ class ConvolutionalLayer : public Layer {
     pads_ = pads;
     dilations_ = dilations;
   }
-  void run(const Tensor& input, Tensor& output, const Tensor& kernel_);
+  void run(const Tensor& input, Tensor& output, const Tensor& kernel_) const;
 };
