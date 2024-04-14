@@ -9,6 +9,7 @@ class InputLayer : public Layer {
   bool layout_;
   int mean_;
   int std_;
+
  public:
   InputLayer() = default;
   InputLayer(bool layout, int mean, int std) {
