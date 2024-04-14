@@ -34,7 +34,14 @@ file(DOWNLOAD
     LOG log_file
 )
 
-add_definitions(-DIMAGE_PATH="${CMAKE_CURRENT_BINARY_DIR}/image.jpg")
+file(DOWNLOAD
+    "https://raw.githubusercontent.com/bpinaya/AlexNetRT/master/data/alexnet/imagenet-labels.txt"
+    "${CMAKE_CURRENT_BINARY_DIR}/imagenet-labels.txt"
+    SHOW_PROGRESS
+    STATUS status_code
+    LOG log_file
+)
+
 file(DOWNLOAD
     "https://tinyurl.com/2w6eh53v"
     "${CMAKE_CURRENT_BINARY_DIR}/squeeze.tflite"
@@ -42,4 +49,6 @@ file(DOWNLOAD
     STATUS status_code
     LOG log_file
 )
+
+target_compile_definitions(run_test PUBLIC TESTS_BINARY_PATH="${CMAKE_CURRENT_BINARY_DIR}")
 add_definitions(-DMODEL_PATH="${CMAKE_CURRENT_BINARY_DIR}/squeeze.tflite")
