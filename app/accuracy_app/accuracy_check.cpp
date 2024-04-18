@@ -18,7 +18,7 @@ int main() {
 
     // image processing will be here...
     // For check. This is temporary:
-    std::cout << "Image size ::: " << image_path << ": " << image.size() << std::endl;
+    std::cout << "Image size ::: " << image_path << " => " << image.size() << std::endl;
     }
 
   return 0;
