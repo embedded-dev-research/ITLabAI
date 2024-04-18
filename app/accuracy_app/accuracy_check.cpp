@@ -3,21 +3,23 @@
 #include <filesystem>
 
 int main() {
-  std::string directory = "./photos";
+  std::string image_directory = "./photos";
 
-  for (const auto& entry : std::filesystem::directory_iterator(directory)) {
-    if (entry.is_regular_file()) {
-      cv::Mat image = cv::imread(entry.path().string());
+  std::vector<cv::String> image_paths;
+  cv::glob(image_directory + "*.jpg", image_paths);
+  cv::glob(image_directory + "*.png", image_paths);
 
-      // For example:
-      if (!image.empty()) {
-        cv::imshow("Image", image);
-        cv::waitKey(0);
-      } else {
-        std::cerr << "Read image error. Image path is: " << entry.path() << std::endl;
-      }
+  for (const auto& path : image_paths) {
+    cv::Mat image = cv::imread(path);
+    if (image.empty()) {
+      std::cerr << "The image could not be opened: " << image_path << std::endl;
+      continue;
     }
-  }
+
+    // image processing will be here...
+    // For check. This is temporary:
+    std::cout << "Image size ::: " << image_path << ": " << image.size() << std::endl;
+    }
 
   return 0;
 }
