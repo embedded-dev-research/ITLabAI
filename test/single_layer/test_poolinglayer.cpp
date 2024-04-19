@@ -90,7 +90,8 @@ std::vector<double> basic_2d_1_data = {9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0,
                                        2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
 Shape basic_2d_1_shape = {4, 4};
 
-std::vector<double> basic_2d_2_data = {9.0, 8.0, 7.0, 5.0, 4.0, 3.0, 2.0, 3.0, 4.0};
+std::vector<double> basic_2d_2_data = {9.0, 8.0, 7.0, 5.0, 4.0,
+                                       3.0, 2.0, 3.0, 4.0};
 Shape basic_2d_2_shape = {3, 3};
 
 INSTANTIATE_TEST_SUITE_P(
