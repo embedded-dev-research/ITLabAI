@@ -69,7 +69,8 @@ class PoolingTestsParameterized
     : public ::testing::TestWithParam<
           std::tuple<std::vector<double>, Shape, Shape, std::string,
                      std::vector<double> > > {};
-// 1) input; 2) input_shape; 3) pooling_shape; 4) pooling_type; 5) expected_output.
+// 1) input; 2) input_shape; 3) pooling_shape; 4) pooling_type;
+// 5) expected_output.
 
 TEST_P(PoolingTestsParameterized, pooling_works_correctly) {
   auto data = GetParam();
