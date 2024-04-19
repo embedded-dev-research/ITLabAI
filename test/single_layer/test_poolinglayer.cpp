@@ -65,13 +65,13 @@ TEST(poolinglayer, equivalent_output_when_pool_size_1) {
   EXPECT_EQ(output_b, input);
 }
 
-class pooling_tests_parameterized
+class PoolingTestsParameterized
     : public ::testing::TestWithParam<
           std::tuple<std::vector<double>, Shape, Shape, std::string,
                      std::vector<double> > > {};
 // 1) input; 2) input_shape; 3) pooling_type; 4) expected_output;
 
-TEST_P(pooling_tests_parameterized, pooling_works_correctly) {
+TEST_P(PoolingTestsParameterized, pooling_works_correctly) {
   auto data = GetParam();
   std::vector<double> input = std::get<0>(data);
   Shape inpshape = std::get<1>(data);
@@ -95,7 +95,7 @@ std::vector<double> basic_2d_2_data = {9.0, 8.0, 7.0, 5.0, 4.0,
 Shape basic_2d_2_shape = {3, 3};
 
 INSTANTIATE_TEST_SUITE_P(
-    pooling_tests, pooling_tests_parameterized,
+    pooling_tests, PoolingTestsParameterized,
     ::testing::Values(
         std::make_tuple(basic_1d_data, basic_1d_shape, Shape({3}),
                         std::string("average"),
