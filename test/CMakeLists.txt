@@ -16,7 +16,7 @@ endif()
 target_link_libraries(run_test PUBLIC perf_lib layers_lib)
 target_link_libraries(run_test PUBLIC gtest_main)
 target_link_libraries(run_test PUBLIC ReadLib)
-if (NOT TENSORFLOW_FOUND)
+if (TENSORFLOW_FOUND)
     target_link_libraries(run_test PUBLIC AlexNetLib)
 endif()
 
