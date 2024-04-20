@@ -22,7 +22,10 @@ endif()
 
 
 target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
-target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/AlexNet")
+if (TENSORFLOW_FOUND)
+    target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/AlexNet")
+endif()
+
 
 if (WIN32)
 add_custom_command(TARGET run_test POST_BUILD
