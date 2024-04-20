@@ -34,9 +34,6 @@ jobs:
         max-size: 2G
     - name: Build
       run: |
-        TensorFlow_INCLUDE_DIRS=${PWD}/include
-        TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.so
-        if [ -n "$TensorFlow_INCLUDE_DIRS" ] && [ -n "$TensorFlow_LIBRARIES" ]; then
             cmake -S . -B build \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -44,9 +41,6 @@ jobs:
             -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} \
             -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
             cmake --build build
-        else
-            echo "TensorFlow variables are not set. Skipping build."
-        fi
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test
