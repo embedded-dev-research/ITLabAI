@@ -1,11 +1,9 @@
-message(STATUS "TENSORFLOW_FOUND is ${TENSORFLOW_FOUND}")
 if(TENSORFLOW_FOUND)
     file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 else()
     file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
     list(REMOVE_ITEM TEST_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/model_read/model_read.cpp")
 endif()
-
 
 if (NOT WIN32)
     find_package(OpenMP REQUIRED)
@@ -18,19 +16,15 @@ endif()
 target_link_libraries(run_test PUBLIC perf_lib layers_lib)
 target_link_libraries(run_test PUBLIC gtest_main)
 target_link_libraries(run_test PUBLIC ReadLib)
-message(STATUS "TENSORFLOW_FOUND is ${TENSORFLOW_FOUND}")
 if(TENSORFLOW_FOUND)
     target_link_libraries(run_test PUBLIC AlexNetLib)
 endif()
 
-
 target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
-message(STATUS "TENSORFLOW_FOUND is ${TENSORFLOW_FOUND}")
 if(TENSORFLOW_FOUND)
     target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/AlexNet")
 endif()
 
-message(STATUS "TENSORFLOW_FOUND is ${TENSORFLOW_FOUND}")
 if (WIN32)
 add_custom_command(TARGET run_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
