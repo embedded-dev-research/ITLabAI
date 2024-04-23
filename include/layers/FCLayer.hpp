@@ -1,19 +1,44 @@
 #pragma once
 #include <algorithm>
-#include <initializer_list>
-#include <numeric>
 #include <stdexcept>
 #include <vector>
 
 #include "layers/Layer.hpp"
 
+namespace itlab_2023 {
+
 class FCLayer : public Layer {
  public:
   FCLayer() = default;
   static std::string get_name() { return "Fully-connected layer"; }
-  void run(const Tensor& input, Tensor& output, const Tensor& weights,
-           const Tensor& bias);
+  static void run(const Tensor& input, Tensor& output, const Tensor& weights,
+                  const Tensor& bias);
 };
+
+template <typename ValueType>
+std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
+                                   const Shape& mat_shape,
+                                   const std::vector<ValueType>& vec) {
+  if (mat_shape.dims() != 2) {
+    throw std::invalid_argument("Not a matrix in argument");
+  }
+  if (vec.size() != mat_shape[1]) {
+    throw std::invalid_argument("Invalid vector size");
+  }
+  Shape res_shape(1);
+  res_shape[0] = mat_shape[0];
+  std::vector<ValueType> res(res_shape[0]);
+  ValueType elem;
+  for (size_t i = 0; i < mat_shape[0]; i++) {
+    elem = ValueType(0);
+    for (size_t j = 0; j < mat_shape[1]; j++) {
+      // due to 1d indexing
+      elem += mat[i * mat_shape[1] + j] * vec[j];
+    }
+    res[i] = elem;
+  }
+  return res;
+}
 
 template <typename ValueType>
 class FCLayerImpl : public LayerImpl<ValueType> {
@@ -93,3 +118,4 @@ std::vector<ValueType> FCLayerImpl<ValueType>::run(
                  output_values.begin(), std::plus<ValueType>());
   return output_values;
 }
+}  // namespace itlab_2023

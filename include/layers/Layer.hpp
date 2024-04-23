@@ -1,5 +1,4 @@
 #pragma once
-#include <algorithm>
 #include <initializer_list>
 #include <numeric>
 #include <stdexcept>
@@ -9,35 +8,12 @@
 #include "layers/Shape.hpp"
 #include "layers/Tensor.hpp"
 
+namespace itlab_2023 {
+
 class Layer {
  public:
   Layer() = default;
 };
-
-template <typename ValueType>
-std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
-                                   const Shape& mat_shape,
-                                   const std::vector<ValueType>& vec) {
-  if (mat_shape.dims() != 2) {
-    throw std::invalid_argument("Not a matrix in argument");
-  }
-  if (vec.size() != mat_shape[1]) {
-    throw std::invalid_argument("Invalid vector size");
-  }
-  Shape res_shape(1);
-  res_shape[0] = mat_shape[0];
-  std::vector<ValueType> res(res_shape[0]);
-  ValueType elem;
-  for (size_t i = 0; i < mat_shape[0]; i++) {
-    elem = ValueType(0);
-    for (size_t j = 0; j < mat_shape[1]; j++) {
-      // due to 1d indexing
-      elem += mat[i * mat_shape[1] + j] * vec[j];
-    }
-    res[i] = elem;
-  }
-  return res;
-}
 
 template <typename ValueType>
 class LayerImpl {
@@ -60,3 +36,4 @@ class LayerImpl {
   Shape inputShape_;
   Shape outputShape_;
 };
+}  // namespace itlab_2023

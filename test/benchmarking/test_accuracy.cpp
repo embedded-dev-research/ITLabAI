@@ -4,6 +4,8 @@
 #include "gtest/gtest.h"
 #include "perf/benchmarking.hpp"
 
+using namespace itlab_2023;
+
 TEST(accuracy, max_accuracy_test) {
   double a[10] = {9.0, 2.0, 1.0, 4.0, 7.0, 10.5, -12.0, 11.0, 0.0, -2.5};
   double b[10] = {9.0, 2.0, 1.0, 4.0, 7.0, 10.5, -12.0, 11.0, 0.0, -2.5};

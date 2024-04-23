@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <vector>
 
+namespace itlab_2023 {
+
 template <typename DurationContainerType, typename DurationType, class Function,
           typename... Args>
 DurationContainerType elapsed_time(Function&& func, Args&&... args) {
@@ -112,3 +114,4 @@ T accuracy_norm(T* test, T* ref, const size_t size) {
   // typename T should have friend sqrt() function
   return std::sqrt(res);
 }
+}  // namespace itlab_2023
