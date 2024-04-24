@@ -48,6 +48,7 @@ class Tensor {
   }
 
  public:
+  Tensor() = default;
   Tensor(const std::vector<uint8_t>& a, const Shape& sh, Type type)
       : shape_(sh), type_(type) {
     values_ = SetRightTypeValues();
@@ -69,6 +70,7 @@ class Tensor {
   Tensor(Tensor&& t) = default;
 
   Tensor& operator=(Tensor&& t) = default;
+  Tensor& operator=(const Tensor& t) = default;
 
   Shape get_shape() const { return shape_; }
   Type get_type() const noexcept { return type_; }
