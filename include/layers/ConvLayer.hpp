@@ -5,84 +5,6 @@
 
 #include "layers/Layer.hpp"
 
-template <typename T>
-void emplConv(const Tensor& input, Tensor& output, const Tensor& kernel_,
-              size_t stride_, size_t pads_, size_t dilations_) {
-  std::vector<T> startmatrix = *input.as<T>();
-  if (input.get_shape().dims() != 4) {
-    throw std::out_of_range("Input = 0");
-  }
-  int input_width =
-      static_cast<int>(input.get_shape()[input.get_shape().dims() - 2]);
-  int input_height =
-      static_cast<int>(input.get_shape()[input.get_shape().dims() - 3]);
-  int input_flow =
-      static_cast<int>(input.get_shape()[input.get_shape().dims() - 1]);
-  int new_rows = input_width + 2 * static_cast<int>(pads_);
-  int new_cols = input_height + 2 * static_cast<int>(pads_);
-  std::vector<T> matrix(new_rows * new_cols * input_flow, 0);
-  for (int i = 0; i < input_height; ++i) {
-    for (int j = 0; j < input_width; ++j) {
-      matrix[((i + pads_) * new_cols + j + pads_) * input_flow] =
-          startmatrix[(i * input_width + j) * input_flow];
-      matrix[((i + pads_) * new_cols + j + pads_) * input_flow + 1] =
-          startmatrix[(i * input_width + j) * input_flow + 1];
-      matrix[((i + pads_) * new_cols + j + pads_) * input_flow + 2] =
-          startmatrix[(i * input_width + j) * input_flow + 2];
-    }
-  }
-  size_t input_size = input.get_shape()[input.get_shape().dims() - 2] *
-                      input.get_shape()[input.get_shape().dims() - 3];
-
-  std::vector<T> startkernel = *kernel_.as<T>();
-  size_t start_kernel_size =
-      kernel_.get_shape()[kernel_.get_shape().dims() - 1];
-  size_t kernel_size = (1 + start_kernel_size) * dilations_ + start_kernel_size;
-  int center_distance = static_cast<int>((kernel_size - 1) / 2);
-  std::vector<T> kernel(kernel_size * kernel_size, 0);
-  for (int i = 0; i < static_cast<int>(start_kernel_size); i++) {
-    for (int j = 0; j < static_cast<int>(start_kernel_size); j++) {
-      kernel[(dilations_ + i) * static_cast<int>(kernel_size) + j +
-             (j + 1) * dilations_] =
-          startkernel[i * static_cast<int>(start_kernel_size) + j];
-    }
-  }
-  std::vector<T> outputvec;
-  for (int i = input_width + center_distance; i < static_cast<int>(input_size);
-       i += static_cast<int>(stride_)) {
-    for (int x = 0; x < 3; x++) {
-      T color = 0;
-      for (int coloms = -input_width; coloms < input_width + 1;
-           coloms += input_width) {
-        for (int str = -1; str < 2; str++) {
-          if (input_width == 0) {
-            throw std::out_of_range("Input = 0");
-          }
-          auto kercol = static_cast<size_t>(coloms / input_width + 1);
-          color += matrix[(i + coloms + str) * 3 + x] *
-                   kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
-        }
-      }
-      outputvec.push_back(color);
-    }
-    if ((i + center_distance + 1) % input_width == 0) {
-      if (i + input_width + center_distance * 2 ==
-          static_cast<int>(input_size)) {
-        i += input_width + center_distance * 2 + 1;
-      } else {
-        i += input_width * (static_cast<int>(stride_) - 1) +
-             (3 - static_cast<int>(stride_));
-      }
-    }
-  }
-  auto sizeforshape = static_cast<size_t>(
-      ((input_width - 1 - static_cast<int>(kernel_size - 1)) /
-       static_cast<int>(stride_)) +
-      1);
-  Shape sh({1, sizeforshape, sizeforshape, 3});
-  output = make_tensor<T>(outputvec, sh);
-}
-
 class ConvolutionalLayer : public Layer {
  private:
   size_t stride_;
@@ -97,4 +19,85 @@ class ConvolutionalLayer : public Layer {
     dilations_ = dilations;
   }
   void run(const Tensor& input, Tensor& output, const Tensor& kernel_) const;
+};
+
+template <typename ValueType>
+class ConvImpl : public LayerImpl<ValueType> {
+ private:
+  int input_width_;
+  int input_height_;
+  int input_flow_;
+  size_t stride_;
+  size_t pads_;
+  size_t dilations_;
+  size_t input_size_;
+ public:
+  ConvImpl() = delete;
+  ConvImpl(size_t stride, size_t pads, size_t dilations, int input_width,
+           int input_height, int input_flow, size_t input_size)
+      : input_width_(input_width),
+        input_height_(input_height),
+        input_flow_(input_flow),
+        stride_(stride),
+        pads_(pads),
+        dilations_(dilations),
+        input_size_(input_size) {}
+  ConvImpl(const ConvImpl& c) = default;
+  std::vector<ValueType> run(const std::vector<ValueType>& input) const override {
+    return input;
+  }
+  std::vector<ValueType> run(std::vector<ValueType> startmatrix, int new_rows,
+                             int new_cols, std::vector<ValueType> startkernel,
+                             size_t start_kernel_size, size_t kernel_size,
+                             int center_distance) const {
+    std::vector<ValueType> matrix(new_rows * new_cols * input_flow_, 0);
+    for (int i = 0; i < input_height_; ++i) {
+      for (int j = 0; j < input_width_; ++j) {
+        matrix[((i + pads_) * new_cols + j + pads_) * input_flow_] =
+            startmatrix[(i * input_width_ + j) * input_flow_];
+        matrix[((i + pads_) * new_cols + j + pads_) * input_flow_ + 1] =
+            startmatrix[(i * input_width_ + j) * input_flow_ + 1];
+        matrix[((i + pads_) * new_cols + j + pads_) * input_flow_ + 2] =
+            startmatrix[(i * input_width_ + j) * input_flow_ + 2];
+      }
+    }
+    std::vector<ValueType> kernel(kernel_size * kernel_size, 0);
+    for (int i = 0; i < static_cast<int>(start_kernel_size); i++) {
+      for (int j = 0; j < static_cast<int>(start_kernel_size); j++) {
+        kernel[(dilations_ + i) * static_cast<int>(kernel_size) + j +
+               (j + 1) * dilations_] =
+            startkernel[i * static_cast<int>(start_kernel_size) + j];
+      }
+    }
+    std::vector<ValueType> outputvec;
+    for (int i = input_width_ + center_distance;
+         i < static_cast<int>(input_size_); i += static_cast<int>(stride_)) {
+      for (int x = 0; x < 3; x++) {
+        ValueType color = 0;
+        for (int coloms = -input_width_; coloms < input_width_ + 1;
+             coloms += input_width_) {
+          for (int str = -1; str < 2; str++) {
+            if (input_width_ == 0) {
+              throw std::out_of_range("Input = 0");
+            }
+            auto kercol = static_cast<size_t>(coloms / input_width_ + 1);
+            color +=
+                matrix[(i + coloms + str) * 3 + x] *
+                kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
+          }
+        }
+        outputvec.push_back(color);
+      }
+      if ((i + center_distance + 1) % input_width_ == 0) {
+        if (i + input_width_ + center_distance * 2 ==
+            static_cast<int>(input_size_)) {
+          i += input_width_ + center_distance * 2 + 1;
+        } else {
+          i += input_width_ * (static_cast<int>(stride_) - 1) +
+               (3 - static_cast<int>(stride_));
+        }
+      }
+    }
+    return outputvec;
+  }
 };
