@@ -31,6 +31,7 @@ class ConvImpl : public LayerImpl<ValueType> {
   size_t pads_;
   size_t dilations_;
   size_t input_size_;
+
  public:
   ConvImpl() = delete;
   ConvImpl(size_t stride, size_t pads, size_t dilations, int input_width,
@@ -43,7 +44,8 @@ class ConvImpl : public LayerImpl<ValueType> {
         dilations_(dilations),
         input_size_(input_size) {}
   ConvImpl(const ConvImpl& c) = default;
-  std::vector<ValueType> run(const std::vector<ValueType>& input) const override {
+  std::vector<ValueType> run(
+      const std::vector<ValueType>& input) const override {
     return input;
   }
   std::vector<ValueType> run(std::vector<ValueType> startmatrix, int new_rows,

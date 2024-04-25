@@ -24,14 +24,15 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
           1);
       Shape sh({1, sizeforshape, sizeforshape, 3});
       output = make_tensor<int>(
-          used_impl.run(*input.as<int>(),
-                        static_cast<int>(
-                            input.get_shape()[input.get_shape().dims() - 2]) +
-                            2 * static_cast<int>(pads_),
-                        static_cast<int>(
-                            input.get_shape()[input.get_shape().dims() - 3]) +
-                            2 * static_cast<int>(pads_),
-                        *kernel_.as<int>(),
+          used_impl.run(
+              *input.as<int>(),
+              static_cast<int>(
+                  input.get_shape()[input.get_shape().dims() - 2]) +
+                  2 * static_cast<int>(pads_),
+              static_cast<int>(
+                  input.get_shape()[input.get_shape().dims() - 3]) +
+                  2 * static_cast<int>(pads_),
+              *kernel_.as<int>(),
               kernel_.get_shape()[kernel_.get_shape().dims() - 1],
               (1 + kernel_.get_shape()[kernel_.get_shape().dims() - 1]) *
                       dilations_ +
