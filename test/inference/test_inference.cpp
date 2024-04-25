@@ -3,6 +3,8 @@
 #include "graph/graph.hpp"
 #include "gtest/gtest.h"
 
+using namespace itlab_2023;
+
 TEST(bfs, check_result_vec) {
   const std::vector<int> vec_in = {1, 2, 3, 4};
   std::vector<int> vec_out(4);
