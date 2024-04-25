@@ -5,8 +5,6 @@
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
 
-using namespace itlab_2023;
-
 TEST(ewlayer, works_with_minus) {
   EWLayerImpl<double> layer({2, 2}, "minus");
   std::vector<double> input = {2.0, 3.9, 0.1, 2.3};

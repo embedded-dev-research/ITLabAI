@@ -4,8 +4,6 @@
 #include "gtest/gtest.h"
 #include "perf/benchmarking.hpp"
 
-using namespace itlab_2023;
-
 template <typename T>
 std::vector<T> matrix_sum(const std::vector<T> &first,
                           const std::vector<T> &second) {

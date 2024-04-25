@@ -6,8 +6,6 @@
 #include "gtest/gtest.h"
 #include "layers/OutputLayer.hpp"
 
-using namespace itlab_2023;
-
 void fill_from_file(const std::string& path_from,
                     std::vector<std::string>& to) {
   std::ifstream f;

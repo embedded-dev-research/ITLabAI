@@ -5,8 +5,6 @@
 #include "gtest/gtest.h"
 #include "layers/Tensor.hpp"
 
-using namespace itlab_2023;
-
 struct TestClass {
  public:
   TestClass(float a) : b_(a) {}
