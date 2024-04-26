@@ -7,7 +7,7 @@ std::ostream& operator<<(std::ostream& out, const Tensor& t) {
       out << (*t.as<int>())[i] << " ";
     } else if (t.get_type() == Type::kFloat) {
       out << (*t.as<float>())[i] << " ";
-    }
+    }7
     if (t.get_shape().dims() > 1) {
       if ((i + 1) % t.get_shape()[1] == 0) out << std::endl;
     }
@@ -17,8 +17,10 @@ std::ostream& operator<<(std::ostream& out, const Tensor& t) {
 
 template <typename T>
 bool elementwiseTensorCmp(const Tensor& t1, const Tensor& t2, double threshold) {
-  if (t1.get_shape().count() != t2.get_shape().count()) return false;
-  if (t1.get_type() != t2.get_type()) return false;
+  if (t1.get_shape().count() != t2.get_shape().count()) 
+    throw std::exception("Diff_sizes");
+  if (t1.get_type() != t2.get_type()) 
+    throw std::exception("Diff_types");
   
   size_t size = t1.get_shape().count();
   for (size_t i = 0; i < size; i++) {

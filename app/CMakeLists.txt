@@ -1,3 +1,12 @@
+cmake_minimum_required(VERSION 3.7) 
+ 
+find_package(OpenCV REQUIRED) 
+ 
+include_directories( ${OpenCV_INCLUDE_DIRS} ) 
+ 
+add_executable( sample_accuracy "./accuracy_app/accuracy_check.cpp" ) 
+target_link_libraries(sample_accuracy ${OpenCV_LIBS} )
+
 add_executable(Reader reader_img.cpp)
 add_executable(alexnet alexnet.cpp)
 target_link_libraries(alexnet AlexNetLib)
