@@ -20,7 +20,7 @@ TEST_P(EWTestsParameterized, element_wise_works_correctly) {
   std::vector<double> output = a.run(input);
   std::vector<double> true_output = std::get<2>(data);
   auto func = std::get<3>(data);
-  if (func != nullptr && func != NULL) {
+  if (func != nullptr) {
     true_output = std::vector<double>(input.size());
     std::transform(input.begin(), input.end(), true_output.begin(), func);
   }
