@@ -1,5 +1,7 @@
 #include "layers/PoolingLayer.hpp"
 
+namespace itlab_2023 {
+
 void PoolingLayer::run(const Tensor& input, Tensor& output) {
   switch (input.get_type()) {
     case Type::kFloat: {
@@ -21,3 +23,4 @@ void PoolingLayer::run(const Tensor& input, Tensor& output) {
     }
   }
 }
+}  // namespace itlab_2023

@@ -3,6 +3,8 @@
 #include "gtest/gtest.h"
 #include "layers/PoolingLayer.hpp"
 
+using namespace itlab_2023;
+
 TEST(poolinglayer, empty_inputs1) {
   Shape inpshape = 0;
   Shape poolshape = 0;

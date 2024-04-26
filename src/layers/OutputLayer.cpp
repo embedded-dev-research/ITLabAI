@@ -1,5 +1,7 @@
 #include "layers/OutputLayer.hpp"
 
+namespace itlab_2023 {
+
 std::pair<std::vector<std::string>, Tensor> OutputLayer::top_k(
     const Tensor &input, size_t k) const {
   if (input.get_shape().dims() != 1) {
@@ -26,3 +28,4 @@ std::pair<std::vector<std::string>, Tensor> OutputLayer::top_k(
   };
   return make_pair(reslabels, resvector);
 }
+}  // namespace itlab_2023
