@@ -6,6 +6,8 @@
 
 #include "layers/Layer.hpp"
 
+namespace itlab_2023 {
+
 enum PoolingType { kAverage, kMax };
 
 class PoolingLayer : public Layer {
@@ -144,3 +146,4 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
   }
   return res;
 }
+}  // namespace itlab_2023

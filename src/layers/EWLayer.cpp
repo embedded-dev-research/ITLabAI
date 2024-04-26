@@ -1,5 +1,7 @@
 #include "layers/EWLayer.hpp"
 
+namespace itlab_2023 {
+
 void EWLayer::run(const Tensor &input, Tensor &output) {
   switch (input.get_type()) {
     case Type::kInt: {
@@ -18,3 +20,4 @@ void EWLayer::run(const Tensor &input, Tensor &output) {
     }
   }
 }
+}  // namespace itlab_2023

@@ -6,6 +6,8 @@
 
 #include "layers/Layer.hpp"
 
+namespace itlab_2023 {
+
 template <typename T>
 T relu(const T& value) {
   if (value > T(0)) {
@@ -82,3 +84,4 @@ std::vector<ValueType> EWLayerImpl<ValueType>::run(
   }
   return res;
 }
+}  // namespace itlab_2023

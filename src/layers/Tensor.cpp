@@ -1,5 +1,7 @@
 #include "layers/Tensor.hpp"
 
+namespace itlab_2023 {
+
 std::ostream& operator<<(std::ostream& out, const Tensor& t) {
   for (size_t i = 0; i < t.get_shape().count(); i++) {
     out.width(5);
@@ -14,3 +16,4 @@ std::ostream& operator<<(std::ostream& out, const Tensor& t) {
   }
   return out;
 }
+}  // namespace itlab_2023

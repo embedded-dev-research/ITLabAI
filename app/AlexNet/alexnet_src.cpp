@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 
-#include "alexnet/alexnet.hpp"
+#include "alexnet.hpp"
 
 void AlexNetSample(std::string& path) {
   TF_Graph* graph = TF_NewGraph();

@@ -5,6 +5,8 @@
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
 
+using namespace itlab_2023;
+
 class EWTestsParameterized
     : public ::testing::TestWithParam<
           std::tuple<std::vector<double>, EWLayerImpl<double>,
