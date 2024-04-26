@@ -1,4 +1,6 @@
 #include "layers/ConvLayer.hpp"
+namespace itlab_2023 {
+
 void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
                              const Tensor& kernel_) const {
   switch (input.get_type()) {
@@ -93,3 +95,4 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
     }
   }
 }
+}  // namespace itlab_2023
