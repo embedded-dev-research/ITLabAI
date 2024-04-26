@@ -2,6 +2,8 @@
 
 #include "layers/ConvLayer.hpp"
 
+using namespace itlab_2023;
+
 TEST(ConvolutionalLayerTest, FStep2) {
   std::vector<float> image;
   image.reserve(75);

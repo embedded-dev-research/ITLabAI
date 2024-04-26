@@ -5,6 +5,8 @@
 
 #include "layers/Layer.hpp"
 
+namespace itlab_2023 {
+
 class ConvolutionalLayer : public Layer {
  private:
   size_t stride_;
@@ -103,3 +105,4 @@ class ConvImpl : public LayerImpl<ValueType> {
     return outputvec;
   }
 };
+}  // namespace itlab_2023
