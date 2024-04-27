@@ -4,6 +4,8 @@
 
 #include "layers/Layer.hpp"
 
+namespace itlab_2023 {
+
 enum LayInOut {
   NCHW,  // 0
   NHWC   // 1
@@ -146,3 +148,4 @@ class InputLayer : public Layer {
     }
   }
 };
+}  // namespace itlab_2023

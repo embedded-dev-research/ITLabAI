@@ -4,6 +4,8 @@
 #include "gtest/gtest.h"
 #include "layers/InputLayer.hpp"
 
+using namespace itlab_2023;
+
 TEST(input, chech_basic) {
   Shape sh1({1, 2, 2, 1});
   std::vector<int> vec = {1, 2, 3, 4};
