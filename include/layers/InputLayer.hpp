@@ -160,9 +160,6 @@ class InputLayer : public Layer {
         output = make_tensor<float>(in, sh);
         break;
       }
-      default: {
-        throw std::runtime_error("No such type");
-      }
     }
   }
 };
