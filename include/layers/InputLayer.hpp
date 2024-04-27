@@ -30,6 +30,9 @@ class InputLayer : public Layer {
     switch (input.get_type()) {
       case Type::kInt: {
         std::vector<int> in = *input.as<int>();
+        if (input.get_shape().dims() != 4) {
+          throw std::out_of_range("Input = 0");
+        }
         for (int& re : in) {
           re = static_cast<int>((re - mean_) / std_);
         }
@@ -39,6 +42,9 @@ class InputLayer : public Layer {
           int C = static_cast<int>(sh[1]);
           int H = static_cast<int>(sh[2]);
           int W = static_cast<int>(sh[3]);
+          if (N < 1 || C < 1 || H < 1 || W < 1) {
+            throw std::out_of_range("NCHW = 0");
+          }
           std::vector<int> res(N * H * W * C);
           for (int n = 0; n < N; ++n) {
             for (int c = 0; c < C; ++c) {
@@ -63,6 +69,9 @@ class InputLayer : public Layer {
           int C = static_cast<int>(sh[3]);
           int H = static_cast<int>(sh[1]);
           int W = static_cast<int>(sh[2]);
+          if (N < 1 || C < 1 || H < 1 || W < 1) {
+            throw std::out_of_range("NCHW = 0");
+          }
           std::vector<int> res(N * C * H * W);
           for (int n = 0; n < N; ++n) {
             for (int c = 0; c < C; ++c) {
@@ -87,6 +96,9 @@ class InputLayer : public Layer {
       }
       case Type::kFloat: {
         std::vector<float> in = *input.as<float>();
+        if (input.get_shape().dims() != 4) {
+          throw std::out_of_range("Input = 0");
+        }
         for (float& re : in) {
           re = static_cast<float>((re - mean_) / std_);
         }
@@ -96,6 +108,9 @@ class InputLayer : public Layer {
           int C = static_cast<int>(sh[1]);
           int H = static_cast<int>(sh[2]);
           int W = static_cast<int>(sh[3]);
+          if (N < 1 || C < 1 || H < 1 || W < 1) {
+            throw std::out_of_range("NCHW = 0");
+          }
           std::vector<float> res(N * H * W * C);
           for (int n = 0; n < N; ++n) {
             for (int c = 0; c < C; ++c) {
@@ -120,6 +135,9 @@ class InputLayer : public Layer {
           int C = static_cast<int>(sh[3]);
           int H = static_cast<int>(sh[1]);
           int W = static_cast<int>(sh[2]);
+          if (N < 1 || C < 1 || H < 1 || W < 1) {
+            throw std::out_of_range("NCHW = 0");
+          }
           std::vector<float> res(N * C * H * W);
           for (int n = 0; n < N; ++n) {
             for (int c = 0; c < C; ++c) {
