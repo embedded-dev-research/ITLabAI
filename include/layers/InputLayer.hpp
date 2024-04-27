@@ -57,10 +57,10 @@ class InputLayer : public Layer {
           break;
         }
         if (layin_ == NHWC && layout_ == NCHW) {
-          int N = static_cast<int> (sh[0]);
-          int C = static_cast<int> (sh[3]);
-          int H = static_cast<int> (sh[1]);
-          int W = static_cast<int> (sh[2]);
+          int N = static_cast<int>(sh[0]);
+          int C = static_cast<int>(sh[3]);
+          int H = static_cast<int>(sh[1]);
+          int W = static_cast<int>(sh[2]);
           std::vector<int> res(N * C * H * W);
           for (int n = 0; n < N; ++n) {
             for (int c = 0; c < C; ++c) {
