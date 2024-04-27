@@ -1,5 +1,7 @@
 #include "layers/Shape.hpp"
 
+namespace itlab_2023 {
+
 size_t Shape::get_index(const std::vector<size_t>& coords) const {
   if (coords.size() != dims_.size()) {
     throw std::invalid_argument("Invalid index vector");
@@ -17,3 +19,4 @@ size_t Shape::get_index(const std::vector<size_t>& coords) const {
   }
   return res;
 }
+}  // namespace itlab_2023

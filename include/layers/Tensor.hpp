@@ -8,6 +8,8 @@
 
 #include "layers/Shape.hpp"
 
+namespace itlab_2023 {
+
 enum class Type { kUnknown, kInt, kFloat };
 
 template <typename T>
@@ -145,3 +147,4 @@ template <typename T>
 Tensor make_tensor(const std::vector<T>& v) {
   return Tensor(*to_byte<T>(v), {v.size()}, GetTypeEnum<T>());
 }
+}  // namespace itlab_2023

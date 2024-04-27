@@ -4,6 +4,8 @@
 
 #include "layers/Layer.hpp"
 
+namespace itlab_2023 {
+
 class OutputLayer : public Layer {
  public:
   OutputLayer() = default;
@@ -66,3 +68,4 @@ std::pair<std::vector<std::string>, std::vector<ValueType> > top_k_vec(
   }
   return make_pair(res_labels, res_input);
 }
+}  // namespace itlab_2023

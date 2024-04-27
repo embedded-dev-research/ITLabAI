@@ -1,32 +1,45 @@
-add_executable(Reader reader_img.cpp)
-add_executable(alexnet alexnet.cpp)
-target_link_libraries(alexnet AlexNetLib)
-target_link_libraries(Reader ReadLib)
+add_subdirectory(ReaderImage)
+if(UNIX)
+    find_path(tensorflow_INCLUDE_DIR
+            NAMES
+            tensorflow/core
+            tensorflow/c
+            HINTS
+            /usr/local/include/tensorflow
+            /usr/include/tensorflow)
+    find_library(tensorflow_LIBRARY NAMES tensorflow
+            HINTS
+            /usr/lib
+            /usr/local/lib)
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(tensorflow DEFAULT_MSG tensorflow_INCLUDE_DIR tensorflow_LIBRARY)
+    if(TENSORFLOW_FOUND)
+        set(TensorFlow_LIBRARIES ${tensorflow_LIBRARY})
+        set(TensorFlow_INCLUDE_DIRS ${tensorflow_INCLUDE_DIR})
+        SET(TENSORFLOW_FOUND "TRUE" CACHE INTERNAL "TENSORFLOW_FOUND")
 
-if (WIN32)
-add_custom_command(TARGET Reader POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
-        "${CMAKE_BINARY_DIR}/app/${CMAKE_BUILD_TYPE}/")
-add_custom_command(TARGET alexnet POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.dll"
-            "$<TARGET_FILE_DIR:alexnet>")
+    else()
+        message(WARNING "TensorFlow not found. Skipping building of alexnet target.")
+        SET(TENSORFLOW_FOUND "FALSE" CACHE INTERNAL "TENSORFLOW_FOUND")
+        return()
+    endif()
 endif()
-file(DOWNLOAD
-    "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
-    "${CMAKE_CURRENT_BINARY_DIR}/image.jpg"
-    SHOW_PROGRESS
-    STATUS status_code
-    LOG log_file
-)
 
-add_definitions(-DIMAGE1_PATH="${CMAKE_CURRENT_BINARY_DIR}/image.jpg")
-file(DOWNLOAD
-    "https://tinyurl.com/2w6eh53v"
-    "${CMAKE_CURRENT_BINARY_DIR}/squeeze.tflite"
-    SHOW_PROGRESS
-    STATUS status_code
-    LOG log_file
-)
-add_definitions(-DMODEL1_PATH="${CMAKE_CURRENT_BINARY_DIR}/squeeze.tflite")
+if(WIN32)
+    set(TensorFlow_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/include")
+    set(TensorFlow_LIBRARIES "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.lib")
+    if(EXISTS "${TensorFlow_INCLUDE_DIRS}" AND EXISTS "${TensorFlow_LIBRARIES}")
+         include(FindPackageHandleStandardArgs)
+         find_package_handle_standard_args(tensorflow DEFAULT_MSG TensorFlow_INCLUDE_DIRS TensorFlow_LIBRARIES)
+         SET(TENSORFLOW_FOUND "TRUE" CACHE INTERNAL "TENSORFLOW_FOUND")
+    else()
+         SET(TENSORFLOW_FOUND "FALSE" CACHE INTERNAL "TENSORFLOW_FOUND")
+         return()
+    endif()
+endif()
+
+if (TENSORFLOW_FOUND)
+    add_subdirectory(AlexNet)
+else()
+    message(WARNING "TensorFlow not found. Skipping building of alexnet target.")
+endif()

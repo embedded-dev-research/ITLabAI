@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "alexnet/alexnet.hpp"
+#include "alexnet.hpp"
 #include "gtest/gtest.h"
 
 TEST(Read_model, can_make_session) {

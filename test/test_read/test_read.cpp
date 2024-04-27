@@ -2,7 +2,7 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "read/reader_img.hpp"
+#include "reader_img.hpp"
 using namespace cv;
 
 TEST(Read_img, can_read_image) {

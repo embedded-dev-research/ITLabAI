@@ -3,6 +3,8 @@
 #include "gtest/gtest.h"
 #include "layers/FCLayer.hpp"
 
+using namespace itlab_2023;
+
 TEST(fclayer, calculates_correctly1) {
   const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
   Shape wshape({3, 2});

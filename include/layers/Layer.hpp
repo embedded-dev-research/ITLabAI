@@ -8,6 +8,8 @@
 #include "layers/Shape.hpp"
 #include "layers/Tensor.hpp"
 
+namespace itlab_2023 {
+
 class Layer {
  public:
   Layer() = default;
@@ -34,3 +36,4 @@ class LayerImpl {
   Shape inputShape_;
   Shape outputShape_;
 };
+}  // namespace itlab_2023

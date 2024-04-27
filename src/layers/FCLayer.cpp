@@ -1,5 +1,7 @@
 #include "layers/FCLayer.hpp"
 
+namespace itlab_2023 {
+
 void FCLayer::run(const Tensor& input, Tensor& output, const Tensor& weights,
                   const Tensor& bias) {
   if (input.get_type() != weights.get_type()) {
@@ -28,3 +30,4 @@ void FCLayer::run(const Tensor& input, Tensor& output, const Tensor& weights,
     }
   }
 }
+}  // namespace itlab_2023

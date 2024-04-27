@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <vector>
 
+namespace itlab_2023 {
+
 class Shape {
  public:
   Shape() = default;
@@ -39,3 +41,4 @@ class Shape {
  private:
   std::vector<size_t> dims_;
 };
+}  // namespace itlab_2023
