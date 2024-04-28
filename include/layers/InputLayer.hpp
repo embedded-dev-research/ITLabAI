@@ -31,7 +31,9 @@ class InputLayer : public Layer {
       case Type::kInt: {
         std::vector<int> in = *input.as<int>();
         if (input.get_shape().dims() != 4) {
-          throw std::out_of_range("The size of the shape does not match what is needed for the input layer");
+          throw std::out_of_range(
+              "The size of the shape does not match what is needed for the "
+              "input layer");
         }
         for (int& re : in) {
           re = static_cast<int>((re - mean_) / std_);
@@ -97,7 +99,9 @@ class InputLayer : public Layer {
       case Type::kFloat: {
         std::vector<float> in = *input.as<float>();
         if (input.get_shape().dims() != 4) {
-          throw std::out_of_range("The size of the shape does not match what is needed for the input layer");
+          throw std::out_of_range(
+              "The size of the shape does not match what is needed for the "
+              "input layer");
         }
         for (float& re : in) {
           re = static_cast<float>((re - mean_) / std_);
