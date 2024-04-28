@@ -47,6 +47,7 @@ file(DOWNLOAD
     STATUS status_code
     LOG log_file
 )
+
 file(DOWNLOAD
     "https://raw.githubusercontent.com/bpinaya/AlexNetRT/master/data/alexnet/imagenet-labels.txt"
     "${CMAKE_CURRENT_BINARY_DIR}/imagenet-labels.txt"
@@ -54,6 +55,7 @@ file(DOWNLOAD
     STATUS status_code
     LOG log_file
 )
+
 file(DOWNLOAD
     "https://tinyurl.com/2w6eh53v"
     "${CMAKE_CURRENT_BINARY_DIR}/squeeze.tflite"
