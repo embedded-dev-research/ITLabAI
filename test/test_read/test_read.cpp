@@ -9,7 +9,6 @@ TEST(Read_img, can_read_image) {
   const std::string image_path = std::string(TESTS_BINARY_PATH) + "/image.jpg";
   ASSERT_NO_THROW(Mat image = imread(image_path););
 }
-
 TEST(Read_img, can_save_image) {
   const std::string image_path = std::string(TESTS_BINARY_PATH) + "/image.jpg";
   Mat image = imread(image_path);
