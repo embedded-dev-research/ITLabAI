@@ -6,7 +6,7 @@
 
 using namespace itlab_2023;
 
-TEST(input, chech_basic) {
+TEST(input, check_basic) {
   Shape sh1({1, 2, 2, 1});
   std::vector<int> vec = {1, 2, 3, 4};
   Tensor input = make_tensor(vec, sh1);

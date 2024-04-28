@@ -20,7 +20,7 @@ class InputLayer : public Layer {
 
  public:
   InputLayer() = default;
-  InputLayer(LayInOut layin, LayInOut layout, int mean, int std) {
+  InputLayer(LayInOut layin, LayInOut layout, int mean = 0, int std = 1) {
     layin_ = layin;
     layout_ = layout;
     mean_ = mean;
@@ -31,7 +31,7 @@ class InputLayer : public Layer {
       case Type::kInt: {
         std::vector<int> in = *input.as<int>();
         if (input.get_shape().dims() != 4) {
-          throw std::out_of_range("Input = 0");
+          throw std::out_of_range("The size of the shape does not match what is needed for the input layer");
         }
         for (int& re : in) {
           re = static_cast<int>((re - mean_) / std_);
@@ -43,7 +43,7 @@ class InputLayer : public Layer {
           int h = static_cast<int>(sh[2]);
           int w = static_cast<int>(sh[3]);
           if (n < 1 || c < 1 || h < 1 || w < 1) {
-            throw std::out_of_range("kNchw = 0");
+            throw std::out_of_range("One of the sizes <= 0");
           }
           std::vector<int> res(n * h * w * c);
           for (int n1 = 0; n1 < n; ++n1) {
@@ -70,7 +70,7 @@ class InputLayer : public Layer {
           int h = static_cast<int>(sh[1]);
           int w = static_cast<int>(sh[2]);
           if (n < 1 || c < 1 || h < 1 || w < 1) {
-            throw std::out_of_range("kNchw = 0");
+            throw std::out_of_range("One of the sizes <= 0");
           }
           std::vector<int> res(n * h * w * c);
           for (int n1 = 0; n1 < n; ++n1) {
@@ -97,7 +97,7 @@ class InputLayer : public Layer {
       case Type::kFloat: {
         std::vector<float> in = *input.as<float>();
         if (input.get_shape().dims() != 4) {
-          throw std::out_of_range("Input = 0");
+          throw std::out_of_range("The size of the shape does not match what is needed for the input layer");
         }
         for (float& re : in) {
           re = static_cast<float>((re - mean_) / std_);
@@ -109,7 +109,7 @@ class InputLayer : public Layer {
           int h = static_cast<int>(sh[2]);
           int w = static_cast<int>(sh[3]);
           if (n < 1 || c < 1 || h < 1 || w < 1) {
-            throw std::out_of_range("kNchw = 0");
+            throw std::out_of_range("One of the sizes <= 0");
           }
           std::vector<float> res(n * h * w * c);
           for (int n1 = 0; n1 < n; ++n1) {
@@ -136,7 +136,7 @@ class InputLayer : public Layer {
           int h = static_cast<int>(sh[1]);
           int w = static_cast<int>(sh[2]);
           if (n < 1 || c < 1 || h < 1 || w < 1) {
-            throw std::out_of_range("kNchw = 0");
+            throw std::out_of_range("One of the sizes <= 0");
           }
           std::vector<float> res(n * h * w * c);
           for (int n1 = 0; n1 < n; ++n1) {
