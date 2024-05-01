@@ -38,7 +38,7 @@ add_custom_command(TARGET run_test POST_BUILD
     endif()
 endif()
 
-add_test(UnitTests ${CMAKE_CURRENT_BINARY_DIR}/run_test)
+add_test(UnitTests ${PROJECT_BINARY_DIR}/bin/run_test)
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
