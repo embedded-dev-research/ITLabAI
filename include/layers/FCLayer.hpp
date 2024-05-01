@@ -5,6 +5,8 @@
 
 #include "layers/Layer.hpp"
 
+namespace itlab_2023 {
+
 class FCLayer : public Layer {
  public:
   FCLayer() = default;
@@ -116,3 +118,4 @@ std::vector<ValueType> FCLayerImpl<ValueType>::run(
                  output_values.begin(), std::plus<ValueType>());
   return output_values;
 }
+}  // namespace itlab_2023

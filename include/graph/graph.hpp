@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+namespace itlab_2023 {
+
 enum LayerType {
   kInput,
   kPooling,
@@ -131,3 +133,4 @@ class Graph {
     outvector_ = &vec;
   }
 };
+}  // namespace itlab_2023
