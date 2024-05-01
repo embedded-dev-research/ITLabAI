@@ -17,7 +17,7 @@ To build and run this project locally on Windows, follow these steps:
    Navigate to the project directory and update the submodules:
    ```bash
    git submodule update --init --recursive
-3. **Download tensorflow library:**
+3. **Download tensorflow library:** (optional)
    Download the tensorflow archive from this [link](https://www.tensorflow.org/install/lang_c?hl=ru)\
    Unzip the archive to the tensorflow folder in folder 3rdparty
 4. **Configure the project:**
@@ -43,8 +43,8 @@ To build and run this project locally on Windows, follow these steps:
     ```bash
    Reader.exe
     ```
-### *Linux*
-   To build and run this project locally on Linux, follow these steps:
+### *Linux/macOS*
+   To build and run this project locally on Linux or macOS, follow these steps:
 
 1. **Clone the repository:**  
    Clone this repository to your local machine using the following command:
@@ -55,29 +55,42 @@ To build and run this project locally on Windows, follow these steps:
    Navigate to the project directory and update the submodules:
    ```bash
    git submodule update --init --recursive
-3. **Download tensorflow library:**
+3. **Download tensorflow library:** (optional)
    Download the tensorflow archive from this [link](https://www.tensorflow.org/install/lang_c?hl=ru)\
    Unzip the archive to the tensorflow folder in folder 3rdparty
-4. **Configure the project:**
+4. **Install necessary dependencies:**
+   1. OpenMP
+     Debian/Ubuntu:
+     ```bash
+     sudo apt-get install -y libomp-dev
+     ```
+     macOS:
+     ```
+     brew install libomp
+     ```
+5. **Configure the project:**
    Create a separate directory for configure the project and compile it:
    ```bash
    cmake -S . -B build
     ```
     *Note: Make sure you have CMake installed to build the project.*
-5. **Build the project:**
+   For macOS need to specify the path to omp.h file:
+   ```bash
+   cmake -S . -B build -DCMAKE_CXX_FLAGS="-I$(brew --prefix libomp)/include" -DCMAKE_C_FLAGS="-I$(brew --prefix libomp)/include"
+   ```
+6. **Build the project:**
    Next, to build the project, we will need to enter the command
     ```bash
    cmake --build build --config Release
     ```
     If you want to build in a debug, change the release to debug
-6. **Run the project**
+7. **Run the project**
    After building the project, you can find the executable file in the following path from the *build* folder
    ```bash
    cd build/app
     ```
    and run the file
     ```bash
-   chmod +x Reader
    ./Reader
     ```
 # Test Process

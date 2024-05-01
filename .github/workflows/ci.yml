@@ -115,8 +115,8 @@ jobs:
         cmake -S . -B build \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_C_FLAGS="-I$(brew --prefix)/opt/libomp/include" \
-          -DCMAKE_CXX_FLAGS="-I$(brew --prefix)/opt/libomp/include" -DTensorFlow_INCLUDE_DIRS=$TensorFlow_INCLUDE_DIRS -DTensorFlow_LIBRARIES=$TensorFlow_LIBRARIES
+          -DCMAKE_C_FLAGS="-I$(brew --prefix libomp)/include" \
+          -DCMAKE_CXX_FLAGS="-I$(brew --prefix libomp)/include" -DTensorFlow_INCLUDE_DIRS=$TensorFlow_INCLUDE_DIRS -DTensorFlow_LIBRARIES=$TensorFlow_LIBRARIES
         cmake --build build
     - name: Test
       run: cmake --build build -t test
