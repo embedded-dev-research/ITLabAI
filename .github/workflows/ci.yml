@@ -146,7 +146,7 @@ jobs:
       run: |
         cd build
         echo "run_test"
-        bin/run_test.exe
+        ctest --output-on-failure
   codecov:
     runs-on: ubuntu-latest
     steps:
