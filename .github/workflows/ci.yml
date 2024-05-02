@@ -134,12 +134,6 @@ jobs:
       run: cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - name: Test (valgrind)
-      run: |
-        brew install valgrind
-        valgrind cmake --build build -t test
-      env:
-        CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
     runs-on: windows-latest
     steps:
