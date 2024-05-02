@@ -145,7 +145,8 @@ jobs:
     - name: Test
       run: |
         cd build
-        bin/run_test
+        echo "run_test"
+        bin/run_test.exe
   codecov:
     runs-on: ubuntu-latest
     steps:
