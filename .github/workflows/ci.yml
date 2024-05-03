@@ -54,6 +54,12 @@ jobs:
       run: cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
+    - name: Test (valgrind)
+      run: |
+        sudo apt-get install -y valgrind
+        valgrind cmake --build build -t test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
   build-linux-clang:
     runs-on: ubuntu-latest
     steps:
@@ -87,6 +93,12 @@ jobs:
         cmake --build build
     - name: Test
       run: cmake --build build -t test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+    - name: Test (valgrind)
+      run: |
+        sudo apt-get install -y valgrind
+        valgrind cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-macos:
