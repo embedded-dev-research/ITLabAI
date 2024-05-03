@@ -39,7 +39,7 @@ add_custom_command(TARGET run_test POST_BUILD
 endif()
 
 add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/run_test)
-set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:$<TARGET_RUNTIME_DLL_DIRS:run_test>)
+set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:${CMAKE_BINARY_DIR}/lib)
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"

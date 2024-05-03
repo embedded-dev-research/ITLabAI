@@ -145,7 +145,6 @@ jobs:
     - name: Test
       run: |
         cd build
-        echo "run_test"
         ctest --output-on-failure
   codecov:
     runs-on: ubuntu-latest
