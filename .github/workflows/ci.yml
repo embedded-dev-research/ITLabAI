@@ -154,10 +154,12 @@ jobs:
         max-size: 2G
         variant: sccache
     - name: Build
+      shell: bash
       run: |
         cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
         cmake --build build
     - name: Test
+    shell: bash
       run: |
         cd build
         ctest --output-on-failure
