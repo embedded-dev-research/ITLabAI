@@ -152,7 +152,6 @@ jobs:
       with:
         key: ccache-${{ github.job }}
         max-size: 2G
-        variant: sccache
     - name: Build
       shell: bash
       run: |
