@@ -23,7 +23,7 @@ class ConvolutionalLayer : public Layer {
     dilations_ = dilations;
     kernel_ = kernel;
   }
-  void run(const Tensor& input, Tensor& output);
+  void run(const Tensor& input, Tensor& output) override;
 };
 
 template <typename ValueType>

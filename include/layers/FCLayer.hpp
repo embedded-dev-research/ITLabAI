@@ -19,7 +19,7 @@ class FCLayer : public Layer {
     bias_ = bias;
   }
   static std::string get_name() { return "Fully-connected layer"; }
-  void run(const Tensor& input, Tensor& output);
+  void run(const Tensor& input, Tensor& output) override;
 };
 
 template <typename ValueType>
