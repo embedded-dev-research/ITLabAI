@@ -26,7 +26,7 @@ class InputLayer : public Layer {
     mean_ = mean;
     std_ = std;
   }  // layout = kNchw(0), kNhwc(1)
-  void run(Tensor& input, Tensor& output) const {
+  void run(const Tensor& input, Tensor& output) {
     switch (input.get_type()) {
       case Type::kInt: {
         std::vector<int> in = *input.as<int>();

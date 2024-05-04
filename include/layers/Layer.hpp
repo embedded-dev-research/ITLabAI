@@ -10,9 +10,27 @@
 
 namespace itlab_2023 {
 
+enum LayerType {
+  kInput,
+  kPooling,
+  kNormalization,
+  kDropout,
+  kElementWise,
+  kConvolution,
+  kFullyConnected,
+  kOutput
+};
+
 class Layer {
  public:
   Layer() = default;
+  int checkID() const { return id_; }
+  void giveID(int id1) { id_ = id1; }
+  virtual void run(const Tensor& input, Tensor& output) = 0;
+
+ private:
+  int id_;
+  LayerType type_;
 };
 
 template <typename ValueType>

@@ -2,8 +2,7 @@
 
 namespace itlab_2023 {
 
-void FCLayer::run(const Tensor& input, Tensor& output, const Tensor& weights,
-                  const Tensor& bias) {
+void FCLayer::run(const Tensor& input, Tensor& output) {
   if (input.get_type() != weights.get_type()) {
     throw std::invalid_argument("Input and weights data type aren't same");
   }

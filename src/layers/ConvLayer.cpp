@@ -1,8 +1,7 @@
 #include "layers/ConvLayer.hpp"
 namespace itlab_2023 {
 
-void ConvolutionalLayer::run(const Tensor& input, Tensor& output,
-                             const Tensor& kernel_) const {
+void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
   switch (input.get_type()) {
     case Type::kInt: {
       ConvImpl<int> used_impl(
