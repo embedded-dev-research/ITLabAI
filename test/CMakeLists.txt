@@ -28,17 +28,18 @@ endif()
 if (WIN32)
 add_custom_command(TARGET run_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
-        "${CMAKE_BINARY_DIR}/test/${CMAKE_BUILD_TYPE}/")
+        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/"
+        "${CMAKE_BINARY_DIR}/bin/")
     if(TENSORFLOW_FOUND)
         add_custom_command(TARGET run_test POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
                 "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.dll"
-                "$<TARGET_FILE_DIR:run_test>")
+                "${CMAKE_BINARY_DIR}/lib")
     endif()
 endif()
 
 add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/run_test)
+set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:${CMAKE_BINARY_DIR}/bin)
 set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:${CMAKE_BINARY_DIR}/lib)
 
 file(DOWNLOAD
@@ -65,5 +66,5 @@ file(DOWNLOAD
     LOG log_file
 )
 
-target_compile_definitions(run_test PUBLIC TESTS_BINARY_PATH="${CMAKE_CURRENT_BINARY_DIR}")
+target_compile_definitions(run_test PUBLIC TESTS_BINARY_PATH="${CMAKE_BINARY_DIR}/bin")
 add_definitions(-DMODEL_PATH="${CMAKE_CURRENT_BINARY_DIR}/squeeze.tflite")
