@@ -29,12 +29,12 @@ if (WIN32)
 add_custom_command(TARGET run_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
-        "${CMAKE_BINARY_DIR}/test/${CMAKE_BUILD_TYPE}/")
+        "${CMAKE_BINARY_DIR}/bin/")
     if(TENSORFLOW_FOUND)
         add_custom_command(TARGET run_test POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
                 "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.dll"
-                "$<TARGET_FILE_DIR:run_test>")
+                "${CMAKE_BINARY_DIR}/bin/")
     endif()
 endif()
 
