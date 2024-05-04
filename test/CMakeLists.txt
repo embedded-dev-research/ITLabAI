@@ -26,10 +26,14 @@ if(TENSORFLOW_FOUND)
 endif()
 
 if (WIN32)
-add_custom_command(TARGET run_test POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/."
-        "${CMAKE_BINARY_DIR}/bin/")
+    add_custom_command(TARGET run_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/Debug/."
+            "${CMAKE_BINARY_DIR}/bin/")
+    add_custom_command(TARGET run_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/Release/."
+            "${CMAKE_BINARY_DIR}/bin/")
     if(TENSORFLOW_FOUND)
         add_custom_command(TARGET run_test POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
