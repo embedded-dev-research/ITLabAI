@@ -184,8 +184,7 @@ TEST(fclayer, new_fc_layer_throws_when_big_input) {
   Shape wshape({3, 2});
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
   FCLayer layer;
-  ASSERT_ANY_THROW(
-      layer.run(make_tensor<float>({2.0F, 3.0F, 4.0F}), output));
+  ASSERT_ANY_THROW(layer.run(make_tensor<float>({2.0F, 3.0F, 4.0F}), output));
 }
 
 TEST(fclayer, new_fc_layer_throws_with_incorrect_bias_type) {
@@ -195,8 +194,7 @@ TEST(fclayer, new_fc_layer_throws_with_incorrect_bias_type) {
   Shape wshape({3, 2});
   Tensor bias = make_tensor<int>({2, 5, 6});
   FCLayer layer;
-  ASSERT_ANY_THROW(
-      layer.run(make_tensor<float>({2.0F, 3.0F}), output));
+  ASSERT_ANY_THROW(layer.run(make_tensor<float>({2.0F, 3.0F}), output));
 }
 
 TEST(fclayer, new_fc_layer_throws_with_incorrect_input_type) {

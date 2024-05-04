@@ -94,7 +94,6 @@ class Graph {
       layers_[i]->run(startten_, *outten_);
       startten_ = *outten_;
     }
-    //outten_->assign(startten_.begin(), startten_.end());
   }
   void setOutput(const Layer& lay, Tensor& vec) {
     end_ = lay.checkID();

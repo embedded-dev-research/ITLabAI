@@ -11,6 +11,7 @@ class FCLayer : public Layer {
  private:
   Tensor weights;
   Tensor bias;
+
  public:
   FCLayer() = default;
   FCLayer(const Tensor& weights_, const Tensor& bias_) {

@@ -2,9 +2,9 @@
 
 #include "graph/graph.hpp"
 #include "gtest/gtest.h"
-#include "layers/InputLayer.hpp"
 #include "layers/ConvLayer.hpp"
 #include "layers/EWLayer.hpp"
+#include "layers/InputLayer.hpp"
 #include "layers/OutputLayer.hpp"
 
 using namespace itlab_2023;
@@ -20,7 +20,6 @@ TEST(bfs, check_result_vec) {
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
   InputLayer a1(kNhwc, kNhwc, 1, 2);
-  //std::vector<int> res = {1, 2, 3, 4};
   InputLayer a3(kNhwc, kNhwc, 1, 1);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
@@ -33,7 +32,7 @@ TEST(bfs, check_result_vec) {
   graph.makeConnection(a2, a4);
   graph.setOutput(a4, output);
   graph.inference();
-  std::vector<int> tmp= *output.as<int>();
+  std::vector<int> tmp = *output.as<int>();
   std::vector<int> res = {81, 81, 81};
   ASSERT_EQ(tmp, res);
 }
