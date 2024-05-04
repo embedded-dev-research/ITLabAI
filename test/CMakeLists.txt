@@ -26,13 +26,10 @@ if(TENSORFLOW_FOUND)
 endif()
 
 if (WIN32)
-    file(GLOB OPENCV_BIN_FILES "{CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/*")
-    foreach(file ${OPENCV_BIN_FILES})
-        add_custom_command(TARGET run_test POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            ${file}
-            "${CMAKE_BINARY_DIR}/bin/")
-    endforeach()
+add_custom_command(TARGET run_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/."
+        "${CMAKE_BINARY_DIR}/bin/")
     if(TENSORFLOW_FOUND)
         add_custom_command(TARGET run_test POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
