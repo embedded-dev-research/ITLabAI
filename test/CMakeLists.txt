@@ -27,9 +27,10 @@ endif()
 
 if (WIN32)
 add_custom_command(TARGET run_test POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
-        "${CMAKE_BINARY_DIR}/bin/")
+    file(GLOB OPENCV_BIN_FILES "{CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/*")
+    foreach(file ${OPENCV_BIN_FILES})
+        file(COPY ${file} DESTINATION "${CMAKE_BINARY_DIR}/bin/")
+    endforeach()
     if(TENSORFLOW_FOUND)
         add_custom_command(TARGET run_test POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
@@ -39,10 +40,6 @@ add_custom_command(TARGET run_test POST_BUILD
 endif()
 
 add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/run_test)
-set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:${CMAKE_BINARY_DIR}/bin)
-set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:${CMAKE_BINARY_DIR}/lib)
-set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:${CMAKE_BINARY_DIR}/test/${CMAKE_BUILD_TYPE}/)
-set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:$<TARGET_FILE_DIR:run_test>)
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
