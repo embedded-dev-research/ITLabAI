@@ -9,14 +9,14 @@ namespace itlab_2023 {
 
 class FCLayer : public Layer {
  private:
-  Tensor weights;
-  Tensor bias;
+  Tensor weights_;
+  Tensor bias_;
 
  public:
   FCLayer() = default;
-  FCLayer(const Tensor& weights_, const Tensor& bias_) {
-    weights = weights_;
-    bias = bias_;
+  FCLayer(const Tensor& weights, const Tensor& bias) {
+    weights_ = weights;
+    bias_ = bias;
   }
   static std::string get_name() { return "Fully-connected layer"; }
   void run(const Tensor& input, Tensor& output);
