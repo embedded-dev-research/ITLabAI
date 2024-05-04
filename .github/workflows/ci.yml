@@ -47,7 +47,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} \
             -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
-            cmake --build build
+            cmake --build build --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test
@@ -90,7 +90,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
-        cmake --build build
+        cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
       env:
@@ -132,7 +132,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_FLAGS="-I$(brew --prefix libomp)/include" \
           -DCMAKE_CXX_FLAGS="-I$(brew --prefix libomp)/include" -DTensorFlow_INCLUDE_DIRS=$TensorFlow_INCLUDE_DIRS -DTensorFlow_LIBRARIES=$TensorFlow_LIBRARIES
-        cmake --build build
+        cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
       env:
@@ -156,7 +156,7 @@ jobs:
     - name: Build
       run: |
         cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-        cmake --build build
+        cmake --build build --parallel
     - name: Test
       run: |
         cd build
@@ -202,7 +202,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
           -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} \
           -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
-        cmake --build build
+        cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
       env:
