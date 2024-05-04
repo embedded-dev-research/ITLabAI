@@ -159,7 +159,7 @@ jobs:
         cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
         cmake --build build
     - name: Test
-    shell: bash
+      shell: bash
       run: |
         cd build
         ctest --output-on-failure
