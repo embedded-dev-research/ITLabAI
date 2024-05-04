@@ -28,19 +28,21 @@ endif()
 if (WIN32)
 add_custom_command(TARGET run_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/"
-        "${CMAKE_BINARY_DIR}/bin/")
+        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
+        "${CMAKE_BINARY_DIR}/test/${CMAKE_BUILD_TYPE}/")
     if(TENSORFLOW_FOUND)
         add_custom_command(TARGET run_test POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
                 "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.dll"
-                "${CMAKE_BINARY_DIR}/lib")
+                "$<TARGET_FILE_DIR:run_test>")
     endif()
 endif()
 
 add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/run_test)
 set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:${CMAKE_BINARY_DIR}/bin)
 set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:${CMAKE_BINARY_DIR}/lib)
+set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:${CMAKE_BINARY_DIR}/test/${CMAKE_BUILD_TYPE}/)
+set_property(TEST UnitTests PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:$<TARGET_FILE_DIR:run_test>)
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
@@ -66,5 +68,5 @@ file(DOWNLOAD
     LOG log_file
 )
 
-target_compile_definitions(run_test PUBLIC TESTS_BINARY_PATH="${CMAKE_BINARY_DIR}/bin")
+target_compile_definitions(run_test PUBLIC TESTS_BINARY_PATH="${CMAKE_CURRENT_BINARY_DIR}")
 add_definitions(-DMODEL_PATH="${CMAKE_CURRENT_BINARY_DIR}/squeeze.tflite")
