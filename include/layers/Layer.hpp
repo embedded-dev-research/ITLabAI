@@ -18,7 +18,7 @@ enum LayerType {
   kElementWise,
   kConvolution,
   kFullyConnected,
-  kOutput
+  kOutput,
 };
 
 class Layer {
@@ -27,7 +27,7 @@ class Layer {
   int checkID() const { return id_; }
   void giveID(int id1) { id_ = id1; }
   LayerType checkType() const { return type_; }
-  void giveType(LayerType type1) { type_ = type1; }
+  void giveType(LayerType type) { type_ = type; }
   virtual void run(const Tensor& input, Tensor& output) = 0;
 
  private:
