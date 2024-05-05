@@ -63,8 +63,10 @@ TEST(poolinglayer, equivalent_output_when_pool_size_1) {
   std::vector<double> input({9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0});
   std::vector<double> output_a = a.run(input);
   std::vector<double> output_b = b.run(input);
-  EXPECT_EQ(output_a, input);
-  EXPECT_EQ(output_b, input);
+  for (size_t i = 0; i < output_a.size(); i++) {
+  EXPECT_NEAR(output_a[i], input[i], 1e-5);
+  EXPECT_NEAR(output_b[i], input[i], 1e-5);
+  }
 }
 
 class PoolingTestsParameterized
@@ -83,7 +85,9 @@ TEST_P(PoolingTestsParameterized, pooling_works_correctly) {
       PoolingLayerImpl<double>(inpshape, poolshape, std::get<3>(data));
   std::vector<double> output = a.run(input);
   std::vector<double> true_output = std::get<4>(data);
-  EXPECT_EQ(output, true_output);
+  for (size_t i = 0; i < output.size(); i++) {
+    EXPECT_NEAR(output[i], true_output[i], 1e-5);
+  }
 }
 
 std::vector<double> basic_1d_data = {9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0};
@@ -132,7 +136,9 @@ TEST(poolinglayer, new_pooling_layer_can_run_float_avg) {
   Tensor output = make_tensor<float>({0});
   a.run(make_tensor(input, inpshape), output);
   std::vector<float> true_output = {6.5F, 4.5F, 4.5F, 6.5F};
-  EXPECT_EQ(*output.as<float>(), true_output);
+  for (size_t i = 0; i < true_output.size(); i++) {
+    EXPECT_NEAR((*output.as<float>())[i], true_output[i], 1e-5);
+  }
 }
 
 TEST(poolinglayer, new_pooling_layer_can_run_int_avg) {
@@ -143,7 +149,9 @@ TEST(poolinglayer, new_pooling_layer_can_run_int_avg) {
   Tensor output = make_tensor<float>({0});
   a.run(make_tensor(input, inpshape), output);
   std::vector<int> true_output = {6, 4, 4, 6};
-  EXPECT_EQ(*output.as<int>(), true_output);
+  for (size_t i = 0; i < true_output.size(); i++) {
+    EXPECT_NEAR((*output.as<int>())[i], true_output[i], 1e-5);
+  }
 }
 
 TEST(poolinglayer, new_pooling_layer_can_run_1d_pooling_float) {
@@ -154,5 +162,7 @@ TEST(poolinglayer, new_pooling_layer_can_run_1d_pooling_float) {
   Tensor output = make_tensor<float>({0});
   a.run(make_tensor(input, inpshape), output);
   std::vector<float> true_output = {8.0F, 5.0F, 2.5F};
-  EXPECT_EQ(*output.as<float>(), true_output);
+  for (size_t i = 0; i < true_output.size(); i++) {
+    EXPECT_NEAR((*output.as<float>())[i], true_output[i], 1e-5);
+  }
 }

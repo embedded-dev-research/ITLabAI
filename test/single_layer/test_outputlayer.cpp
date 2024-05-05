@@ -9,7 +9,8 @@
 using namespace itlab_2023;
 
 void fill_from_file(const std::string& path_from,
-                    std::vector<std::string>& to) {
+                    std::vector<std::string>& to, size_t limit = 0) {
+  to.clear();
   std::ifstream f;
   std::string buf;
   f.open(path_from, std::ios::in);
@@ -19,8 +20,40 @@ void fill_from_file(const std::string& path_from,
   while (!f.eof()) {
     std::getline(f, buf);
     to.emplace_back(buf);
+    if (limit > 0 && to.size() >= limit) {
+      break;
+    }
+  }
+  f.close();
+}
+
+class OutputTestsParameterized
+    : public ::testing::TestWithParam<
+          std::tuple<std::vector<float>, size_t, std::vector<float> > > {};
+// 1) input; 2) k for top_k; 3) expected_output.
+
+TEST_P(OutputTestsParameterized, output_layer_works_correctly) {
+  auto data = GetParam();
+  Tensor input = make_tensor(std::get<0>(data));
+  std::vector<std::string> labels;
+  fill_from_file(std::string(TESTS_BINARY_PATH) + "/imagenet-labels.txt",
+                 labels, input.get_shape().count());
+  size_t k = std::get<1>(data);
+  OutputLayer layer(labels);
+  auto top_k = layer.top_k(input, k);
+  std::vector<float> true_output = std::get<2>(data);
+  for (size_t i = 0; i < true_output.size(); i++) {
+    EXPECT_NEAR((*top_k.second.as<float>())[i], true_output[i], 1e-5);
   }
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    output_layer_tests, OutputTestsParameterized,
+    ::testing::Values(
+        std::make_tuple(std::vector<float>({2.0F, 3.9F, 0.1F, 2.3F}), 3,
+                        std::vector<float>({3.9F, 2.3F, 2.0F})),
+        std::make_tuple(std::vector<float>({1.0F, -1.0F, 2.0F, -2.0F}), 4,
+                        std::vector<float>({2.0F, 1.0F, -1.0F, -2.0F}))));
 
 TEST(OutputLayer, can_get_topk_with_vector) {
   const int k = 50;

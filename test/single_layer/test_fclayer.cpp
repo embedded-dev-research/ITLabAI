@@ -5,29 +5,48 @@
 
 using namespace itlab_2023;
 
-TEST(fclayer, calculates_correctly1) {
-  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
-  Shape wshape({3, 2});
-  std::vector<double> bias = {0.5, 0.5, 1.0};
-  FCLayerImpl<double> layer(a1, wshape, bias);
-  std::vector<double> input = {1, 2};
+class FCTestsParameterized
+    : public ::testing::TestWithParam<
+          std::tuple<std::vector<double>, std::vector<double>, Shape,
+                     std::vector<double>, std::vector<double> > > {};
+// 1) input; 2) weights; 3) weights_shape; 4) bias; 5) expected_output.
+
+TEST_P(FCTestsParameterized, fc_layer_works_correctly) {
+  auto data = GetParam();
+  std::vector<double> input = std::get<0>(data);
+  std::vector<double> weights = std::get<1>(data);
+  Shape wshape = std::get<2>(data);
+  std::vector<double> bias = std::get<3>(data);
+  FCLayerImpl<double> layer(weights, wshape, bias);
   std::vector<double> output = layer.run(input);
-  EXPECT_NEAR(output[0], 5.5, 1e-5);
-  EXPECT_NEAR(output[1], 4.4, 1e-5);
-  EXPECT_NEAR(output[2], 12.0, 1e-5);
+  std::vector<double> expected_output = std::get<4>(data);
+  for (size_t i = 0; i < output.size(); i++) {
+    EXPECT_NEAR(output[i], expected_output[i], 1e-5);
+  }
 }
 
-TEST(fclayer, calculates_correctly2) {
-  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
-  Shape wshape({3, 2});
-  std::vector<double> bias = {0.5, 0.5, 1.0};
-  FCLayerImpl<double> layer(a1, wshape, bias);
-  std::vector<double> input = {0.5, 0.0};
-  std::vector<double> output = layer.run(input);
-  EXPECT_NEAR(output[0], 1.5, 1e-5);
-  EXPECT_NEAR(output[1], 0.55, 1e-5);
-  EXPECT_NEAR(output[2], 1.0, 1e-5);
-}
+std::vector<double> basic_weights1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+std::vector<double> basic_weights2 = {4.1, 3.0, 1.9, -1.2, -2.3, -3.4,
+                                      6.0, 7.0, 8.0, 9.0,  0.0,  -1.0};
+std::vector<double> basic_bias1 = {0.5, 0.5, 1.0};
+
+INSTANTIATE_TEST_SUITE_P(
+    fc_layer_tests, FCTestsParameterized,
+    ::testing::Values(
+        std::make_tuple(std::vector<double>({1.0, 2.0}), basic_weights1,
+                        Shape({3, 2}), basic_bias1,
+                        std::vector<double>({5.5, 4.4, 12.0})),
+        std::make_tuple(std::vector<double>({0.5, 0.0}), basic_weights1,
+                        Shape({3, 2}), basic_bias1,
+                        std::vector<double>({1.5, 0.55, 1.0})),
+        std::make_tuple(std::vector<double>({1.0, -1.0, 1.0, -1.0}),
+                        basic_weights2, Shape({3, 4}),
+                        std::vector<double>({2.0, 2.0, 2.0}),
+                        std::vector<double>({6.2, 2.1, 2.0})),
+        std::make_tuple(std::vector<double>({1.0, 0.0, 1.0, 0.0}),
+                        basic_weights2, Shape({3, 4}),
+                        std::vector<double>({2.0, 2.0, 2.0}),
+                        std::vector<double>({8.0, 5.7, 10.0}))));
 
 TEST(fclayer, throws_when_greater_input_size) {
   const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
