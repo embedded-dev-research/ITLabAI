@@ -64,8 +64,8 @@ TEST(poolinglayer, equivalent_output_when_pool_size_1) {
   std::vector<double> output_a = a.run(input);
   std::vector<double> output_b = b.run(input);
   for (size_t i = 0; i < output_a.size(); i++) {
-  EXPECT_NEAR(output_a[i], input[i], 1e-5);
-  EXPECT_NEAR(output_b[i], input[i], 1e-5);
+    EXPECT_NEAR(output_a[i], input[i], 1e-5);
+    EXPECT_NEAR(output_b[i], input[i], 1e-5);
   }
 }
 

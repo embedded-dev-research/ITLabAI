@@ -8,8 +8,8 @@
 
 using namespace itlab_2023;
 
-void fill_from_file(const std::string& path_from,
-                    std::vector<std::string>& to, size_t limit = 0) {
+void fill_from_file(const std::string& path_from, std::vector<std::string>& to,
+                    size_t limit = 0) {
   to.clear();
   std::ifstream f;
   std::string buf;
