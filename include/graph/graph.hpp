@@ -33,7 +33,7 @@ class Graph {
     layers_.push_back(&lay);
     arrayV_.push_back(0);
     startten_ = vec;
-    start_ = lay.checkID();
+    start_ = lay.getID();
     V_++;
   }
   void makeConnection(const Layer& layPrev, Layer& layNext) {
@@ -41,22 +41,22 @@ class Graph {
     layers_.push_back(&layNext);
     arrayV_[V_] = arrayV_[V_ - 1];
     arrayV_.push_back(static_cast<int>(arrayE_.size()));
-    if (layPrev.checkID() == layNext.checkID()) {
+    if (layPrev.getID() == layNext.getID()) {
       throw std::out_of_range("i=j cant add edge");
     }
     for (int ind = 1; ind < static_cast<int>(arrayV_.size()) -
-                                static_cast<int>(layPrev.checkID()) - 1;
+                                static_cast<int>(layPrev.getID()) - 1;
          ind++)
-      arrayV_[layPrev.checkID() + ind]++;
-    arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.checkID()],
-                   layNext.checkID());
+      arrayV_[layPrev.getID() + ind]++;
+    arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.getID()],
+                   layNext.getID());
     V_++;
     arrayV_[V_] = static_cast<int>(arrayE_.size());
   }
   bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
-    for (int i = arrayV_[layPrev.checkID()]; i < arrayV_[layPrev.checkID() + 1];
+    for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];
          i++) {
-      if (arrayE_[i] == layNext.checkID()) {
+      if (arrayE_[i] == layNext.getID()) {
         return true;
       }
     }
@@ -96,7 +96,7 @@ class Graph {
     }
   }
   void setOutput(const Layer& lay, Tensor& vec) {
-    end_ = lay.checkID();
+    end_ = lay.getID();
     outten_ = &vec;
   }
 };
