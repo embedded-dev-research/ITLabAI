@@ -48,8 +48,7 @@ class Graph {
                                 static_cast<int>(layPrev.getID()) - 1;
          ind++)
       arrayV_[layPrev.getID() + ind]++;
-    arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.getID()],
-                   layNext.getID());
+    arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.getID()], layNext.getID());
     V_++;
     arrayV_[V_] = static_cast<int>(arrayE_.size());
   }
