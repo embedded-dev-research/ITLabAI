@@ -26,19 +26,23 @@ if(TENSORFLOW_FOUND)
 endif()
 
 if (WIN32)
-add_custom_command(TARGET run_test POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
-        "${CMAKE_BINARY_DIR}/test/${CMAKE_BUILD_TYPE}/")
+    add_custom_command(TARGET run_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/Debug/."
+            "${CMAKE_BINARY_DIR}/bin/")
+    add_custom_command(TARGET run_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/Release/."
+            "${CMAKE_BINARY_DIR}/bin/")
     if(TENSORFLOW_FOUND)
         add_custom_command(TARGET run_test POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
                 "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.dll"
-                "$<TARGET_FILE_DIR:run_test>")
+                "${CMAKE_BINARY_DIR}/bin/")
     endif()
 endif()
 
-add_test(UnitTests ${CMAKE_CURRENT_BINARY_DIR}/run_test)
+add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/run_test)
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
