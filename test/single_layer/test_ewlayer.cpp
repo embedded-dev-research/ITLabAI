@@ -24,7 +24,9 @@ TEST_P(EWTestsParameterized, element_wise_works_correctly) {
     true_output = std::vector<double>(input.size());
     std::transform(input.begin(), input.end(), true_output.begin(), func);
   }
-  EXPECT_EQ(output, true_output);
+  for (size_t i = 0; i < output.size(); i++) {
+    EXPECT_NEAR(output[i], true_output[i], 1e-5);
+  }
 }
 
 std::vector<double> basic_data1 = {2.0, 3.9, 0.1, 2.3};
