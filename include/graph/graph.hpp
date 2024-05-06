@@ -29,7 +29,7 @@ class Graph {
     V_ = 0;
   }
   void setInput(Layer& lay, Tensor& vec) {
-    lay.giveID(0);
+    lay.setID(0);
     layers_.push_back(&lay);
     arrayV_.push_back(0);
     startten_ = vec;
@@ -37,7 +37,7 @@ class Graph {
     V_++;
   }
   void makeConnection(const Layer& layPrev, Layer& layNext) {
-    layNext.giveID(V_);
+    layNext.setID(V_);
     layers_.push_back(&layNext);
     arrayV_[V_] = arrayV_[V_ - 1];
     arrayV_.push_back(static_cast<int>(arrayE_.size()));

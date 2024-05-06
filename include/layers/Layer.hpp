@@ -25,9 +25,9 @@ class Layer {
  public:
   Layer() = default;
   int getID() const { return id_; }
-  void giveID(int id1) { id_ = id1; }
+  void setID(int id1) { id_ = id1; }
   LayerType getName() const { return type_; }
-  void giveName(LayerType type) { type_ = type; }
+  void setName(LayerType type) { type_ = type; }
   virtual void run(const Tensor& input, Tensor& output) = 0;
 
  private:
