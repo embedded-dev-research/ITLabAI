@@ -15,7 +15,7 @@ class Graph {
   std::vector<Layer*> layers_;
   std::vector<int> arrayV_;
   std::vector<int> arrayE_;
-  Tensor startten_;
+  Tensor inten_;
   Tensor* outten_;
   int start_;
   int end_;
@@ -32,7 +32,7 @@ class Graph {
     lay.setID(0);
     layers_.push_back(&lay);
     arrayV_.push_back(0);
-    startten_ = vec;
+    inten_ = vec;
     start_ = lay.getID();
     V_++;
   }
@@ -90,8 +90,8 @@ class Graph {
       }
     }
     for (int i : traversal) {
-      layers_[i]->run(startten_, *outten_);
-      startten_ = *outten_;
+      layers_[i]->run(inten_, *outten_);
+      inten_ = *outten_;
     }
   }
   void setOutput(const Layer& lay, Tensor& vec) {
