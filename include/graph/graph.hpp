@@ -5,49 +5,18 @@
 #include <string>
 #include <vector>
 
+#include "layers/Layer.hpp"
+
 namespace itlab_2023 {
-
-enum LayerType {
-  kInput,
-  kPooling,
-  kNormalization,
-  kDropout,
-  kElementWise,
-  kConvolution,
-  kFullyConnected,
-  kOutput
-};
-
-class LayerExample {
- private:
-  int id_;
-  std::string name_;
-  LayerType type_;
-  std::string version_;
-  int numInputs_;
-  int numNeurons_;
-  std::vector<int> primer_;
-
- public:
-  LayerExample(LayerType type1) : type_(type1) {}
-  LayerType getType() { return type_; }
-  int getNumInputs() const { return numInputs_; }
-  int getNumNeurons() const { return numNeurons_; }
-  int checkID() const { return id_; }
-  void giveID(int id1) { id_ = id1; }
-  void In(const std::vector<int>& a) { primer_ = a; }
-  void Work() {}
-  std::vector<int> Out() { return primer_; }
-};
 
 class Graph {
   int BiggestSize_;
   int V_;
-  std::vector<LayerExample> layers_;
+  std::vector<Layer*> layers_;
   std::vector<int> arrayV_;
   std::vector<int> arrayE_;
-  std::vector<int> startvec_;
-  std::vector<int>* outvector_;
+  Tensor inten_;
+  Tensor* outten_;
   int start_;
   int end_;
 
@@ -59,35 +28,34 @@ class Graph {
     arrayV_.push_back(0);
     V_ = 0;
   }
-  void setInput(LayerExample& lay, const std::vector<int>& vec) {
-    lay.giveID(0);
-    layers_.push_back(lay);
+  void setInput(Layer& lay, Tensor& vec) {
+    lay.setID(0);
+    layers_.push_back(&lay);
     arrayV_.push_back(0);
-    startvec_ = vec;
-    start_ = lay.checkID();
+    inten_ = vec;
+    start_ = lay.getID();
     V_++;
   }
-  void makeConnection(const LayerExample& layPrev, LayerExample& layNext) {
-    layNext.giveID(V_);
-    layers_.push_back(layNext);
+  void makeConnection(const Layer& layPrev, Layer& layNext) {
+    layNext.setID(V_);
+    layers_.push_back(&layNext);
     arrayV_[V_] = arrayV_[V_ - 1];
     arrayV_.push_back(static_cast<int>(arrayE_.size()));
-    if (layPrev.checkID() == layNext.checkID()) {
+    if (layPrev.getID() == layNext.getID()) {
       throw std::out_of_range("i=j cant add edge");
     }
     for (int ind = 1; ind < static_cast<int>(arrayV_.size()) -
-                                static_cast<int>(layPrev.checkID()) - 1;
+                                static_cast<int>(layPrev.getID()) - 1;
          ind++)
-      arrayV_[layPrev.checkID() + ind]++;
-    arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.checkID()],
-                   layNext.checkID());
+      arrayV_[layPrev.getID() + ind]++;
+    arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.getID()], layNext.getID());
     V_++;
     arrayV_[V_] = static_cast<int>(arrayE_.size());
   }
-  bool areLayerNext(const LayerExample& layPrev, const LayerExample& layNext) {
-    for (int i = arrayV_[layPrev.checkID()]; i < arrayV_[layPrev.checkID() + 1];
+  bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
+    for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];
          i++) {
-      if (arrayE_[i] == layNext.checkID()) {
+      if (arrayE_[i] == layNext.getID()) {
         return true;
       }
     }
@@ -122,15 +90,13 @@ class Graph {
       }
     }
     for (int i : traversal) {
-      layers_[i].In(startvec_);
-      layers_[i].Work();
-      startvec_ = layers_[i].Out();
+      layers_[i]->run(inten_, *outten_);
+      inten_ = *outten_;
     }
-    outvector_->assign(startvec_.begin(), startvec_.end());
   }
-  void setOutput(const LayerExample& lay, std::vector<int>& vec) {
-    end_ = lay.checkID();
-    outvector_ = &vec;
+  void setOutput(const Layer& lay, Tensor& vec) {
+    end_ = lay.getID();
+    outten_ = &vec;
   }
 };
 }  // namespace itlab_2023

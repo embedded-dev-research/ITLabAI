@@ -12,15 +12,18 @@ class ConvolutionalLayer : public Layer {
   size_t stride_;
   size_t pads_;
   size_t dilations_;
+  Tensor kernel_;
 
  public:
   ConvolutionalLayer() = default;
-  ConvolutionalLayer(size_t step, size_t pads, size_t dilations) {
+  ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
+                     const Tensor& kernel) {
     stride_ = step;
     pads_ = pads;
     dilations_ = dilations;
+    kernel_ = kernel;
   }
-  void run(const Tensor& input, Tensor& output, const Tensor& kernel_) const;
+  void run(const Tensor& input, Tensor& output) override;
 };
 
 template <typename ValueType>

@@ -8,11 +8,18 @@
 namespace itlab_2023 {
 
 class FCLayer : public Layer {
+ private:
+  Tensor weights_;
+  Tensor bias_;
+
  public:
   FCLayer() = default;
+  FCLayer(const Tensor& weights, const Tensor& bias) {
+    weights_ = weights;
+    bias_ = bias;
+  }
   static std::string get_name() { return "Fully-connected layer"; }
-  static void run(const Tensor& input, Tensor& output, const Tensor& weights,
-                  const Tensor& bias);
+  void run(const Tensor& input, Tensor& output) override;
 };
 
 template <typename ValueType>
