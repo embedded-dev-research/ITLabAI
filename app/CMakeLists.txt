@@ -1,11 +1,23 @@
 cmake_minimum_required(VERSION 3.7) 
- 
-find_package(OpenCV REQUIRED) 
- 
-include_directories( ${OpenCV_INCLUDE_DIRS} ) 
- 
-add_executable( sample_accuracy "./accuracy_app/accuracy_check.cpp" ) 
-target_link_libraries(sample_accuracy ${OpenCV_LIBS} )
+
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build")
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -S "${CMAKE_SOURCE_DIR}/3rdparty/opencv" -B "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER} -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build"
+)
+execute_process(
+    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" --config "${CMAKE_BUILD_TYPE}"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build"
+)
+
+add_executable(accuracy_app "./accuracy_app/accuracy_check.cpp")
+
+find_package( OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+target_link_libraries( accuracy_app ${OpenCV_LIBS} )
+
+# ------------------------------------------
 
 add_executable(Reader reader_img.cpp)
 add_executable(alexnet alexnet.cpp)
