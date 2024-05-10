@@ -17,9 +17,6 @@ To build and run this project locally on Windows, follow these steps:
    Navigate to the project directory and update the submodules:
    ```bash
    git submodule update --init --recursive
-3. **Download tensorflow library:** (optional)
-   Download the tensorflow archive from this [link](https://www.tensorflow.org/install/lang_c?hl=ru)\
-   Unzip the archive to the tensorflow folder in folder 3rdparty
 4. **Configure the project:**
    Create a separate directory for configure the project and compile it:
    ```bash
@@ -55,9 +52,6 @@ To build and run this project locally on Windows, follow these steps:
    Navigate to the project directory and update the submodules:
    ```bash
    git submodule update --init --recursive
-3. **Download tensorflow library:** (optional)
-   Download the tensorflow archive from this [link](https://www.tensorflow.org/install/lang_c?hl=ru)\
-   Unzip the archive to the tensorflow folder in folder 3rdparty
 4. **Install necessary dependencies:**
    1. OpenMP
      Debian/Ubuntu:
