@@ -1,4 +1,4 @@
-#include "alexnet/alexnet.hpp"
+#include "alexnet.hpp"
 
 #include <iostream>
 int main() {

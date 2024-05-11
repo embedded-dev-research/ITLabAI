@@ -1,4 +1,4 @@
-﻿#include "read/reader_img.hpp"
+﻿#include "reader_img.hpp"
 #include <stdexcept>
 using namespace cv;
 void read(std::string& path) {

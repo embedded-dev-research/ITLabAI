@@ -1,6 +1,10 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 8 * * *'
 
 jobs:
   clang-format:
@@ -14,6 +18,7 @@ jobs:
     strategy:
       matrix:
         build_type: [DEBUG, RELEASE]
+        use_tensorflow: [ON, OFF]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -23,16 +28,12 @@ jobs:
       run: |
         wget https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
         tar -xzvf libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
+      if: ${{ matrix.use_tensorflow }} == ON
     - name: Set TensorFlow environment variables
       run: |
-        echo "TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
-        echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
         echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
         echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
-    - name: Display TensorFlow environment variables
-      run: |
-        echo "TensorFlow_INCLUDE_DIRS: ${{ env.TensorFlow_INCLUDE_DIRS }}"
-        echo "TensorFlow_LIBRARIES: ${{ env.TensorFlow_LIBRARIES }}"
+      if: ${{ matrix.use_tensorflow }} == ON
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -40,15 +41,23 @@ jobs:
         max-size: 2G
     - name: Build
       run: |
-        cmake -S . -B build \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
-        cmake --build build
+            cmake -S . -B build \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} \
+            -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
+            cmake --build build
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test
       run: cmake --build build -t test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+    - name: Test (valgrind)
+      run: |
+        sudo apt-get install -y valgrind
+        valgrind cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-linux-clang:
@@ -86,6 +95,12 @@ jobs:
       run: cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
+    - name: Test (valgrind)
+      run: |
+        sudo apt-get install -y valgrind
+        valgrind cmake --build build -t test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
   build-macos:
     runs-on: macos-latest
     steps:
@@ -115,8 +130,8 @@ jobs:
         cmake -S . -B build \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_C_FLAGS="-I$(brew --prefix)/opt/libomp/include" \
-          -DCMAKE_CXX_FLAGS="-I$(brew --prefix)/opt/libomp/include" -DTensorFlow_INCLUDE_DIRS=$TensorFlow_INCLUDE_DIRS -DTensorFlow_LIBRARIES=$TensorFlow_LIBRARIES
+          -DCMAKE_C_FLAGS="-I$(brew --prefix libomp)/include" \
+          -DCMAKE_CXX_FLAGS="-I$(brew --prefix libomp)/include" -DTensorFlow_INCLUDE_DIRS=$TensorFlow_INCLUDE_DIRS -DTensorFlow_LIBRARIES=$TensorFlow_LIBRARIES
         cmake --build build
     - name: Test
       run: cmake --build build -t test
