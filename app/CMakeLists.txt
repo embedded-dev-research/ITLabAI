@@ -18,7 +18,7 @@ if(UNIX)
         set(TensorFlow_INCLUDE_DIRS ${tensorflow_INCLUDE_DIR})
         SET(TENSORFLOW_FOUND "TRUE" CACHE INTERNAL "TENSORFLOW_FOUND")
 
-        else()
+    else()
         message(WARNING "TensorFlow not found. Skipping building of alexnet target.")
         SET(TENSORFLOW_FOUND "FALSE" CACHE INTERNAL "TENSORFLOW_FOUND")
         return()
