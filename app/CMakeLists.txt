@@ -25,21 +25,6 @@ if(UNIX)
     endif()
 endif()
 
-if (WIN32)
-add_custom_command(TARGET Reader POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
-        "${CMAKE_BINARY_DIR}/app/${CMAKE_BUILD_TYPE}/")
-add_custom_command(TARGET alexnet POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.dll"
-            "$<TARGET_FILE_DIR:alexnet>")
-add_custom_command(TARGET Reader POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${CMAKE_SOURCE_DIR}/3rdparty/TBB/build/msvc_19.36_cxx_64_md_debug/tbb12_debug.dll"
-            "$<TARGET_FILE_DIR:Reader>")
-endif()
-
 if(WIN32)
     set(TensorFlow_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/include")
     set(TensorFlow_LIBRARIES "${CMAKE_SOURCE_DIR}/3rdparty/tensorflow/lib/tensorflow.lib")
