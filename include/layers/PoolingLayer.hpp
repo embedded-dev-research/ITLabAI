@@ -30,7 +30,7 @@ inline bool isOutOfBounds(size_t index, int coord, const Shape& shape) {
     }
     return true;
   }
-  if (coord < shape.dims()) {
+  if (static_cast<size_t>(coord) < shape.dims()) {
     return (index >= shape[coord]);
   }
   return (index >= 1);
@@ -94,7 +94,7 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(const Shape& input_shape,
     throw std::invalid_argument("Pooling type " + pooling_type +
                                 " is not supported");
   }
-  size_t inphwstart = inputShape_.dims() > 2 ? (inputShape_.dims() - 2) : 0;
+  size_t inphwstart = input_shape.dims() > 2 ? (input_shape.dims() - 2) : 0;
   for (size_t i = 0; i < pooling_shape.dims(); i++) {
     if (pooling_shape[i] == 0) {
       throw std::runtime_error("Zero division, pooling shape has zeroes");
@@ -115,7 +115,9 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
   std::vector<size_t> coords;
   size_t tmpwidth = 0;
   size_t tmpheight = 0;
-  int inphwstart = inputShape_.dims() > 2 ? (static_cast<int>(inputShape_.dims()) - 2) : 0;
+  int inphwstart = this->inputShape_.dims() > 2
+                       ? (static_cast<int>(this->inputShape_.dims()) - 2)
+                       : 0;
   // O(N^2)
   for (size_t N = 0; !isOutOfBounds(N, inphwstart - 2, this->outputShape_);
        N++) {
