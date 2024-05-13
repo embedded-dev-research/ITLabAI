@@ -4,10 +4,10 @@
 #include "gtest/gtest.h"
 #include "layers/ConvLayer.hpp"
 #include "layers/EWLayer.hpp"
+#include "layers/FCLayer.hpp"
 #include "layers/InputLayer.hpp"
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
-#include "layers/FCLayer.hpp"
 
 using namespace itlab_2023;
 
