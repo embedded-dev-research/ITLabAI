@@ -85,7 +85,7 @@ TEST_P(PoolingTestsParameterized, pooling_works_correctly) {
       PoolingLayerImpl<double>(inpshape, poolshape, std::get<3>(data));
   std::vector<double> output = a.run(input);
   std::vector<double> true_output = std::get<4>(data);
-  for (size_t i = 0; i < output.size(); i++) {
+  for (size_t i = 0; i < true_output.size(); i++) {
     EXPECT_NEAR(output[i], true_output[i], 1e-5);
   }
 }
@@ -101,16 +101,21 @@ std::vector<double> basic_2d_2_data = {9.0, 8.0, 7.0, 5.0, 4.0,
                                        3.0, 2.0, 3.0, 4.0};
 Shape basic_2d_2_shape = {3, 3};
 
+std::vector<double> basic_4d_data = {
+    2.0, 3.0, 1.0, 4.0,  0.0,  3.0, 7.0, 1.0, 3.0, 7.0,  0.0,  7.0,
+    0.0, 8.0, 0.0, -1.0, 8.0,  1.0, 1.0, 2.0, 3.0, 4.0,  5.0,  6.0,
+    7.0, 8.0, 9.0, 10.0, 12.0, 2.0, 0.0, 9.0, 8.0, 17.0, -1.0, 120.0};
+Shape basic_4d_shape = {2, 2, 3, 3};
+
 INSTANTIATE_TEST_SUITE_P(
     pooling_tests, PoolingTestsParameterized,
     ::testing::Values(
         std::make_tuple(basic_1d_data, basic_1d_shape, Shape({3}),
                         std::string("average"),
-                        std::vector<double>({8.0, 5.0, 2.5})),
+                        std::vector<double>({8.0, 5.0})),
         std::make_tuple(basic_1d_data, basic_1d_shape, Shape({3}),
-                        std::string("max"),
-                        std::vector<double>({9.0, 6.0, 3.0})),
-        std::make_tuple(basic_1d_data, basic_1d_shape, Shape({9}),
+                        std::string("max"), std::vector<double>({9.0, 6.0})),
+        std::make_tuple(basic_1d_data, basic_1d_shape, Shape({8}),
                         std::string("average"), std::vector<double>({5.5})),
         std::make_tuple(basic_2d_1_data, basic_2d_1_shape, Shape({2, 2}),
                         std::string("average"),
@@ -119,13 +124,14 @@ INSTANTIATE_TEST_SUITE_P(
                         std::string("max"),
                         std::vector<double>({9.0, 7.0, 7.0, 9.0})),
         std::make_tuple(basic_2d_2_data, basic_2d_2_shape, Shape({2, 2}),
-                        std::string("average"),
-                        std::vector<double>({6.5, 5.0, 2.5, 4.0})),
+                        std::string("average"), std::vector<double>({6.5})),
         std::make_tuple(basic_2d_2_data, basic_2d_2_shape, Shape({2, 2}),
+                        std::string("max"), std::vector<double>({9.0})),
+        std::make_tuple(basic_2d_2_data, basic_2d_2_shape, Shape({3, 3}),
+                        std::string("average"), std::vector<double>({5.0})),
+        std::make_tuple(basic_4d_data, basic_4d_shape, Shape({2, 2}),
                         std::string("max"),
-                        std::vector<double>({9.0, 7.0, 3.0, 4.0})),
-        std::make_tuple(basic_2d_2_data, basic_2d_2_shape, Shape({4, 4}),
-                        std::string("average"), std::vector<double>({5.0}))));
+                        std::vector<double>({4.0, 8.0, 5.0, 12.0}))));
 
 TEST(poolinglayer, new_pooling_layer_can_run_float_avg) {
   Shape inpshape = {4, 4};
@@ -161,7 +167,7 @@ TEST(poolinglayer, new_pooling_layer_can_run_1d_pooling_float) {
   std::vector<float> input({9.0F, 8.0F, 7.0F, 6.0F, 5.0F, 4.0F, 3.0F, 2.0F});
   Tensor output = make_tensor<float>({0});
   a.run(make_tensor(input, inpshape), output);
-  std::vector<float> true_output = {8.0F, 5.0F, 2.5F};
+  std::vector<float> true_output = {8.0F, 5.0F};
   for (size_t i = 0; i < true_output.size(); i++) {
     EXPECT_NEAR((*output.as<float>())[i], true_output[i], 1e-5);
   }

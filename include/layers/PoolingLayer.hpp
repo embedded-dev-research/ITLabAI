@@ -23,7 +23,13 @@ class PoolingLayer : public Layer {
   std::string poolingType_;
 };
 
-inline bool isOutOfBounds(size_t index, size_t coord, const Shape& shape) {
+inline bool isOutOfBounds(size_t index, int coord, const Shape& shape) {
+  if (coord < 0) {
+    if (index == 0) {
+        return false;
+    }
+    return true;
+  }
   if (coord < shape.dims()) {
     return (index >= shape[coord]);
   }
@@ -68,6 +74,9 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(const Shape& input_shape,
                                               const std::string& pooling_type)
     : LayerImpl<ValueType>(input_shape, input_shape),
       poolingShape_(pooling_shape) {
+  if (input_shape.dims() > 4) {
+    throw std::invalid_argument("Input dimensions is bigger than 4");
+  }
   if (pooling_shape.dims() > input_shape.dims()) {
     throw std::invalid_argument("Pooling dims is bigger than the input dims");
   }
@@ -85,13 +94,13 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(const Shape& input_shape,
     throw std::invalid_argument("Pooling type " + pooling_type +
                                 " is not supported");
   }
+  size_t inphwstart = inputShape_.dims() > 2 ? (inputShape_.dims() - 2) : 0;
   for (size_t i = 0; i < pooling_shape.dims(); i++) {
     if (pooling_shape[i] == 0) {
       throw std::runtime_error("Zero division, pooling shape has zeroes");
     }
-    auto div_result = std::lldiv(input_shape[i], pooling_shape[i]);
-    this->outputShape_[i] =
-        div_result.rem > 0 ? (div_result.quot + 1) : div_result.quot;
+    this->outputShape_[inphwstart + i] =
+        input_shape[inphwstart + i] / pooling_shape[i];
   }
 }
 
@@ -103,45 +112,59 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
   }
   std::vector<ValueType> pooling_buf;
   std::vector<ValueType> res;
+  std::vector<size_t> coords;
   size_t tmpwidth = 0;
   size_t tmpheight = 0;
+  int inphwstart = inputShape_.dims() > 2 ? (static_cast<int>(inputShape_.dims()) - 2) : 0;
   // O(N^2)
-  for (size_t i = 0; !isOutOfBounds(i, 0, this->outputShape_); i++) {
-    for (size_t j = 0; !isOutOfBounds(j, 1, this->outputShape_); j++) {
-      tmpheight = poolingShape_[0] * i;
-      if (poolingShape_.dims() == 1) {
-        tmpwidth = j;
-      } else {
-        tmpwidth = poolingShape_[1] * j;
-      }
-      // to get matrix block for pooling
-      for (size_t k = 0; !isOutOfBounds(k, 0, poolingShape_); k++) {
-        if (isOutOfBounds(tmpheight + k, 0, this->inputShape_)) {
-          continue;
-        }
-        for (size_t l = 0; !isOutOfBounds(l, 1, poolingShape_); l++) {
-          if (isOutOfBounds(tmpwidth + l, 1, this->inputShape_)) {
-            continue;
-          }
-          if (this->inputShape_.dims() == 1) {
-            pooling_buf.push_back(input[tmpheight + k]);
+  for (size_t N = 0; !isOutOfBounds(N, inphwstart - 2, this->outputShape_);
+       N++) {
+    for (size_t C = 0; !isOutOfBounds(C, inphwstart - 1, this->outputShape_);
+         C++) {
+      for (size_t i = 0; !isOutOfBounds(i, inphwstart, this->outputShape_);
+           i++) {
+        for (size_t j = 0;
+             !isOutOfBounds(j, inphwstart + 1, this->outputShape_); j++) {
+          tmpheight = poolingShape_[0] * i;
+          if (poolingShape_.dims() == 1) {
+            tmpwidth = j;
           } else {
-            pooling_buf.push_back(input[this->inputShape_.get_index(
-                {tmpheight + k, tmpwidth + l})]);
+            tmpwidth = poolingShape_[1] * j;
           }
+          // to get matrix block for pooling
+          for (size_t k = 0; !isOutOfBounds(k, 0, poolingShape_); k++) {
+            if (isOutOfBounds(tmpheight + k, inphwstart, this->inputShape_)) {
+              continue;
+            }
+            for (size_t l = 0; !isOutOfBounds(l, 1, poolingShape_); l++) {
+              if (isOutOfBounds(tmpwidth + l, inphwstart + 1,
+                                this->inputShape_)) {
+                continue;
+              }
+              if (this->inputShape_.dims() == 1) {
+                pooling_buf.push_back(input[tmpheight + k]);
+              } else {
+                coords =
+                    std::vector<size_t>({N, C, tmpheight + k, tmpwidth + l});
+                pooling_buf.push_back(input[this->inputShape_.get_index(
+                    std::vector<size_t>(coords.end() - this->inputShape_.dims(),
+                                        coords.end()))]);
+              }
+            }
+          }
+          switch (poolingType_) {
+            case kAverage:
+              res.push_back(avg_pooling(pooling_buf));
+              break;
+            case kMax:
+              res.push_back(max_pooling(pooling_buf));
+              break;
+            default:
+              throw std::runtime_error("Unknown pooling type");
+          }
+          pooling_buf.clear();
         }
       }
-      switch (poolingType_) {
-        case kAverage:
-          res.push_back(avg_pooling(pooling_buf));
-          break;
-        case kMax:
-          res.push_back(max_pooling(pooling_buf));
-          break;
-        default:
-          throw std::runtime_error("Unknown pooling type");
-      }
-      pooling_buf.clear();
     }
   }
   return res;
