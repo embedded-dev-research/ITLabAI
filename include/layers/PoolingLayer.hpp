@@ -26,7 +26,7 @@ class PoolingLayer : public Layer {
 inline bool isOutOfBounds(size_t index, int coord, const Shape& shape) {
   if (coord < 0) {
     if (index == 0) {
-        return false;
+      return false;
     }
     return true;
   }
