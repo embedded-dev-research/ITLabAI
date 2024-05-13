@@ -12,7 +12,7 @@ TEST(ConvolutionalLayerTest, FStep2) {
   }
   Shape sh({2, 2});
   std::vector<int> vec = {1, 2, 3, 4};
-  Shape sh1({1, 5, 5, 3});
+  Shape sh1({1, 3, 5, 5});
   Tensor input = make_tensor(image, sh1);
   Tensor output = make_tensor(vec, sh);
   int step = 2;
@@ -36,7 +36,7 @@ TEST(ConvolutionalLayerTest, FStep1) {
   }
   Shape sh({2, 2});
   std::vector<int> vec = {1, 2, 3, 4};
-  Shape sh1({1, 5, 5, 3});
+  Shape sh1({1, 3, 5, 5});
   Tensor input = make_tensor(image, sh1);
   Tensor output = make_tensor(vec, sh);
   int step = 1;
@@ -60,7 +60,7 @@ TEST(ConvolutionalLayerTest, IntStep2) {
   }
   Shape sh({2, 2});
   std::vector<int> vec = {1, 2, 3, 4};
-  Shape sh1({1, 5, 5, 3});
+  Shape sh1({1, 3, 5, 5});
   Tensor input = make_tensor(image, sh1);
   Tensor output = make_tensor(vec, sh);
   int step = 2;
@@ -84,7 +84,7 @@ TEST(ConvolutionalLayerTest, IntStep1) {
   }
   Shape sh({2, 2});
   std::vector<int> vec = {1, 2, 3, 4};
-  Shape sh1({1, 5, 5, 3});
+  Shape sh1({1, 3, 5, 5});
   Tensor input = make_tensor(image, sh1);
   Tensor output = make_tensor(vec, sh);
   int step = 1;
