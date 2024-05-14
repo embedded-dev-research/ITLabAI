@@ -47,6 +47,12 @@ TEST(poolinglayer, throws_when_bigger_pooling_dims) {
   ASSERT_ANY_THROW(PoolingLayerImpl<double>(inpshape, poolshape, "average"));
 }
 
+TEST(poolinglayer, throws_when_bigger_input_dims) {
+  Shape inpshape = {2, 3, 4, 5, 6};
+  Shape poolshape = {2, 2};
+  ASSERT_ANY_THROW(PoolingLayerImpl<double>(inpshape, poolshape, "average"));
+}
+
 TEST(poolinglayer, pooling_throws_when_more_than_2d) {
   Shape inpshape = {4, 4, 4};
   Shape poolshape = {2, 1, 3};

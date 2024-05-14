@@ -24,16 +24,10 @@ class PoolingLayer : public Layer {
 };
 
 inline bool isOutOfBounds(size_t index, int coord, const Shape& shape) {
-  if (coord < 0) {
-    if (index == 0) {
-      return false;
-    }
-    return true;
-  }
-  if (static_cast<size_t>(coord) < shape.dims()) {
+  if (coord >= 0 && static_cast<size_t>(coord) < shape.dims()) {
     return (index >= shape[coord]);
   }
-  return (index >= 1);
+  return (index > 0);
 }
 
 template <typename ValueType>
@@ -119,10 +113,10 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
                        ? (static_cast<int>(this->inputShape_.dims()) - 2)
                        : 0;
   // O(N^2)
-  for (size_t N = 0; !isOutOfBounds(N, inphwstart - 2, this->outputShape_);
-       N++) {
-    for (size_t C = 0; !isOutOfBounds(C, inphwstart - 1, this->outputShape_);
-         C++) {
+  for (size_t n = 0; !isOutOfBounds(n, inphwstart - 2, this->outputShape_);
+       n++) {
+    for (size_t c = 0; !isOutOfBounds(c, inphwstart - 1, this->outputShape_);
+         c++) {
       for (size_t i = 0; !isOutOfBounds(i, inphwstart, this->outputShape_);
            i++) {
         for (size_t j = 0;
@@ -147,7 +141,7 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
                 pooling_buf.push_back(input[tmpheight + k]);
               } else {
                 coords =
-                    std::vector<size_t>({N, C, tmpheight + k, tmpwidth + l});
+                    std::vector<size_t>({n, c, tmpheight + k, tmpwidth + l});
                 pooling_buf.push_back(input[this->inputShape_.get_index(
                     std::vector<size_t>(coords.end() - this->inputShape_.dims(),
                                         coords.end()))]);
