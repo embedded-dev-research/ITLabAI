@@ -21,7 +21,7 @@ TEST(bfs, check_result_vec) {
   }
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
-  InputLayer a1(kNhwc, kNhwc, 1, 2);
+  InputLayer a1(kNhwc, kNchw, 1, 2);
   InputLayer a3(kNhwc, kNhwc, 1, 1);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});

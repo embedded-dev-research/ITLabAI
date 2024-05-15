@@ -19,6 +19,8 @@ set_target_properties(ReadLib PROPERTIES LINKER_LANGUAGE CXX)
 find_package( OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 target_link_libraries( ReadLib ${OpenCV_LIBS} )
+target_link_libraries( ReadLib TBB::tbb)
+
 add_executable(Reader reader_img.cpp)
 target_link_libraries(Reader ReadLib)
 
