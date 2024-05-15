@@ -67,6 +67,6 @@ TEST(bfs, check_e2e) {
   graph.setOutput(a3, output);
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
-  std::vector<int> res (27, 21);
+  std::vector<int> res(27, 21);
   ASSERT_EQ(tmp, res);
 }
