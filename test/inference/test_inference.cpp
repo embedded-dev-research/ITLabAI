@@ -40,7 +40,7 @@ TEST(bfs, check_result_vec) {
 }
 TEST(bfs, check_e2e) {
   Graph graph(6);
-  Shape sh1({1, 1, 25, 3});
+  Shape sh1({1, 5, 5, 3});
   std::vector<int> vec;
   vec.reserve(75);
   for (int i = 0; i < 75; ++i) {
@@ -48,14 +48,14 @@ TEST(bfs, check_e2e) {
   }
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
-  InputLayer a1(kNhwc, kNhwc, 1, 2);
+  InputLayer a1(kNhwc, kNchw, 1, 2);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer a2(1, 1, 0, kernel);
-  Shape poolshape = {2, 2, 2};
-  PoolingLayer a3(poolshape, "average");
-  EWLayer a4;
+  ConvolutionalLayer a2(1, 0, 0, kernel);
+  Shape poolshape = {2, 2};
+  EWLayer a3("linear", 2.0F, 3.0F);
+  PoolingLayer a4(poolshape, "average");
   FCLayer a5;
   OutputLayer a6;
   graph.setInput(a1, input);
@@ -64,9 +64,9 @@ TEST(bfs, check_e2e) {
   graph.makeConnection(a3, a4);
   graph.makeConnection(a4, a5);
   graph.makeConnection(a5, a6);
-  graph.setOutput(a2, output);
+  graph.setOutput(a3, output);
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
-  std::vector<int> res = {81, 81, 81};
+  std::vector<int> res (27, 21);
   ASSERT_EQ(tmp, res);
 }
