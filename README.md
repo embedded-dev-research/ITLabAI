@@ -114,3 +114,6 @@ To start the testing process locally, you need to go to the directory
    chmod +x run_test
    ./run_test
    ```
+# **Some files used to create the library**
+### *neural network models*
+[cnn_cat_dog.h5](https://www.kaggle.com/models/alfathterry/convolutional-neural-network)
