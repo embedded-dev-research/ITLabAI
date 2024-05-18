@@ -129,14 +129,7 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
           }
           // to get matrix block for pooling
           for (size_t k = 0; !isOutOfBounds(k, 0, poolingShape_); k++) {
-            if (isOutOfBounds(tmpheight + k, inphwstart, this->inputShape_)) {
-              continue;
-            }
             for (size_t l = 0; !isOutOfBounds(l, 1, poolingShape_); l++) {
-              if (isOutOfBounds(tmpwidth + l, inphwstart + 1,
-                                this->inputShape_)) {
-                continue;
-              }
               if (this->inputShape_.dims() == 1) {
                 pooling_buf.push_back(input[tmpheight + k]);
               } else {
