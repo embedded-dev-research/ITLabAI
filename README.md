@@ -117,3 +117,9 @@ To start the testing process locally, you need to go to the directory
 # **Some files used to create the library**
 ### *neural network models*
 [cnn_cat_dog.h5](https://www.kaggle.com/models/alfathterry/convolutional-neural-network)
+# **Structure of our library**
+Here you can see the class diagram
+
+![uml_1](https://github.com/embedded-dev-research/itlab_2023/assets/129722895/b6e11c13-acfe-46bf-90c3-695a3bd8441d)
+
+
