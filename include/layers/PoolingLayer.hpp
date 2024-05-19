@@ -88,13 +88,13 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(const Shape& input_shape,
     throw std::invalid_argument("Pooling type " + pooling_type +
                                 " is not supported");
   }
-  size_t inphwstart = input_shape.dims() > 2 ? (input_shape.dims() - 2) : 0;
+  size_t input_H_index = input_shape.dims() > 2 ? (input_shape.dims() - 2) : 0;
   for (size_t i = 0; i < pooling_shape.dims(); i++) {
     if (pooling_shape[i] == 0) {
       throw std::runtime_error("Zero division, pooling shape has zeroes");
     }
-    this->outputShape_[inphwstart + i] =
-        input_shape[inphwstart + i] / pooling_shape[i];
+    this->outputShape_[input_H_index + i] =
+        input_shape[input_H_index + i] / pooling_shape[i];
   }
 }
 
@@ -109,18 +109,18 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
   std::vector<size_t> coords;
   size_t tmpwidth = 0;
   size_t tmpheight = 0;
-  int inphwstart = this->inputShape_.dims() > 2
-                       ? (static_cast<int>(this->inputShape_.dims()) - 2)
-                       : 0;
+  int input_H_index = this->inputShape_.dims() > 2
+                          ? (static_cast<int>(this->inputShape_.dims()) - 2)
+                          : 0;
   // O(N^2)
-  for (size_t n = 0; !isOutOfBounds(n, inphwstart - 2, this->outputShape_);
+  for (size_t n = 0; !isOutOfBounds(n, input_H_index - 2, this->outputShape_);
        n++) {
-    for (size_t c = 0; !isOutOfBounds(c, inphwstart - 1, this->outputShape_);
+    for (size_t c = 0; !isOutOfBounds(c, input_H_index - 1, this->outputShape_);
          c++) {
-      for (size_t i = 0; !isOutOfBounds(i, inphwstart, this->outputShape_);
+      for (size_t i = 0; !isOutOfBounds(i, input_H_index, this->outputShape_);
            i++) {
         for (size_t j = 0;
-             !isOutOfBounds(j, inphwstart + 1, this->outputShape_); j++) {
+             !isOutOfBounds(j, input_H_index + 1, this->outputShape_); j++) {
           tmpheight = poolingShape_[0] * i;
           if (poolingShape_.dims() == 1) {
             tmpwidth = j;
