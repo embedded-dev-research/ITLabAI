@@ -3,7 +3,7 @@ from tensorflow.keras.models import load_model
 import pickle
 import joblib
 # Путь к вашей модели .h5
-MODEL_PATH = 'cnn_cat_dog.h5'
+MODEL_PATH = 'AlexNet-model.h5'
 
 # Загрузка модели
 model = load_model(MODEL_PATH)
@@ -14,18 +14,7 @@ graph = tf.compat.v1.get_default_graph()
 # Получение весов модели
 weights = model.get_weights()
 
-new_layer_names = ['kConvolution', 'kNormalization', 'kPooling', 'kDropout',
-                   'kConvolution_1', 'kNormalization_1', 'kPooling_1', 'kDropout_1',
-                   'kConvolution_2', 'kNormalization_2', 'kPooling_2', 'kDropout_2', 'flatten',
-                   'kFullyConnected', 'kNormalization_3', 'kDropout_3', 'flatten_1',
-                   'kFullyConnected_1', 'kNormalization_4', 'kDropout_4',
-                   'kFullyConnected_2']
-
-# Присвоение новых имен слоям
-for layer, new_name in zip(model.layers, new_layer_names):
-    layer._name = new_name
-
-MODEL_DATA_PATH = 'model_data.joblib'
+MODEL_DATA_PATH = 'model_data_alexnet.joblib'
 
 # Сохранение имен слоев и весов модели
 layer_weights = {}
