@@ -116,4 +116,6 @@ To start the testing process locally, you need to go to the directory
    ```
 # **Some files used to create the library**
 ### *neural network models*
-[cnn_cat_dog.h5](https://www.kaggle.com/models/alfathterry/convolutional-neural-network)
+[Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5)
+# **Structure of our library**
+![Class diagram](./docs/class_diagram.svg)
