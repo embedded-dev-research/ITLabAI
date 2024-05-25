@@ -118,5 +118,4 @@ To start the testing process locally, you need to go to the directory
 ### *neural network models*
 [Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5)
 # **Structure of our library**
-In directory "Docs" you can see the class diagram
-
+![Class diagram](./docs/class_diagram.svg)
