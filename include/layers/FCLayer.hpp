@@ -11,13 +11,13 @@ class FCLayer : public Layer {
  private:
   Tensor weights_;
   Tensor bias_;
+  ImplType implType_;
 
  public:
   FCLayer() = default;
-  FCLayer(const Tensor& weights, const Tensor& bias) {
-    weights_ = weights;
-    bias_ = bias;
-  }
+  FCLayer(const Tensor& weights, const Tensor& bias,
+          ImplType implType = kDefault)
+      : weights_(weights), bias_(bias), implType_(implType) {}
   static std::string get_name() { return "Fully-connected layer"; }
   void run(const Tensor& input, Tensor& output) override;
 };
@@ -44,6 +44,34 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
     }
     res[i] = elem;
   }
+  return res;
+}
+
+template <typename ValueType>
+std::vector<ValueType> mat_vec_mul_tbb(const std::vector<ValueType>& mat,
+                                       const Shape& mat_shape,
+                                       const std::vector<ValueType>& vec) {
+  if (mat_shape.dims() != 2) {
+    throw std::invalid_argument("Not a matrix in argument");
+  }
+  if (vec.size() != mat_shape[1]) {
+    throw std::invalid_argument("Invalid vector size");
+  }
+  Shape res_shape(1);
+  res_shape[0] = mat_shape[0];
+  std::vector<ValueType> res(res_shape[0]);
+  ValueType elem;
+  oneapi::tbb::parallel_for(oneapi::tbb::blocked_range2d<size_t>(0, mat_shape[0], 0, mat_shape[1]),
+                            [&](oneapi::tbb::blocked_range2d<size_t> r) {
+                              for (size_t i = r.rows().begin(); i < r.rows().end(); i++) {
+                                elem = ValueType(0);
+                                for (size_t j = r.cols().begin(); j < r.cols().end(); j++) {
+                                  // due to 1d indexing
+                                  elem += mat[i * mat_shape[1] + j] * vec[j];
+                                }
+                                res[i] = elem;
+                              }
+                            });
   return res;
 }
 
@@ -82,7 +110,7 @@ class FCLayerImpl : public LayerImpl<ValueType> {
   }
   std::vector<ValueType> run(const std::vector<ValueType>& input) const;
 
- private:
+ protected:
   std::vector<ValueType> weights_;
   std::vector<ValueType> bias_;
 };
@@ -125,4 +153,29 @@ std::vector<ValueType> FCLayerImpl<ValueType>::run(
                  output_values.begin(), std::plus<ValueType>());
   return output_values;
 }
+
+template <typename ValueType>
+class FCLayerImplTBB : public FCLayerImpl<ValueType> {
+ public:
+  FCLayerImplTBB(const std::vector<ValueType>& input_weights,
+                 const Shape& input_weights_shape,
+                 const std::vector<ValueType>& input_bias)
+      : FCLayerImpl(input_weights, input_weights_shape, input_bias) {}
+  std::vector<ValueType> run(const std::vector<ValueType>& input) const;
+};
+
+template <typename ValueType>
+std::vector<ValueType> FCLayerImplTBB<ValueType>::run(
+    const std::vector<ValueType>& input) const {
+  if (input.size() != this->inputShape_[0]) {
+    throw std::invalid_argument("Input size doesn't fit FCLayer");
+  }
+  Shape cur_w_shape({this->outputShape_[0], this->inputShape_[0]});
+  std::vector<ValueType> output_values =
+      mat_vec_mul_tbb(weights_, cur_w_shape, input);
+  std::transform(output_values.begin(), output_values.end(), bias_.begin(),
+                 output_values.begin(), std::plus<ValueType>());
+  return output_values;
+}
+
 }  // namespace itlab_2023

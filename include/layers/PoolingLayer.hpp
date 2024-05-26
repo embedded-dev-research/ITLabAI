@@ -13,21 +13,25 @@ enum PoolingType { kAverage, kMax };
 class PoolingLayer : public Layer {
  public:
   PoolingLayer() = default;
-  PoolingLayer(const Shape& pooling_shape, std::string pooling_type = "average")
-      : poolingShape_(pooling_shape), poolingType_(std::move(pooling_type)) {}
+  PoolingLayer(const Shape& pooling_shape, std::string pooling_type = "average",
+               ImplType implType = kDefault)
+      : poolingShape_(pooling_shape),
+        poolingType_(std::move(pooling_type)),
+        implType_(implType) {}
   static std::string get_name() { return "Pooling layer"; }
   void run(const Tensor& input, Tensor& output);
 
  private:
   Shape poolingShape_;
   std::string poolingType_;
+  ImplType implType_;
 };
 
-inline bool isOutOfBounds(size_t index, int coord, const Shape& shape) {
+inline size_t coord_size(int coord, const Shape& shape) {
   if (coord >= 0 && static_cast<size_t>(coord) < shape.dims()) {
-    return (index >= shape[coord]);
+    return shape[coord];
   }
-  return (index > 0);
+  return 1;
 }
 
 template <typename ValueType>
@@ -57,7 +61,7 @@ class PoolingLayerImpl : public LayerImpl<ValueType> {
   PoolingLayerImpl& operator=(const PoolingLayerImpl& c) = default;
   std::vector<ValueType> run(const std::vector<ValueType>& input) const;
 
- private:
+ protected:
   Shape poolingShape_;
   PoolingType poolingType_;
 };
@@ -112,15 +116,15 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
   int input_h_index = this->inputShape_.dims() > 2
                           ? (static_cast<int>(this->inputShape_.dims()) - 2)
                           : 0;
-  // O(N^2)
-  for (size_t n = 0; !isOutOfBounds(n, input_h_index - 2, this->outputShape_);
+  
+  for (size_t n = 0; n < coord_size(input_h_index - 2, this->outputShape_);
        n++) {
-    for (size_t c = 0; !isOutOfBounds(c, input_h_index - 1, this->outputShape_);
+    for (size_t c = 0; c < coord_size(input_h_index - 1, this->outputShape_);
          c++) {
-      for (size_t i = 0; !isOutOfBounds(i, input_h_index, this->outputShape_);
+      for (size_t i = 0; i < coord_size(input_h_index, this->outputShape_);
            i++) {
         for (size_t j = 0;
-             !isOutOfBounds(j, input_h_index + 1, this->outputShape_); j++) {
+             j < coord_size(input_h_index + 1, this->outputShape_); j++) {
           tmpheight = poolingShape_[0] * i;
           if (poolingShape_.dims() == 1) {
             tmpwidth = j;
@@ -128,8 +132,8 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
             tmpwidth = poolingShape_[1] * j;
           }
           // to get matrix block for pooling
-          for (size_t k = 0; !isOutOfBounds(k, 0, poolingShape_); k++) {
-            for (size_t l = 0; !isOutOfBounds(l, 1, poolingShape_); l++) {
+          for (size_t k = 0; k < coord_size(0, poolingShape_); k++) {
+            for (size_t l = 0; l < coord_size(1, poolingShape_); l++) {
               if (this->inputShape_.dims() == 1) {
                 pooling_buf.push_back(input[tmpheight + k]);
               } else {
@@ -158,4 +162,87 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
   }
   return res;
 }
+
+template <typename ValueType>
+class PoolingLayerImplTBB : public PoolingLayerImpl<ValueType> {
+ public:
+  PoolingLayerImplTBB(const Shape& input_shape, const Shape& pooling_shape,
+                      const std::string& pooling_type = "average")
+      : PoolingLayerImpl(input_shape, pooling_shape, pooling_type) {}
+  std::vector<ValueType> run(const std::vector<ValueType>& input) const;
+};
+
+template <typename ValueType>
+std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
+    const std::vector<ValueType>& input) const {
+  if (input.size() != this->inputShape_.count()) {
+    throw std::invalid_argument("Input size doesn't fit pooling layer");
+  }
+  std::vector<ValueType> res(this->outputShape_.count());
+  int input_h_index = this->inputShape_.dims() > 2
+                          ? (static_cast<int>(this->inputShape_.dims()) - 2)
+                          : 0;
+  oneapi::tbb::parallel_for(
+      oneapi::tbb::blocked_range2d<size_t>(
+          0, coord_size(input_h_index - 2, this->outputShape_), 0,
+          coord_size(input_h_index - 1, this->outputShape_)),
+      [&](oneapi::tbb::blocked_range2d<size_t> r) {
+        for (size_t n = r.rows().begin(); n < r.rows().end(); n++) {
+          for (size_t c = r.cols().begin(); c < r.cols().end(); c++) {
+            oneapi::tbb::parallel_for(
+                oneapi::tbb::blocked_range2d<size_t>(
+                    0, coord_size(input_h_index, this->outputShape_), 0,
+                    coord_size(input_h_index + 1, this->outputShape_)),
+                [&](oneapi::tbb::blocked_range2d<size_t> r1) {
+                  for (size_t i = r1.rows().begin(); i < r1.rows().end(); i++) {
+                    for (size_t j = r1.cols().begin(); j < r1.cols().end();
+                         j++) {
+                      std::vector<ValueType> pooling_buf;
+                      std::vector<size_t> coords;
+                      size_t tmpwidth;
+                      size_t tmpheight;
+                      tmpheight = poolingShape_[0] * i;
+                      if (poolingShape_.dims() == 1) {
+                        tmpwidth = j;
+                      } else {
+                        tmpwidth = poolingShape_[1] * j;
+                      }
+                      for (size_t k = 0; k < coord_size(0, poolingShape_);
+                           k++) {
+                        for (size_t l = 0; l < coord_size(1, poolingShape_);
+                             l++) {
+                          if (this->inputShape_.dims() == 1) {
+                            pooling_buf.push_back(input[tmpheight + k]);
+                          } else {
+                            coords = std::vector<size_t>(
+                                {n, c, tmpheight + k, tmpwidth + l});
+                            pooling_buf.push_back(
+                                input[this->inputShape_.get_index(
+                                    std::vector<size_t>(
+                                        coords.end() - this->inputShape_.dims(),
+                                        coords.end()))]);
+                          }
+                        }
+                      }
+                      switch (poolingType_) {
+                        case kAverage:
+                          res[this->outputShape_.get_index(std::vector<size_t>(
+                              {n, c, i, j}))] = avg_pooling(pooling_buf);
+                          break;
+                        case kMax:
+                          res[this->outputShape_.get_index(std::vector<size_t>(
+                              {n, c, i, j}))] = max_pooling(pooling_buf);
+                          break;
+                        default:
+                          throw std::runtime_error("Unknown pooling type");
+                      }
+                    }
+                  }
+                });
+          }
+        }
+      });
+  return res;
+}
+
 }  // namespace itlab_2023

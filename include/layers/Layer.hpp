@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include "oneapi/tbb.h"
 
 #include "layers/Shape.hpp"
 #include "layers/Tensor.hpp"
@@ -18,7 +19,12 @@ enum LayerType {
   kElementWise,
   kConvolution,
   kFullyConnected,
-  kOutput,
+  kOutput
+};
+
+enum ImplType {
+  kDefault,
+  kTBB
 };
 
 class Layer {
