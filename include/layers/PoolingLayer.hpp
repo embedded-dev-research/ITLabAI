@@ -168,7 +168,7 @@ class PoolingLayerImplTBB : public PoolingLayerImpl<ValueType> {
  public:
   PoolingLayerImplTBB(const Shape& input_shape, const Shape& pooling_shape,
                       const std::string& pooling_type = "average")
-      : PoolingLayerImpl(input_shape, pooling_shape, pooling_type) {}
+      : PoolingLayerImpl<ValueType>(input_shape, pooling_shape, pooling_type) {}
   std::vector<ValueType> run(const std::vector<ValueType>& input) const;
 };
 
@@ -201,16 +201,16 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
                       std::vector<size_t> coords;
                       size_t tmpwidth;
                       size_t tmpheight;
-                      tmpheight = poolingShape_[0] * i;
-                      if (poolingShape_.dims() == 1) {
+                      tmpheight = this->poolingShape_[0] * i;
+                      if (this->poolingShape_.dims() == 1) {
                         tmpwidth = j;
                       } else {
-                        tmpwidth = poolingShape_[1] * j;
+                        tmpwidth = this->poolingShape_[1] * j;
                       }
-                      for (size_t k = 0; k < coord_size(0, poolingShape_);
+                      for (size_t k = 0; k < coord_size(0, this->poolingShape_);
                            k++) {
-                        for (size_t l = 0; l < coord_size(1, poolingShape_);
-                             l++) {
+                        for (size_t l = 0;
+                             l < coord_size(1, this->poolingShape_); l++) {
                           if (this->inputShape_.dims() == 1) {
                             pooling_buf.push_back(input[tmpheight + k]);
                           } else {
@@ -224,7 +224,7 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
                           }
                         }
                       }
-                      switch (poolingType_) {
+                      switch (this->poolingType_) {
                         case kAverage:
                           res[this->outputShape_.get_index(std::vector<size_t>(
                               {n, c, i, j}))] = avg_pooling(pooling_buf);

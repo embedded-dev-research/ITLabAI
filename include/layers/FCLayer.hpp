@@ -61,17 +61,18 @@ std::vector<ValueType> mat_vec_mul_tbb(const std::vector<ValueType>& mat,
   res_shape[0] = mat_shape[0];
   std::vector<ValueType> res(res_shape[0]);
   ValueType elem;
-  oneapi::tbb::parallel_for(oneapi::tbb::blocked_range2d<size_t>(0, mat_shape[0], 0, mat_shape[1]),
-                            [&](oneapi::tbb::blocked_range2d<size_t> r) {
-                              for (size_t i = r.rows().begin(); i < r.rows().end(); i++) {
-                                elem = ValueType(0);
-                                for (size_t j = r.cols().begin(); j < r.cols().end(); j++) {
-                                  // due to 1d indexing
-                                  elem += mat[i * mat_shape[1] + j] * vec[j];
-                                }
-                                res[i] = elem;
-                              }
-                            });
+  oneapi::tbb::parallel_for(
+      oneapi::tbb::blocked_range2d<size_t>(0, mat_shape[0], 0, mat_shape[1]),
+      [&](oneapi::tbb::blocked_range2d<size_t> r) {
+        for (size_t i = r.rows().begin(); i < r.rows().end(); i++) {
+          elem = ValueType(0);
+          for (size_t j = r.cols().begin(); j < r.cols().end(); j++) {
+            // due to 1d indexing
+            elem += mat[i * mat_shape[1] + j] * vec[j];
+          }
+          res[i] = elem;
+        }
+      });
   return res;
 }
 
@@ -160,7 +161,8 @@ class FCLayerImplTBB : public FCLayerImpl<ValueType> {
   FCLayerImplTBB(const std::vector<ValueType>& input_weights,
                  const Shape& input_weights_shape,
                  const std::vector<ValueType>& input_bias)
-      : FCLayerImpl(input_weights, input_weights_shape, input_bias) {}
+      : FCLayerImpl<ValueType>(input_weights, input_weights_shape, input_bias) {
+  }
   std::vector<ValueType> run(const std::vector<ValueType>& input) const;
 };
 
@@ -172,9 +174,10 @@ std::vector<ValueType> FCLayerImplTBB<ValueType>::run(
   }
   Shape cur_w_shape({this->outputShape_[0], this->inputShape_[0]});
   std::vector<ValueType> output_values =
-      mat_vec_mul_tbb(weights_, cur_w_shape, input);
-  std::transform(output_values.begin(), output_values.end(), bias_.begin(),
-                 output_values.begin(), std::plus<ValueType>());
+      mat_vec_mul_tbb(this->weights_, cur_w_shape, input);
+  std::transform(output_values.begin(), output_values.end(),
+                 this->bias_.begin(), output_values.begin(),
+                 std::plus<ValueType>());
   return output_values;
 }
 

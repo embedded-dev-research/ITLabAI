@@ -4,10 +4,10 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "oneapi/tbb.h"
 
 #include "layers/Shape.hpp"
 #include "layers/Tensor.hpp"
+#include "oneapi/tbb.h"
 
 namespace itlab_2023 {
 
@@ -22,10 +22,7 @@ enum LayerType {
   kOutput
 };
 
-enum ImplType {
-  kDefault,
-  kTBB
-};
+enum ImplType { kDefault, kTBB };
 
 class Layer {
  public:

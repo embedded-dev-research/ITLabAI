@@ -22,11 +22,11 @@ TEST(time_test, mat_vec_mul_comp) {
   for (size_t i = 0; i < k * k; i++) {
     mat[i] = rand();
   }
-  double count1 = elapsed_time_avg<double, std::milli>(500, mat_vec_mul<int>, mat,
-                                                   Shape({k, k}), vec);
+  double count1 = elapsed_time_avg<double, std::milli>(500, mat_vec_mul<int>,
+                                                       mat, Shape({k, k}), vec);
   std::cerr << "Normal:" << count1 << std::endl;
-  double count2 = elapsed_time_avg<double, std::milli>(500, mat_vec_mul_tbb<int>, mat,
-                                                   Shape({k, k}), vec);
+  double count2 = elapsed_time_avg<double, std::milli>(
+      500, mat_vec_mul_tbb<int>, mat, Shape({k, k}), vec);
   std::cerr << "Tbb:" << count2 << std::endl;
   EXPECT_GE(count1, count2);
 }
@@ -45,8 +45,10 @@ TEST(pooling_test, is_parallel_good) {
   Tensor output;
   PoolingLayer p1(Shape({2, 2}), "max", kDefault);
   PoolingLayer p2(Shape({2, 2}), "max", kTBB);
-  double count1 = elapsed_time<double, std::milli>(test_func, p1, input, output);
+  double count1 =
+      elapsed_time<double, std::milli>(test_func, p1, input, output);
   std::cerr << "Normal:" << count1 << std::endl;
-  double count2 = elapsed_time<double, std::milli>(test_func, p2, input, output);
+  double count2 =
+      elapsed_time<double, std::milli>(test_func, p2, input, output);
   std::cerr << "Tbb:" << count2 << std::endl;
 }
