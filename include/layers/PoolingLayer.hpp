@@ -116,7 +116,6 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
   int input_h_index = this->inputShape_.dims() > 2
                           ? (static_cast<int>(this->inputShape_.dims()) - 2)
                           : 0;
-  
   for (size_t n = 0; n < coord_size(input_h_index - 2, this->outputShape_);
        n++) {
     for (size_t c = 0; c < coord_size(input_h_index - 1, this->outputShape_);
