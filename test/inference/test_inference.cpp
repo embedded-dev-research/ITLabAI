@@ -55,18 +55,19 @@ TEST(bfs, check_end_to_end) {
   ConvolutionalLayer a2(1, 0, 0, kernel);
   Shape poolshape = {2, 2};
   EWLayer a3("linear", 2.0F, 3.0F);
-  PoolingLayer a6(poolshape, "average");
-  FCLayer a5;
-  OutputLayer a4;
+  PoolingLayer a4(poolshape, "average");
+  FCLayer a6;
+  OutputLayer a5;
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
   graph.makeConnection(a3, a4);
   graph.makeConnection(a4, a5);
   graph.makeConnection(a5, a6);
-  graph.setOutput(a4, output);
+  graph.setOutput(a5, output);
   graph.inference();
   std::vector<float> tmp = *output.as<float>();
-  std::vector<float> res(27, 21);
+  std::vector<float> tmpOutput = softmax<float>(*output.as<float>());
+  std::vector<float> res(3, 21);
   ASSERT_EQ(tmp, res);
 }
