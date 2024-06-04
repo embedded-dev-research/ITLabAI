@@ -67,7 +67,7 @@ TEST(bfs, check_end_to_end) {
   graph.setOutput(a5, output);
   graph.inference();
   std::vector<float> tmp = *output.as<float>();
-  std::vector<float> tmpOutput = softmax<float>(*output.as<float>());
+  std::vector<float> tmp_output = softmax<float>(*output.as<float>());
   std::vector<float> res(3, 21);
   ASSERT_EQ(tmp, res);
 }
