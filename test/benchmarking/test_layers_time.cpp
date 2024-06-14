@@ -13,7 +13,7 @@ void test_func(PoolingLayer& p, const Tensor& input, Tensor& output) {
 }
 
 TEST(time_test, mat_vec_mul_comp) {
-  size_t k = 2000;
+  size_t k = 5000;
   std::vector<int> mat(k * k);
   std::vector<int> vec(k);
   for (size_t i = 0; i < k; i++) {
@@ -22,17 +22,24 @@ TEST(time_test, mat_vec_mul_comp) {
   for (size_t i = 0; i < k * k; i++) {
     mat[i] = rand() % 500;
   }
-  double count1 = elapsed_time_avg<double, std::milli>(500, mat_vec_mul<int>,
+  double count1 = elapsed_time_avg<double, std::milli>(10, mat_vec_mul<int>,
                                                        mat, Shape({k, k}), vec);
   std::cerr << "Normal:" << count1 << std::endl;
   double count2 = elapsed_time_avg<double, std::milli>(
-      500, mat_vec_mul_upd_tbb<int>, mat, Shape({k, k}), vec);
+      10, mat_vec_mul_upd_tbb<int>, mat, Shape({k, k}), vec);
   std::cerr << "Tbb:" << count2 << std::endl;
+  auto tmp1 = mat_vec_mul<int>(mat, Shape{k, k}, vec);
+  auto tmp2 = mat_vec_mul_upd_tbb<int>(mat, Shape{k, k}, vec);
+  for (size_t i = 0; i < k; i++) {
+    if (tmp1[i] != tmp2[i]) {
+      std::cerr << tmp1[i] << std::endl << tmp2[i] << std::endl;
+    }
+  }
   // EXPECT_GE(count1, count2);
 }
 
 TEST(pooling_test, is_parallel_ok) {
-  size_t n = 500;
+  size_t n = 200;
   size_t c = 3;
   size_t h = 224;
   size_t w = 224;
@@ -51,5 +58,5 @@ TEST(pooling_test, is_parallel_ok) {
   double count2 =
       elapsed_time<double, std::milli>(test_func, p2, input, output);
   std::cerr << "Tbb:" << count2 << std::endl;
-  //EXPECT_GE(count1, count2);
+  EXPECT_GE(count1, count2);
 }

@@ -2,6 +2,13 @@
 
 namespace itlab_2023 {
 
+void split_into_blocks(std::vector<size_t>& tmp, size_t near_pow2_2) {
+  tmp[0] = 0;
+  tmp[1] = near_pow2_2;
+  tmp[2] = 2 * near_pow2_2 * near_pow2_2;
+  tmp[3] = (near_pow2_2) * (2 * near_pow2_2 + 1);
+}
+
 void FCLayer::run(const Tensor& input, Tensor& output) {
   if (input.get_type() != weights_.get_type()) {
     throw std::invalid_argument("Input and weights data type aren't same");
