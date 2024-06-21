@@ -2,8 +2,12 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 import json
 import numpy as np
+import os
 
-MODEL_PATH = 'AlexNet-model.h5'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MODEL_PATH = os.path.join(BASE_DIR, 'docs', 'AlexNet-model.h5')
+MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs', 'model_data_alexnet_1.json')
+
 
 # Загрузка модели
 model = load_model(MODEL_PATH)
@@ -11,7 +15,6 @@ model = load_model(MODEL_PATH)
 # Получение весов модели
 weights = model.get_weights()
 
-MODEL_DATA_PATH = 'model_data_alexnet_1.json'
 
 # Сохранение имен слоев и весов модели
 layer_weights = {}
