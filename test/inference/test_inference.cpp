@@ -34,5 +34,6 @@ TEST(bfs, check_result_vec) {
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res = {81, 81, 81};
+  std::vector<Tensor> tensors_ = graph.getTensors();
   ASSERT_EQ(tmp, res);
 }

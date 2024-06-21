@@ -19,6 +19,7 @@ class Graph {
   Tensor* outten_;
   int start_;
   int end_;
+  std::vector<Tensor> tensors_;
 
  public:
   Graph(int vertices) : BiggestSize_(vertices) {
@@ -91,6 +92,7 @@ class Graph {
     }
     for (int i : traversal) {
       layers_[i]->run(inten_, *outten_);
+      tensors_.push_back(*outten_);
       inten_ = *outten_;
     }
   }
@@ -98,5 +100,6 @@ class Graph {
     end_ = lay.getID();
     outten_ = &vec;
   }
+  std::vector<Tensor> getTensors() { return tensors_; }
 };
 }  // namespace itlab_2023
