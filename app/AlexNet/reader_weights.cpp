@@ -46,38 +46,26 @@ json read_json(const std::string& filename) {
   return model_data;
 }
 
-Tensor create_tensor_from_json(const json& j, const std::vector<size_t>& shape,
-                               Type type) {
+void extract_values_from_json(const json& j, std::vector<float>& values) {
+  if (j.is_array()) {
+    for (const auto& item : j) {
+      extract_values_from_json(item, values);
+    }
+  } else if (j.is_number()) {
+    values.push_back(j.get<float>());
+  } else {
+    std::cerr << "Unexpected type in JSON structure: " << j.type_name()
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+}
+
+Tensor create_tensor_from_json(const json& j, Type type) {
   if (type == Type::kFloat) {
     try {
-      if (!j.is_array()) {
-        std::cerr << "Expected JSON array, but got: " << j.type_name()
-                  << std::endl;
-        exit(EXIT_FAILURE);
-      }
-
       std::vector<float> values;
-      for (const auto& item : j) {
-        if (item.is_number()) {
-          values.push_back(item.get<float>());
-        } else if (item.is_array()) {
-          for (const auto& subitem : item) {
-            if (subitem.is_number()) {
-              values.push_back(subitem.get<float>());
-            } else {
-              std::cerr << "Unexpected type in nested array: "
-                        << subitem.type_name() << std::endl;
-              exit(EXIT_FAILURE);
-            }
-          }
-        } else {
-          std::cerr << "Unexpected type in JSON array: " << item.type_name()
-                    << std::endl;
-          exit(EXIT_FAILURE);
-        }
-      }
-
-      return make_tensor(values, Shape(shape));
+      extract_values_from_json(j, values);
+      return make_tensor(values, Shape({values.size()}));
     } catch (const json::type_error& e) {
       std::cerr << "JSON type error: " << e.what() << std::endl;
       exit(EXIT_FAILURE);
@@ -103,14 +91,7 @@ int main() {
 
     for (const auto& weight : layer.value()) {
       try {
-        if (!weight.is_array() || !weight[0].is_array()) {
-          std::cerr << "Unexpected JSON structure in layer " << layer_name
-                    << std::endl;
-          continue;
-        }
-
-        std::vector<size_t> shape = {weight.size(), weight[0].size()};
-        Tensor tensor = create_tensor_from_json(weight, shape, Type::kFloat);
+        Tensor tensor = create_tensor_from_json(weight, Type::kFloat);
         std::cout << tensor << std::endl;
       } catch (const std::exception& e) {
         std::cerr << "Error processing layer " << layer_name << ": " << e.what()
