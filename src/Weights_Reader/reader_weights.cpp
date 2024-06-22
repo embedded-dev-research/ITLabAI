@@ -6,16 +6,14 @@
 json read_json(const std::string& filename) {
   std::ifstream ifs(filename, std::ifstream::binary);
   if (!ifs.is_open()) {
-    std::cerr << "Failed to open JSON file: " << filename << std::endl;
-    exit(EXIT_FAILURE);
+    throw std::runtime_error("Failed to open JSON file: " + filename);
   }
 
   ifs.seekg(0, std::ios::end);
   size_t size = ifs.tellg();
   if (size == 0) {
-    std::cerr << "JSON file is empty: " << filename << std::endl;
     ifs.close();
-    exit(EXIT_FAILURE);
+    throw std::runtime_error("JSON file is empty: " + filename);
   }
   ifs.seekg(0, std::ios::beg);
 
@@ -27,18 +25,16 @@ json read_json(const std::string& filename) {
   try {
     model_data = json::parse(buffer.begin(), buffer.end());
   } catch (const json::parse_error& e) {
-    std::cerr << "JSON parse error: " << e.what() << std::endl;
-    exit(EXIT_FAILURE);
+    throw std::runtime_error("JSON parse error: " + std::string(e.what()));
   } catch (const std::exception& e) {
-    std::cerr << "Standard exception: " << e.what() << std::endl;
-    exit(EXIT_FAILURE);
+    throw std::runtime_error("Standard exception: " + std::string(e.what()));
   } catch (...) {
-    std::cerr << "An unknown error occurred while parsing JSON." << std::endl;
-    exit(EXIT_FAILURE);
+    throw std::runtime_error("An unknown error occurred while parsing JSON.");
   }
 
   return model_data;
 }
+
 
 void extract_values_from_json(const json& j, std::vector<float>& values) {
   if (j.is_array()) {
@@ -48,9 +44,8 @@ void extract_values_from_json(const json& j, std::vector<float>& values) {
   } else if (j.is_number()) {
     values.push_back(j.get<float>());
   } else {
-    std::cerr << "Unexpected type in JSON structure: " << j.type_name()
-              << std::endl;
-    exit(EXIT_FAILURE);
+    throw std::runtime_error("Unexpected type in JSON structure: " +
+                             std::string(j.type_name()));
   }
 }
 
@@ -61,15 +56,12 @@ Tensor create_tensor_from_json(const json& j, Type type) {
       extract_values_from_json(j, values);
       return make_tensor(values, Shape({values.size()}));
     } catch (const json::type_error& e) {
-      std::cerr << "JSON type error: " << e.what() << std::endl;
-      exit(EXIT_FAILURE);
+      throw std::runtime_error("JSON type error: " + std::string(e.what()));
     } catch (const std::exception& e) {
-      std::cerr << "Standard exception: " << e.what() << std::endl;
-      exit(EXIT_FAILURE);
+      throw std::runtime_error("Standard exception: " + std::string(e.what()));
     } catch (...) {
-      std::cerr << "An unknown error occurred while creating tensor from JSON."
-                << std::endl;
-      exit(EXIT_FAILURE);
+      throw std::runtime_error(
+          "An unknown error occurred while creating tensor from JSON.");
     }
   }
   throw std::invalid_argument("Unsupported type");
