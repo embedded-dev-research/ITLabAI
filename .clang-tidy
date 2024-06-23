@@ -14,6 +14,7 @@ Checks: >
   -modernize-concat-nested-namespaces,
   -modernize-use-nodiscard,
   -modernize-avoid-c-arrays,
+  -modernize-pass-by-value,
   -performance-move-const-arg,
   -performance-avoid-endl,
   -readability-braces-around-statements,
