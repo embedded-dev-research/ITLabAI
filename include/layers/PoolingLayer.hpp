@@ -16,7 +16,7 @@ class PoolingLayer : public Layer {
   PoolingLayer(const Shape& pooling_shape, std::string pooling_type = "average")
       : poolingShape_(pooling_shape), poolingType_(std::move(pooling_type)) {}
   static std::string get_name() { return "Pooling layer"; }
-  void run(const Tensor& input, Tensor& output);
+  void run(const Tensor& input, Tensor& output) override;
 
  private:
   Shape poolingShape_;
@@ -55,7 +55,8 @@ class PoolingLayerImpl : public LayerImpl<ValueType> {
                    const std::string& pooling_type = "average");
   PoolingLayerImpl(const PoolingLayerImpl& c) = default;
   PoolingLayerImpl& operator=(const PoolingLayerImpl& c) = default;
-  std::vector<ValueType> run(const std::vector<ValueType>& input) const;
+  std::vector<ValueType> run(
+      const std::vector<ValueType>& input) const override;
 
  private:
   Shape poolingShape_;

@@ -9,6 +9,9 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+    - name: Install prerequisites
+      run: |
+        sudo apt install clang libomp-dev
     - name: Download and extract TensorFlow
       run: |
          wget https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
@@ -27,15 +30,17 @@ jobs:
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ccache-${{ github.job }}
-    - uses: ZedThree/clang-tidy-review@v0.14.0
-      id: review
-      with:
-        apt_packages: ccache,libomp-dev,libopencv-dev
-        build_dir: build
-        cmake_command: cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DTensorFlow_INCLUDE_DIRS=$TensorFlow_INCLUDE_DIRS -DTensorFlow_LIBRARIES=$TensorFlow_LIBRARIES
-        config_file: .clang-tidy
-        exclude: 3rdparty
-        split_workflow: false
-        lgtm_comment_body: ""
-    - if: steps.review.outputs.total_comments > 0
-      run: exit 1
+    - name: Build
+      run: |
+            cmake -S . -B build \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DTensorFlow_INCLUDE_DIRS=$TensorFlow_INCLUDE_DIRS \
+            -DTensorFlow_LIBRARIES=$TensorFlow_LIBRARIES
+            cmake --build build --parallel
+    - name: Run clang-tidy
+      run: |
+        clang-tidy app/**/*.cpp src/**/*.cpp -format-style=file -header-filter=$PWD/.* -p build
