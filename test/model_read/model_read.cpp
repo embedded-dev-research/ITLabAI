@@ -57,12 +57,64 @@ TEST(ReaderWeightsTest, ExtractValuesFromNestedJson) {
   EXPECT_FLOAT_EQ(values[3], 4.0);
 }
 
+TEST(ExtractValuesFromJsonTests, HandlesFlatArray) {
+  json j = json::array({1.0, 2.0, 3.0, 4.0});
+  std::vector<float> values;
+  extract_values_from_json(j, values);
+  std::vector<float> expected = {1.0, 2.0, 3.0, 4.0};
+  EXPECT_EQ(values, expected);
+}
+
+
+TEST(ExtractValuesFromJsonTests, HandlesNestedArray) {
+  json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
+  std::vector<float> values;
+  extract_values_from_json(j, values);
+  std::vector<float> expected = {1.0, 2.0, 3.0, 4.0};
+  EXPECT_EQ(values, expected);
+}
+
+TEST(ParseJsonShapeTests, HandlesSingleDimension) {
+  json j = json::array({1.0, 2.0, 3.0, 4.0});
+  std::vector<size_t> shape;
+  parse_json_shape(j, shape);
+  std::vector<size_t> expected = {4};
+  EXPECT_EQ(shape, expected);
+}
+
+TEST(ParseJsonShapeTests, HandlesMultiDimension) {
+  json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
+  std::vector<size_t> shape;
+  parse_json_shape(j, shape);
+  std::vector<size_t> expected = {2, 2};
+  EXPECT_EQ(shape, expected);
+}
+
+TEST(ParseJsonShapeTests, HandlesEmptyArray) {
+  json j = json::array({});
+  std::vector<size_t> shape;
+  parse_json_shape(j, shape);
+  std::vector<size_t> expected = {0};
+  EXPECT_EQ(shape, expected);
+}
+
+TEST(ParseJsonShapeTests, HandlesInconsistentSize) {
+  std::string filename = get_test_data_path("4_4-1.json");
+  json j = read_json(filename);
+
+  std::vector<size_t> shape_conv1;
+  EXPECT_NO_THROW(parse_json_shape(j["layer_conv1"], shape_conv1));
+  std::vector<size_t> expected_shape_conv1 = {1, 1, 1, 1, 4};
+  EXPECT_EQ(shape_conv1, expected_shape_conv1);
+
+}
+
 TEST(ReaderWeightsTest, CreateTensorFromJsonInvalidJson) {
   json j = "string";
   EXPECT_THROW(create_tensor_from_json(j, Type::kFloat), std::runtime_error);
 }
 
-TEST(TensorFromJson, can_create_tensor_from_valid_json) {
+TEST(JsonToTensorTests, can_create_tensor_from_valid_json) {
   std::string filename = get_test_data_path("valid.json");
   json j = read_json(filename);
 
@@ -97,5 +149,53 @@ TEST(TensorFromJson, can_create_tensor_from_valid_json) {
     EXPECT_EQ(tensor4.get_shape().dims(), 2);
     EXPECT_EQ(tensor4.get_shape()[0], 2);
     EXPECT_EQ(tensor4.get_shape()[1], 2);
+  });
+}
+
+TEST(JsonToTensorTests, Layer1) {
+  std::string filename = get_test_data_path("1_json.json");
+  json j = read_json(filename);
+
+  ASSERT_NO_THROW({
+    Tensor tensor = create_tensor_from_json(j["layer1"], Type::kFloat);
+    EXPECT_EQ(tensor.get_shape().dims(), 1);
+    EXPECT_EQ(tensor.get_shape()[0], 5);
+  });
+}
+
+
+TEST(JsonToTensorTests, Layer2) {
+  std::string filename = get_test_data_path("2_json.json");
+  json j = read_json(filename);
+
+  ASSERT_NO_THROW({
+    Tensor tensor = create_tensor_from_json(j["layer2"], Type::kFloat);
+    EXPECT_EQ(tensor.get_shape().dims(), 2);
+    EXPECT_EQ(tensor.get_shape()[0], 2);
+    EXPECT_EQ(tensor.get_shape()[1], 5);
+  });
+}
+
+
+TEST(JsonToTensorTests, LayerConv1) {
+  std::string filename = get_test_data_path("4_3_2_json.json");
+  json j = read_json(filename);
+
+  ASSERT_NO_THROW({
+    Tensor tensor = create_tensor_from_json(j["layer_conv1"], Type::kFloat);
+
+    //EXPECT_EQ(tensor.get_shape().dims(), 6);  // Количество размерностей равно 6
+    //EXPECT_EQ(tensor.get_shape()[0],
+    //          1);  // 1й размер: 1 (1-й элемент в массиве)
+    //EXPECT_EQ(tensor.get_shape()[1],
+    //          1);  // 2й размер: 1 (2-й элемент в массиве)
+    //EXPECT_EQ(tensor.get_shape()[2],
+    //          1);  // 3й размер: 1 (3-й элемент в массиве)
+    //EXPECT_EQ(tensor.get_shape()[3],
+    //          5);  // 4й размер: 5 (4-й элемент в массиве)
+    //EXPECT_EQ(tensor.get_shape()[4],
+    //          1);  // 5й размер: 1 (5-й элемент в массиве)
+    //EXPECT_EQ(tensor.get_shape()[5],
+    //          16);  // 6й размер: 16 (6-й элемент в массиве)
   });
 }

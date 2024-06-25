@@ -3,21 +3,20 @@
 #include "Weights_Reader/reader_weights.hpp"
 
 int main() {
-  std::string json_file = MODEL_PATH;
+  std::string json_file =
+      MODEL_PATH;  // Замените на фактический путь к вашему JSON файлу
   json model_data = read_json(json_file);
 
   for (auto& layer : model_data.items()) {
     std::string layer_name = layer.key();
     std::cout << "Layer: " << layer_name << std::endl;
 
-    for (const auto& weight : layer.value()) {
-      try {
-        Tensor tensor = create_tensor_from_json(weight, Type::kFloat);
-        std::cout << tensor << std::endl;
-      } catch (const std::exception& e) {
-        std::cerr << "Error processing layer " << layer_name << ": " << e.what()
-                  << std::endl;
-      }
+    try {
+      Tensor tensor = create_tensor_from_json(layer.value(), Type::kFloat);
+      std::cout << tensor << std::endl;
+    } catch (const std::exception& e) {
+      std::cerr << "Error processing layer " << layer_name << ": " << e.what()
+                << std::endl;
     }
   }
 

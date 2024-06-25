@@ -41,48 +41,54 @@ void extract_values_from_json(const json& j, std::vector<float>& values) {
     for (const auto& item : j) {
       extract_values_from_json(item, values);
     }
-  } else if (j.is_number()) {
+  } else if (j.is_number_float()) {
     values.push_back(j.get<float>());
-  } else {
+  } else if (!j.is_null()) {
+    throw std::runtime_error("Unexpected type in JSON structure: " +
+                             std::string(j.type_name()));
+  }
+}
+
+
+void parse_json_shape(const json& j, std::vector<size_t>& shape,
+                      size_t dim) {
+  if (j.is_array()) {
+    if (shape.size() <= dim) {
+      shape.push_back(j.size());
+    } else if (shape[dim] != j.size()) {
+      throw std::runtime_error("Inconsistent array size at dimension " +
+                               std::to_string(dim));
+    }
+    if (!j.empty()) {
+      parse_json_shape(j.front(), shape, dim + 1);
+    }
+  } else if (!j.is_number_float() && !j.is_null()) {
     throw std::runtime_error("Unexpected type in JSON structure: " +
                              std::string(j.type_name()));
   }
 }
 
 Tensor create_tensor_from_json(const json& j, Type type) {
-  try {
+
     if (type == Type::kFloat) {
-      if (j.is_array() && j.size() > 0 && j[0].is_array()) {
-        // Если JSON представляет собой двумерный массив
-        std::vector<float> vals;
-        size_t rows = j.size();
-        size_t cols = j[0].size();
-        for (const auto& row : j) {
-          for (const auto& elem : row) {
-            vals.push_back(elem.get<float>());
-          }
-        }
-        Shape sh({rows, cols});
-        return make_tensor<float>(vals, sh);
-      } else if (j.is_array()) {
-        // Если JSON представляет собой одномерный массив
-        std::vector<float> vals = j.get<std::vector<float>>();
-        Shape sh({vals.size()});
-        return make_tensor<float>(vals, sh);
-      } else if (j.is_object()) {
-        // Если JSON представляет собой объект
-        std::vector<float> vals;
-        size_t count = 0;
-        for (auto& el : j.items()) {
-          vals.push_back(el.value().get<float>());
-          count++;
-        }
-        Shape sh({count});
-        return make_tensor<float>(vals, sh);
+      std::vector<float> vals;
+      std::vector<size_t> shape;
+
+      // Извлечение значений из JSON
+      extract_values_from_json(j, vals);
+      std::cout << "Extracted values size: " << vals.size() << std::endl;
+
+      // Определение формы тензора
+      parse_json_shape(j, shape);
+      std::cout << "Parsed shape: ";
+      for (const auto& dim : shape) {
+        std::cout << dim << " ";
       }
+      std::cout << std::endl;
+
+      Shape sh(shape);
+      return make_tensor<float>(vals, sh);
     }
     throw std::invalid_argument("Unsupported type or invalid JSON format");
-  } catch (const std::exception& e) {
-    throw std::runtime_error("Error parsing JSON: " + std::string(e.what()));
-  }
+
 }
