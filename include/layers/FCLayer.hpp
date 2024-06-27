@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include "layers/Layer.hpp"
@@ -18,9 +19,8 @@ class FCLayer : public Layer {
 
  public:
   FCLayer() = default;
-  FCLayer(const Tensor& weights, const Tensor& bias,
-          ImplType implType = kDefault)
-      : weights_(weights), bias_(bias), implType_(implType) {}
+  FCLayer(Tensor weights, const Tensor& bias, ImplType implType = kDefault)
+      : weights_(std::move(weights)), bias_(bias), implType_(implType) {}
   static std::string get_name() { return "Fully-connected layer"; }
   void run(const Tensor& input, Tensor& output) override;
 };
@@ -62,23 +62,23 @@ inline ValueType get_from(size_t i, size_t j, const std::vector<ValueType>& mat,
 template <typename ValueType>
 void m_mult(const std::vector<ValueType>& mat,
             const std::vector<ValueType>& vec, const Shape& mat_shape,
-            std::vector<ValueType>& res, size_t indX, size_t indY, size_t size,
-            size_t depth) {
+            std::vector<ValueType>& res, size_t ind_x, size_t ind_y,
+            size_t size, size_t depth) {
   if (depth > kDepth2 || size < kDepth1) {
     for (size_t i = 0; i < size; i++) {
       for (size_t j = 0; j < size; j++) {
-        if (indX + j < vec.size()) {
-          res[indY + i] +=
-              get_from(indY + i, indX + j, mat, mat_shape) * vec[indX + j];
+        if (ind_x + j < vec.size()) {
+          res[ind_y + i] +=
+              get_from(ind_y + i, ind_x + j, mat, mat_shape) * vec[ind_x + j];
         }
       }
     }
   } else {
-    std::vector<size_t> tmpX({0, size / 2, 0, size / 2});
-    std::vector<size_t> tmpY({0, 0, size / 2, size / 2});
+    std::vector<size_t> tmp_x({0, size / 2, 0, size / 2});
+    std::vector<size_t> tmp_y({0, 0, size / 2, size / 2});
     for (size_t i = 0; i < 4; i++) {
-      m_mult<ValueType>(mat, vec, mat_shape, res, indX + tmpX[i],
-                        indY + tmpY[i], size / 2, depth + 1);
+      m_mult<ValueType>(mat, vec, mat_shape, res, ind_x + tmp_x[i],
+                        ind_y + tmp_y[i], size / 2, depth + 1);
     }
   }
 }
@@ -86,38 +86,38 @@ void m_mult(const std::vector<ValueType>& mat,
 template <typename ValueType>
 void m_mult_tbb(const std::vector<ValueType>& mat,
                 const std::vector<ValueType>& vec, const Shape& mat_shape,
-                std::vector<ValueType>& res, size_t indX, size_t indY,
+                std::vector<ValueType>& res, size_t ind_x, size_t ind_y,
                 size_t size, size_t depth) {
   if (depth > kDepth2 || size < kDepth1) {
     for (size_t i = 0; i < size; i++) {
       for (size_t j = 0; j < size; j++) {
-        if (indX + j < vec.size()) {
-          res[indY + i] +=
-              get_from(indY + i, indX + j, mat, mat_shape) * vec[indX + j];
+        if (ind_x + j < vec.size()) {
+          res[ind_y + i] +=
+              get_from(ind_y + i, ind_x + j, mat, mat_shape) * vec[ind_x + j];
         }
       }
     }
   } else {
     size_t size_2 = size / 2;
-    std::vector<size_t> tmpX({0, size_2, 0, size_2});
-    std::vector<size_t> tmpY({0, 0, size_2, size_2});
+    std::vector<size_t> tmp_x({0, size_2, 0, size_2});
+    std::vector<size_t> tmp_y({0, 0, size_2, size_2});
     oneapi::tbb::task_group g;
     g.run([&]() {
-      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, indX + tmpX[0],
-                            indY + tmpY[0], size_2, depth + 1);
+      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, ind_x + tmp_x[0],
+                            ind_y + tmp_y[0], size_2, depth + 1);
     });
     g.run([&]() {
-      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, indX + tmpX[2],
-                            indY + tmpY[2], size_2, depth + 1);
+      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, ind_x + tmp_x[2],
+                            ind_y + tmp_y[2], size_2, depth + 1);
     });
     g.wait();
     g.run([&]() {
-      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, indX + tmpX[1],
-                            indY + tmpY[1], size_2, depth + 1);
+      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, ind_x + tmp_x[1],
+                            ind_y + tmp_y[1], size_2, depth + 1);
     });
     g.run([&]() {
-      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, indX + tmpX[3],
-                            indY + tmpY[3], size_2, depth + 1);
+      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, ind_x + tmp_x[3],
+                            ind_y + tmp_y[3], size_2, depth + 1);
     });
     g.wait();
   }
