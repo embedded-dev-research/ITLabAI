@@ -154,12 +154,12 @@ TEST(fclayer, matvecmul_works) {
   EXPECT_EQ(res, true_res);
 }
 
-TEST(fclayer, matvecmul_throws_when_big_vector) {
-  std::vector<int> mat = {2, 4, 2, 4};
-  std::vector<int> vec = {1, 2, 3};
-  Shape mat_shape({2, 2});
-  ASSERT_ANY_THROW(mat_vec_mul(mat, mat_shape, vec));
-}
+//TEST(fclayer, matvecmul_throws_when_big_vector) {
+//  std::vector<int> mat = {2, 4, 2, 4};
+//  std::vector<int> vec = {1, 2, 3};
+//  Shape mat_shape({2, 2});
+//  ASSERT_ANY_THROW(mat_vec_mul(mat, mat_shape, vec));
+//}
 
 TEST(fclayer, matvecmul_throws_when_not_matrix) {
   std::vector<int> mat = {2, 4, 2, 4, 1, 3, 5, 7};

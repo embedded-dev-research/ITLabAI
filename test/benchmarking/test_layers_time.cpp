@@ -13,7 +13,7 @@ void test_func(PoolingLayer& p, const Tensor& input, Tensor& output) {
 }
 
 TEST(time_test, mat_vec_mul_comp) {
-  size_t k = 5000;
+  size_t k = 7000;
   std::vector<int> mat(k * k);
   std::vector<int> vec(k);
   for (size_t i = 0; i < k; i++) {
@@ -32,7 +32,7 @@ TEST(time_test, mat_vec_mul_comp) {
   auto tmp2 = mat_vec_mul_upd_tbb<int>(mat, Shape{k, k}, vec);
   for (size_t i = 0; i < k; i++) {
     if (tmp1[i] != tmp2[i]) {
-      std::cerr << tmp1[i] << std::endl << tmp2[i] << std::endl;
+      std::cerr << tmp1[i] << ' ' << tmp2[i] << ' ' << i << std::endl;
     }
   }
   // EXPECT_GE(count1, count2);

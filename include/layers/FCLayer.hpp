@@ -7,8 +7,8 @@
 
 namespace itlab_2023 {
 
-const size_t kDepth = 64;
-void split_into_blocks(std::vector<size_t>& tmp, size_t near_pow2_2);
+const size_t kDepth1 = 128;
+const size_t kDepth2 = 5;
 
 class FCLayer : public Layer {
  private:
@@ -52,7 +52,7 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
 
 template <typename ValueType>
 inline ValueType get_from(size_t i, size_t j, const std::vector<ValueType>& mat,
-                   const Shape& mat_shape) {
+                          const Shape& mat_shape) {
   if (i < mat_shape[0] && j < mat_shape[1]) {
     return mat[i * mat_shape[1] + j];
   }
@@ -60,43 +60,67 @@ inline ValueType get_from(size_t i, size_t j, const std::vector<ValueType>& mat,
 }
 
 template <typename ValueType>
-std::vector<ValueType> m_plus(const std::vector<ValueType>& mat,
-                                     const Shape& mat_shape, size_t ind1,
-                                     size_t ind2, size_t size) {
-  std::vector<ValueType> res(size * size);
-  for (size_t i = 0; i < size; i++) {
-    for (size_t j = 0; j < size; j++) {
-      res[i * size + j] = get_from(i, j + ind1, mat, mat_shape) +
-                          get_from(i, j + ind2, mat, mat_shape);
+void m_mult(const std::vector<ValueType>& mat,
+            const std::vector<ValueType>& vec, const Shape& mat_shape,
+            std::vector<ValueType>& res, size_t indX, size_t indY, size_t size,
+            size_t depth) {
+  if (depth > kDepth2 || size < kDepth1) {
+    for (size_t i = 0; i < size; i++) {
+      for (size_t j = 0; j < size; j++) {
+        if (indX + j < vec.size()) {
+          res[indY + i] +=
+              get_from(indY + i, indX + j, mat, mat_shape) * vec[indX + j];
+        }
+      }
+    }
+  } else {
+    std::vector<size_t> tmpX({0, size / 2, 0, size / 2});
+    std::vector<size_t> tmpY({0, 0, size / 2, size / 2});
+    for (size_t i = 0; i < 4; i++) {
+      m_mult<ValueType>(mat, vec, mat_shape, res, indX + tmpX[i],
+                        indY + tmpY[i], size / 2, depth + 1);
     }
   }
-  return res;
 }
 
 template <typename ValueType>
-std::vector<ValueType> m_minus(const std::vector<ValueType>& mat,
-                                      const Shape& mat_shape, size_t ind1,
-                                      size_t ind2, size_t size) {
-  std::vector<ValueType> res(size * size);
-  for (size_t i = 0; i < size; i++) {
-    for (size_t j = 0; j < size; j++) {
-      res[i * size + j] = get_from(i, j + ind1, mat, mat_shape) -
-                          get_from(i, j + ind2, mat, mat_shape);
+void m_mult_tbb(const std::vector<ValueType>& mat,
+                const std::vector<ValueType>& vec, const Shape& mat_shape,
+                std::vector<ValueType>& res, size_t indX, size_t indY,
+                size_t size, size_t depth) {
+  if (depth > kDepth2 || size < kDepth1) {
+    for (size_t i = 0; i < size; i++) {
+      for (size_t j = 0; j < size; j++) {
+        if (indX + j < vec.size()) {
+          res[indY + i] +=
+              get_from(indY + i, indX + j, mat, mat_shape) * vec[indX + j];
+        }
+      }
     }
+  } else {
+    size_t size_2 = size / 2;
+    std::vector<size_t> tmpX({0, size_2, 0, size_2});
+    std::vector<size_t> tmpY({0, 0, size_2, size_2});
+    oneapi::tbb::task_group g;
+    g.run([&]() {
+      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, indX + tmpX[0],
+                            indY + tmpY[0], size_2, depth + 1);
+    });
+    g.run([&]() {
+      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, indX + tmpX[2],
+                            indY + tmpY[2], size_2, depth + 1);
+    });
+    g.wait();
+    g.run([&]() {
+      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, indX + tmpX[1],
+                            indY + tmpY[1], size_2, depth + 1);
+    });
+    g.run([&]() {
+      m_mult_tbb<ValueType>(mat, vec, mat_shape, res, indX + tmpX[3],
+                            indY + tmpY[3], size_2, depth + 1);
+    });
+    g.wait();
   }
-  return res;
-}
-
-template <typename ValueType>
-std::vector<ValueType> m_copy(const std::vector<ValueType>& mat,
-    const Shape& mat_shape, size_t ind1, size_t size) {
-  std::vector<ValueType> res(size * size);
-  for (size_t i = 0; i < size; i++) {
-    for (size_t j = 0; j < size; j++) {
-      res[i * size + j] = get_from(i, j + ind1, mat, mat_shape);
-    }
-  }
-  return res;
 }
 
 template <typename ValueType>
@@ -109,101 +133,13 @@ std::vector<ValueType> mat_vec_mul_upd(const std::vector<ValueType>& mat,
   if (vec.size() < mat_shape[1]) {
     throw std::invalid_argument("Invalid vector size");
   }
-  Shape res_shape(1);
-  res_shape[0] = mat_shape[0];
-  std::vector<ValueType> res;
-  if (mat_shape[0] <= kDepth && mat_shape[1] <= kDepth) {
-    return mat_vec_mul(mat, mat_shape, vec);
-  }
   size_t near_pow2 = 1;
-  std::vector<size_t> tmp(4);
   while (near_pow2 < mat_shape[0] || near_pow2 < mat_shape[1]) {
-      near_pow2 = near_pow2 << 1;
+    near_pow2 = near_pow2 << 1;
   }
-  size_t near_pow2_2 = near_pow2 / 2;
-  split_into_blocks(tmp, near_pow2_2);
-  Shape cur_shape({near_pow2_2, near_pow2_2});
-  std::vector<ValueType> vec_sec_half(vec.begin() + near_pow2_2, vec.end());
-  vec_sec_half.resize(near_pow2_2, ValueType(0));
-  std::vector<ValueType> vec2_minus_vec1(vec_sec_half.size());
-  std::transform(vec_sec_half.begin(), vec_sec_half.end(), vec.begin(),
-                 vec2_minus_vec1.begin(), std::minus<ValueType>());
-  std::vector<ValueType> d = mat_vec_mul_upd<ValueType>(
-      m_plus(mat, mat_shape, tmp[0], tmp[3], near_pow2_2), cur_shape,
-      vec);
-  std::vector<ValueType> d1 = mat_vec_mul_upd<ValueType>(
-      m_minus(mat, mat_shape, tmp[1], tmp[3], near_pow2_2), cur_shape, vec_sec_half);
-  std::vector<ValueType> d2 = mat_vec_mul_upd<ValueType>(
-      m_minus(mat, mat_shape, tmp[2], tmp[0], near_pow2_2), cur_shape, vec);
-  std::vector<ValueType> h2 = mat_vec_mul_upd<ValueType>(
-      m_plus(mat, mat_shape, tmp[2], tmp[3], near_pow2_2), cur_shape, vec);
-  std::vector<ValueType> v1 = mat_vec_mul_upd<ValueType>(
-      m_copy(mat, mat_shape, tmp[3], near_pow2_2), cur_shape, vec2_minus_vec1);
-  std::vector<ValueType> r1(near_pow2_2);
-  std::vector<ValueType> r2(near_pow2_2);
-  std::transform(d1.begin(), d1.end(), v1.begin(), d1.begin(),
-                 std::plus<ValueType>());
-  std::transform(d1.begin(), d1.end(), d.begin(), d1.begin(),
-                 std::plus<ValueType>());
-  std::transform(v1.begin(), v1.end(), h2.begin(), v1.begin(),
-                 std::plus<ValueType>());
-  res = d1;
-  for (size_t i = 0; i < res_shape[0] - d1.size(); i++) {
-      res.push_back(v1[i]);
-  }
-  return res;
-}
-
-template <typename ValueType>
-std::vector<ValueType> m_plus_tbb(const std::vector<ValueType>& mat,
-                                  const Shape& mat_shape, size_t ind1,
-                                  size_t ind2, size_t size) {
-  std::vector<ValueType> res(size * size);
-  oneapi::tbb::parallel_for(
-      oneapi::tbb::blocked_range2d<size_t>(0, size, 0, size),
-      [&](oneapi::tbb::blocked_range2d<size_t> r) {
-        for (size_t i = r.rows().begin(); i < r.rows().end(); i++) {
-          for (size_t j = r.cols().begin(); j < r.cols().end(); j++) {
-            res[i * size + j] = get_from(i, j + ind1, mat, mat_shape) +
-                                get_from(i, j + ind2, mat, mat_shape);
-          }
-        }
-      });
-  return res;
-}
-
-template <typename ValueType>
-std::vector<ValueType> m_minus_tbb(const std::vector<ValueType>& mat,
-                                   const Shape& mat_shape, size_t ind1,
-                                   size_t ind2, size_t size) {
-  std::vector<ValueType> res(size * size);
-  oneapi::tbb::parallel_for(
-      oneapi::tbb::blocked_range2d<size_t>(0, size, 0, size),
-      [&](oneapi::tbb::blocked_range2d<size_t> r) {
-        for (size_t i = r.rows().begin(); i < r.rows().end(); i++) {
-          for (size_t j = r.cols().begin(); j < r.cols().end(); j++) {
-            res[i * size + j] = get_from(i, j + ind1, mat, mat_shape) -
-                                get_from(i, j + ind2, mat, mat_shape);
-          }
-        }
-      });
-  return res;
-}
-
-template <typename ValueType>
-std::vector<ValueType> m_copy_tbb(const std::vector<ValueType>& mat,
-                              const Shape& mat_shape, size_t ind1,
-                              size_t size) {
-  std::vector<ValueType> res(size * size);
-  oneapi::tbb::parallel_for(
-      oneapi::tbb::blocked_range2d<size_t>(0, size, 0, size),
-      [&](oneapi::tbb::blocked_range2d<size_t> r) {
-        for (size_t i = r.rows().begin(); i < r.rows().end(); i++) {
-          for (size_t j = r.cols().begin(); j < r.cols().end(); j++) {
-            res[i * size + j] = get_from(i, j + ind1, mat, mat_shape);
-          }
-        }
-      });
+  std::vector<ValueType> res(near_pow2);
+  m_mult<ValueType>(mat, vec, mat_shape, res, 0, 0, near_pow2, 1);
+  res.resize(mat_shape[0]);
   return res;
 }
 
@@ -217,71 +153,13 @@ std::vector<ValueType> mat_vec_mul_upd_tbb(const std::vector<ValueType>& mat,
   if (vec.size() < mat_shape[1]) {
     throw std::invalid_argument("Invalid vector size");
   }
-  Shape res_shape(1);
-  res_shape[0] = mat_shape[0];
-  std::vector<ValueType> res;
-  if (mat_shape[0] <= kDepth && mat_shape[1] <= kDepth) {
-    return mat_vec_mul(mat, mat_shape, vec);
-  }
   size_t near_pow2 = 1;
-  std::vector<size_t> tmp(4);
   while (near_pow2 < mat_shape[0] || near_pow2 < mat_shape[1]) {
     near_pow2 = near_pow2 << 1;
   }
-  size_t near_pow2_2 = near_pow2 / 2;
-  // split_into_blocks(tmp, near_pow2_2);
-  tmp[0] = 0;
-  tmp[1] = near_pow2_2;
-  tmp[2] = 2 * near_pow2_2 * near_pow2_2;
-  tmp[3] = (near_pow2_2) * (2 * near_pow2_2 + 1);
-  Shape cur_shape({near_pow2_2, near_pow2_2});
-  std::vector<ValueType> vec_sec_half(vec.begin() + near_pow2_2, vec.end());
-  vec_sec_half.resize(near_pow2_2, ValueType(0));
-  std::vector<ValueType> vec2_minus_vec1(vec_sec_half.size());
-  std::vector<ValueType> d;
-  std::vector<ValueType> d1;
-  std::vector<ValueType> d2;
-  std::vector<ValueType> h2;
-  std::vector<ValueType> v1;
-  oneapi::tbb::task_group g;
-  g.run([&]() {
-    std::transform(vec_sec_half.begin(), vec_sec_half.end(), vec.begin(),
-                   vec2_minus_vec1.begin(), std::minus<ValueType>());
-  });
-  g.run([&]() {
-    d = mat_vec_mul<ValueType>(
-        m_plus_tbb(mat, mat_shape, tmp[0], tmp[3], near_pow2_2), cur_shape,
-        vec);
-  });
-  g.run([&]() {
-    d1 = mat_vec_mul<ValueType>(
-        m_minus_tbb(mat, mat_shape, tmp[1], tmp[3], near_pow2_2), cur_shape,
-        vec_sec_half);
-  });
-  g.run([&]() {
-    d2 = mat_vec_mul<ValueType>(
-        m_minus_tbb(mat, mat_shape, tmp[2], tmp[0], near_pow2_2), cur_shape,
-        vec);
-  });
-  g.run([&]() {
-    h2 = mat_vec_mul<ValueType>(
-        m_plus_tbb(mat, mat_shape, tmp[2], tmp[3], near_pow2_2), cur_shape,
-        vec);
-  });
-  g.wait();
-  v1 = mat_vec_mul<ValueType>(
-      m_copy_tbb(mat, mat_shape, tmp[3], near_pow2_2), cur_shape,
-      vec2_minus_vec1);
-  std::transform(d1.begin(), d1.end(), v1.begin(), d1.begin(),
-                 std::plus<ValueType>());
-  std::transform(d1.begin(), d1.end(), d.begin(), d1.begin(),
-                 std::plus<ValueType>());
-  std::transform(v1.begin(), v1.end(), h2.begin(), v1.begin(),
-                 std::plus<ValueType>());
-  res = d1;
-  for (size_t i = 0; i < res_shape[0] - d1.size(); i++) {
-    res.push_back(v1[i]);
-  }
+  std::vector<ValueType> res(near_pow2);
+  m_mult_tbb<ValueType>(mat, vec, mat_shape, res, 0, 0, near_pow2, 1);
+  res.resize(mat_shape[0]);
   return res;
 }
 
