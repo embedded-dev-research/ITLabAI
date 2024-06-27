@@ -22,7 +22,7 @@ class EWLayer : public Layer {
   EWLayer(std::string function, float alpha = 0.0F, float beta = 0.0F)
       : func_(std::move(function)), alpha_(alpha), beta_(beta) {}
   static std::string get_name() { return "Element-wise layer"; }
-  void run(const Tensor& input, Tensor& output);
+  void run(const Tensor& input, Tensor& output) override;
 
  private:
   std::string func_;
@@ -38,7 +38,8 @@ class EWLayerImpl : public LayerImpl<ValueType> {
               float beta = 0.0F);
   EWLayerImpl(const EWLayerImpl& c) = default;
   EWLayerImpl& operator=(const EWLayerImpl& c) = default;
-  std::vector<ValueType> run(const std::vector<ValueType>& input) const;
+  std::vector<ValueType> run(
+      const std::vector<ValueType>& input) const override;
 
  private:
   std::string func_;
