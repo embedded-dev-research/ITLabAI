@@ -80,7 +80,8 @@ class FCLayerImpl : public LayerImpl<ValueType> {
     }
     return bias_[i];
   }
-  std::vector<ValueType> run(const std::vector<ValueType>& input) const;
+  std::vector<ValueType> run(
+      const std::vector<ValueType>& input) const override;
 
  private:
   std::vector<ValueType> weights_;
