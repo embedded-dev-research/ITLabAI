@@ -200,3 +200,16 @@ TEST(poolinglayer, new_pooling_layer_can_run_1d_pooling_float) {
     EXPECT_NEAR((*output.as<float>())[i], true_output[i], 1e-5);
   }
 }
+
+TEST(poolinglayer, new_pooling_layer_tbb_can_run_1d_pooling_float) {
+  Shape inpshape = {8};
+  Shape poolshape = {3};
+  PoolingLayer a(poolshape, "average", itlab_2023::kTBB);
+  std::vector<float> input({9.0F, 8.0F, 7.0F, 6.0F, 5.0F, 4.0F, 3.0F, 2.0F});
+  Tensor output = make_tensor<float>({0});
+  a.run(make_tensor(input, inpshape), output);
+  std::vector<float> true_output = {8.0F, 5.0F};
+  for (size_t i = 0; i < true_output.size(); i++) {
+    EXPECT_NEAR((*output.as<float>())[i], true_output[i], 1e-5);
+  }
+}

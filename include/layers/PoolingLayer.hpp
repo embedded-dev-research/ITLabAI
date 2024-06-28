@@ -169,7 +169,8 @@ class PoolingLayerImplTBB : public PoolingLayerImpl<ValueType> {
   PoolingLayerImplTBB(const Shape& input_shape, const Shape& pooling_shape,
                       const std::string& pooling_type = "average")
       : PoolingLayerImpl<ValueType>(input_shape, pooling_shape, pooling_type) {}
-  std::vector<ValueType> run(const std::vector<ValueType>& input) const;
+  std::vector<ValueType> run(
+      const std::vector<ValueType>& input) const override;
 };
 
 template <typename ValueType>

@@ -251,7 +251,8 @@ class FCLayerImplTBB : public FCLayerImpl<ValueType> {
                  const std::vector<ValueType>& input_bias)
       : FCLayerImpl<ValueType>(input_weights, input_weights_shape, input_bias) {
   }
-  std::vector<ValueType> run(const std::vector<ValueType>& input) const;
+  std::vector<ValueType> run(
+      const std::vector<ValueType>& input) const override;
 };
 
 template <typename ValueType>
