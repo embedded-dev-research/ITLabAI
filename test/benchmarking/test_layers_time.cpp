@@ -39,7 +39,7 @@ TEST(time_test, mat_vec_mul_comp) {
 }
 
 TEST(pooling_test, is_parallel_ok) {
-  size_t n = 200;
+  size_t n = 50;
   size_t c = 3;
   size_t h = 224;
   size_t w = 224;

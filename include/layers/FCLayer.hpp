@@ -164,35 +164,6 @@ std::vector<ValueType> mat_vec_mul_upd_tbb(const std::vector<ValueType>& mat,
 }
 
 template <typename ValueType>
-std::vector<ValueType> mat_vec_mul_tbb(const std::vector<ValueType>& mat,
-                                       const Shape& mat_shape,
-                                       const std::vector<ValueType>& vec) {
-  if (mat_shape.dims() != 2) {
-    throw std::invalid_argument("Not a matrix in argument");
-  }
-  if (vec.size() < mat_shape[1]) {
-    throw std::invalid_argument("Invalid vector size");
-  }
-  Shape res_shape(1);
-  res_shape[0] = mat_shape[0];
-  std::vector<ValueType> res(res_shape[0]);
-  ValueType elem;
-  oneapi::tbb::parallel_for(
-      oneapi::tbb::blocked_range2d<size_t>(0, mat_shape[0], 0, mat_shape[1]),
-      [&](oneapi::tbb::blocked_range2d<size_t> r) {
-        for (size_t i = r.rows().begin(); i < r.rows().end(); i++) {
-          elem = ValueType(0);
-          for (size_t j = r.cols().begin(); j < r.cols().end(); j++) {
-            // due to 1d indexing
-            elem += mat[i * mat_shape[1] + j] * vec[j];
-          }
-          res[i] = elem;
-        }
-      });
-  return res;
-}
-
-template <typename ValueType>
 class FCLayerImpl : public LayerImpl<ValueType> {
  public:
   FCLayerImpl() = delete;
@@ -291,7 +262,7 @@ std::vector<ValueType> FCLayerImplTBB<ValueType>::run(
   }
   Shape cur_w_shape({this->outputShape_[0], this->inputShape_[0]});
   std::vector<ValueType> output_values =
-      mat_vec_mul_tbb(this->weights_, cur_w_shape, input);
+      mat_vec_mul_upd_tbb(this->weights_, cur_w_shape, input);
   std::transform(output_values.begin(), output_values.end(),
                  this->bias_.begin(), output_values.begin(),
                  std::plus<ValueType>());

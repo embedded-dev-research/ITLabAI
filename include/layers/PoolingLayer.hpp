@@ -224,17 +224,30 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
                           }
                         }
                       }
+                      coords = std::vector<size_t>({n, c, i, j});
                       switch (this->poolingType_) {
                         case kAverage:
-                          res[this->outputShape_.get_index(std::vector<size_t>(
-                              {n, c, i, j}))] = avg_pooling(pooling_buf);
+                          if (this->inputShape_.dims() == 1) {
+                            res[i] = avg_pooling(pooling_buf);
+                          } else {
+                            res[this->outputShape_.get_index(
+                                std::vector<size_t>(
+                                    coords.end() - this->inputShape_.dims(),
+                                    coords.end()))] = avg_pooling(pooling_buf);
+                          }
                           break;
                         case kMax:
-                          res[this->outputShape_.get_index(std::vector<size_t>(
-                              {n, c, i, j}))] = max_pooling(pooling_buf);
-                          break;
-                        default:
-                          throw std::runtime_error("Unknown pooling type");
+                          if (this->inputShape_.dims() == 1) {
+                            res[i] = max_pooling(pooling_buf);
+                          } else {
+                            res[this->outputShape_.get_index(
+                                std::vector<size_t>(
+                                    coords.end() - this->inputShape_.dims(),
+                                    coords.end()))] = max_pooling(pooling_buf);
+                            break;
+                            default:
+                              throw std::runtime_error("Unknown pooling type");
+                          }
                       }
                     }
                   }
