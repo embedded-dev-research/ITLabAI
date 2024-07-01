@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <chrono>
+#include <thread>
 
 #include "layers/Layer.hpp"
 
@@ -19,7 +21,12 @@ class Graph {
   Tensor* outten_;
   int start_;
   int end_;
+#ifdef ENABLE_STATISTIC_TENSORS
   std::vector<Tensor> tensors_;
+#endif
+#ifdef ENABLE_STATISTIC_TIME
+  std::vector<int> time_;
+#endif
 
  public:
   Graph(int vertices) : BiggestSize_(vertices) {
@@ -91,15 +98,32 @@ class Graph {
       }
     }
     for (int i : traversal) {
+#ifdef ENABLE_STATISTIC_TIME
+      auto start = std::chrono::high_resolution_clock::now();
+#endif
       layers_[i]->run(inten_, *outten_);
+#ifdef ENABLE_STATISTIC_TENSORS
+      tensors_.push_back(inten_);
       tensors_.push_back(*outten_);
+#endif
       inten_ = *outten_;
+#ifdef ENABLE_STATISTIC_TIME
+      auto end = std::chrono::high_resolution_clock::now();
+      auto elapsed =
+          std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+      time_.push_back(static_cast<int>(elapsed.count()));
+#endif
     }
   }
   void setOutput(const Layer& lay, Tensor& vec) {
     end_ = lay.getID();
     outten_ = &vec;
   }
+#ifdef ENABLE_STATISTIC_TENSORS
   std::vector<Tensor> getTensors() { return tensors_; }
+#endif
+#ifdef ENABLE_STATISTIC_TIME
+  std::vector<int> getTime() { return time_; }
+#endif
 };
 }  // namespace itlab_2023

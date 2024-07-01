@@ -36,7 +36,33 @@ TEST(bfs, check_result_vec) {
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res = {81, 81, 81};
-  std::vector<Tensor> tensors_ = graph.getTensors();
+#ifdef ENABLE_STATISTIC_TENSORS
+  std::vector<Tensor> tensors = graph.getTensors();
+  for (int i = 0; i < tensors.size(); i++) {
+    std::vector<int> ten = *tensors[i].as<int>();
+    for (int j = 0; j < ten.size(); j++) {
+      std::cout << ten[j] << ' ';
+    }
+    std::cout << '\n';
+  }
+#endif
+#ifdef ENABLE_STATISTIC_TIME
+  std::vector<int> times = graph.getTime();
+  for (int j = 0; j < times.size(); j++) {
+    std::cout << times[j] << ' ';
+  }
+    std::cout << '\n';
+#endif
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  std::vector<Tensor> tensors = graph.getTensors();
+  for (int i = 0; i < tensors.size(); i++) {
+    std::vector<int> ten = *tensors[i].as<int>();
+    for (int j = 0; j < ten.size(); j++) {
+      std::cout << ten[j] << ' ';
+    }
+    std::cout << '\n';
+  }
+#endif
   ASSERT_EQ(tmp, res);
 }
 TEST(bfs, check_end_to_end) {

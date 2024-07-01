@@ -2,6 +2,24 @@ cmake_minimum_required(VERSION 3.20)
 
 project(itlab_2023)
 
+option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
+
+if(ENABLE_STATISTIC_TENSORS)
+    add_definitions(-DENABLE_STATISTIC_TENSORS)
+endif()
+
+option(ENABLE_STATISTIC_TIME "Enable statistic time" OFF)
+
+if(ENABLE_STATISTIC_TIME)
+    add_definitions(-DENABLE_STATISTIC_TIME)
+endif()
+
+option(ENABLE_STATISTIC_WEIGHTS "Enable statistic weights" OFF)
+
+if(ENABLE_STATISTIC_WEIGHTS)
+    add_definitions(-DENABLE_STATISTIC_WEIGHTS)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 enable_testing()
