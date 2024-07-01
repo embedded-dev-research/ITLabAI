@@ -1,11 +1,11 @@
 #pragma once
 #include <algorithm>
+#include <chrono>
 #include <queue>
 #include <stdexcept>
 #include <string>
-#include <vector>
-#include <chrono>
 #include <thread>
+#include <vector>
 
 #include "layers/Layer.hpp"
 

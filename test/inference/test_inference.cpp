@@ -51,7 +51,7 @@ TEST(bfs, check_result_vec) {
   for (int j = 0; j < times.size(); j++) {
     std::cout << times[j] << ' ';
   }
-    std::cout << '\n';
+  std::cout << '\n';
 #endif
 #ifdef ENABLE_STATISTIC_WEIGHTS
   std::vector<Tensor> tensors = graph.getTensors();
