@@ -1,4 +1,4 @@
-#include <cstdint>
+﻿#include <cstdint>
 #include <iostream>
 #include <vector>
 
@@ -28,6 +28,13 @@ TEST(Tensor, can_create_float_tensor) {
   Shape sh({2, 3});
   std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
   ASSERT_NO_THROW(make_tensor<float>(vals_tensor, sh));
+}
+
+TEST(Tensor, can_create_float_tensor_with_bias) {
+  Shape sh({2, 3});
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  std::vector<float> bias = {0.5F, 1.5F, -1.0F};
+  ASSERT_NO_THROW(make_tensor<float>(vals_tensor, sh, bias));
 }
 
 TEST(Tensor, can_get_tensor_type) {
@@ -123,13 +130,13 @@ TEST(Tensor,
 TEST(Tensor, cannot_create_tensor_based_on_an_unsuitable_vector_of_values) {
   Shape sh({2, 3});
   std::vector<int> vals_tensor = {4, 0, -2, 1, 6, -3, 9, 1};
-  ASSERT_ANY_THROW(make_tensor<int>(vals_tensor, sh););
+  ASSERT_ANY_THROW(make_tensor<int>(vals_tensor, sh));
 }
 
 TEST(Tensor, cannot_create_a_tensor_with_an_invalid_type) {
   Shape sh({2, 3});
   std::vector<TestClass> vals_tensor = {4.0F, 0.3F, -2.1F, 1.9F, 6.3F, -3.0F};
-  ASSERT_ANY_THROW(make_tensor<TestClass>(vals_tensor, sh););
+  ASSERT_ANY_THROW(make_tensor<TestClass>(vals_tensor, sh));
 }
 
 TEST(Tensor, can_interpret_as_test) {
@@ -140,4 +147,50 @@ TEST(Tensor, can_interpret_as_test) {
   for (size_t i = 0; i < sh.count(); i++) {
     EXPECT_NEAR(tmp_tensor[i], vals_tensor[i], 1e-5);
   }
+}
+
+TEST(Tensor, can_set_and_get_bias) {
+  Shape sh({2, 3});
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  std::vector<float> bias = {0.5F, 1.5F, -1.0F};
+  Tensor t = make_tensor<float>(vals_tensor, sh);
+  t.set_bias(bias);
+  const std::vector<float>& retrieved_bias = t.get_bias();
+  ASSERT_EQ(retrieved_bias.size(), bias.size());
+  for (size_t i = 0; i < bias.size(); ++i) {
+    EXPECT_NEAR(retrieved_bias[i], bias[i], 1e-5);
+  }
+}
+
+TEST(Tensor, can_create_tensor_with_bias_and_get_bias) {
+  Shape sh({2, 3});
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  std::vector<float> bias = {0.5F, 1.5F, -1.0F};
+  Tensor t = make_tensor<float>(vals_tensor, sh, bias);
+  const std::vector<float>& retrieved_bias = t.get_bias();
+  ASSERT_EQ(retrieved_bias.size(), bias.size());
+  for (size_t i = 0; i < bias.size(); ++i) {
+    EXPECT_NEAR(retrieved_bias[i], bias[i], 1e-5);
+  }
+}
+
+TEST(Tensor, check_set_bias_after_creation) {
+  Shape sh({2, 3});
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  Tensor t = make_tensor<float>(vals_tensor, sh);
+  std::vector<float> new_bias = {1.0F, 0.5F, -0.5F};
+  t.set_bias(new_bias);
+  const std::vector<float>& retrieved_bias = t.get_bias();
+  ASSERT_EQ(retrieved_bias.size(), new_bias.size());
+  for (size_t i = 0; i < new_bias.size(); ++i) {
+    EXPECT_NEAR(retrieved_bias[i], new_bias[i], 1e-5);
+  }
+}
+
+TEST(Tensor, cannot_set_bias_with_incorrect_size) {
+  Shape sh({2, 3});
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  Tensor t = make_tensor<float>(vals_tensor, sh);
+  std::vector<float> incorrect_bias = {0.5F, 1.5F};  // Incorrect size
+  ASSERT_ANY_THROW(t.set_bias(incorrect_bias));
 }
