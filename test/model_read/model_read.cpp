@@ -199,3 +199,90 @@ TEST(JsonToTensorTests, LayerConv1) {
     //          16);  // 6й размер: 16 (6-й элемент в массиве)
   });
 }
+
+TEST(CRSConversionTest, SimpleMatrix) {
+  json j = {{1, 0, 0}, {0, 2, 0}, {0, 0, 3}};
+  std::vector<size_t> shape;
+  CRS crs = json_to_crs(j, shape);
+
+  ASSERT_EQ(crs.values.size(), 3);
+  EXPECT_FLOAT_EQ(crs.values[0], 1.0);
+  EXPECT_FLOAT_EQ(crs.values[1], 2.0);
+  EXPECT_FLOAT_EQ(crs.values[2], 3.0);
+
+  ASSERT_EQ(crs.col_idx.size(), 3);
+  EXPECT_EQ(crs.col_idx[0], 0);
+  EXPECT_EQ(crs.col_idx[1], 1);
+  EXPECT_EQ(crs.col_idx[2], 2);
+
+  ASSERT_EQ(crs.row_ptr.size(), 4);
+  EXPECT_EQ(crs.row_ptr[0], 0);
+  EXPECT_EQ(crs.row_ptr[1], 1);
+  EXPECT_EQ(crs.row_ptr[2], 2);
+  EXPECT_EQ(crs.row_ptr[3], 3);
+
+  Tensor tensor = create_tensor_from_crs(crs, shape);
+  auto tensor_values = tensor.as<float>();
+
+  ASSERT_EQ(tensor_values->size(), 9);
+  EXPECT_FLOAT_EQ((*tensor_values)[0], 1.0);
+  EXPECT_FLOAT_EQ((*tensor_values)[4], 2.0);
+  EXPECT_FLOAT_EQ((*tensor_values)[8], 3.0);
+  EXPECT_FLOAT_EQ((*tensor_values)[1], 0.0);
+  EXPECT_FLOAT_EQ((*tensor_values)[2], 0.0);
+}
+
+TEST(CRSConversionTest, AllZeroMatrix) {
+  json j = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+  std::vector<size_t> shape;
+  CRS crs = json_to_crs(j, shape);
+
+  ASSERT_EQ(crs.values.size(), 0);
+  ASSERT_EQ(crs.col_idx.size(), 0);
+
+  ASSERT_EQ(crs.row_ptr.size(), 4);
+  EXPECT_EQ(crs.row_ptr[0], 0);
+  EXPECT_EQ(crs.row_ptr[1], 0);
+  EXPECT_EQ(crs.row_ptr[2], 0);
+  EXPECT_EQ(crs.row_ptr[3], 0);
+
+  Tensor tensor = create_tensor_from_crs(crs, shape);
+  auto tensor_values = tensor.as<float>();
+
+  ASSERT_EQ(tensor_values->size(), 9);
+  for (const auto& val : *tensor_values) {
+    EXPECT_FLOAT_EQ(val, 0.0);
+  }
+}
+
+TEST(CRSConversionTest, RectangularMatrix) {
+  json j = {{1, 0, 2}, {0, 3, 0}};
+  std::vector<size_t> shape;
+  CRS crs = json_to_crs(j, shape);
+
+  ASSERT_EQ(crs.values.size(), 3);
+  EXPECT_FLOAT_EQ(crs.values[0], 1.0);
+  EXPECT_FLOAT_EQ(crs.values[1], 2.0);
+  EXPECT_FLOAT_EQ(crs.values[2], 3.0);
+
+  ASSERT_EQ(crs.col_idx.size(), 3);
+  EXPECT_EQ(crs.col_idx[0], 0);
+  EXPECT_EQ(crs.col_idx[1], 2);
+  EXPECT_EQ(crs.col_idx[2], 1);
+
+  ASSERT_EQ(crs.row_ptr.size(), 3);
+  EXPECT_EQ(crs.row_ptr[0], 0);
+  EXPECT_EQ(crs.row_ptr[1], 2);
+  EXPECT_EQ(crs.row_ptr[2], 3);
+
+  Tensor tensor = create_tensor_from_crs(crs, shape);
+  auto tensor_values = tensor.as<float>();
+
+  ASSERT_EQ(tensor_values->size(), 6);
+  EXPECT_FLOAT_EQ((*tensor_values)[0], 1.0);
+  EXPECT_FLOAT_EQ((*tensor_values)[2], 2.0);
+  EXPECT_FLOAT_EQ((*tensor_values)[4], 3.0);
+  EXPECT_FLOAT_EQ((*tensor_values)[1], 0.0);
+  EXPECT_FLOAT_EQ((*tensor_values)[3], 0.0);
+  EXPECT_FLOAT_EQ((*tensor_values)[5], 0.0);
+}

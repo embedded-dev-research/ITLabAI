@@ -1,10 +1,9 @@
-#include <iostream>
+п»ї#include <iostream>
 
 #include "Weights_Reader/reader_weights.hpp"
 
 int main() {
-  std::string json_file =
-      MODEL_PATH;  // Замените на фактический путь к вашему JSON файлу
+  std::string json_file = MODEL_PATH;
   json model_data = read_json(json_file);
 
   for (auto& layer : model_data.items()) {
