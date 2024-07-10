@@ -100,6 +100,14 @@ class Tensor {
 
   const std::vector<float>& get_bias() const { return bias_; }
 
+  size_t size() const {
+    size_t total_size = 1;
+    for (size_t i = 0; i < shape_.dims(); ++i) {
+      total_size *= shape_[i];
+    }
+    return total_size;
+  }
+
   template <typename T>
   typename std::vector<T>::const_iterator begin() const {
     return this->as<T>().begin();

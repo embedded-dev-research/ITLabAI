@@ -13,16 +13,19 @@ class ConvolutionalLayer : public Layer {
   size_t pads_;
   size_t dilations_;
   Tensor kernel_;
+  Tensor bias_;  // Добавлен bias
 
  public:
   ConvolutionalLayer() = default;
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
-                     const Tensor& kernel) {
-    stride_ = step;
-    pads_ = pads;
-    dilations_ = dilations;
-    kernel_ = kernel;
-  }
+                     const Tensor& kernel,
+                     const Tensor& bias = Tensor())  // bias по умолчанию
+      : stride_(step),
+        pads_(pads),
+        dilations_(dilations),
+        kernel_(kernel),
+        bias_(bias) {}
+
   void run(const Tensor& input, Tensor& output) override;
 };
 
@@ -36,23 +39,29 @@ class ConvImpl : public LayerImpl<ValueType> {
   size_t pads_;
   size_t dilations_;
   size_t input_size_;
+  std::vector<ValueType> bias_;  // Добавлен bias
 
  public:
   ConvImpl() = delete;
   ConvImpl(size_t stride, size_t pads, size_t dilations, int input_width,
-           int input_height, int input_flow, size_t input_size)
+           int input_height, int input_flow, size_t input_size,
+           const std::vector<ValueType>& bias)
       : input_width_(input_width),
         input_height_(input_height),
         input_flow_(input_flow),
         stride_(stride),
         pads_(pads),
         dilations_(dilations),
-        input_size_(input_size) {}
+        input_size_(input_size),
+        bias_(bias) {}
+
   ConvImpl(const ConvImpl& c) = default;
+
   std::vector<ValueType> run(
       const std::vector<ValueType>& input) const override {
     return input;
   }
+
   std::vector<ValueType> run(std::vector<ValueType> startmatrix, int new_rows,
                              int new_cols, std::vector<ValueType> startkernel,
                              size_t start_kernel_size, size_t kernel_size,
@@ -93,6 +102,9 @@ class ConvImpl : public LayerImpl<ValueType> {
                 kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
           }
         }
+        if (!bias_.empty()) {  // Добавлен bias
+          color += bias_[x];
+        }
         outputvec.push_back(color);
       }
       if ((i + center_distance + 1) % input_width_ == 0) {
@@ -108,4 +120,5 @@ class ConvImpl : public LayerImpl<ValueType> {
     return outputvec;
   }
 };
+
 }  // namespace itlab_2023
