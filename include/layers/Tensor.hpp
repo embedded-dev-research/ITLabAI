@@ -185,6 +185,14 @@ Tensor make_tensor(const std::vector<T>& values, const Shape& shape,
       reinterpret_cast<const uint8_t*>(values.data() + values.size()));
   return Tensor(byte_values, shape, bias);
 }
+
+template <typename T>
+Tensor make_tensor(const std::vector<T>& bias) {
+  Shape shape({bias.size()});
+  std::vector<uint8_t> empty_values;
+  return Tensor(empty_values, shape, bias);
+}
+
 std::ostream& operator<<(std::ostream& out, const Tensor& t);
 
 }  // namespace itlab_2023
