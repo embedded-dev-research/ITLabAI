@@ -13,13 +13,13 @@ class ConvolutionalLayer : public Layer {
   size_t pads_;
   size_t dilations_;
   Tensor kernel_;
-  Tensor bias_;  // Добавлен bias
+  Tensor bias_;
 
  public:
   ConvolutionalLayer() = default;
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
                      const Tensor& kernel,
-                     const Tensor& bias = Tensor())  // bias по умолчанию
+                     const Tensor& bias = Tensor())
       : stride_(step),
         pads_(pads),
         dilations_(dilations),
@@ -39,7 +39,7 @@ class ConvImpl : public LayerImpl<ValueType> {
   size_t pads_;
   size_t dilations_;
   size_t input_size_;
-  std::vector<ValueType> bias_;  // Добавлен bias
+  std::vector<ValueType> bias_;
 
  public:
   ConvImpl() = delete;
@@ -102,7 +102,7 @@ class ConvImpl : public LayerImpl<ValueType> {
                 kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
           }
         }
-        if (!bias_.empty()) {  // Добавлен bias
+        if (!bias_.empty()) {
           color += bias_[x];
         }
         outputvec.push_back(color);

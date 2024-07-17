@@ -14,16 +14,6 @@ std::ostream& operator<<(std::ostream& out, const Tensor& t) {
       if ((i + 1) % t.get_shape()[1] == 0) out << std::endl;
     }
   }
-
-  if (!t.get_bias().empty()) {
-    out << "Bias: ";
-    for (const auto& b : t.get_bias()) {
-      out << b << " ";
-    }
-    out << std::endl;
-  }
-
   return out;
 }
-
 }  // namespace itlab_2023

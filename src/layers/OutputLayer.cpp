@@ -63,13 +63,11 @@ std::pair<std::vector<std::string>, std::vector<ValueType>> top_k_vec(
   if (k > input.size()) {
     throw std::invalid_argument("K cannot be bigger than input size");
   }
-  // sort values in descending order
   std::vector<std::pair<std::string, ValueType>> sort_buf(input.size());
   for (size_t i = 0; i < input.size(); i++) {
     sort_buf[i] = std::make_pair(labels[i], input[i]);
   }
   std::sort(sort_buf.begin(), sort_buf.end(), compare_pair<ValueType>);
-  // split vector of pairs to pairs of vectors
   std::vector<std::string> res_labels(k);
   std::vector<ValueType> res_input(k);
   for (size_t i = 0; i < k; i++) {

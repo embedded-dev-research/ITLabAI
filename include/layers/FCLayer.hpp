@@ -108,9 +108,7 @@ FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
   if (this->inputShape_[0] == 0 || this->outputShape_[0] == 0) {
     throw std::invalid_argument("Invalid weights/bias size for FCLayer");
   }
-  // make weights isize x osize, filling empty with 0s
   weights_.resize(input_weights_shape.count(), ValueType(0));
-  //
 }
 
 template <typename ValueType>

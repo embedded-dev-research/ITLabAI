@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
@@ -75,7 +77,7 @@ class Tensor {
       throw std::invalid_argument(
           "Bias size does not match the second dimension of the shape");
     }
-    type_ = Type::kFloat;  // Assuming bias is applicable only for float type
+    type_ = Type::kFloat;
   }
 
   Tensor(const Shape& sh, const std::vector<float>& bias)
@@ -85,7 +87,7 @@ class Tensor {
       throw std::invalid_argument(
           "Bias size does not match the second dimension of the shape");
     }
-    type_ = Type::kFloat;  // Assuming bias is applicable only for float type
+    type_ = Type::kFloat;
   }
 
   Tensor(const Tensor& t) = default;
