@@ -28,7 +28,7 @@ class Graph {
   std::vector<int> time_;
 #endif
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  std::vector<Tensor> weights_; 
+  std::vector<Tensor> weights_;
 #endif
 
  public:
