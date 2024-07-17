@@ -191,6 +191,6 @@ TEST(Tensor, cannot_set_bias_with_incorrect_size) {
   Shape sh({2, 3});
   std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
   Tensor t = make_tensor<float>(vals_tensor, sh);
-  std::vector<float> incorrect_bias = {0.5F, 1.5F};  // Incorrect size
+  std::vector<float> incorrect_bias = {0.5F, 1.5F};
   ASSERT_ANY_THROW(t.set_bias(incorrect_bias));
 }

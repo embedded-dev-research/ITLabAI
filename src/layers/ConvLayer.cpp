@@ -12,11 +12,11 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
           static_cast<int>(input.get_shape()[input.get_shape().dims() - 3]),
           input.get_shape()[input.get_shape().dims() - 1] *
               input.get_shape()[input.get_shape().dims() - 2],
-          bias_.size() > 0 ? *bias_.as<int>()
-                           : std::vector<int>());  // Добавлен bias
+          bias_.empty() ? std::vector<int>()
+                        : std::vector<int>(bias_.begin(), bias_.end()));
 
       if (input.get_shape().dims() != 4) {
-        throw std::out_of_range("Input = 0");
+        throw std::out_of_range("Input must be 4-dimensional");
       }
 
       auto sizeforshape = static_cast<size_t>(
@@ -60,11 +60,11 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
           static_cast<int>(input.get_shape()[input.get_shape().dims() - 3]),
           input.get_shape()[input.get_shape().dims() - 1] *
               input.get_shape()[input.get_shape().dims() - 2],
-          bias_.size() > 0 ? *bias_.as<float>()
-                           : std::vector<float>());  // Добавлен bias
+          bias_.empty() ? std::vector<float>()
+                        : std::vector<float>(bias_.begin(), bias_.end()));
 
       if (input.get_shape().dims() != 4) {
-        throw std::out_of_range("Input = 0");
+        throw std::out_of_range("Input must be 4-dimensional");
       }
 
       auto sizeforshape = static_cast<size_t>(
@@ -101,8 +101,9 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
       break;
     }
     default: {
-      throw std::runtime_error("No such type");
+      throw std::runtime_error("Unsupported tensor type");
     }
   }
 }
+
 }  // namespace itlab_2023

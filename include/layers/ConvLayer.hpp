@@ -18,13 +18,13 @@ class ConvolutionalLayer : public Layer {
  public:
   ConvolutionalLayer() = default;
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
-                     const Tensor& kernel,
-                     const Tensor& bias = Tensor())
-      : stride_(step),
-        pads_(pads),
-        dilations_(dilations),
-        kernel_(kernel),
-        bias_(bias) {}
+                     const Tensor& kernel, const Tensor& bias = Tensor()) {
+    stride_ = step;
+    pads_ = pads;
+    dilations_ = dilations;
+    kernel_ = kernel;
+    bias_ = bias;
+  }
 
   void run(const Tensor& input, Tensor& output) override;
 };
