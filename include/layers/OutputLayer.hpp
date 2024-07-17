@@ -15,6 +15,13 @@ class OutputLayer : public Layer {
   std::vector<std::string> get_labels() const { return labels_; }
   std::pair<std::vector<std::string>, Tensor> top_k(const Tensor& input,
                                                     size_t k) const;
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override {
+    std::vector<int> v = {0};
+    Tensor a = make_tensor(v);
+    return a;
+  }
+#endif
 
  private:
   std::vector<std::string> labels_;

@@ -27,6 +27,9 @@ class Graph {
 #ifdef ENABLE_STATISTIC_TIME
   std::vector<int> time_;
 #endif
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  std::vector<Tensor> weights_; 
+#endif
 
  public:
   Graph(int vertices) : BiggestSize_(vertices) {
@@ -106,6 +109,9 @@ class Graph {
       tensors_.push_back(inten_);
       tensors_.push_back(*outten_);
 #endif
+#ifdef ENABLE_STATISTIC_WEIGHTS
+      weights_.push_back(layers_[i]->get_weights());
+#endif
       inten_ = *outten_;
 #ifdef ENABLE_STATISTIC_TIME
       auto end = std::chrono::high_resolution_clock::now();
@@ -124,6 +130,9 @@ class Graph {
 #endif
 #ifdef ENABLE_STATISTIC_TIME
   std::vector<int> getTime() { return time_; }
+#endif
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  std::vector<Tensor> getWEIGHTS() { return weights_; }
 #endif
 };
 }  // namespace itlab_2023

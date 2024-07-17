@@ -54,13 +54,26 @@ TEST(bfs, check_result_vec) {
   std::cout << '\n';
 #endif
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  std::vector<Tensor> tensors = graph.getTensors();
-  for (int i = 0; i < tensors.size(); i++) {
-    std::vector<int> ten = *tensors[i].as<int>();
-    for (int j = 0; j < ten.size(); j++) {
-      std::cout << ten[j] << ' ';
+  std::vector<Tensor> weights = graph.getWEIGHTS();
+  for (int i = 0; i < weights.size(); i++) {
+    switch (weights[i].get_type()) {
+      case Type::kInt: {
+        std::vector<int> ten = *weights[i].as<int>();
+        for (int j = 0; j < ten.size(); j++) {
+          std::cout << ten[j] << ' ';
+        }
+        std::cout << '\n';
+        break;
+      }
+      case Type::kFloat: {
+        std::vector<float> ten = *weights[i].as<float>();
+        for (int j = 0; j < ten.size(); j++) {
+          std::cout << ten[j] << ' ';
+        }
+        std::cout << '\n';
+        break;
+      }
     }
-    std::cout << '\n';
   }
 #endif
   ASSERT_EQ(tmp, res);
@@ -93,6 +106,29 @@ TEST(bfs, check_end_to_end) {
   graph.makeConnection(a5, a6);
   graph.setOutput(a5, output);
   graph.inference();
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  std::vector<Tensor> weights = graph.getWEIGHTS();
+  for (int i = 0; i < weights.size(); i++) {
+    switch (weights[i].get_type()) {
+      case Type::kInt: {
+        std::vector<int> ten = *weights[i].as<int>();
+        for (int j = 0; j < ten.size(); j++) {
+          std::cout << ten[j] << ' ';
+        }
+        std::cout << '\n';
+        break;
+      }
+      case Type::kFloat: {
+        std::vector<float> ten = *weights[i].as<float>();
+        for (int j = 0; j < ten.size(); j++) {
+          std::cout << ten[j] << ' ';
+        }
+        std::cout << '\n';
+        break;
+      }
+    }
+  }
+#endif
   std::vector<float> tmp = *output.as<float>();
   std::vector<float> tmp_output = softmax<float>(*output.as<float>());
   std::vector<float> res(3, 21);
