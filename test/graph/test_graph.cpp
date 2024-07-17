@@ -14,7 +14,6 @@ TEST(graph, check_connection) {
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
   Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
   Tensor output;
-  
   Graph graph(5);
   FCLayer fcLayer(weights, bias);
   InputLayer inputLayer;

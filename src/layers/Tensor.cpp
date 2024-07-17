@@ -2,7 +2,7 @@
 
 namespace itlab_2023 {
 
-    std::vector<uint8_t> SetRightTypeValues(Type type, size_t count) {
+std::vector<uint8_t> SetRightTypeValues(Type type, size_t count) {
   if (type == Type::kInt) {
     return std::vector<uint8_t>(count * sizeof(int), 0);
   }

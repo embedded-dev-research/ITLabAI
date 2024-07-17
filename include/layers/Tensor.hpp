@@ -97,7 +97,6 @@ class Tensor {
     bias_ = bias;
   }
 
-
   const std::vector<float>& get_bias() const { return bias_; }
 
   bool empty() const { return values_.empty(); }
@@ -212,4 +211,3 @@ Tensor make_tensor(const std::vector<T>& values, const Shape& shape,
 std::ostream& operator<<(std::ostream& out, const Tensor& t);
 
 }  // namespace itlab_2023
-
