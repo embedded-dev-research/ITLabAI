@@ -194,3 +194,35 @@ TEST(Tensor, cannot_set_bias_with_incorrect_size) {
   std::vector<float> incorrect_bias = {0.5F, 1.5F};
   ASSERT_ANY_THROW(t.set_bias(incorrect_bias));
 }
+
+TEST(Tensor, can_create_multidimensional_tensor) {
+  Shape sh({2, 3, 2});  // 3D tensor shape
+  std::vector<int> vals_tensor = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  ASSERT_NO_THROW(make_tensor<int>(vals_tensor, sh));
+}
+
+TEST(Tensor, check_get_element_from_multidimensional_tensor) {
+  Shape sh({2, 3, 2});  // 3D tensor shape
+  std::vector<int> vals_tensor = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  Tensor t = make_tensor<int>(vals_tensor, sh);
+  EXPECT_EQ(t.get<int>({1, 2, 1}), 12);
+}
+
+TEST(Tensor, cannot_get_element_with_invalid_coordinates) {
+  Shape sh({2, 3, 2});  // 3D tensor shape
+  std::vector<int> vals_tensor = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  Tensor t = make_tensor<int>(vals_tensor, sh);
+  ASSERT_ANY_THROW(t.get<int>({2, 3, 1}));
+}
+TEST(Tensor, cannot_create_tensor_with_incorrect_shape) {
+  Shape sh({2, 3});
+  std::vector<float> vals_tensor = {1.0F, 2.0F, 3.0F, 4.0F,
+                                    5.0F};  // Incorrect size
+  ASSERT_ANY_THROW(make_tensor<float>(vals_tensor, sh));
+}
+
+TEST(Tensor, cannot_create_tensor_with_unknown_type) {
+  std::vector<char> vals_tensor = {'a', 'b', 'c'};
+  Shape sh({3});
+  ASSERT_ANY_THROW(make_tensor<char>(vals_tensor, sh));
+}
