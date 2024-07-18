@@ -89,7 +89,7 @@ class Tensor {
   Shape get_shape() const { return shape_; }
   Type get_type() const noexcept { return type_; }
 
-  void Tensor::set_bias(const std::vector<float>& bias) {
+  void set_bias(const std::vector<float>& bias) {
     if (bias.size() != shape_[1]) {
       throw std::invalid_argument(
           "Bias size does not match the second dimension of the shape");
