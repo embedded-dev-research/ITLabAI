@@ -20,6 +20,9 @@ class FCLayer : public Layer {
   }
   static std::string get_name() { return "Fully-connected layer"; }
   void run(const Tensor& input, Tensor& output) override;
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override { return weights_; }
+#endif
 };
 
 template <typename ValueType>
