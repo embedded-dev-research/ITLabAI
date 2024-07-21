@@ -226,3 +226,28 @@ TEST(Tensor, cannot_create_tensor_with_unknown_type) {
   Shape sh({3});
   ASSERT_ANY_THROW(make_tensor<char>(vals_tensor, sh));
 }
+
+TEST(TensorTest, EmptyTensor) {
+  Tensor tensor;
+  EXPECT_TRUE(tensor.empty());
+}
+
+TEST(TensorTest, NonEmptyTensor) {
+  Shape sh({2, 3});
+  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
+  const Tensor tensor = make_tensor(vals_tensor, sh);
+
+  EXPECT_FALSE(tensor.empty());
+}
+
+TEST(TensorTest, TensorWithBias) {
+  Shape shape({2, 3});
+  std::vector<float> values = {1, 2, 3, 4, 5, 6};
+  std::vector<float> bias = {1, 2, 3};
+  Tensor tensor = make_tensor(values, shape, bias);
+
+  EXPECT_EQ(tensor.get_bias().size(), 3);
+  EXPECT_EQ(tensor.get_bias()[0], 1);
+  EXPECT_EQ(tensor.get_bias()[1], 2);
+  EXPECT_EQ(tensor.get_bias()[2], 3);
+}

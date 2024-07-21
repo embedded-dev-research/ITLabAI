@@ -39,47 +39,55 @@ class Tensor {
   std::vector<float> bias_;
   Type type_;
 
-  std::vector<uint8_t> SetRightTypeValues();
+  std::vector<uint8_t> SetRightTypeValues() {
+    if (type_ == Type::kInt) {
+      return std::vector<uint8_t>(shape_.count() * sizeof(int), 0);
+    }
+    if (type_ == Type::kFloat) {
+      return std::vector<uint8_t>(shape_.count() * sizeof(float), 0);
+    }
+    return std::vector<uint8_t>();
+  }
 
  public:
   Tensor() = default;
 
   Tensor(const std::vector<uint8_t>& a, const Shape& sh, Type type)
       : shape_(sh), type_(type) {
-    values_ = SetRightTypeValues();
-    if (a.size() != values_.size()) {
-      throw std::invalid_argument("Incorrect vector size given to Tensor");
-    }
     if (type == Type::kUnknown) {
       throw std::invalid_argument("Unknown data type");
     }
+
+    values_ = SetRightTypeValues();
+
+    if (a.size() != values_.size()) {
+      throw std::invalid_argument("Incorrect vector size given to Tensor");
+    }
+
     values_ = a;
   }
 
   Tensor(const Shape& sh, Type type) : shape_(sh), type_(type) {
+    if (type == Type::kUnknown) {
+      throw std::invalid_argument("Unknown data type");
+    }
+
     values_ = SetRightTypeValues();
   }
 
   Tensor(const std::vector<uint8_t>& a, const Shape& sh,
          const std::vector<float>& bias)
       : shape_(sh), values_(a), bias_(bias), type_(Type::kFloat) {
-    if (a.size() != SetRightTypeValues().size()) {
+    values_ = SetRightTypeValues();
+    if (a.size() != values_.size()) {
       throw std::invalid_argument("Incorrect vector size given to Tensor");
     }
-    if (bias.size() != shape_[1]) {
+    if (bias.size() != shape_[shape_.dims() - 1]) {
       throw std::invalid_argument(
-          "Bias size does not match the second dimension of the shape");
+          "Bias size does not match the last dimension of the shape");
     }
   }
-  Tensor(const Shape& sh, const std::vector<float>& bias)
-      : shape_(sh), bias_(bias) {
-    values_ = SetRightTypeValues();
-    if (bias.size() != shape_[1]) {
-      throw std::invalid_argument(
-          "Bias size does not match the second dimension of the shape");
-    }
-    type_ = Type::kFloat;
-  }
+
 
   Tensor(const Tensor& t) = default;
   Tensor(Tensor&& t) = default;
@@ -89,10 +97,10 @@ class Tensor {
   Shape get_shape() const { return shape_; }
   Type get_type() const noexcept { return type_; }
 
-  void set_bias(const std::vector<float>& bias) {
-    if (bias.size() != shape_[1]) {
+   void set_bias(const std::vector<float>& bias) {
+    if (bias.size() != shape_[shape_.dims() - 1]) {
       throw std::invalid_argument(
-          "Bias size does not match the second dimension of the shape");
+          "Bias size does not match the last dimension of the shape");
     }
     bias_ = bias;
   }
@@ -108,13 +116,7 @@ class Tensor {
 
   auto end() const { return values_.end(); }
 
-  size_t size() const {
-    size_t total_size = 1;
-    for (size_t i = 0; i < shape_.dims(); ++i) {
-      total_size *= shape_[i];
-    }
-    return total_size;
-  }
+
 
   template <typename T>
   typename std::vector<T>::const_iterator begin() const {

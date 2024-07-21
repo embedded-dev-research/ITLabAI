@@ -12,16 +12,6 @@ std::vector<uint8_t> SetRightTypeValues(Type type, size_t count) {
   return std::vector<uint8_t>();
 }
 
-std::vector<uint8_t> Tensor::SetRightTypeValues() {
-  if (type_ == Type::kInt) {
-    return std::vector<uint8_t>(shape_.count() * sizeof(int), 0);
-  }
-  if (type_ == Type::kFloat) {
-    return std::vector<uint8_t>(shape_.count() * sizeof(float), 0);
-  }
-  return std::vector<uint8_t>();
-}
-
 std::ostream& operator<<(std::ostream& out, const Tensor& t) {
   for (size_t i = 0; i < t.get_shape().count(); i++) {
     out.width(5);

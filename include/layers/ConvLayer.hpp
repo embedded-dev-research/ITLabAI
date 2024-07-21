@@ -69,40 +69,40 @@ class ConvImpl : public LayerImpl<ValueType> {
     std::vector<ValueType> matrix(new_rows * new_cols * input_flow_, 0);
     for (int i = 0; i < input_height_; ++i) {
       for (int j = 0; j < input_width_; ++j) {
-        matrix[((i + pads_) * new_cols + j + pads_) * input_flow_] =
-            startmatrix[(i * input_width_ + j) * input_flow_];
-        matrix[((i + pads_) * new_cols + j + pads_) * input_flow_ + 1] =
-            startmatrix[(i * input_width_ + j) * input_flow_ + 1];
-        matrix[((i + pads_) * new_cols + j + pads_) * input_flow_ + 2] =
-            startmatrix[(i * input_width_ + j) * input_flow_ + 2];
+        for (int f = 0; f < input_flow_; ++f) {
+          matrix[((i + pads_) * new_cols + j + pads_) * input_flow_ + f] =
+              startmatrix[(i * input_width_ + j) * input_flow_ + f];
+        }
       }
     }
+
     std::vector<ValueType> kernel(kernel_size * kernel_size, 0);
-    for (int i = 0; i < static_cast<int>(start_kernel_size); i++) {
-      for (int j = 0; j < static_cast<int>(start_kernel_size); j++) {
+    for (int i = 0; i < static_cast<int>(start_kernel_size); ++i) {
+      for (int j = 0; j < static_cast<int>(start_kernel_size); ++j) {
         kernel[(dilations_ + i) * static_cast<int>(kernel_size) + j +
                (j + 1) * dilations_] =
             startkernel[i * static_cast<int>(start_kernel_size) + j];
       }
     }
+
     std::vector<ValueType> outputvec;
     for (int i = input_width_ + center_distance;
          i < static_cast<int>(input_size_); i += static_cast<int>(stride_)) {
-      for (int x = 0; x < 3; x++) {
+      for (int x = 0; x < input_flow_; ++x) {
         ValueType color = 0;
         for (int coloms = -input_width_; coloms < input_width_ + 1;
              coloms += input_width_) {
-          for (int str = -1; str < 2; str++) {
+          for (int str = -1; str < 2; ++str) {
             if (input_width_ == 0) {
               throw std::out_of_range("Input = 0");
             }
             auto kercol = static_cast<size_t>(coloms / input_width_ + 1);
             color +=
-                matrix[(i + coloms + str) * 3 + x] *
+                matrix[(i + coloms + str) * input_flow_ + x] *
                 kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
           }
         }
-        if (!bias_.empty()) {
+        if (!bias_.empty() && x < bias_.size()) {
           color += bias_[x];
         }
         outputvec.push_back(color);
@@ -120,5 +120,6 @@ class ConvImpl : public LayerImpl<ValueType> {
     return outputvec;
   }
 };
+
 
 }  // namespace itlab_2023
