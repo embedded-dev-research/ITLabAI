@@ -102,7 +102,7 @@ class ConvImpl : public LayerImpl<ValueType> {
                 kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
           }
         }
-        if (!bias_.empty() && x < bias_.size()) {
+        if (!bias_.empty() && static_cast<size_t>(x) < bias_.size()) {
           color += bias_[x];
         }
         outputvec.push_back(color);
