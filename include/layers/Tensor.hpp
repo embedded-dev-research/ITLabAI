@@ -88,7 +88,6 @@ class Tensor {
     }
   }
 
-
   Tensor(const Tensor& t) = default;
   Tensor(Tensor&& t) = default;
   Tensor& operator=(Tensor&& t) = default;
@@ -97,7 +96,7 @@ class Tensor {
   Shape get_shape() const { return shape_; }
   Type get_type() const noexcept { return type_; }
 
-   void set_bias(const std::vector<float>& bias) {
+  void set_bias(const std::vector<float>& bias) {
     if (bias.size() != shape_[shape_.dims() - 1]) {
       throw std::invalid_argument(
           "Bias size does not match the last dimension of the shape");
@@ -115,8 +114,6 @@ class Tensor {
   auto begin() const { return values_.begin(); }
 
   auto end() const { return values_.end(); }
-
-
 
   template <typename T>
   typename std::vector<T>::const_iterator begin() const {

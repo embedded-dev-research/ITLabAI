@@ -121,5 +121,4 @@ class ConvImpl : public LayerImpl<ValueType> {
   }
 };
 
-
 }  // namespace itlab_2023
