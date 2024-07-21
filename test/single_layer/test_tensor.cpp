@@ -251,3 +251,18 @@ TEST(TensorTest, TensorWithBias) {
   EXPECT_EQ(tensor.get_bias()[1], 2);
   EXPECT_EQ(tensor.get_bias()[2], 3);
 }
+
+TEST(TensorTest, CorrectBiasSize) {
+  Shape shape({2, 3});
+  std::vector<float> values = {1, 2, 3, 4, 5, 6};
+  std::vector<float> correct_bias = {1, 2, 3};
+  EXPECT_NO_THROW(Tensor tensor = make_tensor(values, shape, correct_bias));
+}
+
+TEST(TensorTest, IncorrectBiasSize) {
+  Shape shape({2, 3});
+  std::vector<float> values = {1, 2, 3, 4, 5, 6};
+  std::vector<float> incorrect_bias = {1.0f, 2.0f};
+  EXPECT_THROW(Tensor tensor = make_tensor(values, shape, incorrect_bias),
+               std::invalid_argument);
+}
