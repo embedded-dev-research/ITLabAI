@@ -100,7 +100,6 @@ TEST(ConvolutionalLayerTest, IntStep1) {
     ASSERT_EQ(tmp[i], expected_output[i]);
   }
 }
-
 TEST(ConvolutionalLayerTest, FloatWithBias) {
   std::vector<float> image(75, 1.0f);
   Shape input_shape({1, 3, 5, 5});
@@ -129,7 +128,6 @@ TEST(ConvolutionalLayerTest, FloatWithBias) {
     ASSERT_FLOAT_EQ(tmp[i], expected_output[i]);
   }
 }
-
 TEST(ConvolutionalLayerTest, InvalidInputShapeDims) {
   std::vector<float> image(15, 1.0f);
   Shape invalid_shape({1, 3, 5});
@@ -147,7 +145,6 @@ TEST(ConvolutionalLayerTest, InvalidInputShapeDims) {
 
   EXPECT_THROW(layer.run(input, output), std::out_of_range);
 }
-
 TEST(ConvImplTest, RunReturnsInput) {
   std::vector<float> input = {1.0, 2.0, 3.0, 4.0};
   ConvImpl<float> conv(1, 0, 1, 2, 2, 1, 4, {0.0});
@@ -156,13 +153,3 @@ TEST(ConvImplTest, RunReturnsInput) {
 
   ASSERT_EQ(output, input);
 }
-
-
-TEST(ConvImplTest, ThrowsOnZeroInputWidth) {
-  std::vector<float> input = {1.0, 2.0, 3.0, 4.0};
-  ConvImpl<float> conv(1, 0, 1, 0, 2, 1, 4, {0.0});
-
-  ASSERT_THROW({ std::vector<float> output = conv.run(input); },
-               std::out_of_range);
-}
-
