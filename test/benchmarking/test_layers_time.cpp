@@ -24,18 +24,14 @@ TEST(time_test, mat_vec_mul_comp) {
   }
   double count1 = elapsed_time_avg<double, std::milli>(10, mat_vec_mul<int>,
                                                        mat, Shape({k, k}), vec);
-  std::cerr << "Normal:" << count1 << std::endl;
   double count2 = elapsed_time_avg<double, std::milli>(
       10, mat_vec_mul_upd_tbb<int>, mat, Shape({k, k}), vec);
-  std::cerr << "Tbb:" << count2 << std::endl;
   auto tmp1 = mat_vec_mul<int>(mat, Shape{k, k}, vec);
   auto tmp2 = mat_vec_mul_upd_tbb<int>(mat, Shape{k, k}, vec);
   for (size_t i = 0; i < k; i++) {
-    if (tmp1[i] != tmp2[i]) {
-      std::cerr << tmp1[i] << ' ' << tmp2[i] << ' ' << i << std::endl;
-    }
+    EXPECT_EQ(tmp1[i], tmp2[i]);
   }
-  // EXPECT_GE(count1, count2);
+  EXPECT_GE(count1, count2);
 }
 
 TEST(pooling_test, is_parallel_ok) {
@@ -54,9 +50,7 @@ TEST(pooling_test, is_parallel_ok) {
   PoolingLayer p2(Shape({2, 2}), "max", kTBB);
   double count1 =
       elapsed_time<double, std::milli>(test_func, p1, input, output);
-  std::cerr << "Normal:" << count1 << std::endl;
   double count2 =
       elapsed_time<double, std::milli>(test_func, p2, input, output);
-  std::cerr << "Tbb:" << count2 << std::endl;
-  // EXPECT_GE(count1, count2);
+  EXPECT_GE(count1, count2);
 }

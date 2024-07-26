@@ -19,7 +19,7 @@ enum LayerType {
   kElementWise,
   kConvolution,
   kFullyConnected,
-  kOutput
+  kOutput,
 };
 
 enum ImplType { kDefault, kTBB };
