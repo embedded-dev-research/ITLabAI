@@ -23,6 +23,9 @@ class FCLayer : public Layer {
       : weights_(std::move(weights)), bias_(bias), implType_(implType) {}
   static std::string get_name() { return "Fully-connected layer"; }
   void run(const Tensor& input, Tensor& output) override;
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override { return weights_; }
+#endif
 };
 
 template <typename ValueType>
