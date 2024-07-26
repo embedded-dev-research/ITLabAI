@@ -27,6 +27,9 @@ class ConvolutionalLayer : public Layer {
   }
 
   void run(const Tensor& input, Tensor& output) override;
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override { return kernel_; }
+#endif
 };
 
 template <typename ValueType>

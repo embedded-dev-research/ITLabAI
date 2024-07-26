@@ -24,7 +24,13 @@ class EWLayer : public Layer {
 
   static std::string get_name() { return "Element-wise layer"; }
   void run(const Tensor& input, Tensor& output) override;
-
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override {
+    std::vector<int> v = {0};
+    Tensor a = make_tensor(v);
+    return a;
+  }
+#endif
  private:
   std::string func_;
   float alpha_;
