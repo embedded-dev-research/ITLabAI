@@ -100,3 +100,56 @@ TEST(ConvolutionalLayerTest, IntStep1) {
     ASSERT_EQ(tmp[i], expected_output[i]);
   }
 }
+TEST(ConvolutionalLayerTest, FloatWithBias) {
+  std::vector<float> image(75, 1.0f);
+  Shape input_shape({1, 3, 5, 5});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<float> kernelvec = {1, 0, 1, 0, 1, 0, 1, 0, 1};
+  Shape kernel_shape({3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<float> biasvec = {0.5f, 0.5f, 0.5f};
+  Tensor bias = make_tensor(biasvec, Shape({3}));
+
+  Shape output_shape({1, 3, 3, 3});
+  std::vector<float> output_vec(27, 0.0f);
+  Tensor output = make_tensor(output_vec, output_shape);
+
+  std::vector<float> expected_output(27, 5);
+
+  ConvolutionalLayer layer(1, 0, 0, kernel, bias);
+  layer.run(input, output);
+
+  std::vector<float> tmp = *output.as<float>();
+  ASSERT_EQ(tmp.size(), expected_output.size());
+
+  for (size_t i = 0; i < tmp.size(); ++i) {
+    ASSERT_FLOAT_EQ(tmp[i], expected_output[i]);
+  }
+}
+TEST(ConvolutionalLayerTest, InvalidInputShapeDims) {
+  std::vector<float> image(15, 1.0f);
+  Shape invalid_shape({1, 3, 5});
+  Tensor input = make_tensor(image, invalid_shape);
+
+  std::vector<float> kernelvec = {1, 0, 1, 0, 1, 0, 1, 0, 1};
+  Shape kernel_shape({3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  Shape output_shape({1, 3, 3, 3});
+  std::vector<float> output_vec(27, 0.0f);
+  Tensor output = make_tensor(output_vec, output_shape);
+
+  ConvolutionalLayer layer(1, 0, 0, kernel);
+
+  EXPECT_THROW(layer.run(input, output), std::out_of_range);
+}
+TEST(ConvImplTest, RunReturnsInput) {
+  std::vector<float> input = {1.0, 2.0, 3.0, 4.0};
+  ConvImpl<float> conv(1, 0, 1, 2, 2, 1, 4, {0.0});
+
+  std::vector<float> output = conv.run(input);
+
+  ASSERT_EQ(output, input);
+}

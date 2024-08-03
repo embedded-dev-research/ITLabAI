@@ -21,6 +21,7 @@ class EWLayer : public Layer {
   EWLayer() = default;
   EWLayer(std::string function, float alpha = 0.0F, float beta = 0.0F)
       : func_(std::move(function)), alpha_(alpha), beta_(beta) {}
+
   static std::string get_name() { return "Element-wise layer"; }
   void run(const Tensor& input, Tensor& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
@@ -91,4 +92,5 @@ std::vector<ValueType> EWLayerImpl<ValueType>::run(
   }
   return res;
 }
+
 }  // namespace itlab_2023
