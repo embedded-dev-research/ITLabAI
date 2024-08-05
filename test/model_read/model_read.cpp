@@ -65,7 +65,6 @@ TEST(ExtractValuesFromJsonTests, HandlesFlatArray) {
   EXPECT_EQ(values, expected);
 }
 
-
 TEST(ExtractValuesFromJsonTests, HandlesNestedArray) {
   json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
   std::vector<float> values;
@@ -81,6 +80,3 @@ TEST(ParseJsonShapeTests, HandlesEmptyArray) {
   std::vector<size_t> expected = {0};
   EXPECT_EQ(shape, expected);
 }
-
-
-

@@ -80,7 +80,6 @@ void extract_values_without_bias(const json& j, std::vector<float>& values) {
   std::cout << "Values size after extraction: " << values.size() << std::endl;
 }
 
-
 // Функция для определения формы из JSON
 void parse_json_shape(const json& j, std::vector<size_t>& shape, size_t dim) {
   // Если dim == 0, просто проверяем первый уровень
@@ -116,7 +115,6 @@ void parse_json_shape(const json& j, std::vector<size_t>& shape, size_t dim) {
     }
   }
 }
-
 
 void extract_bias_from_json(const json& j, std::vector<float>& bias) {
   if (j.is_array()) {
@@ -160,10 +158,7 @@ Tensor create_tensor_from_json(const json& j, Type type) {
     if (expected_size == 1 && shape.empty()) {
       expected_size = 0;
     }
-
     std::cout << "Expected size: " << expected_size << std::endl;
-
- 
     try {
       extract_bias_from_json(j, bias);
       std::cout << "Extracted bias size: " << bias.size() << std::endl;
@@ -171,12 +166,8 @@ Tensor create_tensor_from_json(const json& j, Type type) {
       std::cout << "No bias found or error extracting bias: " << e.what()
                 << std::endl;
     }
-
-
     Shape sh(shape);
-    
     return make_tensor<float>(vals, sh, bias);
-
   }
   throw std::invalid_argument("Unsupported type or invalid JSON format");
 }
