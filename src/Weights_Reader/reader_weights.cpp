@@ -55,13 +55,47 @@ void extract_values_from_json(const json& j, std::vector<float>& values) {
   }
 }
 
+void extract_values_without_bias(const json& j, std::vector<float>& values) {
+  std::vector<float> temp_values;
+
+  // Извлечение всех значений из JSON
+  extract_values_from_json(j, temp_values);
+
+  // Определяем размер bias, если он присутствует
+  size_t bias_size = 0;
+  if (j.is_array() && !j.empty() && j.back().is_array()) {
+    bias_size =
+        j.back().size();  // Размер bias равен размеру последнего массива
+  }
+
+  std::cout << "Temp values size: " << temp_values.size() << std::endl;
+  std::cout << "Bias size: " << bias_size << std::endl;
+
+  // Заполняем values значениями без bias
+  if (temp_values.size() >= bias_size) {
+    values.assign(temp_values.begin(), temp_values.end() - bias_size);
+  } else {
+    throw std::runtime_error("Extracted values are smaller than bias size.");
+  }
+  std::cout << "Values size after extraction: " << values.size() << std::endl;
+}
+
+
 // Функция для определения формы из JSON
-void parse_json_shape(const json& j, std::vector<size_t>& shape,
-                      size_t dim) {
+void parse_json_shape(const json& j, std::vector<size_t>& shape, size_t dim) {
+  // Если dim == 0, просто проверяем первый уровень
   if (dim == 0) {
-    // Игнорируем первую размерность и переходим к следующей вложенности
-    if (j.is_array() && !j.empty()) {
+    if (j.is_array()) {
+      if (j.empty()) {
+        // Пустой массив
+        shape.push_back(0);
+        return;
+      }
+      // Рекурсивно вызываем функцию на первом элементе массива
       parse_json_shape(j.front(), shape, dim + 1);
+    } else {
+      // Если на первом уровне нет массива, задаем пустую форму
+      shape.push_back(0);
     }
   } else {
     if (j.is_array()) {
@@ -71,24 +105,23 @@ void parse_json_shape(const json& j, std::vector<size_t>& shape,
         throw std::runtime_error("Inconsistent array size at dimension " +
                                  std::to_string(dim - 1));
       }
+      // Рекурсивно вызываем функцию на первом элементе массива, если массив не
+      // пуст
       if (!j.empty()) {
         parse_json_shape(j.front(), shape, dim + 1);
       }
-    } else if (!j.is_number() && !j.is_null()) {  // Изменено на j.is_number()
+    } else if (!j.is_number() && !j.is_null()) {
       throw std::runtime_error("Unexpected type in JSON structure: " +
                                std::string(j.type_name()));
     }
   }
 }
 
+
 void extract_bias_from_json(const json& j, std::vector<float>& bias) {
   if (j.is_array()) {
-    // Проверяем, что входные данные представляют собой массив
-    auto& last_element = j.back();
-    if (last_element.is_array()) {
-      // Если последний элемент массива также является массивом, это может быть
-      // bias
-      for (const auto& item : last_element) {
+    if (!j.empty() && j.back().is_array()) {
+      for (const auto& item : j.back()) {
         if (item.is_number()) {
           bias.push_back(item.get<float>());
         } else {
@@ -96,8 +129,6 @@ void extract_bias_from_json(const json& j, std::vector<float>& bias) {
                                    std::string(item.type_name()));
         }
       }
-    } else {
-      throw std::runtime_error("Last element should be an array (bias).");
     }
   } else {
     throw std::runtime_error("Input JSON structure should be an array.");
@@ -109,9 +140,10 @@ Tensor create_tensor_from_json(const json& j, Type type) {
   if (type == Type::kFloat) {
     std::vector<float> vals;
     std::vector<size_t> shape;
+    std::vector<float> bias;
 
     // Извлечение значений из JSON
-    extract_values_from_json(j, vals);
+    extract_values_without_bias(j, vals);
     std::cout << "Extracted values size: " << vals.size() << std::endl;
 
     // Определение формы тензора
@@ -131,15 +163,20 @@ Tensor create_tensor_from_json(const json& j, Type type) {
 
     std::cout << "Expected size: " << expected_size << std::endl;
 
-    if (vals.size() != expected_size) {
-      throw std::runtime_error(
-          "Incorrect vector size given to Tensor. Extracted values size: " +
-          std::to_string(vals.size()) +
-          ", Expected size: " + std::to_string(expected_size));
+ 
+    try {
+      extract_bias_from_json(j, bias);
+      std::cout << "Extracted bias size: " << bias.size() << std::endl;
+    } catch (const std::exception& e) {
+      std::cout << "No bias found or error extracting bias: " << e.what()
+                << std::endl;
     }
 
+
     Shape sh(shape);
-    return make_tensor<float>(vals, sh);
+    
+    return make_tensor<float>(vals, sh, bias);
+
   }
   throw std::invalid_argument("Unsupported type or invalid JSON format");
 }
