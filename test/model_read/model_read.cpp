@@ -8,6 +8,21 @@ std::string get_test_data_path(const std::string& filename) {
   return std::string(TEST_DATA_PATH) + "/" + filename;
 }
 
+TEST(ReaderWeightsTest, ReadJsonFailed) {
+  std::string filename = get_test_data_path("error.json");
+  EXPECT_THROW(read_json(filename), std::runtime_error);
+}
+
+TEST(ReaderWeightsTest, ReadEmptyJson) {
+  std::string filename = get_test_data_path("empty0.json");
+  EXPECT_THROW(read_json(filename), std::runtime_error);
+}
+
+TEST(ReaderWeightsTest, ReadJson_UnexpectedType) {
+  std::string filename = get_test_data_path("empty0.json");
+  EXPECT_THROW(read_json(filename), std::runtime_error);
+}
+
 TEST(ReaderWeightsTest, ReadJsonValidLargeFile) {
   std::string filename = get_test_data_path("valid.json");
   json j = read_json(filename);
@@ -16,6 +31,7 @@ TEST(ReaderWeightsTest, ReadJsonValidLargeFile) {
   EXPECT_TRUE(j.contains("layer3"));
   EXPECT_TRUE(j.contains("layer4"));
 }
+
 TEST(ReaderWeightsTest, ReadJsonEmptyFile) {
   std::string filename = get_test_data_path("empty.json");
   json j = read_json(filename);
@@ -79,4 +95,27 @@ TEST(ParseJsonShapeTests, HandlesEmptyArray) {
   parse_json_shape(j, shape);
   std::vector<size_t> expected = {0};
   EXPECT_EQ(shape, expected);
+}
+
+TEST(ExtractValuesWithoutBiasTest, HandlesCaseWithoutBias) {
+  json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
+  std::vector<float> values;
+  extract_values_without_bias(j, values);
+  std::vector<float> expected = {1.0, 2.0};
+  EXPECT_EQ(values, expected);
+}
+
+TEST(ExtractValuesWithoutBiasTest, HandlesEmptyJson) {
+  json j = json::array({});
+  std::vector<float> values;
+  extract_values_without_bias(j, values);
+  EXPECT_TRUE(values.empty());
+}
+
+TEST(ExtractValuesWithoutBiasTest, HandlesComplexNestedCase) {
+  json j = json::array({{{1.0, 2.0}, {3.0, 4.0}}, {5.0, 6.0}});
+  std::vector<float> values;
+  extract_values_without_bias(j, values);
+  std::vector<float> expected = {1.0, 2.0, 3.0, 4.0};
+  EXPECT_EQ(values, expected);
 }
