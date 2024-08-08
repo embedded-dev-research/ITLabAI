@@ -97,6 +97,22 @@ TEST(ParseJsonShapeTests, HandlesEmptyArray) {
   EXPECT_EQ(shape, expected);
 }
 
+TEST(ParseJsonShapeTests, HandlesSimpleArray) {
+  json j = json::array({{1.0, 2.0, 3.0}, {1.0, 2.0, 3.0}});
+  std::vector<size_t> shape;
+  parse_json_shape(j, shape);
+  std::vector<size_t> expected = {3};
+  EXPECT_EQ(shape, expected);
+}
+
+TEST(ParseJsonShapeTests, HandlesNestedArray) {
+  json j = json::array({{{1.0, 2.0}, {3.0, 4.0}}, {3.0, 4.0}});
+  std::vector<size_t> shape;
+  parse_json_shape(j, shape);
+  std::vector<size_t> expected = {2, 2};
+  EXPECT_EQ(shape, expected);
+}
+
 TEST(ExtractValuesWithoutBiasTest, HandlesCaseWithoutBias) {
   json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
   std::vector<float> values;
