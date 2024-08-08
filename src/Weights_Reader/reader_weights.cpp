@@ -16,9 +16,6 @@ json read_json(const std::string& filename) {
 
   ifs.seekg(0, std::ios::end);
   size_t size = ifs.tellg();
-  if (size == 0) {
-    ifs.close();
-  }
   ifs.seekg(0, std::ios::beg);
 
   std::vector<char> buffer(size);
@@ -56,8 +53,6 @@ void extract_values_without_bias(const json& j, std::vector<float>& values) {
   std::cout << "Bias size: " << bias_size << std::endl;
   if (temp_values.size() >= bias_size) {
     values.assign(temp_values.begin(), temp_values.end() - bias_size);
-  } else {
-    throw std::runtime_error("Extracted values are smaller than bias size.");
   }
   std::cout << "Values size after extraction: " << values.size() << std::endl;
 }
@@ -94,8 +89,6 @@ void extract_bias_from_json(const json& j, std::vector<float>& bias) {
         }
       }
     }
-  } else {
-    throw std::runtime_error("Input JSON structure should be an array.");
   }
 }
 

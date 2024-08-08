@@ -135,3 +135,40 @@ TEST(ExtractValuesWithoutBiasTest, HandlesComplexNestedCase) {
   std::vector<float> expected = {1.0, 2.0, 3.0, 4.0};
   EXPECT_EQ(values, expected);
 }
+
+TEST(ExtractBiasFromJsonTests, extract_bias) {
+  json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
+  std::vector<float> values;
+  extract_bias_from_json(j, values);
+  std::vector<float> expected = {3.0, 4.0};
+  EXPECT_EQ(values, expected);
+}
+
+TEST(ExtractBiasFromJsonTests, extract_bias_error_array) {
+  json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
+  std::vector<float> values;
+  extract_bias_from_json(j, values);
+  std::vector<float> expected = {3.0, 4.0};
+  EXPECT_EQ(values, expected);
+}
+
+TEST(CreateTensorFromJsonTest, SimpleTensor) {
+  json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
+  EXPECT_NO_THROW(Tensor tensor = create_tensor_from_json(j, Type::kFloat););
+}
+
+TEST(CreateTensorFromJsonTest, SimpleTensorCheckBias) {
+  json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
+  Tensor tensor = create_tensor_from_json(j, Type::kFloat);
+
+  EXPECT_EQ(tensor.get_bias().size(), 2);
+  EXPECT_EQ(tensor.get_bias()[0], 3.0);
+  EXPECT_EQ(tensor.get_bias()[1], 4.0);
+}
+
+TEST(CreateTensorFromJsonTest, SimpleTensorCheckWeights) {
+  json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
+  Tensor tensor = create_tensor_from_json(j, Type::kFloat);
+
+  EXPECT_EQ(tensor.get<float>({1}), 2.0);
+}
