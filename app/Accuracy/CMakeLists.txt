@@ -9,11 +9,11 @@ execute_process(
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build"
 )
 
-set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/accuracy_check.hpp")
-add_library(ACCLib STATIC ${INCLUDE_HEADERS})
+set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/acc.hpp")
+set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/acc.cpp")
+add_library(ACCLib STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 
-
-set_target_properties(ACCLib PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(ReadLib PROPERTIES LINKER_LANGUAGE CXX)
 
 find_package( OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" )
 include_directories( ${OpenCV_INCLUDE_DIRS} )

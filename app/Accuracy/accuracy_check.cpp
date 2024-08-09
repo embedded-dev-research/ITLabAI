@@ -1,12 +1,11 @@
 #include "graph/graph.hpp"
+#include "acc.hpp"
 #include "layers/ConvLayer.hpp"
 #include "layers/EWLayer.hpp"
 #include "layers/FCLayer.hpp"
 #include "layers/InputLayer.hpp"
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
-
-#include "accuracy_check.hpp"
 
 using namespace itlab_2023;
 
@@ -33,7 +32,7 @@ int main() {
       c++;
     }
   }
-  Shape sh({static_cast<size_t>(Count_pic_), 227, 227, 3});
+  /*Shape sh({static_cast<size_t>(Count_pic_), 227, 227, 3});
   Tensor t = make_tensor<int>(res, sh);
   Graph graph(6);
   Shape sh1({1, 5, 5, 3});
@@ -63,8 +62,8 @@ int main() {
   graph.setOutput(a5, output);
   graph.inference();
   std::vector<float> tmp = *output.as<float>();
-  std::vector<float> tmp_output = softmax<float>(*output.as<float>());
-  for (int i = 0; i < tmp.size(); i++) {
-    std::cout << tmp[i] << " ";
+  std::vector<float> tmp_output = softmax<float>(*output.as<float>());*/
+  for (int i = 0; i < res.size(); i++) {
+    std::cout << res[i] << " ";
   }
 }
