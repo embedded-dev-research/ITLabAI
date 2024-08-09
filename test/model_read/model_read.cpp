@@ -172,3 +172,21 @@ TEST(CreateTensorFromJsonTest, SimpleTensorCheckWeights) {
 
   EXPECT_EQ(tensor.get<float>({1}), 2.0);
 }
+
+TEST(CreateTensorFromJsonTest, SimpleTensorCheckNoBias) {
+  json j = json::array({{1.0, 2.0}});
+  ASSERT_ANY_THROW(Tensor tensor = create_tensor_from_json(j, Type::kFloat););
+}
+
+TEST(CreateTensorFromJsonTest, EmptyShape) {
+  json j = json::array({});
+  std::vector<size_t> shape;
+  parse_json_shape(j, shape);
+  std::vector<size_t> expected = {0};
+  EXPECT_EQ(shape, expected);
+}
+
+TEST(CreateTensorFromJsonTest, CheckIntTensor) {
+  json j = json::array({{1, 2}, {3, 7}});
+  ASSERT_ANY_THROW(Tensor tensor = create_tensor_from_json(j, Type::kInt););
+}
