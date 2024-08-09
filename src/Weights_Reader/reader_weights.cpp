@@ -97,7 +97,6 @@ Tensor create_tensor_from_json(const json& j, Type type) {
     std::vector<float> vals;
     std::vector<size_t> shape;
     std::vector<float> bias;
-
     extract_values_without_bias(j, vals);
     std::cout << "Extracted values size: " << vals.size() << std::endl;
 
@@ -114,13 +113,8 @@ Tensor create_tensor_from_json(const json& j, Type type) {
       expected_size = 0;
     }
     std::cout << "Expected size: " << expected_size << std::endl;
-    try {
-      extract_bias_from_json(j, bias);
-      std::cout << "Extracted bias size: " << bias.size() << std::endl;
-    } catch (const std::exception& e) {
-      std::cout << "No bias found or error extracting bias: " << e.what()
-                << std::endl;
-    }
+    extract_bias_from_json(j, bias);
+    std::cout << "Extracted bias size: " << bias.size() << std::endl;
     Shape sh(shape);
     return make_tensor<float>(vals, sh, bias);
   }
