@@ -190,3 +190,13 @@ TEST(CreateTensorFromJsonTest, CheckIntTensor) {
   json j = json::array({{1, 2}, {3, 7}});
   ASSERT_ANY_THROW(Tensor tensor = create_tensor_from_json(j, Type::kInt););
 }
+
+TEST(ParseJsonShapeTests, HandlesNonArrayJson) {
+  json j = "not_an_array";
+  std::vector<size_t> shape;
+
+  parse_json_shape(j, shape);
+
+  std::vector<size_t> expected = {0};
+  EXPECT_EQ(shape, expected);
+}
