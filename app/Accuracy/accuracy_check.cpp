@@ -32,7 +32,7 @@ int main() {
       c++;
     }
   }
-  /*Shape sh({static_cast<size_t>(Count_pic_), 227, 227, 3});
+  Shape sh({static_cast<size_t>(Count_pic_), 227, 227, 3});
   Tensor t = make_tensor<int>(res, sh);
   Graph graph(6);
   Shape sh1({1, 5, 5, 3});
@@ -62,8 +62,8 @@ int main() {
   graph.setOutput(a5, output);
   graph.inference();
   std::vector<float> tmp = *output.as<float>();
-  std::vector<float> tmp_output = softmax<float>(*output.as<float>());*/
-  for (int i = 0; i < res.size(); i++) {
+  std::vector<float> tmp_output = softmax<float>(*output.as<float>());
+  for (int i = 0; i < static_cast<int>(res.size()); i++) {
     std::cout << res[i] << " ";
   }
 }
