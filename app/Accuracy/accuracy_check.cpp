@@ -19,8 +19,8 @@ int main() {
   cv::resize(image, resized_image, cv::Size(227, 227));
   std::vector<cv::Mat> channels;
   cv::split(resized_image, channels);
-  int ñount_pic = 1;
-  std::vector<int> res(ñount_pic * 227 * 227 * 3);
+  int count_pic = 1;
+  std::vector<int> res(count_pic * 227 * 227 * 3);
   int c = 0;
   for (int i = 0; i < 227; ++i) {
     for (int j = 0; j < 227; ++j) {
@@ -32,7 +32,7 @@ int main() {
       c++;
     }
   }
-  Shape sh({static_cast<size_t>(ñount_pic), 227, 227, 3});
+  Shape sh({static_cast<size_t>(count_pic), 227, 227, 3});
   Tensor t = make_tensor<int>(res, sh);
   Graph graph(6);
   Shape sh1({1, 5, 5, 3});
