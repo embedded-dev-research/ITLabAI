@@ -1,5 +1,5 @@
-#include "graph/graph.hpp"
 #include "acc.hpp"
+#include "graph/graph.hpp"
 #include "layers/ConvLayer.hpp"
 #include "layers/EWLayer.hpp"
 #include "layers/FCLayer.hpp"
