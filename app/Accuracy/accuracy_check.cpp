@@ -63,7 +63,7 @@ int main() {
   graph.inference();
   std::vector<float> tmp = *output.as<float>();
   std::vector<float> tmp_output = softmax<float>(*output.as<float>());
-  for (int i = 0; i < static_cast<int>(tmp.size()); i++) {
+  for (size_t i = 0; i < tmp.size(); i++) {
     std::cout << tmp[i] << " ";
   }
 }
