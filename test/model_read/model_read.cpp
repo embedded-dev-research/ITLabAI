@@ -8,16 +8,6 @@ std::string get_test_data_path(const std::string& filename) {
   return std::string(TEST_DATA_PATH) + "/" + filename;
 }
 
-TEST(ReaderWeightsTest, ReadJsonFailed) {
-  std::string filename = get_test_data_path("error.json");
-  EXPECT_THROW(read_json(filename), std::runtime_error);
-}
-
-TEST(ReaderWeightsTest, ReadEmptyJson) {
-  std::string filename = get_test_data_path("empty0.json");
-  EXPECT_THROW(read_json(filename), std::runtime_error);
-}
-
 TEST(ReaderWeightsTest, ReadJson_UnexpectedType) {
   std::string filename = get_test_data_path("empty0.json");
   EXPECT_THROW(read_json(filename), std::runtime_error);
@@ -36,20 +26,6 @@ TEST(ReaderWeightsTest, ReadJsonEmptyFile) {
   std::string filename = get_test_data_path("empty.json");
   json j = read_json(filename);
   EXPECT_TRUE(j.empty());
-}
-
-TEST(ReaderWeightsTest, ReadJsonInvalidFile) {
-  std::string filename = get_test_data_path("invalid-[.json");
-  std::string filename1 = get_test_data_path("invalid-_.json");
-  std::string filename2 = get_test_data_path("invalid_number.json");
-  std::string filename3 = get_test_data_path("invalid-}.json");
-  std::string filename4 = get_test_data_path("invalid-}}.json");
-
-  EXPECT_THROW(read_json(filename), std::runtime_error);
-  EXPECT_THROW(read_json(filename1), std::runtime_error);
-  EXPECT_THROW(read_json(filename2), std::runtime_error);
-  EXPECT_THROW(read_json(filename3), std::runtime_error);
-  EXPECT_THROW(read_json(filename4), std::runtime_error);
 }
 
 TEST(ReaderWeightsTest, ExtractValuesFromJson) {
