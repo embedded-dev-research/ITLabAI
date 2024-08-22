@@ -20,20 +20,20 @@ int main() {
   std::vector<cv::Mat> channels;
   cv::split(resized_image, channels);
   int count_pic = 1;
-  std::vector<int> res(count_pic * 227 * 227 * 3);
+  std::vector<float> res(count_pic * 227 * 227 * 3);
   int c = 0;
   for (int i = 0; i < 227; ++i) {
     for (int j = 0; j < 227; ++j) {
-      res[c] = static_cast<int>(channels[2].at<uchar>(i, j));
+      res[c] = channels[2].at<uchar>(i, j);
       c++;
-      res[c] = static_cast<int>(channels[1].at<uchar>(i, j));
+      res[c] = channels[1].at<uchar>(i, j);
       c++;
-      res[c] = static_cast<int>(channels[0].at<uchar>(i, j));
+      res[c] = channels[0].at<uchar>(i, j);
       c++;
     }
   }
   Shape sh({static_cast<size_t>(count_pic), 227, 227, 3});
-  Tensor t = make_tensor<int>(res, sh);
+  Tensor t = make_tensor<float>(res, sh);
   Graph graph(6);
   Shape sh1({1, 5, 5, 3});
   std::vector<float> vec;
@@ -63,7 +63,7 @@ int main() {
   graph.inference();
   std::vector<float> tmp = *output.as<float>();
   std::vector<float> tmp_output = softmax<float>(*output.as<float>());
-  for (int i : tmp) {
+  for (size_t i = 0; i < tmp.size(); ++i) {
     std::cout << tmp[i] << " ";
   }
 }
