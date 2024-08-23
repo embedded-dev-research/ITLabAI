@@ -82,6 +82,7 @@ class Tensor {
     if (a.size() != values_.size()) {
       throw std::invalid_argument("Incorrect vector size given to Tensor");
     }
+    values_ = a;
     if (bias.size() != shape_[shape_.dims() - 1]) {
       throw std::invalid_argument(
           "Bias size does not match the last dimension of the shape");
