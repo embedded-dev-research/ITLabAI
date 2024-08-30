@@ -29,6 +29,9 @@ class Layer {
   LayerType getName() const { return type_; }
   void setName(LayerType type) { type_ = type; }
   virtual void run(const Tensor& input, Tensor& output) = 0;
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  virtual Tensor get_weights() = 0;
+#endif
 
  private:
   int id_;

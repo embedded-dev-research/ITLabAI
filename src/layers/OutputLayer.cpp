@@ -13,7 +13,7 @@ std::pair<std::vector<std::string>, Tensor> OutputLayer::top_k(
     case Type::kFloat: {
       auto toppair = top_k_vec<float>(*input.as<float>(), labels_, k);
       reslabels = toppair.first;
-      resvector = make_tensor(toppair.second);
+      resvector = resvector = make_tensor(toppair.second);
       break;
     }
     case Type::kInt: {

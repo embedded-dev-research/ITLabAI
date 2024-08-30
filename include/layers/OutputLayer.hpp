@@ -1,6 +1,9 @@
 #pragma once
+#include <algorithm>
 #include <cmath>
+#include <numeric>
 #include <string>
+#include <vector>
 
 #include "layers/Layer.hpp"
 
@@ -15,6 +18,13 @@ class OutputLayer : public Layer {
   std::vector<std::string> get_labels() const { return labels_; }
   std::pair<std::vector<std::string>, Tensor> top_k(const Tensor& input,
                                                     size_t k) const;
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override {
+    std::vector<int> v = {0};
+    Tensor a = make_tensor(v);
+    return a;
+  }
+#endif
 
  private:
   std::vector<std::string> labels_;
@@ -44,7 +54,7 @@ bool compare_pair(std::pair<std::string, ValueType> a,
 }
 
 template <typename ValueType>
-std::pair<std::vector<std::string>, std::vector<ValueType> > top_k_vec(
+std::pair<std::vector<std::string>, std::vector<ValueType>> top_k_vec(
     const std::vector<ValueType>& input, const std::vector<std::string>& labels,
     size_t k) {
   if (input.size() != labels.size()) {
@@ -53,19 +63,18 @@ std::pair<std::vector<std::string>, std::vector<ValueType> > top_k_vec(
   if (k > input.size()) {
     throw std::invalid_argument("K cannot be bigger than input size");
   }
-  // sort values in descending order
-  std::vector<std::pair<std::string, ValueType> > sort_buf(input.size());
+  std::vector<std::pair<std::string, ValueType>> sort_buf(input.size());
   for (size_t i = 0; i < input.size(); i++) {
-    sort_buf[i] = make_pair(labels[i], input[i]);
+    sort_buf[i] = std::make_pair(labels[i], input[i]);
   }
   std::sort(sort_buf.begin(), sort_buf.end(), compare_pair<ValueType>);
-  // split vector of pairs to pairs of vectors
   std::vector<std::string> res_labels(k);
   std::vector<ValueType> res_input(k);
   for (size_t i = 0; i < k; i++) {
     res_labels[i] = sort_buf[i].first;
     res_input[i] = sort_buf[i].second;
   }
-  return make_pair(res_labels, res_input);
+  return std::make_pair(res_labels, res_input);
 }
+
 }  // namespace itlab_2023

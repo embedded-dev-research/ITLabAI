@@ -20,6 +20,9 @@ class FCLayer : public Layer {
   }
   static std::string get_name() { return "Fully-connected layer"; }
   void run(const Tensor& input, Tensor& output) override;
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override { return weights_; }
+#endif
 };
 
 template <typename ValueType>
@@ -108,9 +111,7 @@ FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
   if (this->inputShape_[0] == 0 || this->outputShape_[0] == 0) {
     throw std::invalid_argument("Invalid weights/bias size for FCLayer");
   }
-  // make weights isize x osize, filling empty with 0s
   weights_.resize(input_weights_shape.count(), ValueType(0));
-  //
 }
 
 template <typename ValueType>

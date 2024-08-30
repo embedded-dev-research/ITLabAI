@@ -10,93 +10,109 @@ using namespace itlab_2023;
 
 TEST(graph, check_connection) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
-  const std::vector<float> vec2 = {9.0F, 6.4F, 17.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
-  Tensor output;
-  Shape wshape({3, 2});
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
   Graph graph(5);
-  FCLayer a1;
-  InputLayer a2;
-  EWLayer a3;
-  graph.setInput(a1, bias);
-  graph.makeConnection(a1, a2);
-  graph.makeConnection(a2, a3);
-  ASSERT_EQ(graph.areLayerNext(a1, a2), 1);
+  FCLayer fcLayer(weights, bias);
+  InputLayer inputLayer;
+  EWLayer ewLayer;
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, ewLayer);
+
+  ASSERT_EQ(graph.areLayerNext(inputLayer, fcLayer), 1);
 }
+
 TEST(graph, check_connection1) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
-  const std::vector<float> vec2 = {9.0F, 6.4F, 17.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
-  Tensor output;
-  Shape wshape({3, 2});
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
   Graph graph(5);
-  FCLayer a1;
-  InputLayer a2;
-  EWLayer a3;
-  FCLayer a4;
-  graph.setInput(a1, bias);
-  graph.makeConnection(a1, a2);
-  graph.makeConnection(a2, a3);
-  graph.makeConnection(a1, a4);
-  graph.setOutput(a4, bias);
-  ASSERT_EQ(graph.areLayerNext(a1, a4), 1);
+  FCLayer fcLayer(weights, bias);
+  InputLayer inputLayer;
+  EWLayer ewLayer;
+  FCLayer fcLayer2(weights, bias);
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, ewLayer);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.setOutput(fcLayer2, output);
+
+  ASSERT_EQ(graph.areLayerNext(fcLayer, fcLayer2), 1);
 }
+
 TEST(graph, check_connection_when_not_connection) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
-  const std::vector<float> vec2 = {9.0F, 6.4F, 17.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
-  Tensor output;
-  Shape wshape({3, 2});
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
   Graph graph(5);
-  FCLayer a1;
-  InputLayer a2;
-  EWLayer a3;
-  FCLayer a4;
-  graph.setInput(a1, bias);
-  graph.makeConnection(a1, a2);
-  graph.makeConnection(a2, a3);
-  graph.makeConnection(a1, a4);
-  graph.setOutput(a4, bias);
-  ASSERT_EQ(graph.areLayerNext(a1, a3), 0);
+  FCLayer fcLayer(weights, bias);
+  InputLayer inputLayer;
+  EWLayer ewLayer;
+  FCLayer fcLayer2(weights, bias);
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.setOutput(fcLayer2, output);
+
+  ASSERT_EQ(graph.areLayerNext(fcLayer, ewLayer), false);
+
+  graph.makeConnection(fcLayer, ewLayer);
+
+  ASSERT_EQ(graph.areLayerNext(fcLayer, ewLayer), true);
 }
+
 TEST(graph, check_connection_when_not_connection1) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
-  const std::vector<float> vec2 = {9.0F, 6.4F, 17.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
-  Tensor output;
-  Shape wshape({3, 2});
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
   Graph graph(5);
-  FCLayer a1;
-  FCLayer a2;
-  FCLayer a3;
-  FCLayer a4;
-  graph.setInput(a1, bias);
-  graph.makeConnection(a1, a2);
-  graph.makeConnection(a2, a3);
-  graph.makeConnection(a1, a4);
-  graph.setOutput(a4, bias);
-  ASSERT_EQ(graph.areLayerNext(a1, a1), 0);
+  FCLayer fcLayer(weights, bias);
+  FCLayer fcLayer2(weights, bias);
+  FCLayer fcLayer3(weights, bias);
+  FCLayer fcLayer4(weights, bias);
+
+  graph.setInput(fcLayer, input);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.makeConnection(fcLayer2, fcLayer3);
+  graph.makeConnection(fcLayer, fcLayer4);
+  graph.setOutput(fcLayer4, output);
+
+  ASSERT_EQ(graph.areLayerNext(fcLayer, fcLayer), 0);
 }
+
 TEST(graph, check_connection_when_not_connection2) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
-  const std::vector<float> vec2 = {9.0F, 6.4F, 17.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
-  Tensor output;
-  Shape wshape({3, 2});
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
   Graph graph(5);
-  FCLayer a1;
-  FCLayer a2;
-  FCLayer a3;
-  FCLayer a4;
-  graph.setInput(a1, bias);
-  graph.makeConnection(a1, a2);
-  graph.makeConnection(a2, a3);
-  graph.makeConnection(a1, a4);
-  graph.setOutput(a4, bias);
-  ASSERT_EQ(graph.areLayerNext(a2, a4), 0);
+  FCLayer fcLayer(weights, bias);
+  FCLayer fcLayer2(weights, bias);
+  FCLayer fcLayer3(weights, bias);
+  FCLayer fcLayer4(weights, bias);
+
+  graph.setInput(fcLayer, input);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.makeConnection(fcLayer2, fcLayer3);
+  graph.makeConnection(fcLayer, fcLayer4);
+  graph.setOutput(fcLayer4, output);
+
+  ASSERT_EQ(graph.areLayerNext(fcLayer2, fcLayer4), 0);
 }
