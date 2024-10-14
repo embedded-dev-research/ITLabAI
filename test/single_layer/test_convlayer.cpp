@@ -170,7 +170,8 @@ TEST(ConvolutionalLayerTest, Conv4DKern) {
   for (int i = 0; i < 54; ++i) {
     kernelvec.push_back(1);
   }
-  std::vector<float> expected_output = {12, 12, 18, 18, 12, 12, 18, 18, 27, 27, 18, 18, 12, 12, 18, 18, 12, 12};
+  std::vector<float> expected_output = {12, 12, 18, 18, 12, 12, 18, 18, 27,
+                                        27, 18, 18, 12, 12, 18, 18, 12, 12};
   Shape sh2({3, 3, 3, 2});
   Tensor kernel = make_tensor(kernelvec, sh2);
   ConvolutionalLayer layer(step, 1, 1, kernel);

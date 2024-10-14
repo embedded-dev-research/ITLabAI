@@ -81,10 +81,10 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
 
         std::vector<int> t = *input.as<int>();
         std::vector<std::vector<std::vector<std::vector<int>>>> input_tensor(
-            batch_size, std::vector<std::vector<std::vector<int>>>(
-                            in_height, std::vector<std::vector<int>>(
-                               in_width, std::vector<int>(
-                                                         in_channels, 1))));
+            batch_size,
+            std::vector<std::vector<std::vector<int>>>(
+                in_height, std::vector<std::vector<int>>(
+                               in_width, std::vector<int>(in_channels, 1))));
         for (size_t index = 0; index < t.size(); ++index) {
           size_t n_index = index / (in_height * in_width * in_channels);
           size_t h_index = (index / (in_width * in_channels)) % in_height;
@@ -97,9 +97,8 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
         std::vector<std::vector<std::vector<std::vector<int>>>> kernel(
             kernel_height,
             std::vector<std::vector<std::vector<int>>>(
-                kernel_width,
-                std::vector<std::vector<int>>(
-                    kernel_in_channels,
+                kernel_width, std::vector<std::vector<int>>(
+                                  kernel_in_channels,
                                   std::vector<int>(kernel_out_channels, 1))));
         for (size_t index = 0; index < t1.size(); ++index) {
           size_t n_index =
@@ -161,7 +160,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
         }
         Shape sh({batch_size, out_height, out_width, kernel_out_channels});
         std::vector<int> one_d_vector(batch_size * out_height * out_width *
-                                        kernel_out_channels);
+                                      kernel_out_channels);
         size_t index_1d = 0;
         for (size_t i = 0; i < batch_size; ++i) {
           for (size_t j = 0; j < out_height; ++j) {
@@ -235,7 +234,6 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
         size_t kernel_in_channels = kernel_.get_shape()[2];
         size_t kernel_out_channels = kernel_.get_shape()[3];
 
-
         size_t out_height =
             (in_height + 2 * pads_ - (dilations_ * (kernel_height - 1) + 1)) /
                 stride_ +
@@ -255,7 +253,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
         std::vector<float> t = *input.as<float>();
         std::vector<std::vector<std::vector<std::vector<float>>>> input_tensor(
             batch_size, std::vector<std::vector<std::vector<float>>>(
-                   in_height, std::vector<std::vector<float>>(
+                            in_height, std::vector<std::vector<float>>(
                                            in_width, std::vector<float>(
                                                          in_channels, 1.0))));
         for (size_t index = 0; index < t.size(); ++index) {
@@ -263,8 +261,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
           size_t h_index = (index / (in_width * in_channels)) % in_height;
           size_t w_index = (index / in_channels) % in_width;
           size_t c_index = index % in_channels;
-          input_tensor[n_index][h_index][w_index][c_index] =
-              t[index];
+          input_tensor[n_index][h_index][w_index][c_index] = t[index];
         }
 
         std::vector<float> t1 = *kernel_.as<float>();
@@ -273,7 +270,8 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
             std::vector<std::vector<std::vector<float>>>(
                 kernel_width,
                 std::vector<std::vector<float>>(
-                    kernel_in_channels, std::vector<float>(kernel_out_channels, 1.0))));
+                    kernel_in_channels,
+                    std::vector<float>(kernel_out_channels, 1.0))));
         for (size_t index = 0; index < t1.size(); ++index) {
           size_t n_index =
               index / (kernel_width * kernel_in_channels * kernel_out_channels);
@@ -286,16 +284,15 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
         }
 
         std::vector<std::vector<std::vector<std::vector<float>>>> padded_input =
-           input_tensor;
+            input_tensor;
         if (pads_ > 0) {
           padded_input =
               std::vector<std::vector<std::vector<std::vector<float>>>>(
-              batch_size,
-                  std::vector<std::vector<std::vector<float>>>(
-                  in_height + 2 * pads_,
+                  batch_size, std::vector<std::vector<std::vector<float>>>(
+                                  in_height + 2 * pads_,
                                   std::vector<std::vector<float>>(
                                       in_width + 2 * pads_,
-                                        std::vector<float>(in_channels, 0))));
+                                      std::vector<float>(in_channels, 0))));
 
           for (size_t b = 0; b < batch_size; ++b) {
             for (size_t h = 0; h < in_height; ++h) {
@@ -309,7 +306,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
           }
         }
 
-       for (size_t b = 0; b < batch_size; ++b) {
+        for (size_t b = 0; b < batch_size; ++b) {
           for (size_t oc = 0; oc < kernel_out_channels; ++oc) {
             for (size_t i = 0; i < out_height; ++i) {
               for (size_t j = 0; j < out_width; ++j) {
