@@ -153,3 +153,31 @@ TEST(ConvImplTest, RunReturnsInput) {
 
   ASSERT_EQ(output, input);
 }
+TEST(ConvolutionalLayerTest, Conv4DKern) {
+  std::vector<float> image;
+  image.reserve(75);
+  for (int i = 0; i < 75; ++i) {
+    image.push_back(1);
+  }
+  Shape sh({2, 2});
+  std::vector<float> vec = {1, 2, 3, 4};
+  Shape sh1({1, 3, 5, 5});
+  Tensor input = make_tensor(image, sh1);
+  Tensor output = make_tensor(vec, sh);
+  int step = 2;
+  std::vector<float> kernelvec;
+  kernelvec.reserve(54);
+  for (int i = 0; i < 54; ++i) {
+    kernelvec.push_back(1);
+  }
+  std::vector<float> expected_output = {12, 12, 18, 18, 12, 12, 18, 18, 27, 27, 18, 18, 12, 12, 18, 18, 12, 12};
+  Shape sh2({3, 3, 3, 2});
+  Tensor kernel = make_tensor(kernelvec, sh2);
+  ConvolutionalLayer layer(step, 1, 1, kernel);
+  layer.run(input, output);
+  std::vector<float> tmp = *output.as<float>();
+  ASSERT_EQ(tmp.size(), expected_output.size());
+  for (size_t i = 0; i < tmp.size(); ++i) {
+    ASSERT_FLOAT_EQ(tmp[i], expected_output[i]);
+  }
+}
