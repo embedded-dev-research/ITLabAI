@@ -7,7 +7,7 @@ import os
 # Пути к модели и JSON файлу
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MODEL_PATH = os.path.join(BASE_DIR, 'docs', 'AlexNet-model.h5')
-MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs', 'model_data_alexnet_with_order.json')
+MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs', 'model_data_alexnet_1.json')
 
 # Загрузка модели
 model = load_model(MODEL_PATH)
