@@ -13,40 +13,34 @@
 #include "build.hpp"
 
 using namespace itlab_2023;
-using LayerTemplate = std::variant<ConvolutionalLayer, FCLayer, PoolingLayer, /*DropOut, Flatten*/>;
 
 void build_graph(Tensor input, Tensor output) {
-  int number_of_layers;
-  std::vector<LayerTemplate> layers;
+  std::vector<std::shared_ptr<Layer>> layers;
 
   std::string json_file = MODEL_PATH;
   json model_data = read_json(json_file);
 
   for (const auto& layer_data : model_data) {
-    number_of_layers++;
 
-    // Извлекаем тип слоя и его веса
     std::string layer_type = layer_data["type"];
     Tensor tensor = create_tensor_from_json(layer_data["weights"], Type::kFloat);
 
     if (layer_type.find("Conv") != std::string::npos) {
       Shape shape = tensor.get_shape();
       Tensor tmp_values = make_tensor(tensor.get_values(), shape);
-      Tensor tmp_bias =
-          make_tensor(tensor.get_bias(), tensor.get_bias().size());
-      layers.emplace_back(1, 0, 0, tmp_values, tmp_bias);
+      Tensor tmp_bias = make_tensor(tensor.get_bias());
+      layers.push_back(std::make_shared<ConvolutionalLayer>(1, 0, 0, tmp_values, tmp_bias));
     }
 
     if (layer_type.find("Dense") != std::string::npos) {
       Tensor tmp_values = make_tensor(tensor.get_values(), tensor.get_shape());
-      Tensor tmp_bias =
-          make_tensor(tensor.get_bias(), tensor.get_bias().size());
-      layers.emplace_back(tmp_values, tmp_bias);
+      Tensor tmp_bias = make_tensor(tensor.get_bias());
+      layers.push_back(std::make_shared<FCLayer>(tmp_values, tmp_bias));
     }
 
     if (layer_type.find("Pool") != std::string::npos) {
       Shape shape = {2, 2};
-      layers.emplace_back(shape);
+      layers.push_back(std::make_shared<PoolingLayer>(shape));
     }
 
     if (layer_type.find("Flatten") != std::string::npos) {
@@ -57,27 +51,20 @@ void build_graph(Tensor input, Tensor output) {
       layers.emplace_back(/*construcrtor of dropout*/);
     }
   }
-  Graph graph(number_of_layers);
+  Graph graph(layers.size());
   InputLayer a1(kNhwc, kNchw, 1, 2);
-  //---------------
+
   graph.setInput(a1, input);
-  graph.makeConnection(a1, conv_layers[0]);
-  graph.makeConnection(conv_layers[0], pooling_layers[0]);
-  graph.makeConnection(pooling_layers[0], conv_layers[1]);
-  graph.makeConnection(conv_layers[1], pooling_layers[1]);
-  graph.makeConnection(pooling_layers[1], conv_layers[2]);
-  graph.makeConnection(conv_layers[2], conv_layers[3]);
-  graph.makeConnection(conv_layers[3], conv_layers[4]);
-  graph.makeConnection(conv_layers[5], pooling_layers[2]);
-  graph.makeConnection(pooling_layers[2], flatten1);
-  graph.makeConnection( flatten1, fc_layers[0]);
-  graph.makeConnection(fc_layers[0], fc_layers[1]);
-  graph.makeConnection(fc_layers[1], dropout);
-  graph.setOutput(dropout, output);
+
+  graph.makeConnection(a1, *layers[0]);
+
+  for (size_t i = 0; i < layers.size() - 1; ++i) {
+    graph.makeConnection(*layers[i], *layers[i + 1]);
+  }
+
+  graph.setOutput(*layers.back(), output);
+
   graph.inference();
-  graph.setOutput(/*layers[number_of_layers - 1]*/ , output);
-  graph.inference();
-  //--------------------------------------
 
   std::vector<float> tmp = *output.as<float>();
   std::vector<float> tmp_output = softmax<float>(*output.as<float>());
@@ -112,7 +99,6 @@ int main() {
   Shape sh({static_cast<size_t>(count_pic), 227, 227, 3});
   Tensor t = make_tensor<float>(res, sh);
   Tensor input = t;
-
 
   Shape sh1({1, 5, 5, 3});
   std::vector<float> vec;
