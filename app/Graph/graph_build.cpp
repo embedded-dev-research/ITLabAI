@@ -1,4 +1,10 @@
+#include <iostream>
+#include <stdexcept>
+#include <variant>
+#include <vector>
+
 #include "Weights_Reader/reader_weights.hpp"
+#include "build.hpp"
 #include "graph/graph.hpp"
 #include "layers/ConvLayer.hpp"
 #include "layers/EWLayer.hpp"
@@ -6,11 +12,6 @@
 #include "layers/InputLayer.hpp"
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
-#include <stdexcept>
-#include <iostream>
-#include <vector>
-#include <variant>
-#include "build.hpp"
 
 using namespace itlab_2023;
 
@@ -23,13 +24,15 @@ void build_graph(Tensor input, Tensor output) {
   for (const auto& layer_data : model_data) {
 
     std::string layer_type = layer_data["type"];
-    Tensor tensor = create_tensor_from_json(layer_data["weights"], Type::kFloat);
+    Tensor tensor =
+        create_tensor_from_json(layer_data["weights"], Type::kFloat);
 
     if (layer_type.find("Conv") != std::string::npos) {
       Shape shape = tensor.get_shape();
       Tensor tmp_values = make_tensor(tensor.get_values(), shape);
       Tensor tmp_bias = make_tensor(tensor.get_bias());
-      layers.push_back(std::make_shared<ConvolutionalLayer>(1, 0, 0, tmp_values, tmp_bias));
+      layers.push_back(
+          std::make_shared<ConvolutionalLayer>(1, 0, 0, tmp_values, tmp_bias));
     }
 
     if (layer_type.find("Dense") != std::string::npos) {
