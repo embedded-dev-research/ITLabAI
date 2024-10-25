@@ -6,7 +6,7 @@ void FlattenLayer::run(const Tensor &input, Tensor &output) {
   switch (input.get_type()) {
     case Type::kInt: {
       output =
-	      make_tensor(*input.as<int>(), Shape({input.get_shape().count()}));
+	  make_tensor(*input.as<int>(), Shape({input.get_shape().count()}));
       break;
     }
     case Type::kFloat: {
