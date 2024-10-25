@@ -10,7 +10,6 @@ class FlattenLayer : public Layer {
   FlattenLayer() = default;
   static std::string get_name() { return "Flatten layer"; }
   void run(const Tensor& input, Tensor& output) override;
-
 };
 
 }  // namespace itlab_2023
