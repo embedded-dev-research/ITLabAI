@@ -6,7 +6,7 @@
 using namespace itlab_2023;
 
 TEST(flattenlayer, new_flattenlayer_can_flatten_int) {
-  FlattenLayer layer();
+  FlattenLayer layer;
   Shape sh({2, 2});
   Tensor input = make_tensor<int>({1, -1, 2, -2}, sh);
   Tensor output;
@@ -16,7 +16,7 @@ TEST(flattenlayer, new_flattenlayer_can_flatten_int) {
 }
 
 TEST(flattenlayer, new_flattenlayer_can_flatten_float) {
-  FlattenLayer layer();
+  FlattenLayer layer;
   Shape sh({2, 2});
   Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F}, sh);
   Tensor output;
