@@ -1,5 +1,5 @@
-#include <vector>
 #include <numeric>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "layers/DropOutLayer.hpp"
