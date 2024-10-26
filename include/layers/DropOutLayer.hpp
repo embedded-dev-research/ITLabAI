@@ -8,6 +8,7 @@ namespace itlab_2023 {
 class DropOutLayer : public Layer {
  private:
   double drop_rate_;
+
  public:
   DropOutLayer() = default;
   DropOutLayer(double drop_rate) { drop_rate_ = drop_rate; }
