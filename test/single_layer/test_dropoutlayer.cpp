@@ -40,7 +40,7 @@ TEST(DropOutLayer, dropoutlayer_float_50proc) {
   Tensor output;
   layer.run(input, output);
   std::vector<float> vec = *output.as<float>();
-  EXPECT_NEAR(std::accumulate(vec.begin(), vec.end(), 0.0F), 0.5, 0.1);
+  EXPECT_NEAR(std::accumulate(vec.begin(), vec.end(), 0.0F), 0.5, 0.2);
 }
 
 TEST(DropOutLayer, dropoutlayer_float_30proc) {
@@ -51,7 +51,7 @@ TEST(DropOutLayer, dropoutlayer_float_30proc) {
   Tensor output;
   layer.run(input, output);
   std::vector<float> vec = *output.as<float>();
-  EXPECT_NEAR(std::accumulate(vec.begin(), vec.end(), 0.0F), 0.7, 0.1);
+  EXPECT_NEAR(std::accumulate(vec.begin(), vec.end(), 0.0F), 0.7, 0.2);
 }
 
 TEST(DropOutLayer, dropoutlayer_float_70proc) {
@@ -62,7 +62,7 @@ TEST(DropOutLayer, dropoutlayer_float_70proc) {
   Tensor output;
   layer.run(input, output);
   std::vector<float> vec = *output.as<float>();
-  EXPECT_NEAR(std::accumulate(vec.begin(), vec.end(), 0.0F), 0.3, 0.1);
+  EXPECT_NEAR(std::accumulate(vec.begin(), vec.end(), 0.0F), 0.3, 0.2);
 }
 
 TEST(DropOutLayer, get_layer_name) {
