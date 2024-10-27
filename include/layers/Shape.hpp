@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+#include <iostream>
 #include <algorithm>
 #include <initializer_list>
 #include <numeric>
@@ -37,8 +39,9 @@ class Shape {
   }
   size_t dims() const noexcept { return dims_.size(); }
   size_t get_index(const std::vector<size_t>& coords) const;
-
+  friend std::ostream& operator<<(std::ostream& os, const Shape& shape);
  private:
   std::vector<size_t> dims_;
 };
+
 }  // namespace itlab_2023

@@ -79,9 +79,11 @@ class Graph {
     std::vector<int> traversal;
     q.push(start_);
     visited[start_] = true;
+
     while (!q.empty()) {
       int current = q.front();
       q.pop();
+
       if (current == end_) {
         int node = current;
         while (node != -1) {
@@ -91,6 +93,7 @@ class Graph {
         std::reverse(traversal.begin(), traversal.end());
         break;
       }
+
       for (int ind = arrayV_[current]; ind < arrayV_[current + 1]; ind++) {
         int neighbor = arrayE_[ind];
         if (!visited[neighbor]) {
@@ -100,27 +103,39 @@ class Graph {
         }
       }
     }
+
     for (int i : traversal) {
 #ifdef ENABLE_STATISTIC_TIME
       auto start = std::chrono::high_resolution_clock::now();
 #endif
+      std::cout << "Running layer " << i
+                << " with input shape: " << inten_.get_shape()
+                << ", output shape: " << outten_->get_shape() << std::endl;
+
       layers_[i]->run(inten_, *outten_);
+
 #ifdef ENABLE_STATISTIC_TENSORS
       tensors_.push_back(inten_);
       tensors_.push_back(*outten_);
 #endif
+
 #ifdef ENABLE_STATISTIC_WEIGHTS
       weights_.push_back(layers_[i]->get_weights());
 #endif
+
       inten_ = *outten_;
+
 #ifdef ENABLE_STATISTIC_TIME
       auto end = std::chrono::high_resolution_clock::now();
       auto elapsed =
           std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
       time_.push_back(static_cast<int>(elapsed.count()));
+      std::cout << "Layer " << i << " execution time: " << elapsed.count()
+                << " ms" << std::endl;
 #endif
     }
   }
+
   void setOutput(const Layer& lay, Tensor& vec) {
     end_ = lay.getID();
     outten_ = &vec;

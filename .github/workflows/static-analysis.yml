@@ -43,4 +43,4 @@ jobs:
             cmake --build build --parallel
     - name: Run clang-tidy
       run: |
-        clang-tidy app/**/*.cpp src/**/*.cpp -format-style=file -header-filter=$PWD/.* -p build
+        clang-tidy app/**/*.cpp src/**/*.cpp -format-style=file -header-filter="($PWD/include/.*|$PWD/src/.*|$PWD/app/.*)" -p build

@@ -8,19 +8,22 @@ execute_process(
     COMMAND ${CMAKE_COMMAND} --build "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" --config "${CMAKE_BUILD_TYPE}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build"
 )
-
 set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/build.hpp")
 set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/build.cpp")
 add_library(BuildGraph STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 
-set_target_properties(ReadLib PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(BuildGraph PROPERTIES LINKER_LANGUAGE CXX)
 
-find_package( OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" )
-include_directories( ${OpenCV_INCLUDE_DIRS} )
-target_link_libraries( BuildGraph ${OpenCV_LIBS} )
-target_link_libraries( BuildGraph TBB::tbb)
-target_link_libraries( BuildGraph layers_lib)
-target_link_libraries( BuildGraph gtest_main)
+find_package(OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build")
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+target_link_libraries(BuildGraph PUBLIC ${OpenCV_LIBS})
+target_link_libraries(BuildGraph PUBLIC reader_lib)
+target_link_libraries(BuildGraph PUBLIC TBB::tbb)
+target_link_libraries(BuildGraph PUBLIC layers_lib)
+target_link_libraries(BuildGraph PUBLIC gtest_main)
+
+target_include_directories(BuildGraph PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/Json/include)
 
 add_executable(Graph_Build graph_build.cpp)
 target_link_libraries(Graph_Build BuildGraph)
