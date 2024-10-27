@@ -15,7 +15,7 @@ void DropOutLayer::run(const Tensor &input, Tensor &output) {
   switch (input.get_type()) {
     case Type::kInt: {
       std::vector<int> vec = *input.as<int>();
-      for (size_t i = 0; i < vec.size(); i++) {
+      for (int &i : vec) {
         if (unif(rand_engine) < static_cast<float>(drop_rate_) * 100)
           vec[i] = 0;
       }
@@ -24,9 +24,9 @@ void DropOutLayer::run(const Tensor &input, Tensor &output) {
     }
     case Type::kFloat: {
       std::vector<float> vec = *input.as<float>();
-      for (size_t i = 0; i < vec.size(); i++) {
+      for (float &j : vec) {
         if (unif(rand_engine) < static_cast<float>(drop_rate_) * 100)
-          vec[i] = 0;
+          vec[j] = 0;
       }
       output = make_tensor(vec, input.get_shape());
       break;
