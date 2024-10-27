@@ -6,8 +6,8 @@ int main() {
   std::string json_file = MODEL_PATH;
   json model_data = read_json(json_file);
 
-  for (auto& layer : model_data.items()) {
-    std::string layer_name = layer.key();
+  for (const auto& layer : model_data.items()) {
+    const std::string& layer_name = layer.key();
     std::cout << "Layer: " << layer_name << std::endl;
 
     try {
