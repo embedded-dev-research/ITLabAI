@@ -10,7 +10,30 @@
 #include "layers/Layer.hpp"
 
 namespace itlab_2023 {
-
+std::string layerTypeToString(LayerType type) {
+  switch (type) {
+    case kInput:
+      return "Input";
+    case kPooling:
+      return "Pooling";
+    case kNormalization:
+      return "Normalization";
+    case kDropout:
+      return "Dropout";
+    case kElementWise:
+      return "ElementWise";
+    case kConvolution:
+      return "Convolution";
+    case kFullyConnected:
+      return "FullyConnected";
+    case kFlatten:
+      return "Flatten";
+    case kOutput:
+      return "Output";
+    default:
+      return "Unknown";
+  }
+}
 class Graph {
   int BiggestSize_;
   int V_;
@@ -108,8 +131,9 @@ class Graph {
 #ifdef ENABLE_STATISTIC_TIME
       auto start = std::chrono::high_resolution_clock::now();
 #endif
-      std::cout << "Running layer " << i
-                << " with input shape: " << inten_.get_shape()
+      std::cout << "Running layer " << i << " ("
+                << layerTypeToString(layers_[i]->getName()) << ") "
+                << "with input shape: " << inten_.get_shape()
                 << ", output shape: " << outten_->get_shape() << std::endl;
 
       layers_[i]->run(inten_, *outten_);

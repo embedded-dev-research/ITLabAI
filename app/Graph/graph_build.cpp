@@ -43,9 +43,10 @@ void build_graph(Tensor input, Tensor output) {
       Tensor tmp_values = tensor;
       Tensor tmp_bias = make_tensor(tensor.get_bias());
 
-
-       layers.push_back(
-          std::make_shared<ConvolutionalLayer>(1, 0, 0, tmp_values, tmp_bias));
+      auto conv_layer =
+          std::make_shared<ConvolutionalLayer>(1, 0, 0, tmp_values, tmp_bias);
+      conv_layer->setName(kConvolution);
+      layers.push_back(conv_layer);
       std::cout << "ConvLayer added to layers." << std::endl;
     }
 
@@ -53,7 +54,9 @@ void build_graph(Tensor input, Tensor output) {
       Tensor tmp_values = tensor;
       Tensor tmp_bias = make_tensor(tensor.get_bias());
 
-      layers.push_back(std::make_shared<FCLayer>(tmp_values, tmp_bias));
+      auto fc_layer = std::make_shared<FCLayer>(tmp_values, tmp_bias);
+      fc_layer->setName(kFullyConnected);
+      layers.push_back(fc_layer);
       std::cout << "DenseLayer added to layers." << std::endl;
     }
 
@@ -61,25 +64,31 @@ void build_graph(Tensor input, Tensor output) {
       Shape shape = {2, 2};
       std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
                 << std::endl;
-
-      layers.push_back(std::make_shared<PoolingLayer>(shape));
+      auto pool_layer = std::make_shared<PoolingLayer>(shape);
+      pool_layer->setName(kPooling);
+      layers.push_back(pool_layer);
       std::cout << "PoolingLayer added to layers." << std::endl;
     }
 
     if (layer_type.find("Flatten") != std::string::npos) {
-      layers.emplace_back(std::make_shared<FlattenLayer>());
+      auto flatten_layer = std::make_shared<FlattenLayer>();
+      flatten_layer->setName(kFlatten);
+      layers.push_back(flatten_layer);
       std::cout << "FlattenLayer added to layers." << std::endl;
     }
 
     if (layer_type.find("Dropout") != std::string::npos) {
-      layers.emplace_back(std::make_shared<DropOutLayer>(0.5));
+      auto dropout_layer = std::make_shared<DropOutLayer>(0.5);
+      dropout_layer->setName(kDropout);
+      layers.push_back(dropout_layer);
       std::cout << "DropOutLayer added to layers with probability 0.5."
                 << std::endl;
     }
   }
-
+  std::cout << "number of layers - " << layers.size() + 1<< std::endl;
   Graph graph(static_cast<int>(layers.size()));
   InputLayer a1(kNhwc, kNchw, 1, 2);
+
   std::cout << "InputLayer created." << std::endl;
 
   graph.setInput(a1, input);
@@ -91,9 +100,14 @@ void build_graph(Tensor input, Tensor output) {
 
   for (size_t i = 0; i < layers.size() - 1; ++i) {
     graph.makeConnection(*layers[i], *layers[i + 1]);
-    std::cout << "Connection made between layer " << i << " and layer " << i + 1
+    std::cout << "Connection made between layer " << i << " ("
+              << layerTypeToString(layers[i]->getName()) << ")"
+              << " and layer " << i + 1 << " ("
+              << layerTypeToString(layers[i + 1]->getName()) << ")"
               << std::endl;
   }
+
+
 
   graph.setOutput(*layers.back(), output);
   std::cout << "Output set in graph." << std::endl;

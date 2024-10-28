@@ -18,6 +18,7 @@ enum LayerType {
   kElementWise,
   kConvolution,
   kFullyConnected,
+  kFlatten,
   kOutput,
 };
 
