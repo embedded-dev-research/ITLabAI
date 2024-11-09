@@ -1,5 +1,5 @@
 #include "layers/ConvLayer.hpp"
-#include <iostream>
+
 namespace itlab_2023 {
 
 void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
@@ -337,12 +337,12 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
         if (dilations_ > 0) {
           dil_kernel =
               std::vector<std::vector<std::vector<std::vector<float>>>>(
-              kernel_height * (1 + 2 * dilations_),
+                  kernel_height * (1 + 2 * dilations_),
                   std::vector<std::vector<std::vector<float>>>(
-                  kernel_width * (1 + 2 * dilations_),
-                  std::vector<std::vector<float>>(
-                      kernel_in_channels,
-                      std::vector<float>(kernel_out_channels, 0))));
+                      kernel_width * (1 + 2 * dilations_),
+                      std::vector<std::vector<float>>(
+                          kernel_in_channels,
+                          std::vector<float>(kernel_out_channels, 0))));
 
           for (size_t b = 0; b < kernel_out_channels; ++b) {
             for (size_t h = 0; h < kernel_height; ++h) {
@@ -414,7 +414,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
 
         Shape sh({batch_size, kernel_out_channels, out_height, out_width});
         std::vector<float> one_d_vector(batch_size * out_height * out_width *
-                                      kernel_out_channels);
+                                        kernel_out_channels);
         size_t index_1d = 0;
         for (size_t i = 0; i < batch_size; ++i) {
           for (size_t l = 0; l < kernel_out_channels; ++l) {
