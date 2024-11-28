@@ -119,6 +119,10 @@ void check_accuracy(std::string neural_network_path, std::string dataset_path,
   Tensor output;
   InputLayer inlayer;
   OutputLayer outlayer;
+  // ?? warning from linux
+  outlayer.setID(1);
+  inlayer.setID(0);
+  //
   size_t k = 5;
   for (size_t i = 0; i < imgs_size; i++) {
     process_image(input,
