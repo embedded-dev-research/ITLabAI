@@ -12,8 +12,8 @@
 
 using namespace itlab_2023;
 
-bool cmp_by_first(std::pair<size_t, std::string> a,
-                  std::pair<size_t, std::string> b) {
+bool cmp_by_first(const std::pair<size_t, std::string>& a,
+                  const std::pair<size_t, std::string>& b) {
   return a.first < b.first;
 }
 
@@ -24,11 +24,11 @@ std::string generate_imgnet_val_string(size_t i) {
   return res;
 }
 
-std::vector<std::string> split(std::string str, std::string delim,
+std::vector<std::string> split(std::string str, const std::string& delim,
                                size_t count) {
   std::vector<std::string> result;
   size_t cur_count = 0;
-  while (str.size() && cur_count < count) {
+  while (!str.empty() && cur_count < count) {
     size_t index = str.find(delim);
     if (index != std::string::npos) {
       result.push_back(str.substr(0, index));
@@ -43,14 +43,14 @@ std::vector<std::string> split(std::string str, std::string delim,
   return result;
 }
 
-size_t str_to_sizet(std::string inp) {
+size_t str_to_sizet(const std::string& inp) {
   size_t res = 0;
-  if (inp.size() == 0) {
+  if (inp.empty()) {
     return 0;
   }
-  for (size_t i = 0; i < inp.size(); i++) {
+  for (char i : inp) {
     res *= 10;
-    res += inp[i] - '0';
+    res += i - '0';
   }
   return res;
 }
@@ -60,7 +60,7 @@ Graph open_network(std::string path) {
   return Graph(1);
 }
 
-void process_image(Tensor& input, std::string file) {
+void process_image(Tensor& input, const std::string& file) {
   size_t width = 227;
   cv::Mat image = cv::imread(file);
   if (image.empty()) {
@@ -94,7 +94,7 @@ void process_image(Tensor& input, std::string file) {
 }
 
 std::vector<std::pair<size_t, std::string> > extract_csv(
-    std::string reference_path) {
+    const std::string& reference_path) {
   size_t n = 50000;
   std::ifstream ref;
   std::vector<std::pair<size_t, std::string> > lines(n);
@@ -112,9 +112,9 @@ std::vector<std::pair<size_t, std::string> > extract_csv(
   return lines;
 }
 
-void check_accuracy(std::string neural_network_path, std::string dataset_path,
-                    size_t imgs_size, std::string reference_path) {
-  Graph a1 = open_network(neural_network_path);
+void check_accuracy(const std::string& neural_network_path, const std::string& dataset_path,
+                    size_t imgs_size, const std::string& reference_path) {
+  Graph a1 = open_network(std::move(neural_network_path));
   Tensor input;
   Tensor output;
   InputLayer inlayer;
@@ -134,7 +134,7 @@ void check_accuracy(std::string neural_network_path, std::string dataset_path,
   size_t eqs;
   std::vector<size_t> eqs_info(imgs_size);
   std::vector<std::pair<size_t, std::string> > csv_info =
-      extract_csv(reference_path);
+      extract_csv(std::move(reference_path));
   std::sort(csv_info.begin(), csv_info.end(), cmp_by_first);
   std::vector<std::string> cur_ref_topk;
   std::vector<std::string> cur_our_topk;
