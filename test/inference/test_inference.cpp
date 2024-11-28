@@ -11,47 +11,6 @@
 
 using namespace itlab_2023;
 
-Graph open_network(std::string path) { return Graph(1); }
-void process_image(Tensor input, std::string file) {}
-std::vector<std::string> extract_topk(size_t k, std::string img_name,
-                                      std::string reference_path) {
-  return std::vector<std::string>({"1"});
-}
-
-void check_accuracy(std::string neural_network_path, std::string dataset_path,
-                    size_t imgs_size, std::string reference_path,
-                    std::string output_path) {
-  Graph a1 = open_network(neural_network_path);
-  Tensor input;
-  Tensor output;
-  InputLayer inlayer;
-  OutputLayer outlayer;
-  size_t k = 5;
-  std::string cur_file = "";
-  for (size_t i = 0; i < imgs_size; i++) {
-    cur_file = "" + i;
-    process_image(input, cur_file);
-  }
-  a1.setInput(inlayer, input);
-  a1.setOutput(outlayer, output);
-  a1.inference();
-  size_t eqs;
-  std::vector<size_t> eqs_info(imgs_size);
-  for (size_t i = 0; i < imgs_size; i++) {
-    eqs = 0;
-    std::vector<std::string> cur_ref_topk =
-        extract_topk(k, cur_file, reference_path);
-    std::vector<std::string> cur_our_topk = outlayer.top_k(output, k).first;
-    for (size_t j = 0; j < k; j++) {
-      if (cur_ref_topk == cur_our_topk) {
-        eqs++;
-      }
-    }
-    eqs_info[i] = eqs;
-  }
-  // ... analyze accuracy
-}
-
 TEST(bfs, check_result_vec) {
   Graph graph(5);
   Shape sh1({1, 5, 5, 3});
