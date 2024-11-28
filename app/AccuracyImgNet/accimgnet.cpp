@@ -55,7 +55,10 @@ size_t str_to_sizet(std::string inp) {
   return res;
 }
 
-Graph open_network(std::string path) { return Graph(1); }
+Graph open_network(std::string path) {
+  path += " ";
+  return Graph(1);
+}
 
 void process_image(Tensor& input, std::string file) {
   size_t width = 227;
@@ -69,8 +72,8 @@ void process_image(Tensor& input, std::string file) {
   cv::split(resized_image, channels);
   std::vector<float> res(width * width * 3);
   int c = 0;
-  for (int i = 0; i < width; ++i) {
-    for (int j = 0; j < width; ++j) {
+  for (int i = 0; i < (int)width; ++i) {
+    for (int j = 0; j < (int)width; ++j) {
       res[c] = channels[2].at<uchar>(i, j);
       c++;
       res[c] = channels[1].at<uchar>(i, j);
