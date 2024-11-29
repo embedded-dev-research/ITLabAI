@@ -25,6 +25,7 @@ enum LayerType {
 class Layer {
  public:
   Layer() = default;
+  virtual ~Layer() = default;
   int getID() const { return id_; }
   void setID(int id) { id_ = id; }
   LayerType getName() const { return type_; }
