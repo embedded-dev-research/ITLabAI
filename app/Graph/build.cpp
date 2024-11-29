@@ -38,7 +38,7 @@ void build_graph(Tensor& input, Tensor& output) {
       std::vector<float> values_vector = *tensor.as<float>();
       std::vector<std::vector<float>> values_vector_2d(
           tensor.get_shape()[0],
-          std::vector<float>(tensor.get_shape()[1], 0.0f));
+          std::vector<float>(tensor.get_shape()[1], 0.0F));
       int q = 0;
       for (size_t i = 0; i < values_vector.size(); i++) {
         values_vector_2d[q][i - (q * tensor.get_shape()[1])] = values_vector[i];
@@ -48,7 +48,7 @@ void build_graph(Tensor& input, Tensor& output) {
       }
       std::vector<std::vector<float>> values_vector_2d_2(
           tensor.get_shape()[1],
-          std::vector<float>(tensor.get_shape()[0], 0.0f));
+          std::vector<float>(tensor.get_shape()[0], 0.0F));
 
       for (size_t i = 0; i < tensor.get_shape()[0]; ++i) {
         for (size_t j = 0; j < tensor.get_shape()[1]; ++j) {
