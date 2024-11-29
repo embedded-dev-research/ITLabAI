@@ -1,5 +1,5 @@
-#include "build.hpp"
 #include "build.cpp"
+#include "build.hpp"
 
 using namespace itlab_2023;
 
@@ -13,7 +13,7 @@ int main() {
   cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
   cv::resize(image, resized_image, cv::Size(28, 28));
   std::vector<cv::Mat> channels;
- 
+
   cv::split(resized_image, channels);
 
   int count_pic = 1;
@@ -21,7 +21,7 @@ int main() {
 
   for (int i = 0; i < 28; ++i) {
     for (int j = 0; j < 28; ++j) {
-      res[i * 28 + j] = channels[0].at<uchar>(i,j);
+      res[i * 28 + j] = channels[0].at<uchar>(i, j);
     }
   }
   Shape sh({static_cast<size_t>(count_pic), 28, 28, 1});

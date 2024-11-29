@@ -1,8 +1,9 @@
 #include <iostream>
+#include <opencv2/opencv.hpp>
 #include <stdexcept>
 #include <variant>
 #include <vector>
-#include <opencv2/opencv.hpp>
+
 #include "Weights_Reader/reader_weights.hpp"
 #include "graph/graph.hpp"
 #include "layers/ConvLayer.hpp"

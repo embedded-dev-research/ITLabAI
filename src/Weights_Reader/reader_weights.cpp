@@ -55,7 +55,8 @@ void extract_values_without_bias(const json& j, std::vector<float>& values) {
   }
 }
 
-void parse_json_shape(const json& j, std::vector<size_t>& shape, size_t dim = 0) {
+void parse_json_shape(const json& j, std::vector<size_t>& shape,
+    size_t dim) {
   if (dim == 0) {
     if (j.is_array()) {
       if (j.empty()) {
@@ -98,7 +99,7 @@ Tensor create_tensor_from_json(const json& j, Type type) {
     extract_values_without_bias(j, vals);
     std::cout << "Extracted values size: " << vals.size() << std::endl;
 
-    parse_json_shape(j, shape);
+    parse_json_shape(j, shape, 0);
     std::cout << "Parsed shape: ";
     size_t expected_size = 1;
     for (const auto& dim : shape) {
