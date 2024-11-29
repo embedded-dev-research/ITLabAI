@@ -55,7 +55,7 @@ void extract_values_without_bias(const json& j, std::vector<float>& values) {
   }
 }
 
-void parse_json_shape(const json& j, std::vector<size_t>& shape, size_t dim) {
+void parse_json_shape(const json& j, std::vector<size_t>& shape, size_t dim = 0) {
   if (dim == 0) {
     if (j.is_array()) {
       if (j.empty()) {

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <ostream>
-#include <iostream>
 #include <algorithm>
 #include <initializer_list>
+#include <iostream>
 #include <numeric>
+#include <ostream>
 #include <stdexcept>
 #include <vector>
 
@@ -40,6 +40,7 @@ class Shape {
   size_t dims() const noexcept { return dims_.size(); }
   size_t get_index(const std::vector<size_t>& coords) const;
   friend std::ostream& operator<<(std::ostream& os, const Shape& shape);
+
  private:
   std::vector<size_t> dims_;
 };
