@@ -15,4 +15,4 @@
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
 
-void build_graph(Tensor input, Tensor output);
+void build_graph(Tensor& input, Tensor& output);

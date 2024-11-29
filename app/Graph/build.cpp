@@ -1,6 +1,6 @@
 #include "build.hpp"
 
-void build_graph(Tensor input, Tensor output) {
+void build_graph(Tensor& input, Tensor& output) {
   std::vector<std::shared_ptr<Layer>> layers;
 
   std::string json_file = MODEL_PATH;
@@ -35,38 +35,38 @@ void build_graph(Tensor input, Tensor output) {
 
     if (layer_type.find("Dense") != std::string::npos) {
       Tensor tmp_values = tensor;
-      std::vector<float> Values_vector = *tensor.as<float>();
-      std::vector<std::vector<float>> Values_vector_2d(
+      std::vector<float> values_vector = *tensor.as<float>();
+      std::vector<std::vector<float>> values_vector_2d(
           tensor.get_shape()[0],
           std::vector<float>(tensor.get_shape()[1], 0.0f));
       int q = 0;
-      for (size_t i = 0; i < Values_vector.size(); i++) {
-        Values_vector_2d[q][i - (q * tensor.get_shape()[1])] = Values_vector[i];
+      for (size_t i = 0; i < values_vector.size(); i++) {
+        values_vector_2d[q][i - (q * tensor.get_shape()[1])] = values_vector[i];
         if ((i + 1) % tensor.get_shape()[1] == 0) {
           q++;
         }
       }
-      std::vector<std::vector<float>> Values_vector_2d_2(
+      std::vector<std::vector<float>> values_vector_2d_2(
           tensor.get_shape()[1],
           std::vector<float>(tensor.get_shape()[0], 0.0f));
 
       for (size_t i = 0; i < tensor.get_shape()[0]; ++i) {
         for (size_t j = 0; j < tensor.get_shape()[1]; ++j) {
-          Values_vector_2d_2[j][i] = Values_vector_2d[i][j];
+          values_vector_2d_2[j][i] = values_vector_2d[i][j];
         }
       }
-      std::vector<float> Values_vector_1d(
-          tensor.get_shape()[0] * tensor.get_shape()[1], 0.0f);
+      std::vector<float> values_vector_1d(
+          tensor.get_shape()[0] * tensor.get_shape()[1], 0.0F);
       int index_1d = 0;
 
       for (size_t j = 0; j < tensor.get_shape()[1]; ++j) {
         for (size_t k = 0; k < tensor.get_shape()[0]; ++k) {
-          Values_vector_1d[index_1d++] = Values_vector_2d_2[j][k];
+          values_vector_1d[index_1d++] = values_vector_2d_2[j][k];
         }
       }
 
       Shape shape_fc({tensor.get_shape()[1], tensor.get_shape()[0]});
-      Tensor values = make_tensor<float>(Values_vector_1d, shape_fc);
+      Tensor values = make_tensor<float>(values_vector_1d, shape_fc);
       Tensor tmp_bias = make_tensor(tensor.get_bias());
 
       auto fc_layer = std::make_shared<FCLayer>(values, tmp_bias);

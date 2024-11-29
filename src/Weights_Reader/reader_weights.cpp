@@ -107,9 +107,6 @@ Tensor create_tensor_from_json(const json& j, Type type) {
     }
     std::cout << std::endl;
 
-    if (expected_size == 1 && shape.empty()) {
-      expected_size = 0;
-    }
     extract_bias_from_json(j, bias);
     std::cout << "Extracted bias size: " << bias.size() << std::endl;
     Shape sh(shape);
