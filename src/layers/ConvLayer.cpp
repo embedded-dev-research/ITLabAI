@@ -63,22 +63,6 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
         size_t kernel_in_channels = kernel_.get_shape()[2];
         size_t kernel_out_channels = kernel_.get_shape()[3];
 
-        size_t out_height =
-            (in_height + 2 * pads_ - (dilations_ * (kernel_height - 1) + 1)) /
-                stride_ +
-            1;
-        size_t out_width =
-            (in_width + 2 * pads_ - (dilations_ * (kernel_width - 1) + 1)) /
-                stride_ +
-            1;
-
-        std::vector<std::vector<std::vector<std::vector<int>>>> output_tensor(
-            batch_size,
-            std::vector<std::vector<std::vector<int>>>(
-                out_height,
-                std::vector<std::vector<int>>(
-                    out_width, std::vector<int>(kernel_out_channels, 0))));
-
         std::vector<int> t = *input.as<int>();
         std::vector<std::vector<std::vector<std::vector<int>>>> input_tensor(
             batch_size,
@@ -111,6 +95,8 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
           kernel[n_index][h_index][w_index][c_index] = t1[index];
         }
 
+        pads_ = (kernel_height * (1 + 2 * dilations_) - 1) / 2;
+
         std::vector<std::vector<std::vector<std::vector<int>>>> padded_input =
             input_tensor;
         if (pads_ > 0) {
@@ -134,38 +120,93 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
           }
         }
 
-        for (size_t b = 0; b < batch_size; ++b) {
-          for (size_t oc = 0; oc < kernel_out_channels; ++oc) {
-            for (size_t i = 0; i < out_height; ++i) {
-              for (size_t j = 0; j < out_width; ++j) {
-                int value = 0;
-                for (size_t kh = 0; kh < kernel_height; ++kh) {
-                  for (size_t kw = 0; kw < kernel_width; ++kw) {
-                    for (size_t ic = 0; ic < in_channels; ++ic) {
-                      size_t vert_start = i * stride_ + kh * dilations_;
-                      size_t horiz_start = j * stride_ + kw * dilations_;
+        std::vector<std::vector<std::vector<std::vector<int>>>> dil_kernel =
+            kernel;
+        if (dilations_ > 0) {
+          dil_kernel = std::vector<std::vector<std::vector<std::vector<int>>>>(
+              kernel_height * (1 + 2 * dilations_),
+              std::vector<std::vector<std::vector<int>>>(
+                  kernel_width * (1 + 2 * dilations_),
+                  std::vector<std::vector<int>>(
+                      kernel_in_channels,
+                      std::vector<int>(kernel_out_channels, 0))));
 
-                      if (vert_start < padded_input[0].size() &&
-                          horiz_start < padded_input[0][0].size()) {
-                        value += padded_input[b][vert_start][horiz_start][ic] *
-                                 kernel[kh][kw][ic][oc];
-                      }
-                    }
-                  }
+          for (size_t b = 0; b < kernel_out_channels; ++b) {
+            for (size_t h = 0; h < kernel_height; ++h) {
+              for (size_t w = 0; w < kernel_width; ++w) {
+                for (size_t c = 0; c < kernel_in_channels; ++c) {
+                  dil_kernel[(h * (1 + 2 * dilations_)) + dilations_]
+                            [(w * (1 + 2 * dilations_)) + dilations_][c][b] =
+                                kernel[h][w][c][b];
                 }
-                output_tensor[b][i][j][oc] = value;
               }
             }
           }
         }
-        Shape sh({batch_size, out_height, out_width, kernel_out_channels});
+
+        size_t crat = 0;
+        if ((in_height + 2 * pads_ -
+             ((kernel_height * (1 + 2 * dilations_)) - 1)) %
+                stride_ !=
+            0)
+          crat = 1;
+
+        size_t out_height = (in_height + 2 * pads_ -
+                             ((kernel_height * (1 + 2 * dilations_)) - 1)) /
+                                stride_ +
+                            crat;
+
+        crat = 0;
+
+        if ((in_width + 2 * pads_ -
+             ((kernel_width * (1 + 2 * dilations_)) - 1)) %
+                stride_ !=
+            0)
+          crat = 1;
+
+        size_t out_width = (in_width + 2 * pads_ -
+                            ((kernel_width * (1 + 2 * dilations_)) - 1)) /
+                               stride_ +
+                           crat;
+
+        std::vector<std::vector<std::vector<std::vector<int>>>> output_tensor(
+            batch_size,
+            std::vector<std::vector<std::vector<int>>>(
+                out_height,
+                std::vector<std::vector<int>>(
+                    out_width, std::vector<int>(kernel_out_channels, 0))));
+        size_t one_size = (kernel_height * (1 + 2 * dilations_) - 1) / 2;
+
+        for (size_t b = 0; b < batch_size; ++b) {
+          for (size_t c = 0; c < kernel_out_channels; ++c) {
+            for (size_t i = 0; i < out_height; i += stride_) {
+              for (size_t j = 0; j < out_width; j += stride_) {
+                int value = 0;
+                for (size_t ic = 0; ic < in_channels; ++ic) {
+                  for (int h = (-1 * static_cast<int>(one_size));
+                       h <= static_cast<int>(one_size); ++h) {
+                    for (int w = (-1 * static_cast<int>(one_size));
+                         w <= static_cast<int>(one_size); ++w) {
+                      value += padded_input[b][i + one_size + h]
+                                           [j + one_size + w][ic] *
+                               dil_kernel[one_size + h][one_size + w][ic][c];
+                    }
+                  }
+                }
+                output_tensor[b][i][j][c] = value;
+              }
+            }
+          }
+        }
+
+        Shape sh({batch_size, kernel_out_channels, out_height, out_width});
         std::vector<int> one_d_vector(batch_size * out_height * out_width *
                                       kernel_out_channels);
         size_t index_1d = 0;
         for (size_t i = 0; i < batch_size; ++i) {
-          for (size_t j = 0; j < out_height; ++j) {
-            for (size_t k = 0; k < out_width; ++k) {
-              for (size_t l = 0; l < kernel_out_channels; ++l) {
+          for (size_t l = 0; l < kernel_out_channels; ++l) {
+            for (size_t j = 0; j < out_height; ++j) {
+              for (size_t k = 0; k < out_width; ++k) {
                 one_d_vector[index_1d++] = output_tensor[i][j][k][l];
               }
             }
@@ -234,28 +275,12 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
         size_t kernel_in_channels = kernel_.get_shape()[2];
         size_t kernel_out_channels = kernel_.get_shape()[3];
 
-        size_t out_height =
-            (in_height + 2 * pads_ - (dilations_ * (kernel_height - 1) + 1)) /
-                stride_ +
-            1;
-        size_t out_width =
-            (in_width + 2 * pads_ - (dilations_ * (kernel_width - 1) + 1)) /
-                stride_ +
-            1;
-
-        std::vector<std::vector<std::vector<std::vector<float>>>> output_tensor(
-            batch_size,
-            std::vector<std::vector<std::vector<float>>>(
-                out_height,
-                std::vector<std::vector<float>>(
-                    out_width, std::vector<float>(kernel_out_channels, 0))));
-
         std::vector<float> t = *input.as<float>();
         std::vector<std::vector<std::vector<std::vector<float>>>> input_tensor(
-            batch_size, std::vector<std::vector<std::vector<float>>>(
-                            in_height, std::vector<std::vector<float>>(
-                                           in_width, std::vector<float>(
-                                                         in_channels, 1.0))));
+            batch_size,
+            std::vector<std::vector<std::vector<float>>>(
+                in_height, std::vector<std::vector<float>>(
+                               in_width, std::vector<float>(in_channels, 1))));
         for (size_t index = 0; index < t.size(); ++index) {
           size_t n_index = index / (in_height * in_width * in_channels);
           size_t h_index = (index / (in_width * in_channels)) % in_height;
@@ -268,10 +293,9 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
         std::vector<std::vector<std::vector<std::vector<float>>>> kernel(
             kernel_height,
             std::vector<std::vector<std::vector<float>>>(
-                kernel_width,
-                std::vector<std::vector<float>>(
-                    kernel_in_channels,
-                    std::vector<float>(kernel_out_channels, 1.0))));
+                kernel_width, std::vector<std::vector<float>>(
+                                  kernel_in_channels,
+                                  std::vector<float>(kernel_out_channels, 1))));
         for (size_t index = 0; index < t1.size(); ++index) {
           size_t n_index =
               index / (kernel_width * kernel_in_channels * kernel_out_channels);
@@ -282,6 +306,8 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
           size_t c_index = index % kernel_out_channels;
           kernel[n_index][h_index][w_index][c_index] = t1[index];
         }
+
+        pads_ = (kernel_height * (1 + 2 * dilations_) - 1) / 2;
 
         std::vector<std::vector<std::vector<std::vector<float>>>> padded_input =
             input_tensor;
@@ -306,38 +332,94 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
           }
         }
 
-        for (size_t b = 0; b < batch_size; ++b) {
-          for (size_t oc = 0; oc < kernel_out_channels; ++oc) {
-            for (size_t i = 0; i < out_height; ++i) {
-              for (size_t j = 0; j < out_width; ++j) {
-                float value = 0.0;
-                for (size_t kh = 0; kh < kernel_height; ++kh) {
-                  for (size_t kw = 0; kw < kernel_width; ++kw) {
-                    for (size_t ic = 0; ic < in_channels; ++ic) {
-                      size_t vert_start = i * stride_ + kh * dilations_;
-                      size_t horiz_start = j * stride_ + kw * dilations_;
+        std::vector<std::vector<std::vector<std::vector<float>>>> dil_kernel =
+            kernel;
+        if (dilations_ > 0) {
+          dil_kernel =
+              std::vector<std::vector<std::vector<std::vector<float>>>>(
+                  kernel_height * (1 + 2 * dilations_),
+                  std::vector<std::vector<std::vector<float>>>(
+                      kernel_width * (1 + 2 * dilations_),
+                      std::vector<std::vector<float>>(
+                          kernel_in_channels,
+                          std::vector<float>(kernel_out_channels, 0))));
 
-                      if (vert_start < padded_input[0].size() &&
-                          horiz_start < padded_input[0][0].size()) {
-                        value += padded_input[b][vert_start][horiz_start][ic] *
-                                 kernel[kh][kw][ic][oc];
-                      }
-                    }
-                  }
+          for (size_t b = 0; b < kernel_out_channels; ++b) {
+            for (size_t h = 0; h < kernel_height; ++h) {
+              for (size_t w = 0; w < kernel_width; ++w) {
+                for (size_t c = 0; c < kernel_in_channels; ++c) {
+                  dil_kernel[(h * (1 + 2 * dilations_)) + dilations_]
+                            [(w * (1 + 2 * dilations_)) + dilations_][c][b] =
+                                kernel[h][w][c][b];
                 }
-                output_tensor[b][i][j][oc] = value;
               }
             }
           }
         }
-        Shape sh({batch_size, out_height, out_width, kernel_out_channels});
+
+        size_t crat = 0;
+        if ((in_height + 2 * pads_ -
+             ((kernel_height * (1 + 2 * dilations_)) - 1)) %
+                stride_ !=
+            0)
+          crat = 1;
+
+        size_t out_height = (in_height + 2 * pads_ -
+                             ((kernel_height * (1 + 2 * dilations_)) - 1)) /
+                                stride_ +
+                            crat;
+
+        crat = 0;
+
+        if ((in_width + 2 * pads_ -
+             ((kernel_width * (1 + 2 * dilations_)) - 1)) %
+                stride_ !=
+            0)
+          crat = 1;
+
+        size_t out_width = (in_width + 2 * pads_ -
+                            ((kernel_width * (1 + 2 * dilations_)) - 1)) /
+                               stride_ +
+                           crat;
+
+        std::vector<std::vector<std::vector<std::vector<float>>>> output_tensor(
+            batch_size,
+            std::vector<std::vector<std::vector<float>>>(
+                out_height,
+                std::vector<std::vector<float>>(
+                    out_width, std::vector<float>(kernel_out_channels, 0))));
+        size_t one_size = (kernel_height * (1 + 2 * dilations_) - 1) / 2;
+
+        for (size_t b = 0; b < batch_size; ++b) {
+          for (size_t c = 0; c < kernel_out_channels; ++c) {
+            for (size_t i = 0; i < out_height; i += stride_) {
+              for (size_t j = 0; j < out_width; j += stride_) {
+                float value = 0;
+                for (size_t ic = 0; ic < in_channels; ++ic) {
+                  for (int h = (-1 * static_cast<int>(one_size));
+                       h <= static_cast<int>(one_size); ++h) {
+                    for (int w = (-1 * static_cast<int>(one_size));
+                         w <= static_cast<int>(one_size); ++w) {
+                      value += padded_input[b][i + one_size + h]
+                                           [j + one_size + w][ic] *
+                               dil_kernel[one_size + h][one_size + w][ic][c];
+                    }
+                  }
+                }
+                output_tensor[b][i][j][c] = value;
+              }
+            }
+          }
+        }
+
+        Shape sh({batch_size, kernel_out_channels, out_height, out_width});
         std::vector<float> one_d_vector(batch_size * out_height * out_width *
                                         kernel_out_channels);
         size_t index_1d = 0;
         for (size_t i = 0; i < batch_size; ++i) {
-          for (size_t j = 0; j < out_height; ++j) {
-            for (size_t k = 0; k < out_width; ++k) {
-              for (size_t l = 0; l < kernel_out_channels; ++l) {
+          for (size_t l = 0; l < kernel_out_channels; ++l) {
+            for (size_t j = 0; j < out_height; ++j) {
+              for (size_t k = 0; k < out_width; ++k) {
                 one_d_vector[index_1d++] = output_tensor[i][j][k][l];
               }
             }
