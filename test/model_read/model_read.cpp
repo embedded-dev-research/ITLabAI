@@ -68,7 +68,7 @@ TEST(ExtractValuesFromJsonTests, HandlesNestedArray) {
 TEST(ParseJsonShapeTests, HandlesEmptyArray) {
   json j = json::array({});
   std::vector<size_t> shape;
-  parse_json_shape(j, shape);
+  parse_json_shape(j, shape, 0);
   std::vector<size_t> expected = {0};
   EXPECT_EQ(shape, expected);
 }
@@ -76,7 +76,7 @@ TEST(ParseJsonShapeTests, HandlesEmptyArray) {
 TEST(ParseJsonShapeTests, HandlesSimpleArray) {
   json j = json::array({{1.0, 2.0, 3.0}, {1.0, 2.0, 3.0}});
   std::vector<size_t> shape;
-  parse_json_shape(j, shape);
+  parse_json_shape(j, shape, 0);
   std::vector<size_t> expected = {3};
   EXPECT_EQ(shape, expected);
 }
@@ -84,7 +84,7 @@ TEST(ParseJsonShapeTests, HandlesSimpleArray) {
 TEST(ParseJsonShapeTests, HandlesNestedArray) {
   json j = json::array({{{1.0, 2.0}, {3.0, 4.0}}, {3.0, 4.0}});
   std::vector<size_t> shape;
-  parse_json_shape(j, shape);
+  parse_json_shape(j, shape, 0);
   std::vector<size_t> expected = {2, 2};
   EXPECT_EQ(shape, expected);
 }
@@ -157,7 +157,7 @@ TEST(CreateTensorFromJsonTest, SimpleTensorCheckNoBias) {
 TEST(CreateTensorFromJsonTest, EmptyShape) {
   json j = json::array({});
   std::vector<size_t> shape;
-  parse_json_shape(j, shape);
+  parse_json_shape(j, shape, 0);
   std::vector<size_t> expected = {0};
   EXPECT_EQ(shape, expected);
 }
@@ -171,7 +171,7 @@ TEST(ParseJsonShapeTests, HandlesNonArrayJson) {
   json j = "not_an_array";
   std::vector<size_t> shape;
 
-  parse_json_shape(j, shape);
+  parse_json_shape(j, shape, 0);
 
   std::vector<size_t> expected = {0};
   EXPECT_EQ(shape, expected);
