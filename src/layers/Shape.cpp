@@ -19,4 +19,13 @@ size_t Shape::get_index(const std::vector<size_t>& coords) const {
   }
   return res;
 }
+std::ostream& operator<<(std::ostream& os, const Shape& shape) {
+  for (size_t i = 0; i < shape.dims(); ++i) {
+    os << shape[i];
+    if (i < shape.dims() - 1) {
+      os << " ";
+    }
+  }
+  return os;
+}
 }  // namespace itlab_2023
