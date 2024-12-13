@@ -16,14 +16,20 @@ target_link_libraries(run_test PUBLIC reader_lib)
 
 target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
 
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Debug")
+endif()
+
 if (WIN32)
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
+	    set(CMAKE_BUILD_TYPE "Debug")
+	endif()
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
+	    set(CMAKE_BUILD_TYPE "Release")
+	endif()
     add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/Debug/."
-            "${CMAKE_BINARY_DIR}/bin/")
-    add_custom_command(TARGET run_test POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/Release/."
+            "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/."
             "${CMAKE_BINARY_DIR}/bin/")
 endif()
 

@@ -1,14 +1,3 @@
-file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build")
-
-execute_process(
-    COMMAND ${CMAKE_COMMAND} -S "${CMAKE_SOURCE_DIR}/3rdparty/opencv" -B "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER} -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_PERF_TESTS=OFF -DBUILD_TESTS=OFF -DBUILD_opencv_apps=OFF
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build"
-)
-execute_process(
-    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" --config "${CMAKE_BUILD_TYPE}"
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build"
-)
-
 set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/acc.hpp")
 set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/acc.cpp")
 add_library(ACCLib STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
@@ -24,13 +13,6 @@ target_link_libraries( ACCLib gtest_main)
 
 add_executable(Accuracy_Check accuracy_check.cpp)
 target_link_libraries(Accuracy_Check ACCLib)
-
-if (WIN32)
-add_custom_command(TARGET Accuracy_Check POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
-        "${CMAKE_BINARY_DIR}/app/ReaderImage/${CMAKE_BUILD_TYPE}/")
-endif()
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
