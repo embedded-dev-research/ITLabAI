@@ -106,6 +106,7 @@ class Tensor {
   }
 
   const std::vector<float>& get_bias() const { return bias_; }
+  const std::vector<uint8_t>& get_values() const { return values_; }
 
   bool empty() const { return values_.empty(); }
   auto begin() { return values_.begin(); }

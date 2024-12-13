@@ -49,12 +49,10 @@ void extract_values_without_bias(const json& j, std::vector<float>& values) {
   if (j.is_array() && !j.empty() && j.back().is_array()) {
     bias_size = j.back().size();
   }
-  std::cout << "Temp values size: " << temp_values.size() << std::endl;
   std::cout << "Bias size: " << bias_size << std::endl;
   if (temp_values.size() >= bias_size) {
     values.assign(temp_values.begin(), temp_values.end() - bias_size);
   }
-  std::cout << "Values size after extraction: " << values.size() << std::endl;
 }
 
 void parse_json_shape(const json& j, std::vector<size_t>& shape, size_t dim) {
@@ -100,19 +98,10 @@ Tensor create_tensor_from_json(const json& j, Type type) {
     extract_values_without_bias(j, vals);
     std::cout << "Extracted values size: " << vals.size() << std::endl;
 
-    parse_json_shape(j, shape);
-    std::cout << "Parsed shape: ";
-    size_t expected_size = 1;
-    for (const auto& dim : shape) {
-      std::cout << dim << " ";
-      expected_size *= dim;
-    }
+    parse_json_shape(j, shape, 0);
+
     std::cout << std::endl;
 
-    if (expected_size == 1 && shape.empty()) {
-      expected_size = 0;
-    }
-    std::cout << "Expected size: " << expected_size << std::endl;
     extract_bias_from_json(j, bias);
     std::cout << "Extracted bias size: " << bias.size() << std::endl;
     Shape sh(shape);
