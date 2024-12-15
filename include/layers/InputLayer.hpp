@@ -20,7 +20,8 @@ class InputLayer : public Layer {
 
  public:
   InputLayer() = default;
-  InputLayer(LayInOut layin, LayInOut layout, int mean = 0, int std = 1) {
+  InputLayer(LayInOut layin, LayInOut layout, int mean = 0, int std = 1)
+      : Layer() {
     layin_ = layin;
     layout_ = layout;
     mean_ = mean;
