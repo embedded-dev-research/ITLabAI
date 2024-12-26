@@ -21,10 +21,10 @@ int main() {
 
   for (int i = 0; i < 28; ++i) {
     for (int j = 0; j < 28; ++j) {
-      res[i * 28 + j] = channels[0].at<uchar>(i, j);
+      res[i * 28 + j] = channels[0].at<uchar>(j, i);
     }
   }
-  Shape sh({static_cast<size_t>(count_pic), 28, 28, 1});
+  Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
   Tensor t = make_tensor<float>(res, sh);
   Tensor input = t;
 

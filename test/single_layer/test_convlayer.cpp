@@ -116,7 +116,7 @@ TEST(ConvolutionalLayerTest, FloatWithBias) {
   std::vector<float> output_vec(27, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  std::vector<float> expected_output(27, 5);
+  std::vector<float> expected_output(27, 5.5f);
 
   ConvolutionalLayer layer(1, 0, 0, kernel, bias);
   layer.run(input, output);

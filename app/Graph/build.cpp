@@ -1,6 +1,23 @@
 #include "build.hpp"
 
 void build_graph(Tensor& input, Tensor& output) {
+  for (size_t i = 0; i < input.get_shape().dims(); i++) {
+    std::cout << input.get_shape()[i] << ' ';
+  }
+  std::cout << std::endl;
+  if (input.get_shape().dims() == 4) {
+    for (size_t n = 0; n < input.get_shape()[0]; n++) {
+      for (size_t h = 0; h < input.get_shape()[2]; h++) {
+        for (size_t w = 0; w < input.get_shape()[3]; w++) {
+          for (size_t c = 0; c < input.get_shape()[1]; c++) {
+            std::cout << input.get<float>({n, c, h, w}) << ' ';
+          }
+        }
+        std::cerr << std::endl;
+      }
+    }
+    std::cout << std::endl << std::endl;
+  }
   std::vector<std::shared_ptr<Layer>> layers;
 
   std::string json_file = MODEL_PATH;
@@ -16,7 +33,27 @@ void build_graph(Tensor& input, Tensor& output) {
         create_tensor_from_json(layer_data["weights"], Type::kFloat);
 
     if (layer_type.find("Conv") != std::string::npos) {
+      Tensor tmp_tensor = tensor;
+      // kernel is always transposed ?
+      for (size_t n = 0; n < tensor.get_shape()[2]; n++) {
+        for (size_t c = 0; c < tensor.get_shape()[3]; c++) {
+          for (size_t h = 0; h < tensor.get_shape()[0]; h++) {
+            for (size_t w = 0; w < tensor.get_shape()[1]; w++) {
+              tmp_tensor.set<float>(std::vector<size_t>({w, h, n, c}),
+                                    tensor.get<float>({h, w, n, c}));
+            }
+          }
+        }
+      }
+      //
+      tensor = tmp_tensor;
       Shape shape = tensor.get_shape();
+      size_t pads_ = (tensor.get_shape()[0] - 1) / 2;
+      if (layer_data.contains("padding")) {
+        if (layer_data["padding"] == "nsame") {
+          pads_ = 0;
+        }
+      }
       std::cout << "PoolingLayer shape: ";
       for (size_t i = 0; i < shape.dims(); ++i) {
         std::cout << shape[i] << " ";
@@ -25,51 +62,33 @@ void build_graph(Tensor& input, Tensor& output) {
 
       Tensor tmp_values = tensor;
       Tensor tmp_bias = make_tensor(tensor.get_bias());
-
-      auto conv_layer =
-          std::make_shared<ConvolutionalLayer>(1, 0, 1, tmp_values, tmp_bias);
+      auto conv_layer = std::make_shared<ConvolutionalLayer>(
+          1, pads_, 1, tmp_values, tmp_bias);
       conv_layer->setName(kConvolution);
       layers.push_back(conv_layer);
       std::cout << "ConvLayer added to layers." << std::endl;
     }
-
+    if (layer_type.find("relu") != std::string::npos) {
+      auto ew_layer = std::make_shared<EWLayer>("relu");
+      ew_layer->setName(kElementWise);
+      layers.push_back(ew_layer);
+      std::cout << "Element wise (relu) added to layers" << std::endl;
+    }
     if (layer_type.find("Dense") != std::string::npos) {
-      Tensor tmp_values = tensor;
-      std::vector<float> values_vector = *tensor.as<float>();
-      std::vector<std::vector<float>> values_vector_2d(
-          tensor.get_shape()[0],
-          std::vector<float>(tensor.get_shape()[1], 0.0F));
-      int q = 0;
-      for (size_t i = 0; i < values_vector.size(); i++) {
-        values_vector_2d[q][i - (q * tensor.get_shape()[1])] = values_vector[i];
-        if ((i + 1) % tensor.get_shape()[1] == 0) {
-          q++;
-        }
-      }
-      std::vector<std::vector<float>> values_vector_2d_2(
-          tensor.get_shape()[1],
-          std::vector<float>(tensor.get_shape()[0], 0.0F));
-
-      for (size_t i = 0; i < tensor.get_shape()[0]; ++i) {
-        for (size_t j = 0; j < tensor.get_shape()[1]; ++j) {
-          values_vector_2d_2[j][i] = values_vector_2d[i][j];
-        }
-      }
-      std::vector<float> values_vector_1d(
-          tensor.get_shape()[0] * tensor.get_shape()[1], 0.0F);
-      int index_1d = 0;
-
-      for (size_t j = 0; j < tensor.get_shape()[1]; ++j) {
-        for (size_t k = 0; k < tensor.get_shape()[0]; ++k) {
-          values_vector_1d[index_1d++] = values_vector_2d_2[j][k];
-        }
-      }
-
-      Shape shape_fc({tensor.get_shape()[1], tensor.get_shape()[0]});
-      Tensor values = make_tensor<float>(values_vector_1d, shape_fc);
       Tensor tmp_bias = make_tensor(tensor.get_bias());
-
-      auto fc_layer = std::make_shared<FCLayer>(values, tmp_bias);
+      Tensor tmp_tensor =
+          Tensor(Shape({tensor.get_shape()[1], tensor.get_shape()[0]}),
+                 itlab_2023::Type::kFloat);
+      // kernel is always transposed ?
+      for (size_t h = 0; h < tensor.get_shape()[0]; h++) {
+        for (size_t w = 0; w < tensor.get_shape()[1]; w++) {
+          tmp_tensor.set<float>(std::vector<size_t>({w, h}),
+                                tensor.get<float>({h, w}));
+        }
+      }
+      //
+      tensor = tmp_tensor;
+      auto fc_layer = std::make_shared<FCLayer>(tensor, tmp_bias);
       fc_layer->setName(kFullyConnected);
       layers.push_back(fc_layer);
       std::cout << "DenseLayer added to layers." << std::endl;
@@ -77,32 +96,38 @@ void build_graph(Tensor& input, Tensor& output) {
 
     if (layer_type.find("Pool") != std::string::npos) {
       Shape shape = {2, 2};
+      std::string pooltype;
+      if (layer_type.find("Max") != std::string::npos) {
+        pooltype = "max";
+      } else {
+        pooltype = "average";
+      }
       std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
                 << std::endl;
-      auto pool_layer = std::make_shared<PoolingLayer>(shape);
+      auto pool_layer = std::make_shared<PoolingLayer>(shape, pooltype);
       pool_layer->setName(kPooling);
       layers.push_back(pool_layer);
       std::cout << "PoolingLayer added to layers." << std::endl;
     }
 
     if (layer_type.find("Flatten") != std::string::npos) {
-      auto flatten_layer = std::make_shared<FlattenLayer>();
+      auto flatten_layer = std::make_shared<FlattenLayer>(std::vector<size_t>({0, 3, 2, 1}));
       flatten_layer->setName(kFlatten);
       layers.push_back(flatten_layer);
       std::cout << "FlattenLayer added to layers." << std::endl;
     }
 
     if (layer_type.find("Dropout") != std::string::npos) {
-      auto dropout_layer = std::make_shared<DropOutLayer>(0.5);
+      auto dropout_layer = std::make_shared<DropOutLayer>(0.0);
       dropout_layer->setName(kDropout);
       layers.push_back(dropout_layer);
-      std::cout << "DropOutLayer added to layers with probability 0.5."
+      std::cout << "DropOutLayer added to layers with probability 0.4."
                 << std::endl;
     }
   }
   std::cout << "number of layers - " << layers.size() + 1 << std::endl;
   Graph graph(static_cast<int>(layers.size()));
-  InputLayer a1(kNhwc, kNchw, 1, 2);
+  InputLayer a1(kNchw, kNchw, 0, 1);
 
   std::cout << "InputLayer created." << std::endl;
 
@@ -126,7 +151,11 @@ void build_graph(Tensor& input, Tensor& output) {
 
   std::vector<float> tmp = *output.as<float>();
   std::vector<float> tmp_output = softmax<float>(*output.as<float>());
-  for (float i : tmp) {
-    std::cout << i << " ";
+  for (int i = 0; i < tmp_output.size(); i++) {
+    if (tmp_output[i] < 1e-6) {
+      std::cout << i << ": 0" << std::endl;
+    } else {
+      std::cout << i << ": " << tmp_output[i] << std::endl;
+    }
   }
 }
