@@ -153,7 +153,7 @@ void build_graph(Tensor& input, Tensor& output) {
 
   std::vector<float> tmp = *output.as<float>();
   std::vector<float> tmp_output = softmax<float>(*output.as<float>());
-  for (int i = 0; i < tmp_output.size(); i++) {
+  for (size_t i = 0; i < tmp_output.size(); i++) {
     if (tmp_output[i] < 1e-6) {
       std::cout << i << ": 0" << std::endl;
     } else {

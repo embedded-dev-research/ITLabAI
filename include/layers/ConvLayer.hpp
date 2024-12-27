@@ -127,7 +127,7 @@ class ConvImpl : public LayerImpl<ValueType> {
 // NCHW -> NCHW only
 template <typename ValueType>
 void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
-              Tensor& output, size_t stride_, size_t pads_, size_t dilations_) {
+            Tensor& output, size_t stride_, size_t pads_, size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
   size_t in_height = input.get_shape()[2];
   size_t in_width = input.get_shape()[3];
@@ -215,8 +215,7 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
       for (size_t h = 0; h < kernel_height; ++h) {
         for (size_t w = 0; w < kernel_width; ++w) {
           for (size_t c = 0; c < kernel_in_channels; ++c) {
-            dil_kernel[h * dilations_]
-                      [w * dilations_][c][b] =
+            dil_kernel[h * dilations_][w * dilations_][c][b] =
                 kernel[h][w][c][b];
           }
         }
@@ -252,9 +251,9 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
         for (size_t j = 0; j < out_width; j += stride_) {
           ValueType value = 0;
           for (size_t ic = 0; ic < in_channels; ++ic) {
-            for (int h = 0; h < kernel_height * dilations_ + 1 - dilations_;
+            for (size_t h = 0; h < kernel_height * dilations_ + 1 - dilations_;
                  ++h) {
-              for (int w = 0; w < kernel_width * dilations_ + 1 - dilations_;
+              for (size_t w = 0; w < kernel_width * dilations_ + 1 - dilations_;
                    ++w) {
                 value +=
                     padded_input[b][i + h][j + w][ic] * dil_kernel[h][w][ic][c];
