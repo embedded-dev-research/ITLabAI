@@ -202,7 +202,6 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> dil_kernel =
       kernel;
   if (dilations_ > 1) {
-    
     dil_kernel = std::vector<std::vector<std::vector<std::vector<ValueType>>>>(
         kernel_height * dilations_ + 1 - dilations_,
         std::vector<std::vector<std::vector<ValueType>>>(
