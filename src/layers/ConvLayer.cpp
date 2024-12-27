@@ -9,6 +9,9 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
   switch (input.get_type()) {
     case Type::kInt: {
       if (kernel_.get_shape().dims() == 2) {
+        if (dilations_ > 0) {
+          dilations_--;
+        }
         ConvImpl<int> used_impl(
             stride_, pads_, dilations_,
             static_cast<int>(input.get_shape()[input.get_shape().dims() - 1]),
@@ -16,8 +19,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
             static_cast<int>(input.get_shape()[input.get_shape().dims() - 3]),
             input.get_shape()[input.get_shape().dims() - 1] *
                 input.get_shape()[input.get_shape().dims() - 2],
-            bias_.empty() ? std::vector<int>()
-                          : std::vector<int>(bias_.begin(), bias_.end()));
+            bias_.empty() ? std::vector<int>() : *bias_.as<int>());
         auto sizeforshape = static_cast<size_t>(
             ((static_cast<int>(
                   input.get_shape()[input.get_shape().dims() - 1]) -
@@ -57,6 +59,9 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
     }
     case Type::kFloat: {
       if (kernel_.get_shape().dims() == 2) {
+        if (dilations_ > 0) {
+          dilations_--;
+        }
         ConvImpl<float> used_impl(
             stride_, pads_, dilations_,
             static_cast<int>(input.get_shape()[input.get_shape().dims() - 1]),
@@ -64,8 +69,7 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
             static_cast<int>(input.get_shape()[input.get_shape().dims() - 3]),
             input.get_shape()[input.get_shape().dims() - 1] *
                 input.get_shape()[input.get_shape().dims() - 2],
-            bias_.empty() ? std::vector<float>()
-                          : std::vector<float>(bias_.begin(), bias_.end()));
+            bias_.empty() ? std::vector<float>() : *bias_.as<float>());
         auto sizeforshape = static_cast<size_t>(
             ((static_cast<int>(
                   input.get_shape()[input.get_shape().dims() - 1]) -

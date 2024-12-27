@@ -100,7 +100,7 @@ Tensor create_tensor_from_json(const json& j, Type type) {
 
     parse_json_shape(j, shape, 0);
     std::cout << "Shape: ";
-    for (size_t i = 0; i < shape.size()-1; i++) {
+    for (size_t i = 0; i < shape.size() - 1; i++) {
       std::cout << shape[i] << ", ";
     }
     std::cout << shape[shape.size() - 1];

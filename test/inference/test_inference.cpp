@@ -26,8 +26,8 @@ TEST(bfs, check_result_vec) {
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer a2(1, 0, 0, kernel);
-  ConvolutionalLayer a4(1, 0, 0, kernel);
+  ConvolutionalLayer a2(1, 0, 1, kernel);
+  ConvolutionalLayer a4(1, 0, 1, kernel);
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a1, a3);
@@ -92,7 +92,7 @@ TEST(bfs, check_end_to_end) {
   std::vector<float> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer a2(1, 0, 0, kernel);
+  ConvolutionalLayer a2(1, 0, 1, kernel);
   Shape poolshape = {2, 2};
   EWLayer a3("linear", 2.0F, 3.0F);
   PoolingLayer a4(poolshape, "average");

@@ -50,7 +50,7 @@ void build_graph(Tensor& input, Tensor& output) {
       Shape shape = tensor.get_shape();
       size_t pads_ = (tensor.get_shape()[0] - 1) / 2;
       if (layer_data.contains("padding")) {
-        if (layer_data["padding"] == "nsame") {
+        if (layer_data["padding"] == "VALID") {
           pads_ = 0;
         }
       }
@@ -111,7 +111,8 @@ void build_graph(Tensor& input, Tensor& output) {
     }
 
     if (layer_type.find("Flatten") != std::string::npos) {
-      auto flatten_layer = std::make_shared<FlattenLayer>(std::vector<size_t>({0, 3, 2, 1}));
+      auto flatten_layer =
+          std::make_shared<FlattenLayer>(std::vector<size_t>({0, 3, 2, 1}));
       flatten_layer->setName(kFlatten);
       layers.push_back(flatten_layer);
       std::cout << "FlattenLayer added to layers." << std::endl;
@@ -121,7 +122,8 @@ void build_graph(Tensor& input, Tensor& output) {
       auto dropout_layer = std::make_shared<DropOutLayer>(0.0);
       dropout_layer->setName(kDropout);
       layers.push_back(dropout_layer);
-      std::cout << "DropOutLayer added to layers with probability 0.4."
+      std::cout << "DropOutLayer added to layers with probability 0.4 (turned "
+                   "off for inference)."
                 << std::endl;
     }
   }

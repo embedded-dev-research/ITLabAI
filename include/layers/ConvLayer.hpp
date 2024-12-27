@@ -127,8 +127,7 @@ class ConvImpl : public LayerImpl<ValueType> {
 // NCHW -> NCHW only
 template <typename ValueType>
 void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
-              Tensor& output, size_t stride_,
-              size_t pads_, size_t dilations_) {
+              Tensor& output, size_t stride_, size_t pads_, size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
   size_t in_height = input.get_shape()[2];
   size_t in_width = input.get_shape()[3];
@@ -158,8 +157,7 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> kernel(
       kernel_height,
       std::vector<std::vector<std::vector<ValueType>>>(
-          kernel_width,
-          std::vector<std::vector<ValueType>>(
+          kernel_width, std::vector<std::vector<ValueType>>(
                             kernel_in_channels,
                             std::vector<ValueType>(kernel_out_channels, 1))));
   for (size_t h = 0; h < kernel_height; h++) {
@@ -173,7 +171,7 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   }
   // adapt kernel
 
-  // pads_ = (kernel_height * (-1 + 2 * dilations_) - 1) / 2;
+  // pads_ = (kernel_height * dilations_ + 1 - dilations_) / 2;
   // ???
 
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> padded_input =
@@ -181,10 +179,9 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   if (pads_ > 0) {
     padded_input =
         std::vector<std::vector<std::vector<std::vector<ValueType>>>>(
-        batch_size,
-            std::vector<std::vector<std::vector<ValueType>>>(
-            in_height + 2 * pads_,
-                std::vector<std::vector<ValueType>>(
+            batch_size, std::vector<std::vector<std::vector<ValueType>>>(
+                            in_height + 2 * pads_,
+                            std::vector<std::vector<ValueType>>(
                                 in_width + 2 * pads_,
                                 std::vector<ValueType>(in_channels, 0))));
 
@@ -205,10 +202,11 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> dil_kernel =
       kernel;
   if (dilations_ > 1) {
+    
     dil_kernel = std::vector<std::vector<std::vector<std::vector<ValueType>>>>(
-        kernel_height * (-1 + 2 * dilations_),
+        kernel_height * dilations_ + 1 - dilations_,
         std::vector<std::vector<std::vector<ValueType>>>(
-            kernel_width * (-1 + 2 * dilations_),
+            kernel_width * dilations_ + 1 - dilations_,
             std::vector<std::vector<ValueType>>(
                 kernel_in_channels,
                 std::vector<ValueType>(kernel_out_channels, 0))));
@@ -217,8 +215,9 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
       for (size_t h = 0; h < kernel_height; ++h) {
         for (size_t w = 0; w < kernel_width; ++w) {
           for (size_t c = 0; c < kernel_in_channels; ++c) {
-            dil_kernel[(h * (-1 + 2 * dilations_))][(w * (-1 + 2 * dilations_))]
-                      [c][b] = kernel[h][w][c][b];
+            dil_kernel[h * dilations_]
+                      [w * dilations_][c][b] =
+                kernel[h][w][c][b];
           }
         }
       }
@@ -226,34 +225,26 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   }
 
   size_t crat = 0;
-  if ((in_height + 2 * pads_ - ((kernel_height * (-1 + 2 * dilations_)) - 1)) %
-          stride_ !=
-      0)
+  if ((in_height + 2 * pads_ - dilations_ * (kernel_height - 1)) % stride_ != 0)
     crat = 1;
 
   size_t out_height =
-      (in_height + 2 * pads_ - ((kernel_height * (-1 + 2 * dilations_)) - 1)) /
-          stride_ +
+      (in_height + 2 * pads_ - dilations_ * (kernel_height - 1)) / stride_ +
       crat;
 
   crat = 0;
 
-  if ((in_width + 2 * pads_ - ((kernel_width * (-1 + 2 * dilations_)) - 1)) %
-          stride_ !=
-      0)
+  if ((in_width + 2 * pads_ - dilations_ * (kernel_width - 1)) % stride_ != 0)
     crat = 1;
 
   size_t out_width =
-      (in_width + 2 * pads_ - ((kernel_width * (-1 + 2 * dilations_)) - 1)) /
-          stride_ +
-      crat;
+      (in_width + 2 * pads_ - dilations_ * (kernel_width - 1)) / stride_ + crat;
 
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> output_tensor(
       batch_size, std::vector<std::vector<std::vector<ValueType>>>(
                       kernel_out_channels,
                       std::vector<std::vector<ValueType>>(
                           out_height, std::vector<ValueType>(out_width, 0))));
-  size_t one_size = (kernel_height * (-1 + 2 * dilations_) - 1) / 2;
 
   for (size_t b = 0; b < batch_size; ++b) {
     for (size_t c = 0; c < kernel_out_channels; ++c) {
@@ -261,17 +252,20 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
         for (size_t j = 0; j < out_width; j += stride_) {
           ValueType value = 0;
           for (size_t ic = 0; ic < in_channels; ++ic) {
-            for (int h = (-1 * static_cast<int>(one_size));
-                 h <= static_cast<int>(one_size); ++h) {
-              for (int w = (-1 * static_cast<int>(one_size));
-                   w <= static_cast<int>(one_size); ++w) {
+            for (int h = 0; h < kernel_height * dilations_ + 1 - dilations_;
+                 ++h) {
+              for (int w = 0; w < kernel_width * dilations_ + 1 - dilations_;
+                   ++w) {
                 value +=
-                    padded_input[b][i + one_size + h][j + one_size + w][ic] *
-                    dil_kernel[one_size + h][one_size + w][ic][c];
+                    padded_input[b][i + h][j + w][ic] * dil_kernel[h][w][ic][c];
               }
             }
           }
-          output_tensor[b][c][i][j] = value + (*bias_.as<ValueType>())[c];
+          if (!bias_.empty()) {
+            output_tensor[b][c][i][j] = value + (*bias_.as<ValueType>())[c];
+          } else {
+            output_tensor[b][c][i][j] = value;
+          }
         }
       }
     }
@@ -279,7 +273,7 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
 
   Shape sh({batch_size, kernel_out_channels, out_height, out_width});
   std::vector<ValueType> one_d_vector(batch_size * out_height * out_width *
-                                  kernel_out_channels);
+                                      kernel_out_channels);
   size_t index_1d = 0;
   for (size_t i = 0; i < batch_size; ++i) {
     for (size_t l = 0; l < kernel_out_channels; ++l) {
