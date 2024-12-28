@@ -27,8 +27,8 @@ TEST(flattenlayer, new_flattenlayer_can_flatten_float) {
 
 TEST(flattenlayer, new_flattenlayer_can_flatten_float_reorder) {
   FlattenLayer layer1;
-  FlattenLayer layer2({1, 2, 3, 0}); // NCHW -> CHWN
-  FlattenLayer layer3({0, 2, 3, 1}); // NCHW -> NHWC
+  FlattenLayer layer2({1, 2, 3, 0});  // NCHW -> CHWN
+  FlattenLayer layer3({0, 2, 3, 1});  // NCHW -> NHWC
   Shape sh({2, 2, 2, 3});
   std::vector<float> input_vec(sh.count());
   for (size_t i = 0; i < sh.count(); i++) {
