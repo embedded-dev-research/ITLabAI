@@ -130,6 +130,7 @@ void build_graph(Tensor& input, Tensor& output) {
   std::cout << "number of layers - " << layers.size() + 1 << std::endl;
   Graph graph(static_cast<int>(layers.size()));
   InputLayer a1(kNchw, kNchw);
+  a1.setName(kInput);
 
   std::cout << "InputLayer created." << std::endl;
 
