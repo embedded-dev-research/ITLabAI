@@ -26,7 +26,7 @@ void FlattenLayer::run(const Tensor &input, Tensor &output) {
         Tensor tmp_tensor = Tensor(
             Shape({input.get_shape()[order[0]], input.get_shape()[order[1]],
                    input.get_shape()[order[2]], input.get_shape()[order[3]]}),
-            Type::kFloat);
+            Type::kInt);
         std::vector<size_t> reorder_vec(4);
         std::vector<size_t> order_vec(4);
         for (order_vec[0] = 0; order_vec[0] < input.get_shape()[order[0]];
