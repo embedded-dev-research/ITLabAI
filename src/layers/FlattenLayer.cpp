@@ -24,20 +24,21 @@ void FlattenLayer::run(const Tensor &input, Tensor &output) {
     case Type::kInt: {
       if (input.get_shape().dims() == 4) {
         Tensor tmp_tensor = Tensor(
-            Shape({input.get_shape()[order[0]], input.get_shape()[order[1]],
-                   input.get_shape()[order[2]], input.get_shape()[order[3]]}),
+            Shape({input.get_shape()[order_[0]], input.get_shape()[order_[1]],
+                   input.get_shape()[order_[2]], input.get_shape()[order_[3]]}),
             Type::kInt);
         std::vector<size_t> reorder_ind_vec =
-            reordered(std::vector<size_t>({0, 1, 2, 3}), order);
+            reordered(std::vector<size_t>({0, 1, 2, 3}), order_);
         std::vector<size_t> reordered_vec;
         std::vector<size_t> order_vec(4);
-        for (order_vec[0] = 0; order_vec[0] < input.get_shape()[order[0]];
+        for (order_vec[0] = 0; order_vec[0] < input.get_shape()[order_[0]];
              order_vec[0]++) {
-          for (order_vec[1] = 0; order_vec[1] < input.get_shape()[order[1]];
+          for (order_vec[1] = 0; order_vec[1] < input.get_shape()[order_[1]];
                order_vec[1]++) {
-            for (order_vec[2] = 0; order_vec[2] < input.get_shape()[order[2]];
+            for (order_vec[2] = 0; order_vec[2] < input.get_shape()[order_[2]];
                  order_vec[2]++) {
-              for (order_vec[3] = 0; order_vec[3] < input.get_shape()[order[3]];
+              for (order_vec[3] = 0;
+                   order_vec[3] < input.get_shape()[order_[3]];
                    order_vec[3]++) {
                 reordered_vec = {order_vec[reorder_ind_vec[0]],
                                  order_vec[reorder_ind_vec[1]],
@@ -59,20 +60,21 @@ void FlattenLayer::run(const Tensor &input, Tensor &output) {
     case Type::kFloat: {
       if (input.get_shape().dims() == 4) {
         Tensor tmp_tensor = Tensor(
-            Shape({input.get_shape()[order[0]], input.get_shape()[order[1]],
-                   input.get_shape()[order[2]], input.get_shape()[order[3]]}),
+            Shape({input.get_shape()[order_[0]], input.get_shape()[order_[1]],
+                   input.get_shape()[order_[2]], input.get_shape()[order_[3]]}),
             Type::kFloat);
         std::vector<size_t> reorder_ind_vec =
-            reordered(std::vector<size_t>({0, 1, 2, 3}), order);
+            reordered(std::vector<size_t>({0, 1, 2, 3}), order_);
         std::vector<size_t> reordered_vec;
         std::vector<size_t> order_vec(4);
-        for (order_vec[0] = 0; order_vec[0] < input.get_shape()[order[0]];
+        for (order_vec[0] = 0; order_vec[0] < input.get_shape()[order_[0]];
              order_vec[0]++) {
-          for (order_vec[1] = 0; order_vec[1] < input.get_shape()[order[1]];
+          for (order_vec[1] = 0; order_vec[1] < input.get_shape()[order_[1]];
                order_vec[1]++) {
-            for (order_vec[2] = 0; order_vec[2] < input.get_shape()[order[2]];
+            for (order_vec[2] = 0; order_vec[2] < input.get_shape()[order_[2]];
                  order_vec[2]++) {
-              for (order_vec[3] = 0; order_vec[3] < input.get_shape()[order[3]];
+              for (order_vec[3] = 0;
+                   order_vec[3] < input.get_shape()[order_[3]];
                    order_vec[3]++) {
                 reordered_vec = {order_vec[reorder_ind_vec[0]],
                                  order_vec[reorder_ind_vec[1]],

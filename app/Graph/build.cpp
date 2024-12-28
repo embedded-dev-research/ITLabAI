@@ -48,10 +48,10 @@ void build_graph(Tensor& input, Tensor& output) {
       //
       tensor = tmp_tensor;
       Shape shape = tensor.get_shape();
-      size_t pads_ = (tensor.get_shape()[0] - 1) / 2;
+      size_t pads = (tensor.get_shape()[0] - 1) / 2;
       if (layer_data.contains("padding")) {
         if (layer_data["padding"] == "VALID") {
-          pads_ = 0;
+          pads = 0;
         }
       }
       std::cout << "PoolingLayer shape: ";
@@ -63,7 +63,7 @@ void build_graph(Tensor& input, Tensor& output) {
       Tensor tmp_values = tensor;
       Tensor tmp_bias = make_tensor(tensor.get_bias());
       auto conv_layer = std::make_shared<ConvolutionalLayer>(
-          1, pads_, 1, tmp_values, tmp_bias);
+          1, pads, 1, tmp_values, tmp_bias);
       conv_layer->setName(kConvolution);
       layers.push_back(conv_layer);
       std::cout << "ConvLayer added to layers." << std::endl;
@@ -129,7 +129,7 @@ void build_graph(Tensor& input, Tensor& output) {
   }
   std::cout << "number of layers - " << layers.size() + 1 << std::endl;
   Graph graph(static_cast<int>(layers.size()));
-  InputLayer a1(kNchw, kNchw, 0, 1);
+  InputLayer a1(kNchw, kNchw);
 
   std::cout << "InputLayer created." << std::endl;
 
