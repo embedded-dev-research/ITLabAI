@@ -50,7 +50,7 @@ void build_graph(Tensor& input, Tensor& output) {
       Shape shape = tensor.get_shape();
       size_t pads = (tensor.get_shape()[0] - 1) / 2;
       if (layer_data.contains("padding")) {
-        if (layer_data["padding"] == "VALID") {
+        if (layer_data["padding"] == "valid") {
           pads = 0;
         }
       }
