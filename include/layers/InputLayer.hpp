@@ -6,7 +6,7 @@
 
 namespace itlab_2023 {
 
-enum LayInOut {
+enum LayInOut : uint8_t {
   kNchw,  // 0
   kNhwc   // 1
 };
@@ -20,8 +20,8 @@ class InputLayer : public Layer {
 
  public:
   InputLayer() = default;
-  InputLayer(LayInOut layin, LayInOut layout, int mean = 0, int std = 1)
-      : Layer() {
+  InputLayer(LayInOut layin, LayInOut layout, int mean = 0, int std = 1) {
+    type_ = LayerType::kInput;
     layin_ = layin;
     layout_ = layout;
     mean_ = mean;
@@ -44,7 +44,7 @@ class InputLayer : public Layer {
               "input layer");
         }
         for (int& re : in) {
-          re = static_cast<int>((re - mean_) / std_);
+          re = (re - mean_) / std_;
         }
         Shape sh(input.get_shape());
         if (layin_ == kNchw && layout_ == kNhwc) {

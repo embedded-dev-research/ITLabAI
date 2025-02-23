@@ -8,7 +8,7 @@
 
 namespace itlab_2023 {
 
-enum PoolingType { kAverage, kMax };
+enum PoolingType : uint8_t { kAverage, kMax };
 
 class PoolingLayer : public Layer {
  public:

@@ -115,7 +115,7 @@ std::vector<std::pair<size_t, std::string> > extract_csv(
 void check_accuracy(const std::string& neural_network_path,
                     const std::string& dataset_path, size_t imgs_size,
                     const std::string& reference_path) {
-  Graph a1 = open_network(std::move(neural_network_path));
+  Graph a1 = open_network(neural_network_path);
   Tensor input;
   Tensor output;
   InputLayer inlayer;
