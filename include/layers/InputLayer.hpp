@@ -6,7 +6,7 @@
 
 namespace itlab_2023 {
 
-enum LayInOut {
+enum LayInOut : uint8_t {
   kNchw,  // 0
   kNhwc   // 1
 };
@@ -21,6 +21,7 @@ class InputLayer : public Layer {
  public:
   InputLayer() = default;
   InputLayer(LayInOut layin, LayInOut layout, int mean = 0, int std = 1) {
+    type_ = LayerType::kInput;
     layin_ = layin;
     layout_ = layout;
     mean_ = mean;

@@ -10,7 +10,7 @@
 
 namespace itlab_2023 {
 
-enum class Type { kUnknown, kInt, kFloat };
+enum class Type : uint8_t { kUnknown, kInt, kFloat };
 
 template <typename T>
 std::vector<uint8_t>* to_byte(std::vector<T>& v) {

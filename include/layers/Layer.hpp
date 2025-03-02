@@ -10,7 +10,7 @@
 
 namespace itlab_2023 {
 
-enum LayerType {
+enum LayerType : uint8_t {
   kInput,
   kPooling,
   kNormalization,
@@ -35,8 +35,8 @@ class Layer {
   virtual Tensor get_weights() = 0;
 #endif
 
- private:
-  int id_;
+ protected:
+  int id_ = 0;
   LayerType type_;
 };
 
