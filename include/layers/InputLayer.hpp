@@ -43,7 +43,7 @@ class InputLayer : public Layer {
               "input layer");
         }
         for (int& re : in) {
-          re = static_cast<int>((re - mean_) / std_);
+          re = (re - mean_) / std_;
         }
         Shape sh(input.get_shape());
         if (layin_ == kNchw && layout_ == kNhwc) {

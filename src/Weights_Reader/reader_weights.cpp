@@ -99,7 +99,11 @@ Tensor create_tensor_from_json(const json& j, Type type) {
     std::cout << "Extracted values size: " << vals.size() << std::endl;
 
     parse_json_shape(j, shape, 0);
-
+    std::cout << "Shape: ";
+    for (size_t i = 0; i < shape.size() - 1; i++) {
+      std::cout << shape[i] << ", ";
+    }
+    std::cout << shape[shape.size() - 1];
     std::cout << std::endl;
 
     extract_bias_from_json(j, bias);

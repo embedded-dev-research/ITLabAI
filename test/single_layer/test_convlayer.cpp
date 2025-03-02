@@ -20,7 +20,7 @@ TEST(ConvolutionalLayerTest, FStep2) {
   std::vector<float> expected_output(12, 5);
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer layer(step, 0, 0, kernel);
+  ConvolutionalLayer layer(step, 0, 1, kernel);
   layer.run(input, output);
   std::vector<float> tmp = *output.as<float>();
   ASSERT_EQ(tmp.size(), expected_output.size());
@@ -44,7 +44,7 @@ TEST(ConvolutionalLayerTest, FStep1) {
   std::vector<float> expected_output(27, 5);
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer layer(step, 0, 0, kernel);
+  ConvolutionalLayer layer(step, 0, 1, kernel);
   layer.run(input, output);
   std::vector<float> tmp = *output.as<float>();
   ASSERT_EQ(tmp.size(), expected_output.size());
@@ -68,7 +68,7 @@ TEST(ConvolutionalLayerTest, IntStep2) {
   std::vector<int> expected_output(12, 5);
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer layer(step, 0, 0, kernel);
+  ConvolutionalLayer layer(step, 0, 1, kernel);
   layer.run(input, output);
   std::vector<int> tmp = *output.as<int>();
   ASSERT_EQ(tmp.size(), expected_output.size());
@@ -92,7 +92,7 @@ TEST(ConvolutionalLayerTest, IntStep1) {
   std::vector<int> expected_output(27, 5);
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer layer(step, 0, 0, kernel);
+  ConvolutionalLayer layer(step, 0, 1, kernel);
   layer.run(input, output);
   std::vector<int> tmp = *output.as<int>();
   ASSERT_EQ(tmp.size(), expected_output.size());
@@ -116,9 +116,9 @@ TEST(ConvolutionalLayerTest, FloatWithBias) {
   std::vector<float> output_vec(27, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  std::vector<float> expected_output(27, 5);
+  std::vector<float> expected_output(27, 5.5f);
 
-  ConvolutionalLayer layer(1, 0, 0, kernel, bias);
+  ConvolutionalLayer layer(1, 0, 1, kernel, bias);
   layer.run(input, output);
 
   std::vector<float> tmp = *output.as<float>();
@@ -141,7 +141,7 @@ TEST(ConvolutionalLayerTest, InvalidInputShapeDims) {
   std::vector<float> output_vec(27, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 0, kernel);
+  ConvolutionalLayer layer(1, 0, 1, kernel);
 
   EXPECT_THROW(layer.run(input, output), std::out_of_range);
 }
@@ -195,13 +195,13 @@ TEST(ConvolutionalLayerTest, Conv4DKern_int) {
   for (int i = 0; i < 400; ++i) {
     kernelvec.push_back(1);
   }
-  std::vector<int> expected_output(784 * 16, 0);
+  std::vector<int> expected_output(400 * 16, 25);
   Shape sh2({5, 5, 1, 16});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer layer(step, 0, 1, kernel);
+  ConvolutionalLayer layer(step, 0, 2, kernel);
   layer.run(input, output);
   std::vector<int> tmp = *output.as<int>();
-  ASSERT_EQ(tmp.size(), expected_output.size());
+  ASSERT_EQ(tmp, expected_output);
 }
 TEST(ConvolutionalLayerTest, Conv4DKern_int_36) {
   std::vector<int> image;
@@ -223,7 +223,7 @@ TEST(ConvolutionalLayerTest, Conv4DKern_int_36) {
   std::vector<int> expected_output(784 * 36, 0);
   Shape sh2({5, 5, 16, 36});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer layer(step, 0, 1, kernel);
+  ConvolutionalLayer layer(step, (kernel.get_shape()[0] - 1) / 2, 1, kernel);
   layer.run(input, output);
   std::vector<int> tmp = *output.as<int>();
   ASSERT_EQ(tmp.size(), expected_output.size());
