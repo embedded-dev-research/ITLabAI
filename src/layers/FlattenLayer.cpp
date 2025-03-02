@@ -4,7 +4,7 @@ namespace itlab_2023 {
 
 // reorder coords
 std::vector<size_t> reorder(std::vector<size_t> order_vec,
-                              std::vector<size_t> order) {
+                            std::vector<size_t> order) {
   size_t min_ind;
   for (size_t i = 0; i < order.size() - 1; i++) {
     min_ind = i;
@@ -41,9 +41,9 @@ void FlattenLayer::run(const Tensor &input, Tensor &output) {
                    order_vec[3] < input.get_shape()[order_[3]];
                    order_vec[3]++) {
                 reorder_vec = {order_vec[reorder_ind_vec[0]],
-                                 order_vec[reorder_ind_vec[1]],
-                                 order_vec[reorder_ind_vec[2]],
-                                 order_vec[reorder_ind_vec[3]]};
+                               order_vec[reorder_ind_vec[1]],
+                               order_vec[reorder_ind_vec[2]],
+                               order_vec[reorder_ind_vec[3]]};
                 tmp_tensor.set<int>(order_vec, input.get<int>(reorder_vec));
               }
             }
@@ -77,11 +77,10 @@ void FlattenLayer::run(const Tensor &input, Tensor &output) {
                    order_vec[3] < input.get_shape()[order_[3]];
                    order_vec[3]++) {
                 reorder_vec = {order_vec[reorder_ind_vec[0]],
-                                 order_vec[reorder_ind_vec[1]],
-                                 order_vec[reorder_ind_vec[2]],
-                                 order_vec[reorder_ind_vec[3]]};
-                tmp_tensor.set<float>(order_vec,
-                                      input.get<float>(reorder_vec));
+                               order_vec[reorder_ind_vec[1]],
+                               order_vec[reorder_ind_vec[2]],
+                               order_vec[reorder_ind_vec[3]]};
+                tmp_tensor.set<float>(order_vec, input.get<float>(reorder_vec));
               }
             }
           }
