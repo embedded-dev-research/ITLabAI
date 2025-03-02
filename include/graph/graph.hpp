@@ -56,9 +56,8 @@ class Graph {
     if (layPrev.getID() == layNext.getID()) {
       throw std::out_of_range("i=j cant add edge");
     }
-    for (int ind = 1; ind < static_cast<int>(arrayV_.size()) -
-                                layPrev.getID() - 1;
-         ind++)
+    for (int ind = 1;
+         ind < static_cast<int>(arrayV_.size()) - layPrev.getID() - 1; ind++)
       arrayV_[layPrev.getID() + ind]++;
     arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.getID()], layNext.getID());
     V_++;
