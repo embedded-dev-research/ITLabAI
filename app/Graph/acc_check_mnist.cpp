@@ -1,6 +1,6 @@
 #include <iomanip>
-#include <sstream>
 #include <numeric>
+#include <sstream>
 
 #include "build.cpp"
 #include "build.hpp"
@@ -8,7 +8,8 @@
 using namespace itlab_2023;
 
 int main() {
-  std::vector<size_t> counts = {979, 1134, 1031, 1009, 981, 891, 957, 1027, 973, 1008};
+  std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
+                                891, 957,  1027, 973,  1008};
   int stat = 0;
 
   for (size_t name = 0; name < 10; name++) {

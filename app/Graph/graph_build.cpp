@@ -9,12 +9,12 @@ int main() {
   if (image.empty()) {
     throw std::runtime_error("Failed to load image");
   }
-  //cv::Mat resized_image;
+  // cv::Mat resized_image;
   cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
-  //cv::resize(image, resized_image, cv::Size(28, 28));
+  // cv::resize(image, resized_image, cv::Size(28, 28));
   std::vector<cv::Mat> channels;
 
-  //cv::split(resized_image, channels);
+  // cv::split(resized_image, channels);
   cv::split(image, channels);
 
   int count_pic = 1;
