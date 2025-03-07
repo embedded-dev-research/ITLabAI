@@ -110,7 +110,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments) {
       }
       if (comments)
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
-                << std::endl;
+                  << std::endl;
       auto pool_layer = std::make_shared<PoolingLayer>(shape, pooltype);
       pool_layer->setName(kPooling);
       layers.push_back(pool_layer);
@@ -132,8 +132,8 @@ void build_graph(Tensor& input, Tensor& output, bool comments) {
       if (comments)
         std::cout
             << "DropOutLayer added to layers with probability 0.4 (turned "
-                   "off for inference)."
-                << std::endl;
+               "off for inference)."
+            << std::endl;
     }
   }
   if (comments)
@@ -150,7 +150,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments) {
   graph.makeConnection(a1, *layers[0]);
   if (comments)
     std::cout << "Connection made between InputLayer and first layer."
-            << std::endl;
+              << std::endl;
 
   for (size_t i = 0; i < layers.size() - 1; ++i) {
     graph.makeConnection(*layers[i], *layers[i + 1]);
