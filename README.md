@@ -116,9 +116,15 @@ To start the testing process locally, you need to go to the directory
    ```
 # **Some files used to create the library**
 ### *neural network models*
-[Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5)
+You need to download [Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5) to the folder *docs*
+
 # **How do I launch the inference?**
-* You need to run the script parcer.py that is located in app/AlexNet to read weights from a model Alexnet-model.h5 and the json file with the weights will be stored in the docs folder.
+* You need to run the script *parcer.py* that is located in app/AlexNet to read weights from a model *Alexnet-model.h5* and the json file with the weights will be stored in the *docs* folder.
 * Then put the test images in png format in the folder *docs/input*
+
+# **Accuracy validation**
+To run accuracy validation you need to use the MNIST dataset, which you can download [here](https://github.com/DeepTrackAI/MNIST_dataset/tree/main/mnist/test) and put it in a folder *docs/mnist/mnist/test*
+Now you can run accuracy check - *build\bin\ACC_MNIST.exe*
+
 # **Structure of our library**
 ![Class diagram](./docs/class_diagram.svg)
