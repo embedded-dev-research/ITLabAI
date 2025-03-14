@@ -18,7 +18,7 @@ int main() {
       oss << "/" << name << "_" << std::setw(6) << std::setfill('0') << ind
           << ".png";
       std::string png = oss.str();
-      std::string image_path = FOLDERMNIST_PATH + png;
+      std::string image_path = MNIST_PATH + png;
       std::cout << image_path << std::endl;
 
       cv::Mat image = cv::imread(image_path);

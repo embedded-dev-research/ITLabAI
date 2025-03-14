@@ -54,4 +54,4 @@ file(DOWNLOAD
 )
 add_definitions(-DIMAGE1_PATH="${CMAKE_CURRENT_BINARY_DIR}/image.jpg")
 add_definitions(-DMODEL_PATH="${CMAKE_SOURCE_DIR}/docs/model_data_alexnet_1.json")
-add_definitions(-DFOLDERMNIST_PATH="${CMAKE_SOURCE_DIR}/docs/mnist/mnist/test")
+add_definitions(-DMNIST_PATH="${CMAKE_SOURCE_DIR}/docs/mnist/mnist/test")
