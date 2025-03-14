@@ -46,12 +46,13 @@ add_custom_command(TARGET ACC_MNIST POST_BUILD
 endif()
 
 file(DOWNLOAD
-    "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
-    "${CMAKE_CURRENT_BINARY_DIR}/image.jpg"
+    "https://raw.githubusercontent.com/DeepTrackAI/MNIST_dataset/main/mnist/test/1_000008.png"
+    "${CMAKE_SOURCE_DIR}/docs/input/test1.png"
     SHOW_PROGRESS
     STATUS status_code
     LOG log_file
 )
-add_definitions(-DIMAGE1_PATH="${CMAKE_CURRENT_BINARY_DIR}/image.jpg")
+
+add_definitions(-DIMAGE1_PATH="${CMAKE_SOURCE_DIR}/docs/input/")
 add_definitions(-DMODEL_PATH="${CMAKE_SOURCE_DIR}/docs/model_data_alexnet_1.json")
 add_definitions(-DMNIST_PATH="${CMAKE_SOURCE_DIR}/docs/mnist/mnist/test")

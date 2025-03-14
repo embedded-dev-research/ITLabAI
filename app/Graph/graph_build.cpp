@@ -1,46 +1,56 @@
 #include "build.cpp"
 #include "build.hpp"
 
+namespace fs = std::filesystem;
 using namespace itlab_2023;
 
 int main() {
-  std::string image_path = IMAGE1_PATH;
-  cv::Mat image = cv::imread(image_path);
-  if (image.empty()) {
-    throw std::runtime_error("Failed to load image");
-  }
-  cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
-  std::vector<cv::Mat> channels;
+  std::string image_folder = IMAGE1_PATH;
+  std::vector<std::string> image_paths;
 
-  cv::split(image, channels);
-
-  int count_pic = 1;
-  std::vector<float> res(count_pic * 28 * 28);
-
-  for (int i = 0; i < 28; ++i) {
-    for (int j = 0; j < 28; ++j) {
-      res[i * 28 + j] = channels[0].at<uchar>(j, i);
+  for (const auto& entry : fs::directory_iterator(image_folder)) {
+    if (entry.path().extension() == ".png") {
+      image_paths.push_back(entry.path().string());
     }
   }
-  Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
-  // move to reshape layer
-  Tensor t = make_tensor<float>(res, sh);
-  Tensor input = t;
 
-  Shape sh1({1, 5, 5, 3});
-  std::vector<float> vec;
-  vec.reserve(75);
-  for (int i = 0; i < 75; ++i) {
-    vec.push_back(3);
+  if (image_paths.empty()) {
+    throw std::runtime_error("No PNG images found in the folder");
   }
-  Tensor output = make_tensor(vec, sh1);
 
-  build_graph(input, output, true);
+  for (const auto& image_path : image_paths) {
+    cv::Mat image = cv::imread(image_path);
+    if (image.empty()) {
+      std::cerr << "Failed to load image: " << image_path << std::endl;
+      continue;
+    }
 
-  std::vector<float> tmp_output = softmax<float>(*output.as<float>());
-  for (size_t i = 0; i < tmp_output.size(); i++) {
-    if (tmp_output[i] >= 1e-6) {
-      std::cout << i << std::endl;
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+    std::vector<cv::Mat> channels;
+    cv::split(image, channels);
+
+    std::vector<float> res(28 * 28);
+    for (int i = 0; i < 28; ++i) {
+      for (int j = 0; j < 28; ++j) {
+        res[i * 28 + j] = channels[0].at<uchar>(j, i);
+      }
+    }
+
+    Shape sh({1, 1, 28, 28});
+    Tensor input = make_tensor<float>(res, sh);
+
+    Shape sh1({1, 5, 5, 3});
+    std::vector<float> vec(75, 3);
+    Tensor output = make_tensor(vec, sh1);
+
+    build_graph(input, output, true);
+
+    std::vector<float> tmp_output = softmax<float>(*output.as<float>());
+    for (size_t i = 0; i < tmp_output.size(); i++) {
+      if (tmp_output[i] >= 1e-6) {
+        std::cout << "Image: " << image_path << " -> Class: " << i << std::endl;
+      }
     }
   }
+  return 0;
 }
