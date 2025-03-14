@@ -28,8 +28,18 @@ target_include_directories(BuildGraph PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/Json/i
 add_executable(Graph_Build graph_build.cpp)
 target_link_libraries(Graph_Build BuildGraph)
 
+add_executable(ACC_MNIST acc_check_mnist.cpp)
+target_link_libraries(ACC_MNIST BuildGraph)
+
 if (WIN32)
 add_custom_command(TARGET Graph_Build POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
+        "${CMAKE_BINARY_DIR}/app/ReaderImage/${CMAKE_BUILD_TYPE}/")
+endif()
+
+if (WIN32)
+add_custom_command(TARGET ACC_MNIST POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
         "${CMAKE_BINARY_DIR}/app/ReaderImage/${CMAKE_BUILD_TYPE}/")
@@ -44,3 +54,4 @@ file(DOWNLOAD
 )
 add_definitions(-DIMAGE1_PATH="${CMAKE_CURRENT_BINARY_DIR}/image.jpg")
 add_definitions(-DMODEL_PATH="${CMAKE_SOURCE_DIR}/docs/model_data_alexnet_1.json")
+add_definitions(-DMNIST_PATH="${CMAKE_SOURCE_DIR}/docs/mnist/mnist/test")

@@ -9,16 +9,14 @@ int main() {
   if (image.empty()) {
     throw std::runtime_error("Failed to load image");
   }
-  cv::Mat resized_image;
   cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
-  cv::resize(image, resized_image, cv::Size(28, 28));
   std::vector<cv::Mat> channels;
 
-  cv::split(resized_image, channels);
+  cv::split(image, channels);
 
   int count_pic = 1;
   std::vector<float> res(count_pic * 28 * 28);
-  //
+
   for (int i = 0; i < 28; ++i) {
     for (int j = 0; j < 28; ++j) {
       res[i * 28 + j] = channels[0].at<uchar>(j, i);
@@ -37,5 +35,12 @@ int main() {
   }
   Tensor output = make_tensor(vec, sh1);
 
-  build_graph(input, output);
+  build_graph(input, output, true);
+
+  std::vector<float> tmp_output = softmax<float>(*output.as<float>());
+  for (size_t i = 0; i < tmp_output.size(); i++) {
+    if (tmp_output[i] >= 1e-6) {
+      std::cout << i << std::endl;
+    }
+  }
 }
