@@ -31,18 +31,34 @@ target_link_libraries(Graph_Build BuildGraph)
 add_executable(ACC_MNIST acc_check_mnist.cpp)
 target_link_libraries(ACC_MNIST BuildGraph)
 
-if (WIN32)
-add_custom_command(TARGET Graph_Build POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
-        "${CMAKE_BINARY_DIR}/app/ReaderImage/${CMAKE_BUILD_TYPE}/")
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
 if (WIN32)
-add_custom_command(TARGET ACC_MNIST POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}"
-        "${CMAKE_BINARY_DIR}/app/ReaderImage/${CMAKE_BUILD_TYPE}/")
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
+	    set(CMAKE_BUILD_TYPE "Debug")
+	endif()
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
+	    set(CMAKE_BUILD_TYPE "Release")
+	endif()
+    add_custom_command(TARGET Graph_Build POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/."
+            "${CMAKE_BINARY_DIR}/bin/")
+endif()
+
+if (WIN32)
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
+	    set(CMAKE_BUILD_TYPE "Debug")
+	endif()
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
+	    set(CMAKE_BUILD_TYPE "Release")
+	endif()
+    add_custom_command(TARGET ACC_MNIST POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/."
+            "${CMAKE_BINARY_DIR}/bin/")
 endif()
 
 file(DOWNLOAD
