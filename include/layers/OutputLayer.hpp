@@ -53,6 +53,12 @@ std::vector<std::vector<ValueType>> softmax(
   if (fullvec.empty()) {
     throw std::invalid_argument("Empty vector in softmax");
   }
+  if (c == 0) {
+    throw std::invalid_argument("c cannot be zero");
+  }
+  if (fullvec.size() % c != 0) {
+    throw std::invalid_argument("Vector size must be divisible by c");
+  }
   size_t p = fullvec.size() / c;
   std::vector<std::vector<ValueType>> fullres;
   for (size_t n = 0; n < p; n++) {
