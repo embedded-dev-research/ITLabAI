@@ -44,7 +44,7 @@ int main() {
         for (int j = 0; j < 28; ++j) {
           size_t a = ind;
           for (size_t n = 0; n < name; n++) a += counts[n] + 1;
-          res[(a)*28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
+          res[(a) * 28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
         }
       }
     }

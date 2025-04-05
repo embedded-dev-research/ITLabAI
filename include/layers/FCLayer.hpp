@@ -1,9 +1,9 @@
 #pragma once
 #include <algorithm>
-#include <stdexcept>
-#include <vector>
-#include <thread>
 #include <mutex>
+#include <stdexcept>
+#include <thread>
+#include <vector>
 
 #include "layers/Layer.hpp"
 
