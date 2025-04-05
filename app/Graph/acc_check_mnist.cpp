@@ -10,7 +10,20 @@ using namespace itlab_2023;
 int main() {
   std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
                                 891, 957,  1027, 973,  1008};
+  // std::vector<size_t> counts = {1, 2, 3, 4, 5,
+  //     6, 7, 8, 9, 10};
   int stat = 0;
+  size_t sum = std::accumulate(counts.begin(), counts.end(), size_t{0});
+  int count_pic = static_cast<int>(sum) + 10;
+  std::vector<float> res(count_pic * 28 * 28);
+  Tensor input;
+  Shape sh1({1, 5, 5, 3});
+  std::vector<float> vec;
+  vec.reserve(75);
+  for (int i = 0; i < 75; ++i) {
+    vec.push_back(3);
+  }
+  Tensor output = make_tensor(vec, sh1);
 
   for (size_t name = 0; name < 10; name++) {
     for (size_t ind = 0; ind < counts[name] + 1; ind++) {
@@ -19,7 +32,6 @@ int main() {
           << ".png";
       std::string png = oss.str();
       std::string image_path = MNIST_PATH + png;
-      std::cout << image_path << std::endl;
 
       cv::Mat image = cv::imread(image_path);
       if (image.empty()) {
@@ -28,37 +40,49 @@ int main() {
       cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
       std::vector<cv::Mat> channels;
       cv::split(image, channels);
-      int count_pic = 1;
-      std::vector<float> res(count_pic * 28 * 28);
       for (int i = 0; i < 28; ++i) {
         for (int j = 0; j < 28; ++j) {
-          res[i * 28 + j] = channels[0].at<uchar>(j, i);
-        }
-      }
-      Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
-      Tensor t = make_tensor<float>(res, sh);
-      Tensor input = t;
-      Shape sh1({1, 5, 5, 3});
-      std::vector<float> vec;
-      vec.reserve(75);
-      for (int i = 0; i < 75; ++i) {
-        vec.push_back(3);
-      }
-      Tensor output = make_tensor(vec, sh1);
-      build_graph(input, output, false);
-      std::vector<float> tmp_output = softmax<float>(*output.as<float>());
-      for (size_t i = 0; i < tmp_output.size(); i++) {
-        if (tmp_output[i] >= 1e-6) {
-          if (i == name) stat++;
+          size_t a = ind;
+          for (size_t n = 0; n < name; n++) a += counts[n] + 1;
+          res[(a)*28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
         }
       }
     }
   }
-
-  size_t sum = std::accumulate(counts.begin(), counts.end(), size_t{0});
+  Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
+  Tensor t = make_tensor<float>(res, sh);
+  input = t;
+  build_graph(input, output, false);
+  std::vector<std::vector<float>> tmp_output =
+      softmax<float>(*output.as<float>(), 10);
+  /*for (size_t i = 0; i < tmp_output.size(); ++i) {
+    for (size_t j = 0; j < tmp_output[i].size(); ++j) {
+        std::cout << tmp_output[i][j] << " ";
+    }
+    std::cout << "\n";
+  }*/
+  std::vector<size_t> indices;
+  for (const auto& row : tmp_output) {
+    for (size_t j = 0; j < row.size(); ++j) {
+      if (row[j] >= 1e-6) {
+        indices.push_back(j);
+        break;
+      }
+    }
+  }
+  /*for (size_t j = 0; j < indices.size(); ++j) {
+    std::cout << indices[j] << " ";
+  }
+  std::cout << "\n";*/
+  for (size_t name = 0; name < 10; name++) {
+    for (size_t ind = 0; ind < counts[name] + 1; ind++) {
+      size_t a = ind;
+      for (size_t n = 0; n < name; n++) a += counts[n] + 1;
+      if (name == indices[a]) stat++;
+    }
+  }
   double percentage =
       (static_cast<double>(stat) / static_cast<double>(sum + 10)) * 100;
   std::cout << "Stat: " << std::fixed << std::setprecision(2) << percentage
             << "%" << std::endl;
-  std::cout << percentage << std::endl;
 }

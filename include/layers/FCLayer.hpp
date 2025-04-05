@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
+#include <thread>
+#include <mutex>
 
 #include "layers/Layer.hpp"
 
@@ -29,23 +31,23 @@ template <typename ValueType>
 std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
                                    const Shape& mat_shape,
                                    const std::vector<ValueType>& vec) {
+  size_t c = vec.size() / mat_shape[1];
   if (mat_shape.dims() != 2) {
     throw std::invalid_argument("Not a matrix in argument");
   }
-  if (vec.size() != mat_shape[1]) {
-    throw std::invalid_argument("Invalid vector size");
-  }
   Shape res_shape(1);
-  res_shape[0] = mat_shape[0];
+  res_shape[0] = mat_shape[0] * c;
   std::vector<ValueType> res(res_shape[0]);
   ValueType elem;
-  for (size_t i = 0; i < mat_shape[0]; i++) {
-    elem = ValueType(0);
-    for (size_t j = 0; j < mat_shape[1]; j++) {
-      // due to 1d indexing
-      elem += mat[i * mat_shape[1] + j] * vec[j];
+  for (size_t count = 0; count < c; count++) {
+    for (size_t i = 0; i < mat_shape[0]; i++) {
+      elem = ValueType(0);
+      for (size_t j = 0; j < mat_shape[1]; j++) {
+        // due to 1d indexing
+        elem += mat[i * mat_shape[1] + j] * vec[count * mat_shape[1] + j];
+      }
+      res[count * mat_shape[0] + i] = elem;
     }
-    res[i] = elem;
   }
   return res;
 }
@@ -117,14 +119,14 @@ FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
 template <typename ValueType>
 std::vector<ValueType> FCLayerImpl<ValueType>::run(
     const std::vector<ValueType>& input) const {
-  if (input.size() != this->inputShape_[0]) {
-    throw std::invalid_argument("Input size doesn't fit FCLayer");
-  }
   Shape cur_w_shape({this->outputShape_[0], this->inputShape_[0]});
   std::vector<ValueType> output_values =
       mat_vec_mul(weights_, cur_w_shape, input);
-  std::transform(output_values.begin(), output_values.end(), bias_.begin(),
-                 output_values.begin(), std::plus<ValueType>());
+  for (size_t p = 0; p < output_values.size() / bias_.size(); ++p) {
+    for (size_t i = 0; i < bias_.size(); ++i) {
+      output_values[p * bias_.size() + i] += bias_[i];
+    }
+  }
   return output_values;
 }
 }  // namespace itlab_2023
