@@ -10,8 +10,6 @@ using namespace itlab_2023;
 int main() {
   std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
                                 891, 957,  1027, 973,  1008};
-  // std::vector<size_t> counts = {1, 2, 3, 4, 5,
-  //     6, 7, 8, 9, 10};
   int stat = 0;
   size_t sum = std::accumulate(counts.begin(), counts.end(), size_t{0});
   int count_pic = static_cast<int>(sum) + 10;
@@ -55,12 +53,6 @@ int main() {
   build_graph(input, output, false);
   std::vector<std::vector<float>> tmp_output =
       softmax<float>(*output.as<float>(), 10);
-  /*for (size_t i = 0; i < tmp_output.size(); ++i) {
-    for (size_t j = 0; j < tmp_output[i].size(); ++j) {
-        std::cout << tmp_output[i][j] << " ";
-    }
-    std::cout << "\n";
-  }*/
   std::vector<size_t> indices;
   for (const auto& row : tmp_output) {
     for (size_t j = 0; j < row.size(); ++j) {
@@ -70,10 +62,6 @@ int main() {
       }
     }
   }
-  /*for (size_t j = 0; j < indices.size(); ++j) {
-    std::cout << indices[j] << " ";
-  }
-  std::cout << "\n";*/
   for (size_t name = 0; name < 10; name++) {
     for (size_t ind = 0; ind < counts[name] + 1; ind++) {
       size_t a = ind;
