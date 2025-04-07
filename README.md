@@ -25,13 +25,14 @@ To build and run this project locally on Windows, follow these steps:
    cmake .. -DCMAKE_BUILD_TYPE=Release
     ```
    If you want to build in a Debug, change the Release to Debug
-    *Note: Make sure you have CMake installed to build the project.*
-4. **Build the project:**
+
+   *Note: Make sure you have CMake installed to build the project.*
+5. **Build the project:**
    Next, to build the project, we will need to enter the command
     ```bash
    cmake --build . --config Release
     ```
-5. **Run the project**
+6. **Run the project**
    After building the project, you can find the executable file in the following path from the *build* folder
    ```bash
    cd app\Release
