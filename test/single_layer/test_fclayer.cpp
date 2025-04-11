@@ -48,31 +48,6 @@ INSTANTIATE_TEST_SUITE_P(
                         std::vector<double>({2.0, 2.0, 2.0}),
                         std::vector<double>({8.0, 5.7, 10.0}))));
 
-TEST(fclayer, throws_when_greater_input_size) {
-  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
-  Shape wshape({3, 2});
-  std::vector<double> bias = {0.5, 0.5, 1.0};
-  FCLayerImpl<double> layer(a1, wshape, bias);
-  std::vector<double> input = {2.0, 1.0, 0.0};
-  ASSERT_ANY_THROW(layer.run(input));
-}
-TEST(fclayer, throws_when_less_input_size) {
-  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
-  Shape wshape({3, 2});
-  std::vector<double> bias = {0.5, 0.5, 1.0};
-  FCLayerImpl<double> layer(a1, wshape, bias);
-  std::vector<double> input = {2.0};
-  ASSERT_ANY_THROW(layer.run(input));
-}
-
-TEST(fclayer, throws_when_empty_input) {
-  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
-  Shape wshape({3, 2});
-  std::vector<double> bias = {0.5, 0.5, 1.0};
-  FCLayerImpl<double> layer(a1, wshape, bias);
-  std::vector<double> input;
-  ASSERT_ANY_THROW(layer.run(input));
-}
 TEST(fclayer, throws_when_empty_weights) {
   const std::vector<double> a1;
   Shape wshape({3, 2});
@@ -152,13 +127,6 @@ TEST(fclayer, matvecmul_works) {
   std::vector<int> true_res = {10, 8};
   std::vector<int> res = mat_vec_mul(mat, mat_shape, vec);
   EXPECT_EQ(res, true_res);
-}
-
-TEST(fclayer, matvecmul_throws_when_small_vector) {
-  std::vector<int> mat = {2, 4, 2, 4};
-  std::vector<int> vec = {1};
-  Shape mat_shape({2, 2});
-  ASSERT_ANY_THROW(mat_vec_mul(mat, mat_shape, vec));
 }
 
 TEST(fclayer, matvecmul_throws_when_not_matrix) {

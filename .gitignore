@@ -1,3 +1,5 @@
 .vscode
 build
 3rdparty/tensorflow
+app/AccuracyImgNet/imgs
+docs/model_data_alexnet_1.json

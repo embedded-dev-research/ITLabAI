@@ -11,7 +11,7 @@
 
 namespace itlab_2023 {
 
-enum LayerType {
+enum LayerType : uint8_t {
   kInput,
   kPooling,
   kNormalization,
@@ -19,6 +19,7 @@ enum LayerType {
   kElementWise,
   kConvolution,
   kFullyConnected,
+  kFlatten,
   kOutput,
 };
 
@@ -27,6 +28,7 @@ enum ImplType { kDefault, kTBB };
 class Layer {
  public:
   Layer() = default;
+  virtual ~Layer() = default;
   int getID() const { return id_; }
   void setID(int id) { id_ = id; }
   LayerType getName() const { return type_; }
@@ -36,8 +38,8 @@ class Layer {
   virtual Tensor get_weights() = 0;
 #endif
 
- private:
-  int id_;
+ protected:
+  int id_ = 0;
   LayerType type_;
 };
 

@@ -11,41 +11,19 @@ void FCLayer::run(const Tensor& input, Tensor& output) {
   }
   switch (input.get_type()) {
     case Type::kInt: {
-      switch (implType_) {
-        case kDefault: {
-          FCLayerImpl<int> used_impl(*weights_.as<int>(), weights_.get_shape(),
-                                     *bias_.as<int>());
-          output = make_tensor(used_impl.run(*input.as<int>()),
-                               used_impl.get_output_shape());
-          break;
-        }
-        case kTBB: {
-          FCLayerImplTBB<int> used_impl(*weights_.as<int>(),
-                                        weights_.get_shape(), *bias_.as<int>());
-          output = make_tensor(used_impl.run(*input.as<int>()),
-                               used_impl.get_output_shape());
-          break;
-        }
-      }
+      FCLayerImpl<int> used_impl(*weights_.as<int>(), weights_.get_shape(),
+                                 *bias_.as<int>());
+      output = make_tensor(used_impl.run(*input.as<int>()),
+                           {(*input.as<int>()).size() /
+                            weights_.get_shape()[1] * weights_.get_shape()[0]});
       break;
     }
     case Type::kFloat: {
-      switch (implType_) {
-        case kDefault: {
-          FCLayerImpl<float> used_impl(
-              *weights_.as<float>(), weights_.get_shape(), *bias_.as<float>());
-          output = make_tensor(used_impl.run(*input.as<float>()),
-                               used_impl.get_output_shape());
-          break;
-        }
-        case kTBB: {
-          FCLayerImplTBB<float> used_impl(
-              *weights_.as<float>(), weights_.get_shape(), *bias_.as<float>());
-          output = make_tensor(used_impl.run(*input.as<float>()),
-                               used_impl.get_output_shape());
-          break;
-        }
-      }
+      FCLayerImpl<float> used_impl(*weights_.as<float>(), weights_.get_shape(),
+                                   *bias_.as<float>());
+      output = make_tensor(used_impl.run(*input.as<float>()),
+                           {(*input.as<float>()).size() /
+                            weights_.get_shape()[1] * weights_.get_shape()[0]});
       break;
     }
     default: {

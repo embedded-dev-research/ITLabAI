@@ -162,3 +162,85 @@ TEST(OutputLayer, softmax_throws_when_empty_input) {
   std::vector<double> input;
   ASSERT_ANY_THROW(softmax<double>(input));
 }
+
+TEST(SoftmaxTest, throws_when_empty_input) {
+  std::vector<double> input;
+  ASSERT_THROW(softmax(input, 1), std::invalid_argument);
+}
+
+TEST(SoftmaxTest, throws_when_division_not_possible) {
+  std::vector<double> input = {1.0, 2.0, 3.0};
+  ASSERT_THROW(softmax(input, 0), std::invalid_argument);
+}
+
+TEST(SoftmaxTest, throws_when_size_not_divisible_by_c) {
+  std::vector<double> input = {1.0, 2.0, 3.0, 4.0};
+  ASSERT_THROW(softmax(input, 3), std::invalid_argument);
+}
+
+TEST(SoftmaxTest, handles_single_element_vector) {
+  std::vector<double> input = {5.0};
+  auto result = softmax(input, 1);
+  ASSERT_EQ(result.size(), 1);
+  ASSERT_EQ(result[0].size(), 1);
+  EXPECT_DOUBLE_EQ(result[0][0], 1.0);
+}
+
+TEST(SoftmaxTest, handles_multiple_elements_single_chunk) {
+  std::vector<double> input = {1.0, 2.0, 3.0};
+  auto result = softmax(input, 3);
+  ASSERT_EQ(result.size(), 1);
+  ASSERT_EQ(result[0].size(), 3);
+  EXPECT_NEAR(result[0][0], 0.090030573, 1e-8);
+  EXPECT_NEAR(result[0][1], 0.244728471, 1e-8);
+  EXPECT_NEAR(result[0][2], 0.665240956, 1e-8);
+}
+
+TEST(SoftmaxTest, handles_multiple_chunks) {
+  std::vector<double> input = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+  auto result = softmax(input, 3);
+  ASSERT_EQ(result.size(), 2);
+  ASSERT_EQ(result[0].size(), 3);
+  ASSERT_EQ(result[1].size(), 3);
+
+  EXPECT_NEAR(result[0][0], 0.090030573, 1e-8);
+  EXPECT_NEAR(result[0][1], 0.244728471, 1e-8);
+  EXPECT_NEAR(result[0][2], 0.665240956, 1e-8);
+
+  EXPECT_NEAR(result[1][0], 0.090030573, 1e-8);
+  EXPECT_NEAR(result[1][1], 0.244728471, 1e-8);
+  EXPECT_NEAR(result[1][2], 0.665240956, 1e-8);
+}
+
+TEST(SoftmaxTest, works_with_negative_values) {
+  std::vector<double> input = {-1.0, -2.0, -3.0};
+  auto result = softmax(input, 3);
+  ASSERT_EQ(result.size(), 1);
+  ASSERT_EQ(result[0].size(), 3);
+  EXPECT_NEAR(result[0][0], 0.66524096, 1e-8);
+  EXPECT_NEAR(result[0][1], 0.24472847, 1e-8);
+  EXPECT_NEAR(result[0][2], 0.09003057, 1e-8);
+}
+
+TEST(SoftmaxTest, works_with_large_values) {
+  std::vector<double> input = {1000.0, 1001.0, 1002.0};
+  auto result = softmax(input, 3);
+  ASSERT_EQ(result.size(), 1);
+  ASSERT_EQ(result[0].size(), 3);
+  EXPECT_FALSE(std::isnan(result[0][0]));
+  EXPECT_FALSE(std::isnan(result[0][1]));
+  EXPECT_FALSE(std::isnan(result[0][2]));
+  EXPECT_FALSE(std::isinf(result[0][0]));
+  EXPECT_FALSE(std::isinf(result[0][1]));
+  EXPECT_FALSE(std::isinf(result[0][2]));
+}
+
+TEST(SoftmaxTest, works_with_custom_type) {
+  std::vector<float> input = {1.0f, 2.0f, 3.0f};
+  auto result = softmax(input, 3);
+  ASSERT_EQ(result.size(), 1);
+  ASSERT_EQ(result[0].size(), 3);
+  EXPECT_NEAR(result[0][0], 0.09003057f, 1e-6f);
+  EXPECT_NEAR(result[0][1], 0.24472847f, 1e-6f);
+  EXPECT_NEAR(result[0][2], 0.66524096f, 1e-6f);
+}

@@ -6,4 +6,7 @@
 	url = https://github.com/opencv/opencv
 [submodule "3rdparty/TBB"]
 	path = 3rdparty/TBB
-	url = https://github.com/oneapi-src/oneTBB.git
+	url = https://github.com/oneapi-src/oneTBB
+[submodule "3rdparty/Json"]
+	path = 3rdparty/Json
+	url = https://github.com/nlohmann/json

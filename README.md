@@ -22,16 +22,17 @@ To build and run this project locally on Windows, follow these steps:
    ```bash
    mkdir build
    cd build
-   cmake ..
+   cmake .. -DCMAKE_BUILD_TYPE=Release
     ```
-    *Note: Make sure you have CMake installed to build the project.*
-4. **Build the project:**
+   If you want to build in a Debug, change the Release to Debug
+
+   *Note: Make sure you have CMake installed to build the project.*
+5. **Build the project:**
    Next, to build the project, we will need to enter the command
     ```bash
    cmake --build . --config Release
     ```
-    If you want to build in a debug, change the release to debug
-5. **Run the project**
+6. **Run the project**
    After building the project, you can find the executable file in the following path from the *build* folder
    ```bash
    cd app\Release
@@ -77,11 +78,11 @@ To build and run this project locally on Windows, follow these steps:
     ```bash
    cmake --build build --config Release
     ```
-    If you want to build in a debug, change the release to debug
+    If you want to build in a Debug, change the Release to Debug
 6. **Run the project**
    After building the project, you can find the executable file in the following path from the *build* folder
    ```bash
-   cd build/app
+   cd build/bin
     ```
    and run the file
     ```bash
@@ -107,7 +108,7 @@ To build and run this project locally on Windows, follow these steps:
 ### *Linux*
 To start the testing process locally, you need to go to the directory
    ```bash
-   cd build/test
+   cd build/bin
    ```
    and run the following files:
    ```bash
@@ -116,6 +117,15 @@ To start the testing process locally, you need to go to the directory
    ```
 # **Some files used to create the library**
 ### *neural network models*
-[Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5)
+You need to download [Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5) to the folder *docs*
+
+# **How do I launch the inference?**
+* You need to run the script *parcer.py* that is located in app/AlexNet to read weights from a model *Alexnet-model.h5* and the json file with the weights will be stored in the *docs* folder.
+* Then put the test images in png format in the folder *docs/input*
+
+# **Accuracy validation**
+To run accuracy validation you need to use the MNIST dataset, which you can download [here](https://github.com/DeepTrackAI/MNIST_dataset/tree/main/mnist/test) and put it in a folder *docs/mnist/mnist/test*
+Now you can run accuracy check - *build\bin\ACC_MNIST.exe*
+
 # **Structure of our library**
 ![Class diagram](./docs/class_diagram.svg)
