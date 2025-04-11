@@ -120,7 +120,8 @@ To start the testing process locally, you need to go to the directory
 You need to download [Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5) to the folder *docs*
 
 # **How do I launch the inference?**
-* You need to run the script *parcer.py* that is located in app/AlexNet to read weights from a model *Alexnet-model.h5* and the json file with the weights will be stored in the *docs* folder.
+* Make sure you install the project dependencies by running: *pip install -r requirements.txt*
+* You need to run the script *parser.py* that is located in app/AlexNet to read weights from a model *Alexnet-model.h5* and the json file with the weights will be stored in the *docs* folder.
 * Then put the test images in png format in the folder *docs/input*
 
 # **Accuracy validation**
