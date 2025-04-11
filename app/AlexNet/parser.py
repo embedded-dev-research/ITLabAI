@@ -1,8 +1,19 @@
-import tensorflow as tf
-from tensorflow.keras.models import load_model
 import json
-import numpy as np
 import os
+
+import tensorflow as tf
+from tensorflow.keras.initializers import GlorotUniform as OriginalGlorotUniform, Zeros as OriginalZeros
+from tensorflow.keras.models import load_model
+
+class CustomGlorotUniform(OriginalGlorotUniform):
+    def __init__(self, seed=None, **kwargs):
+        kwargs.pop('dtype', None)  # Remove the unexpected dtype keyword if present
+        super().__init__(seed=seed, **kwargs)
+
+class CustomZeros(OriginalZeros):
+    def __init__(self, **kwargs):
+        kwargs.pop('dtype', None)  # Remove the unexpected dtype keyword if present
+        super().__init__(**kwargs)
 
 # Пути к модели и JSON файлу
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -10,7 +21,7 @@ MODEL_PATH = os.path.join(BASE_DIR, 'docs', 'AlexNet-model.h5')
 MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs', 'model_data_alexnet_1.json')
 
 # Загрузка модели
-model = load_model(MODEL_PATH)
+model = load_model(MODEL_PATH, custom_objects={'GlorotUniform': CustomGlorotUniform, 'Zeros': CustomZeros})
 
 # Получение весов модели и информации о порядке слоев
 layer_info = []
