@@ -1,10 +1,27 @@
 [![CI](https://github.com/embedded-dev-research/itlab_2023/actions/workflows/ci.yml/badge.svg)](https://github.com/embedded-dev-research/itlab_2023/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/embedded-dev-research/itlab_2023/graph/badge.svg?token=L3OS8C4BI6)](https://codecov.io/gh/embedded-dev-research/itlab_2023)
 
-# itlab_2023
-# Name
-## Short description ##
-# **Building a Project**
+# AlexNet-MNIST-Inference
+## Short description
+A lightweight C++ library for performing high-performance inference on MNIST handwritten digits using a modified AlexNet architecture. Designed for efficiency and educational purposes, this project demonstrates how classic CNNs can be optimized for small-scale tasks in native environments.
+### Key Features:
+
+* C++17 implementation for bare-metal performance
+
+* Simplified AlexNet for 28×28 grayscale images
+
+* Parallel computing via Intel TBB (Threading Building Blocks)
+
+* Pre-trained model: AlexNet-model.h5 included
+## **Some files used to create the library**
+### Neural network models
+You need to download [Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5) to the folder *docs*
+
+## **How do I launch the inference?**
+* Make sure you install the project dependencies by running: *pip install -r requirements.txt*
+* You need to run the script *parser.py* that is located in app/AlexNet to read weights from a model *Alexnet-model.h5* and the json file with the weights will be stored in the *docs* folder.
+* Then put the test images in png format in the folder *docs/input*
+## **Building a Project**
 ### *Windows*
 To build and run this project locally on Windows, follow these steps:
 
@@ -35,11 +52,11 @@ To build and run this project locally on Windows, follow these steps:
 6. **Run the project**
    After building the project, you can find the executable file in the following path from the *build* folder
    ```bash
-   cd app\Release
+   cd build/bin
     ```
    and run the file
     ```bash
-   Reader.exe
+   Graph_Build.exe
     ```
 ### *Linux/macOS*
    To build and run this project locally on Linux or macOS, follow these steps:
@@ -86,9 +103,10 @@ To build and run this project locally on Windows, follow these steps:
     ```
    and run the file
     ```bash
-   ./Reader
+   ./Graph_Build
     ```
-# Test Process
+
+## Test Process
    This project contains tests to verify functionality.
    To test the project, the Google Test Framework is used as a submodule of the project.
    ### Google Test Framework
@@ -99,7 +117,7 @@ To build and run this project locally on Windows, follow these steps:
    
    To start the testing process locally, you need to go to the directory
    ```bash
-   cd test\Release
+   cd build/bin
    ```
    and run the following files:
    ```bash
@@ -115,18 +133,11 @@ To start the testing process locally, you need to go to the directory
    chmod +x run_test
    ./run_test
    ```
-# **Some files used to create the library**
-### *neural network models*
-You need to download [Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5) to the folder *docs*
 
-# **How do I launch the inference?**
-* Make sure you install the project dependencies by running: *pip install -r requirements.txt*
-* You need to run the script *parser.py* that is located in app/AlexNet to read weights from a model *Alexnet-model.h5* and the json file with the weights will be stored in the *docs* folder.
-* Then put the test images in png format in the folder *docs/input*
-
-# **Accuracy validation**
+## **Accuracy validation**
 To run accuracy validation you need to use the MNIST dataset, which you can download [here](https://github.com/DeepTrackAI/MNIST_dataset/tree/main/mnist/test) and put it in a folder *docs/mnist/mnist/test*
 Now you can run accuracy check - *build\bin\ACC_MNIST.exe*
+* **The accuracy should be 98.02%**
 
-# **Structure of our library**
+## **Structure of our library**
 ![Class diagram](./docs/class_diagram.svg)
