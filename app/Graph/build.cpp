@@ -1,6 +1,7 @@
 #include "build.hpp"
 
-void build_graph(Tensor& input, Tensor& output, bool comments, bool parallel = false) {
+void build_graph(Tensor& input, Tensor& output, bool comments,
+                 bool parallel = false) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';

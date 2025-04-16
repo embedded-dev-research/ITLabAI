@@ -13,12 +13,11 @@ class FCLayer : public Layer {
  private:
   Tensor weights_;
   Tensor bias_;
-  ImplType implType_;
 
  public:
   FCLayer() = default;
   FCLayer(Tensor weights, const Tensor& bias, ImplType implType = kDefault)
-      : weights_(std::move(weights)), bias_(bias), implType_(implType) {}
+      : weights_(std::move(weights)), bias_(bias) {}
   static std::string get_name() { return "Fully-connected layer"; }
   void run(const Tensor& input, Tensor& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS

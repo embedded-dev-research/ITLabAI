@@ -5,10 +5,12 @@
 
 namespace itlab_2023 {
 
+std::vector<size_t> reorder(std::vector<size_t> order_vec,
+                            std::vector<size_t> order);
+
 class FlattenLayer : public Layer {
  private:
   std::vector<size_t> order_;
-  ImplType implType_;
 
  public:
   FlattenLayer() : order_({0, 1, 2, 3}) {}
@@ -18,7 +20,8 @@ class FlattenLayer : public Layer {
 };
 
 template <typename ValueType>
-void Flatten4D(const Tensor& input, Tensor& output, const std::vector<size_t>& order_) {
+void Flatten4D(const Tensor& input, Tensor& output,
+               const std::vector<size_t>& order_) {
   Tensor tmp_tensor = Tensor(
       Shape({input.get_shape()[order_[0]], input.get_shape()[order_[1]],
              input.get_shape()[order_[2]], input.get_shape()[order_[3]]}),

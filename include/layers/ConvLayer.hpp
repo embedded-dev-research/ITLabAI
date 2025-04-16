@@ -132,7 +132,7 @@ class ConvImpl : public LayerImpl<ValueType> {
 // NCHW -> NCHW only
 template <typename ValueType>
 void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
-               Tensor& output, size_t stride_, size_t pads_, size_t dilations_) {
+            Tensor& output, size_t stride_, size_t pads_, size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
   size_t in_height = input.get_shape()[2];
   size_t in_width = input.get_shape()[3];
@@ -143,7 +143,7 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   size_t kernel_in_channels = kernel_.get_shape()[2];
   size_t kernel_out_channels = kernel_.get_shape()[3];
 
-   std::vector<std::vector<std::vector<std::vector<ValueType>>>> padded_input =
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> padded_input =
       std::vector<std::vector<std::vector<std::vector<ValueType>>>>(
           batch_size, std::vector<std::vector<std::vector<ValueType>>>(
                           in_height + 2 * pads_,
@@ -259,7 +259,7 @@ void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   std::vector<std::thread> threads;
   size_t chunk_size = batch_size / num_threads;
 
-   std::vector<std::vector<std::vector<std::vector<ValueType>>>> padded_input =
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> padded_input =
       std::vector<std::vector<std::vector<std::vector<ValueType>>>>(
           batch_size, std::vector<std::vector<std::vector<ValueType>>>(
                           in_height + 2 * pads_,
