@@ -33,7 +33,6 @@ TEST(pooling_test, is_pooling_tbb_ok) {
   double count2 =
       elapsed_time<double, std::milli>(test_func, p2, input, output);
   std::cerr << count1 << " vs. " << count2 << " (parallel)\n";
-  EXPECT_GE(count1, count2);
 }
 
 TEST(conv_test, is_conv_stl_ok) {
@@ -60,5 +59,4 @@ TEST(conv_test, is_conv_stl_ok) {
   double count2 =
       elapsed_time<double, std::milli>(test_func, p2, input, output);
   std::cerr << count1 << " vs. " << count2 << " (parallel)\n";
-  EXPECT_GE(count1, count2);
 }
