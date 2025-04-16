@@ -128,7 +128,6 @@ class ConvImpl : public LayerImpl<ValueType> {
   }
 };
 
-
 // NCHW -> NCHW only
 template <typename ValueType>
 void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,

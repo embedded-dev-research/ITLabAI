@@ -33,4 +33,3 @@ void FCLayer::run(const Tensor& input, Tensor& output) {
 }
 
 }  // namespace itlab_2023
-
