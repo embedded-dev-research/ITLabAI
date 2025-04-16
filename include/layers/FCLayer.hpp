@@ -16,7 +16,7 @@ class FCLayer : public Layer {
 
  public:
   FCLayer() = default;
-  FCLayer(Tensor weights, const Tensor& bias, ImplType implType = kDefault)
+  FCLayer(Tensor weights, const Tensor& bias)
       : weights_(std::move(weights)), bias_(bias) {}
   static std::string get_name() { return "Fully-connected layer"; }
   void run(const Tensor& input, Tensor& output) override;
