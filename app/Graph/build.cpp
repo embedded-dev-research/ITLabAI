@@ -174,7 +174,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments,
   int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
   std::cout << "Elapsed inference time:" << sum << std::endl;
   std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-#endif ENABLE_STATISTIC_TIME
+#endif
   if (comments) std::cout << "Inference completed." << std::endl;
   if (comments) {
     std::vector<float> tmp_output = softmax<float>(*output.as<float>());
