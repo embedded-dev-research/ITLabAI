@@ -6,16 +6,16 @@ void PoolingLayer::run(const Tensor& input, Tensor& output) {
   switch (input.get_type()) {
     case Type::kInt: {
       switch (implType_) {
-        case kDefault: {
-          PoolingLayerImpl<int> used_impl(input.get_shape(), poolingShape_,
-                                          poolingType_);
+        case kTBB: {
+          PoolingLayerImplTBB<int> used_impl(input.get_shape(), poolingShape_,
+                                             poolingType_);
           output = make_tensor(used_impl.run(*input.as<int>()),
                                used_impl.get_output_shape());
           break;
         }
-        case kTBB: {
-          PoolingLayerImplTBB<int> used_impl(input.get_shape(), poolingShape_,
-                                             poolingType_);
+        default: {
+          PoolingLayerImpl<int> used_impl(input.get_shape(), poolingShape_,
+                                          poolingType_);
           output = make_tensor(used_impl.run(*input.as<int>()),
                                used_impl.get_output_shape());
           break;
@@ -25,16 +25,16 @@ void PoolingLayer::run(const Tensor& input, Tensor& output) {
     }
     case Type::kFloat: {
       switch (implType_) {
-        case kDefault: {
-          PoolingLayerImpl<float> used_impl(input.get_shape(), poolingShape_,
-                                            poolingType_);
+        case kTBB: {
+          PoolingLayerImplTBB<float> used_impl(input.get_shape(), poolingShape_,
+                                               poolingType_);
           output = make_tensor(used_impl.run(*input.as<float>()),
                                used_impl.get_output_shape());
           break;
         }
-        case kTBB: {
-          PoolingLayerImplTBB<float> used_impl(input.get_shape(), poolingShape_,
-                                               poolingType_);
+        default: {
+          PoolingLayerImpl<float> used_impl(input.get_shape(), poolingShape_,
+                                            poolingType_);
           output = make_tensor(used_impl.run(*input.as<float>()),
                                used_impl.get_output_shape());
           break;
@@ -47,4 +47,5 @@ void PoolingLayer::run(const Tensor& input, Tensor& output) {
     }
   }
 }
+
 }  // namespace itlab_2023

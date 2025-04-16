@@ -47,7 +47,7 @@ TEST(bfs, check_result_vec) {
   }
 #endif
 #ifdef ENABLE_STATISTIC_TIME
-  std::vector<int> times = graph.getTime();
+  std::vector<std::string> times = graph.getTimeInfo();
   for (int j = 0; j < times.size(); j++) {
     std::cout << times[j] << ' ';
   }

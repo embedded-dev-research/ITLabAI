@@ -9,9 +9,6 @@
 
 namespace itlab_2023 {
 
-const size_t kDepth1 = 128;
-const size_t kDepth2 = 5;
-
 class FCLayer : public Layer {
  private:
   Tensor weights_;
@@ -55,15 +52,6 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
 }
 
 template <typename ValueType>
-inline ValueType get_from(size_t i, size_t j, const std::vector<ValueType>& mat,
-                          const Shape& mat_shape) {
-  if (i < mat_shape[0] && j < mat_shape[1]) {
-    return mat[i * mat_shape[1] + j];
-  }
-  return ValueType(0);
-}
-
-template <typename ValueType>
 class FCLayerImpl : public LayerImpl<ValueType> {
  public:
   FCLayerImpl() = delete;
@@ -99,7 +87,7 @@ class FCLayerImpl : public LayerImpl<ValueType> {
   std::vector<ValueType> run(
       const std::vector<ValueType>& input) const override;
 
- protected:
+ private:
   std::vector<ValueType> weights_;
   std::vector<ValueType> bias_;
 };

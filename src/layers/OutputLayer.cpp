@@ -28,4 +28,5 @@ std::pair<std::vector<std::string>, Tensor> OutputLayer::top_k(
   };
   return make_pair(reslabels, resvector);
 }
+
 }  // namespace itlab_2023

@@ -2,39 +2,19 @@
 #include <random>
 
 #include "gtest/gtest.h"
+#include "layers/ConvLayer.hpp"
 #include "layers/FCLayer.hpp"
+#include "layers/FlattenLayer.hpp"
 #include "layers/PoolingLayer.hpp"
 #include "perf/benchmarking.hpp"
 
 using namespace itlab_2023;
 
-void test_func(PoolingLayer& p, const Tensor& input, Tensor& output) {
+void test_func(Layer& p, const Tensor& input, Tensor& output) {
   p.run(input, output);
 }
 
-TEST(time_test, mat_vec_mul_comp) {
-  size_t k = 7000;
-  std::vector<int> mat(k * k);
-  std::vector<int> vec(k);
-  for (size_t i = 0; i < k; i++) {
-    vec[i] = rand() % 500;
-  }
-  for (size_t i = 0; i < k * k; i++) {
-    mat[i] = rand() % 500;
-  }
-  double count1 = elapsed_time_avg<double, std::milli>(10, mat_vec_mul<int>,
-                                                       mat, Shape({k, k}), vec);
-  double count2 = elapsed_time_avg<double, std::milli>(
-      10, mat_vec_mul_upd_tbb<int>, mat, Shape({k, k}), vec);
-  auto tmp1 = mat_vec_mul<int>(mat, Shape{k, k}, vec);
-  auto tmp2 = mat_vec_mul_upd_tbb<int>(mat, Shape{k, k}, vec);
-  for (size_t i = 0; i < k; i++) {
-    EXPECT_EQ(tmp1[i], tmp2[i]);
-  }
-  EXPECT_GE(count1, count2);
-}
-
-TEST(pooling_test, is_parallel_ok) {
+TEST(pooling_test, is_pooling_tbb_ok) {
   size_t n = 50;
   size_t c = 3;
   size_t h = 224;
@@ -52,5 +32,33 @@ TEST(pooling_test, is_parallel_ok) {
       elapsed_time<double, std::milli>(test_func, p1, input, output);
   double count2 =
       elapsed_time<double, std::milli>(test_func, p2, input, output);
+  std::cerr << count1 << " vs. " << count2 << " (parallel)\n";
+  EXPECT_GE(count1, count2);
+}
+
+TEST(conv_test, is_conv_stl_ok) {
+  size_t n = 50;
+  size_t c = 3;
+  size_t h = 224;
+  size_t w = 224;
+  Shape test_shape = {n, c, h, w};
+  std::vector<int> a1(n * c * h * w);
+  std::vector<int> a2(3 * 25 * 16);
+  for (size_t i = 0; i < n * c * h * w; i++) {
+    a1[i] = rand();
+  }
+  for (size_t i = 0; i < 3 * 25 * 16; i++) {
+    a2[i] = rand();
+  }
+  Tensor input = make_tensor(a1, test_shape);
+  Tensor kernel = make_tensor(a2, Shape({5, 5, 3, 16}));
+  Tensor output;
+  ConvolutionalLayer p1(1, 1, 2, kernel, Tensor(), kDefault);
+  ConvolutionalLayer p2(1, 1, 2, kernel, Tensor(), kSTL);
+  double count1 =
+      elapsed_time<double, std::milli>(test_func, p1, input, output);
+  double count2 =
+      elapsed_time<double, std::milli>(test_func, p2, input, output);
+  std::cerr << count1 << " vs. " << count2 << " (parallel)\n";
   EXPECT_GE(count1, count2);
 }

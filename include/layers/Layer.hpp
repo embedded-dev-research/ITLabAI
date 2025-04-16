@@ -23,7 +23,7 @@ enum LayerType : uint8_t {
   kOutput,
 };
 
-enum ImplType { kDefault, kTBB };
+enum ImplType : uint8_t { kDefault, kTBB, kSTL };
 
 class Layer {
  public:
@@ -64,4 +64,5 @@ class LayerImpl {
   Shape inputShape_;
   Shape outputShape_;
 };
+
 }  // namespace itlab_2023

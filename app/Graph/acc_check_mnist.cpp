@@ -7,7 +7,12 @@
 
 using namespace itlab_2023;
 
-int main() {
+int main(int argc, char* argv[]) {
+  bool parallel = false;
+  if (argc > 1 && std::string(argv[1]) == "--parallel") {
+    std::cout << "Parallel mode" << std::endl;
+    parallel = true;
+  }
   std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
                                 891, 957,  1027, 973,  1008};
   int stat = 0;
@@ -50,7 +55,7 @@ int main() {
   Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
   Tensor t = make_tensor<float>(res, sh);
   input = t;
-  build_graph(input, output, false);
+  build_graph(input, output, false, parallel);
   std::vector<std::vector<float>> tmp_output =
       softmax<float>(*output.as<float>(), 10);
   std::vector<size_t> indices;

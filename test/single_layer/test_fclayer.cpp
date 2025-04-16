@@ -136,20 +136,6 @@ TEST(fclayer, matvecmul_throws_when_not_matrix) {
   ASSERT_ANY_THROW(mat_vec_mul(mat, mat_shape, vec));
 }
 
-TEST(fclayer, matvecmul_tbb_throws_when_small_vector) {
-  std::vector<int> mat = {2, 4, 2, 4};
-  std::vector<int> vec = {1};
-  Shape mat_shape({2, 2});
-  ASSERT_ANY_THROW(mat_vec_mul_upd_tbb(mat, mat_shape, vec));
-}
-
-TEST(fclayer, matvecmul_tbb_throws_when_not_matrix) {
-  std::vector<int> mat = {2, 4, 2, 4, 1, 3, 5, 7};
-  std::vector<int> vec = {1, 2};
-  Shape mat_shape({2, 2, 2});
-  ASSERT_ANY_THROW(mat_vec_mul_upd_tbb(mat, mat_shape, vec));
-}
-
 TEST(fclayer, new_fc_layer_can_run_float) {
   const std::vector<float> a1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   const std::vector<float> a2 = {9.0F, 6.4F, 17.5F};
@@ -172,34 +158,6 @@ TEST(fclayer, new_fc_layer_can_run_int) {
   Shape wshape({3, 2});
   Tensor bias = make_tensor<int>({0, 0, 1});
   FCLayer layer(weights, bias);
-  layer.run(make_tensor<int>({2, 3}), output);
-  for (size_t i = 0; i < a2.size(); i++) {
-    EXPECT_NEAR((*output.as<int>())[i], a2[i], 1e-5);
-  }
-}
-
-TEST(fclayer, new_fc_layer_tbb_can_run_float) {
-  const std::vector<float> a1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
-  const std::vector<float> a2 = {9.0F, 6.4F, 17.5F};
-  Tensor weights = make_tensor<float>(a1, {3, 2});
-  Tensor output;
-  Shape wshape({3, 2});
-  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
-  FCLayer layer(weights, bias, itlab_2023::kTBB);
-  layer.run(make_tensor<float>({2.0F, 3.0F}), output);
-  for (size_t i = 0; i < a2.size(); i++) {
-    EXPECT_NEAR((*output.as<float>())[i], a2[i], 1e-5);
-  }
-}
-
-TEST(fclayer, new_fc_layer_tbb_can_run_int) {
-  const std::vector<int> a1 = {2, 1, 0, 2, 0, 5};
-  const std::vector<int> a2 = {7, 6, 16};
-  Tensor weights = make_tensor<int>(a1, {3, 2});
-  Tensor output;
-  Shape wshape({3, 2});
-  Tensor bias = make_tensor<int>({0, 0, 1});
-  FCLayer layer(weights, bias, itlab_2023::kTBB);
   layer.run(make_tensor<int>({2, 3}), output);
   for (size_t i = 0; i < a2.size(); i++) {
     EXPECT_NEAR((*output.as<int>())[i], a2[i], 1e-5);
