@@ -21,6 +21,8 @@ You need to download [Alexnet-model.h5](https://github.com/moizahmed97/Convoluti
 * Make sure you install the project dependencies by running: *pip install -r requirements.txt*
 * You need to run the script *parser.py* that is located in app/AlexNet to read weights from a model *Alexnet-model.h5* and the json file with the weights will be stored in the *docs* folder.
 * Then put the test images in png format in the folder *docs/input*
+* After building the project, which is described below, run Graph_build in folder *build/bin*
+
 ## **Building a Project**
 ### *Windows*
 To build and run this project locally on Windows, follow these steps:
