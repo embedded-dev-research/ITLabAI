@@ -10,7 +10,7 @@ A lightweight C++ library for performing high-performance inference on MNIST han
 
 * Simplified AlexNet for 28×28 grayscale images
 
-* Parallel computing via Intel TBB (Threading Building Blocks)
+* Parallel computing via Intel OneTBB (Threading Building Blocks)
 
 * Pre-trained model: AlexNet-model.h5 included
 ## **Some files used to create the library**
