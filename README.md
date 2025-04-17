@@ -141,5 +141,7 @@ To run accuracy validation you need to use the MNIST dataset, which you can down
 Now you can run accuracy check - *build\bin\ACC_MNIST.exe*
 * **The accuracy should be 98.02%**
 
+## **Documentation of project**
+https://docs.google.com/document/d/17f5xWI2VtbxrRtkaZqA74SO-rFZY_efhrzE6EtGnHvc/edit?tab=t.0
 ## **Structure of our library**
 ![Class diagram](./docs/class_diagram.svg)
