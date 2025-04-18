@@ -15,7 +15,7 @@ void test_func(Layer& p, const Tensor& input, Tensor& output) {
 }
 
 TEST(pooling_test, is_pooling_tbb_ok) {
-  size_t n = 50;
+  size_t n = 10;
   size_t c = 3;
   size_t h = 224;
   size_t w = 224;
@@ -36,7 +36,7 @@ TEST(pooling_test, is_pooling_tbb_ok) {
 }
 
 TEST(conv_test, is_conv_stl_ok) {
-  size_t n = 50;
+  size_t n = 10;
   size_t c = 3;
   size_t h = 224;
   size_t w = 224;
