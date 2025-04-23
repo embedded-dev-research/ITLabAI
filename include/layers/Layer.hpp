@@ -7,6 +7,7 @@
 
 #include "layers/Shape.hpp"
 #include "layers/Tensor.hpp"
+#include "oneapi/tbb.h"
 
 namespace itlab_2023 {
 
@@ -21,6 +22,8 @@ enum LayerType : uint8_t {
   kFlatten,
   kOutput,
 };
+
+enum ImplType : uint8_t { kDefault, kTBB, kSTL };
 
 class Layer {
  public:
@@ -61,4 +64,5 @@ class LayerImpl {
   Shape inputShape_;
   Shape outputShape_;
 };
+
 }  // namespace itlab_2023

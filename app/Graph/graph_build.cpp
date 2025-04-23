@@ -4,9 +4,14 @@
 namespace fs = std::filesystem;
 using namespace itlab_2023;
 
-int main() {
+int main(int argc, char* argv[]) {
   std::string image_folder = IMAGE1_PATH;
   std::vector<std::string> image_paths;
+  bool parallel = false;
+  if (argc > 1 && std::string(argv[1]) == "--parallel") {
+    std::cout << "Parallel mode" << std::endl;
+    parallel = true;
+  }
 
   for (const auto& entry : fs::directory_iterator(image_folder)) {
     if (entry.path().extension() == ".png") {
@@ -43,7 +48,7 @@ int main() {
     std::vector<float> vec(75, 3);
     Tensor output = make_tensor(vec, sh1);
 
-    build_graph(input, output, true);
+    build_graph(input, output, true, parallel);
 
     std::vector<float> tmp_output = softmax<float>(*output.as<float>());
     for (size_t i = 0; i < tmp_output.size(); i++) {

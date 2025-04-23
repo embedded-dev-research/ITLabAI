@@ -35,6 +35,15 @@ TEST(poolinglayer, throws_when_big_input) {
   ASSERT_ANY_THROW(a.run(input));
 }
 
+TEST(poolinglayer, tbb_pl_throws_when_big_input) {
+  Shape inpshape = {7};
+  Shape poolshape = {3};
+  PoolingLayerImplTBB<double> a =
+      PoolingLayerImplTBB<double>(inpshape, poolshape, "average");
+  std::vector<double> input({9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0});
+  ASSERT_ANY_THROW(a.run(input));
+}
+
 TEST(poolinglayer, throws_when_invalid_pooling_type) {
   Shape inpshape = {7};
   Shape poolshape = {3};
@@ -166,10 +175,36 @@ TEST(poolinglayer, new_pooling_layer_can_run_int_avg) {
   }
 }
 
+TEST(poolinglayer, new_pooling_layer_can_run_int_avg_tbb) {
+  Shape inpshape = {4, 4};
+  Shape poolshape = {2, 2};
+  PoolingLayer a(poolshape, "average", itlab_2023::kTBB);
+  std::vector<int> input({9, 8, 7, 6, 5, 4, 3, 2, 2, 3, 4, 5, 6, 7, 8, 9});
+  Tensor output = make_tensor<float>({0});
+  a.run(make_tensor(input, inpshape), output);
+  std::vector<int> true_output = {6, 4, 4, 6};
+  for (size_t i = 0; i < true_output.size(); i++) {
+    EXPECT_NEAR((*output.as<int>())[i], true_output[i], 1e-5);
+  }
+}
+
 TEST(poolinglayer, new_pooling_layer_can_run_1d_pooling_float) {
   Shape inpshape = {8};
   Shape poolshape = {3};
   PoolingLayer a(poolshape, "average");
+  std::vector<float> input({9.0F, 8.0F, 7.0F, 6.0F, 5.0F, 4.0F, 3.0F, 2.0F});
+  Tensor output = make_tensor<float>({0});
+  a.run(make_tensor(input, inpshape), output);
+  std::vector<float> true_output = {8.0F, 5.0F};
+  for (size_t i = 0; i < true_output.size(); i++) {
+    EXPECT_NEAR((*output.as<float>())[i], true_output[i], 1e-5);
+  }
+}
+
+TEST(poolinglayer, new_pooling_layer_tbb_can_run_1d_pooling_float) {
+  Shape inpshape = {8};
+  Shape poolshape = {3};
+  PoolingLayer a(poolshape, "average", itlab_2023::kTBB);
   std::vector<float> input({9.0F, 8.0F, 7.0F, 6.0F, 5.0F, 4.0F, 3.0F, 2.0F});
   Tensor output = make_tensor<float>({0});
   a.run(make_tensor(input, inpshape), output);

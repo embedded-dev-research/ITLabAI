@@ -1,6 +1,7 @@
 #include "build.hpp"
 
-void build_graph(Tensor& input, Tensor& output, bool comments) {
+void build_graph(Tensor& input, Tensor& output, bool comments,
+                 bool parallel = false) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -20,6 +21,8 @@ void build_graph(Tensor& input, Tensor& output, bool comments) {
       std::cout << std::endl << std::endl;
     }
   }
+  ImplType impl1 = parallel ? kTBB : kDefault;
+  ImplType impl2 = parallel ? kSTL : kDefault;
   std::vector<std::shared_ptr<Layer>> layers;
 
   std::string json_file = MODEL_PATH;
@@ -68,7 +71,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments) {
       Tensor tmp_values = tensor;
       Tensor tmp_bias = make_tensor(tensor.get_bias());
       auto conv_layer = std::make_shared<ConvolutionalLayer>(
-          1, pads, 1, tmp_values, tmp_bias);
+          1, pads, 1, tmp_values, tmp_bias, impl2);
       conv_layer->setName(kConvolution);
       layers.push_back(conv_layer);
       if (comments) std::cout << "ConvLayer added to layers." << std::endl;
@@ -111,7 +114,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments) {
       if (comments)
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
                   << std::endl;
-      auto pool_layer = std::make_shared<PoolingLayer>(shape, pooltype);
+      auto pool_layer = std::make_shared<PoolingLayer>(shape, pooltype, impl1);
       pool_layer->setName(kPooling);
       layers.push_back(pool_layer);
       if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
@@ -161,6 +164,17 @@ void build_graph(Tensor& input, Tensor& output, bool comments) {
 
   if (comments) std::cout << "Starting inference..." << std::endl;
   graph.inference();
+#ifdef ENABLE_STATISTIC_TIME
+  std::vector<std::string> times = graph.getTimeInfo();
+  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
+  for (size_t i = 0; i < times.size(); i++) {
+    std::cout << times[i] << std::endl;
+  }
+  std::vector<int> elps_time = graph.getTime();
+  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
+  std::cout << "Elapsed inference time:" << sum << std::endl;
+  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+#endif
   if (comments) std::cout << "Inference completed." << std::endl;
   if (comments) {
     std::vector<float> tmp_output = softmax<float>(*output.as<float>());

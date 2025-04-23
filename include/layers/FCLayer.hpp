@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <mutex>
 #include <stdexcept>
-#include <thread>
+#include <utility>
 #include <vector>
 
 #include "layers/Layer.hpp"
@@ -16,10 +16,8 @@ class FCLayer : public Layer {
 
  public:
   FCLayer() = default;
-  FCLayer(const Tensor& weights, const Tensor& bias) {
-    weights_ = weights;
-    bias_ = bias;
-  }
+  FCLayer(Tensor weights, const Tensor& bias)
+      : weights_(std::move(weights)), bias_(bias) {}
   static std::string get_name() { return "Fully-connected layer"; }
   void run(const Tensor& input, Tensor& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
@@ -129,4 +127,5 @@ std::vector<ValueType> FCLayerImpl<ValueType>::run(
   }
   return output_values;
 }
+
 }  // namespace itlab_2023

@@ -178,4 +178,5 @@ class InputLayer : public Layer {
     }
   }
 };
+
 }  // namespace itlab_2023

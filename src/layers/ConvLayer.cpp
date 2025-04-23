@@ -53,7 +53,18 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
                     2)),
             sh);
       } else {
-        Conv4D<int>(input, kernel_, bias_, output, stride_, pads_, dilations_);
+        switch (implType_) {
+          case kSTL: {
+            Conv4DSTL<int>(input, kernel_, bias_, output, stride_, pads_,
+                           dilations_);
+            break;
+          }
+          default: {
+            Conv4D<int>(input, kernel_, bias_, output, stride_, pads_,
+                        dilations_);
+            break;
+          }
+        }
       }
       break;
     }
@@ -103,8 +114,18 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
                     2)),
             sh);
       } else {
-        Conv4D<float>(input, kernel_, bias_, output, stride_, pads_,
-                      dilations_);
+        switch (implType_) {
+          case kSTL: {
+            Conv4DSTL<float>(input, kernel_, bias_, output, stride_, pads_,
+                             dilations_);
+            break;
+          }
+          default: {
+            Conv4D<float>(input, kernel_, bias_, output, stride_, pads_,
+                          dilations_);
+            break;
+          }
+        }
       }
       break;
     }

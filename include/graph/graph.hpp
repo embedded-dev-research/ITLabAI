@@ -27,6 +27,7 @@ class Graph {
 #endif
 #ifdef ENABLE_STATISTIC_TIME
   std::vector<int> time_;
+  std::vector<LayerType> time_layer_;
 #endif
 #ifdef ENABLE_STATISTIC_WEIGHTS
   std::vector<Tensor> weights_;
@@ -118,6 +119,7 @@ class Graph {
       auto elapsed =
           std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
       time_.push_back(static_cast<int>(elapsed.count()));
+      time_layer_.push_back(layers_[i]->getName());
 #endif
     }
   }
@@ -129,6 +131,17 @@ class Graph {
   std::vector<Tensor> getTensors() { return tensors_; }
 #endif
 #ifdef ENABLE_STATISTIC_TIME
+  std::vector<std::string> getTimeInfo() {
+    std::vector<std::string> res;
+    std::vector<std::string> labels = {
+        "Input",       "Pooling", "Normalization", "Dropout", "Element-wise",
+        "Convolution", "Dense",   "Flatten",       "Output"};
+    for (size_t i = 0; i < time_.size(); i++) {
+      res.push_back(labels[static_cast<size_t>(time_layer_[i])] + ':' +
+                    std::to_string(time_[i]));
+    }
+    return res;
+  }
   std::vector<int> getTime() { return time_; }
 #endif
 #ifdef ENABLE_STATISTIC_WEIGHTS
