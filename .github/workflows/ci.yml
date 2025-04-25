@@ -210,7 +210,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Generate Coverage Data
-      run: gcovr -r . --xml -o coverage.xml
+      run: gcovr -r . --xml -o coverage.xml --gcov-ignore-parse-errors
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
