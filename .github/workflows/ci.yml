@@ -42,10 +42,18 @@ jobs:
       run: |
        mkdir -p build/bin/opencv_libs
        cp -P 3rdparty/opencv/build/lib/libopencv_*so* build/bin/opencv_libs/
-    
-       echo "Copied libs:"
-       ls -la build/bin/opencv_libs/
-       echo "LD_LIBRARY_PATH will be: $PWD/build/bin/opencv_libs"
+       # Создаём скрипт для настройки переменных окружения
+       echo 'export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:$LD_LIBRARY_PATH' > build/setenv.sh
+       chmod +x build/setenv.sh
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+       name: mnist-package
+       path: |
+        build/bin/ACC_MNIST*
+        build/bin/opencv_libs/*
+        build/setenv.sh
     - name: Test
       run: cmake --build build -t test
       env:
@@ -57,11 +65,6 @@ jobs:
         valgrind cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - name: Upload executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: mnist-${{ matrix.build_type }}
-        path: build/bin/ACC_MNIST*
   build-linux-clang:
     runs-on: ubuntu-latest
     steps:
@@ -246,9 +249,20 @@ jobs:
 
     - name: Run evaluation
       run: |
-        chmod +x build/bin/ACC_MNIST*
-        ./build/bin/ACC_MNIST* > accuracy.txt
-        echo "Accuracy: $(cat accuracy.txt)"  # Для логов
+       # Загружаем переменные окружения
+       source build/setenv.sh
+    
+       # Проверяем пути
+       echo "Current LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+       echo "OpenCV libs:"
+       ls -la build/bin/opencv_libs/
+    
+       # Проверяем зависимости
+       ldd build/bin/ACC_MNIST* || true
+    
+       # Запускаем программу
+       ./build/bin/ACC_MNIST* > accuracy.txt
+       echo "Accuracy: $(cat accuracy.txt)"
 
     - name: Update README
       run: |
