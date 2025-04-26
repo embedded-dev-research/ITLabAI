@@ -62,7 +62,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Upload executable artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
        name: mnist-executable
        path: build/bin/ACC_MNIST*
