@@ -232,26 +232,38 @@ jobs:
         fetch-depth: 0
 
     # Скачиваем тестовые изображения
-    - name: Download MNIST test dataset
+    - name: Download and prepare test dataset
       run: |
-        mkdir -p docs/mnist/mnist/test
-        cd docs/mnist/mnist/test
-        if [ ! -f "0_000000.png" ]; then
-          echo "Downloading test images..."
-          for i in {0..9}; do
-            wget -q -r -nd -np -A "*.png" \
-              https://github.com/DeepTrackAI/MNIST_dataset/tree/main/mnist/test/ \
-              --accept-regex=".*${i}_[0-9]*\.png"
-          done
-          echo "Downloaded $(ls | wc -l) images"
-        fi
-
-    # Проверяем скачанные файлы
+       mkdir -p docs/mnist/mnist/test
+       if [ ! -f "docs/mnist/mnist/test/0_000000.png" ]; then
+       echo "Downloading MNIST test dataset..."
+      
+       # Создаем временную директорию
+       TEMP_DIR=$(mktemp -d)
+       cd $TEMP_DIR
+      
+       # Скачиваем и распаковываем
+       wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip
+       unzip -q main.zip
+      
+       # Копируем тестовые изображения
+       cp MNIST_dataset-main/mnist/test/*.png $GITHUB_WORKSPACE/docs/mnist/mnist/test/
+      
+       # Проверяем количество файлов
+       COUNT=$(ls $GITHUB_WORKSPACE/docs/mnist/mnist/test | wc -l)
+       echo "Copied $COUNT test images"
+      
+       # Очищаем
+       cd $GITHUB_WORKSPACE
+       rm -rf $TEMP_DIR
+       else
+        echo "Test dataset already exists"
+       fi
+       
     - name: Verify test data
       run: |
-        echo "Test images count:"
-        ls docs/mnist/mnist/test/ | wc -l
-        [ -f "docs/mnist/mnist/test/0_000000.png" ] || (echo "Test images not downloaded!" && exit 1)
+       echo "Test images count: $(ls docs/mnist/mnist/test | wc -l)"
+       [ -f "docs/mnist/mnist/test/0_000000.png" ] || (echo "Test images not downloaded!" && exit 1)
 
     - name: Download binary
       uses: actions/download-artifact@v4
