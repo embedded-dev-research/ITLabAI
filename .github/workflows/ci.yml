@@ -64,7 +64,7 @@ jobs:
     - name: Upload executable artifact
       uses: actions/upload-artifact@v4
       with:
-       name: mnist-executable
+       name: mnist-${{ matrix.build_type }}
        path: build/bin/ACC_MNIST*
   build-linux-clang:
     runs-on: ubuntu-latest
