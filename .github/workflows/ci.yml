@@ -248,7 +248,7 @@ jobs:
         sudo ldconfig
     - name: Generate model JSON
       run: |
-        cd app/Alexnet
+        cd app/AlexNet
         pip install -r requirements.txt
         parser.py
         cd ../..
