@@ -226,7 +226,7 @@ jobs:
     - name: Download binary and libs
       uses: actions/download-artifact@v4
       with:
-        name: mnist-package  # Должно совпадать с именем из upload-artifact
+        name: mnist-RELEASE
         path: build/bin/
 
     - name: Install runtime dependencies
