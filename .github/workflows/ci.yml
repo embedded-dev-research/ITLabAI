@@ -231,55 +231,60 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Скачиваем тестовые изображения
-    - name: Download and prepare test dataset
+    # 1. Загрузка тестовых данных
+    - name: Download MNIST test dataset
       run: |
-       mkdir -p docs/mnist/mnist/test
-       if [ ! -f "docs/mnist/mnist/test/0_000000.png" ]; then
-       echo "Downloading MNIST test dataset..."
-      
-       # Создаем временную директорию
-       TEMP_DIR=$(mktemp -d)
-       cd $TEMP_DIR
-      
-       # Скачиваем и распаковываем
-       wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip
-       unzip -q main.zip
-      
-       # Копируем тестовые изображения
-       cp MNIST_dataset-main/mnist/test/*.png $GITHUB_WORKSPACE/docs/mnist/mnist/test/
-      
-       # Проверяем количество файлов
-       COUNT=$(ls $GITHUB_WORKSPACE/docs/mnist/mnist/test | wc -l)
-       echo "Copied $COUNT test images"
-      
-       # Очищаем
-       cd $GITHUB_WORKSPACE
-       rm -rf $TEMP_DIR
-       else
-        echo "Test dataset already exists"
-       fi
-       
-    - name: Verify test data
-      run: |
-       echo "Test images count: $(ls docs/mnist/mnist/test | wc -l)"
-       [ -f "docs/mnist/mnist/test/0_000000.png" ] || (echo "Test images not downloaded!" && exit 1)
+        mkdir -p docs/mnist/mnist/test
+        if [ ! -f "docs/mnist/mnist/test/0_000000.png" ]; then
+          echo "Downloading test images..."
+          TEMP_DIR=$(mktemp -d)
+          cd $TEMP_DIR
+          wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip
+          unzip -q main.zip
+          cp MNIST_dataset-main/mnist/test/*.png $GITHUB_WORKSPACE/docs/mnist/mnist/test/
+          echo "Downloaded $(ls $GITHUB_WORKSPACE/docs/mnist/mnist/test | wc -l) images"
+          rm -rf $TEMP_DIR
+        fi
 
-    - name: Download binary
+    # 2. Загрузка артефактов сборки
+    - name: Download binary and libs
       uses: actions/download-artifact@v4
       with:
         name: mnist-RELEASE
         path: build/
 
+    # 3. Настройка окружения
     - name: Prepare environment
       run: |
+        # Проверяем наличие всех файлов
+        echo "Binary files:"
+        ls -la build/bin/
+        echo "OpenCV libs:"
+        ls -la build/bin/opencv_libs/
+        
+        # Даем права на выполнение
         chmod +x build/bin/ACC_MNIST*
+        
+        # Устанавливаем пути к библиотекам
         export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:$LD_LIBRARY_PATH
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
+    # 4. Проверка зависимостей
+    - name: Verify dependencies
+      run: |
+        echo "### Library paths ###"
+        echo $LD_LIBRARY_PATH
+        echo "### Binary dependencies ###"
+        ldd build/bin/ACC_MNIST* || true
+
+    # 5. Запуск оценки
     - name: Run evaluation
       run: |
-        echo "Running evaluation with test images from:"
-        realpath docs/mnist/mnist/test/
+        echo "Test images available:"
+        ls docs/mnist/mnist/test | head -5
+        echo "..."
+        
+        echo "Running evaluation..."
         ./build/bin/ACC_MNIST* > accuracy.txt
         echo "Accuracy: $(cat accuracy.txt)"
 
