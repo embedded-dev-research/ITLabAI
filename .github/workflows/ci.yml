@@ -38,11 +38,14 @@ jobs:
             cmake --build build --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - name: Copy OpenCV libs
+    - name: Prepare OpenCV libs
       run: |
        mkdir -p build/bin/opencv_libs
-       cp -P /usr/lib/x86_64-linux-gnu/libopencv_* build/bin/opencv_libs/
-       ls -la build/bin/opencv_libs/  # Для проверки
+       cp -P 3rdparty/opencv/build/lib/libopencv_*so* build/bin/opencv_libs/
+    
+       echo "Copied libs:"
+       ls -la build/bin/opencv_libs/
+       echo "LD_LIBRARY_PATH will be: $PWD/build/bin/opencv_libs"
     - name: Test
       run: cmake --build build -t test
       env:
