@@ -18,22 +18,11 @@ jobs:
     strategy:
       matrix:
         build_type: [DEBUG, RELEASE]
-        use_tensorflow: [ON, OFF]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Download and extract TensorFlow
-      run: |
-        wget https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
-        tar -xzvf libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
-      if: ${{ matrix.use_tensorflow }} == ON
-    - name: Set TensorFlow environment variables
-      run: |
-        echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
-        echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
-      if: ${{ matrix.use_tensorflow }} == ON
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -45,8 +34,6 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DTensorFlow_INCLUDE_DIRS=${{ env.TensorFlow_INCLUDE_DIRS }} \
-            -DTensorFlow_LIBRARIES=${{ env.TensorFlow_LIBRARIES }}
             cmake --build build --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
@@ -61,11 +48,11 @@ jobs:
         valgrind cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - name: Upload executable artifact
+    - name: Upload executable
       uses: actions/upload-artifact@v4
       with:
-       name: mnist-${{ matrix.build_type }}
-       path: build/bin/ACC_MNIST*
+        name: mnist-${{ matrix.build_type }}
+        path: build/bin/ACC_MNIST*
   build-linux-clang:
     runs-on: ubuntu-latest
     steps:
@@ -230,10 +217,10 @@ jobs:
    steps:
     - uses: actions/checkout@v4
 
-    - name: Download executable
-      uses: actions/download-artifact@v3
+    - name: Download binary
+      uses: actions/download-artifact@v4
       with:
-        name: mnist-executable
+        name: mnist-RELEASE
         path: build/bin/
 
     - name: Run evaluation
