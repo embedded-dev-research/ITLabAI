@@ -61,6 +61,11 @@ jobs:
         valgrind cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
+    - name: Upload executable artifact
+      uses: actions/upload-artifact@v3
+      with:
+       name: mnist-executable
+       path: build/bin/ACC_MNIST*
   build-linux-clang:
     runs-on: ubuntu-latest
     steps:
@@ -216,3 +221,38 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: embedded-dev-research/itlab_2023
+  evaluate-model:
+   runs-on: ubuntu-latest
+   needs: [build-linux]
+   permissions:
+    contents: write
+
+   steps:
+    - uses: actions/checkout@v4
+
+    - name: Download executable
+      uses: actions/download-artifact@v3
+      with:
+        name: mnist-executable
+        path: build/bin/
+
+    - name: Run evaluation
+      run: |
+        mkdir -p build/bin
+        chmod +x build/bin/ACC_MNIST*
+        ./build/bin/ACC_MNIST* > accuracy.txt
+
+    - name: Update README
+      run: |
+        ACCURACY=$(cat accuracy.txt)
+        sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->${ACCURACY}<!--END_ACCURACY-->/" README.md
+
+    - name: Commit changes
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add README.md
+        git commit -m "[CI] Update accuracy: $(cat accuracy.txt)"
+        git pull --rebase origin main
+        git push
