@@ -220,6 +220,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: embedded-dev-research/itlab_2023
+        
   evaluate-model:
    runs-on: ubuntu-latest
    needs: [build-linux]
@@ -231,60 +232,66 @@ jobs:
       with:
         fetch-depth: 0
 
-    # 1. Загрузка тестовых данных
+    # 1. Установка системных зависимостей
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgtk-3-0 \
+          libtbb12 \
+          libjpeg-dev \
+          libpng-dev \
+          libtiff-dev
+        sudo ldconfig
+
+    # 2. Загрузка тестовых данных
     - name: Download MNIST test dataset
       run: |
         mkdir -p docs/mnist/mnist/test
         if [ ! -f "docs/mnist/mnist/test/0_000000.png" ]; then
           echo "Downloading test images..."
-          TEMP_DIR=$(mktemp -d)
-          cd $TEMP_DIR
           wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip
           unzip -q main.zip
-          cp MNIST_dataset-main/mnist/test/*.png $GITHUB_WORKSPACE/docs/mnist/mnist/test/
-          echo "Downloaded $(ls $GITHUB_WORKSPACE/docs/mnist/mnist/test | wc -l) images"
-          rm -rf $TEMP_DIR
+          cp MNIST_dataset-main/mnist/test/*.png docs/mnist/mnist/test/
+          rm -rf main.zip MNIST_dataset-main
+          echo "Downloaded $(ls docs/mnist/mnist/test | wc -l) images"
         fi
 
-    # 2. Загрузка артефактов сборки
+    # 3. Загрузка артефактов сборки
     - name: Download binary and libs
       uses: actions/download-artifact@v4
       with:
         name: mnist-RELEASE
         path: build/
 
-    # 3. Настройка окружения
+    # 4. Настройка окружения
     - name: Prepare environment
       run: |
-        # Проверяем наличие всех файлов
-        echo "Binary files:"
-        ls -la build/bin/
+        # Проверка файлов
+        echo "Binary:"
+        ls -la build/bin/ACC_MNIST*
         echo "OpenCV libs:"
         ls -la build/bin/opencv_libs/
         
-        # Даем права на выполнение
+        # Права на выполнение
         chmod +x build/bin/ACC_MNIST*
         
-        # Устанавливаем пути к библиотекам
-        export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:$LD_LIBRARY_PATH
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        # Пути к библиотекам
+        export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
+        echo "Final LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
-    # 4. Проверка зависимостей
+    # 5. Проверка зависимостей
     - name: Verify dependencies
       run: |
-        echo "### Library paths ###"
-        echo $LD_LIBRARY_PATH
+        echo "### TBB library ###"
+        ls -la /usr/lib/x86_64-linux-gnu/libtbb*
         echo "### Binary dependencies ###"
         ldd build/bin/ACC_MNIST* || true
 
-    # 5. Запуск оценки
+    # 6. Запуск оценки
     - name: Run evaluation
       run: |
-        echo "Test images available:"
-        ls docs/mnist/mnist/test | head -5
-        echo "..."
-        
-        echo "Running evaluation..."
+        echo "Test images: $(ls docs/mnist/mnist/test | wc -l) files"
         ./build/bin/ACC_MNIST* > accuracy.txt
         echo "Accuracy: $(cat accuracy.txt)"
 
