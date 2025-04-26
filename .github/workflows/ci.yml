@@ -248,9 +248,10 @@ jobs:
         sudo ldconfig
     - name: Generate model JSON
       run: |
-        pip install -r requirements.txt
         cd app/Alexnet
+        pip install -r requirements.txt
         parser.py
+        cd ../..
     # 2. Загрузка тестовых данных
     - name: Download MNIST test dataset
       run: |
