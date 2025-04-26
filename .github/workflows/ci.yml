@@ -235,8 +235,14 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: mnist-RELEASE
-        path: build/bin/
-
+        path: build/
+    - name: Verify downloaded files
+      run: |
+       echo "Contents of build/:"
+       ls -la build/
+       echo "OpenCV libs:"
+       ls -la build/bin/opencv_libs/
+       [ -f build/setenv.sh ] || (echo "setenv.sh not found!" && exit 1)
     - name: Install runtime dependencies
       run: |
        sudo apt-get update
@@ -249,20 +255,17 @@ jobs:
 
     - name: Run evaluation
       run: |
-       # Загружаем переменные окружения
+       # Явно устанавливаем пути
+       export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:$LD_LIBRARY_PATH
+    
+       # Альтернатива: используем setenv.sh если он есть
+       if [ -f build/setenv.sh ]; then
        source build/setenv.sh
+       fi
     
-       # Проверяем пути
-       echo "Current LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-       echo "OpenCV libs:"
-       ls -la build/bin/opencv_libs/
-    
-       # Проверяем зависимости
+       echo "Final LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
        ldd build/bin/ACC_MNIST* || true
-    
-       # Запускаем программу
        ./build/bin/ACC_MNIST* > accuracy.txt
-       echo "Accuracy: $(cat accuracy.txt)"
 
     - name: Update README
       run: |
