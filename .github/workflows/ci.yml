@@ -33,7 +33,7 @@ jobs:
             cmake -S . -B build \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
             cmake --build build --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
