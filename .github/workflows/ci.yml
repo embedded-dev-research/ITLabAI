@@ -264,6 +264,11 @@ jobs:
        fi
     
        echo "Final LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+       # Даём права на выполнение
+       chmod +x build/bin/ACC_MNIST*
+
+       # Проверяем права
+       ls -la build/bin/ACC_MNIST*
        ldd build/bin/ACC_MNIST* || true
        ./build/bin/ACC_MNIST* > accuracy.txt
 
