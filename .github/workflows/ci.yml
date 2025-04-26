@@ -229,51 +229,47 @@ jobs:
    steps:
     - uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Важно для git push!
+        fetch-depth: 0
 
-    - name: Download binary and libs
+    # Скачиваем тестовые изображения
+    - name: Download MNIST test dataset
+      run: |
+        mkdir -p docs/mnist/mnist/test
+        cd docs/mnist/mnist/test
+        if [ ! -f "0_000000.png" ]; then
+          echo "Downloading test images..."
+          for i in {0..9}; do
+            wget -q -r -nd -np -A "*.png" \
+              https://github.com/DeepTrackAI/MNIST_dataset/tree/main/mnist/test/ \
+              --accept-regex=".*${i}_[0-9]*\.png"
+          done
+          echo "Downloaded $(ls | wc -l) images"
+        fi
+
+    # Проверяем скачанные файлы
+    - name: Verify test data
+      run: |
+        echo "Test images count:"
+        ls docs/mnist/mnist/test/ | wc -l
+        [ -f "docs/mnist/mnist/test/0_000000.png" ] || (echo "Test images not downloaded!" && exit 1)
+
+    - name: Download binary
       uses: actions/download-artifact@v4
       with:
         name: mnist-RELEASE
         path: build/
-    - name: Verify downloaded files
-      run: |
-       echo "Contents of build/:"
-       ls -la build/
-       echo "OpenCV libs:"
-       ls -la build/bin/opencv_libs/
-       [ -f build/setenv.sh ] || (echo "setenv.sh not found!" && exit 1)
-    - name: Install runtime dependencies
-      run: |
-       sudo apt-get update
-       sudo apt-get install -y libgtk-3-0 libtbb12
 
     - name: Prepare environment
       run: |
-        # Даём права на выполнение
         chmod +x build/bin/ACC_MNIST*
-        
-        # Проверяем права
-        ls -la build/bin/ACC_MNIST*
-        
-        # Устанавливаем пути
         export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:$LD_LIBRARY_PATH
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
     - name: Run evaluation
       run: |
-       # Явно устанавливаем пути
-       export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:$LD_LIBRARY_PATH
-    
-       # Альтернатива: используем setenv.sh если он есть
-       if [ -f build/setenv.sh ]; then
-       source build/setenv.sh
-       fi
-    
-       echo "Final LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-       
-       ldd build/bin/ACC_MNIST* || true
-       ./build/bin/ACC_MNIST* > accuracy.txt
+        echo "Running evaluation with test images from:"
+        realpath docs/mnist/mnist/test/
+        ./build/bin/ACC_MNIST* > accuracy.txt
+        echo "Accuracy: $(cat accuracy.txt)"
 
     - name: Update README
       run: |
