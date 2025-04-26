@@ -42,6 +42,9 @@ jobs:
       run: |
        mkdir -p build/bin/opencv_libs
        cp -P 3rdparty/opencv/build/lib/libopencv_*so* build/bin/opencv_libs/
+       chmod +x build/bin/opencv_libs/*.so*
+       # Проверка
+       ls -la build/bin/opencv_libs/libopencv_imgcodecs.so*
        # Создаём скрипт для настройки переменных окружения
        echo 'export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:$LD_LIBRARY_PATH' > build/setenv.sh
        chmod +x build/setenv.sh
