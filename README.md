@@ -2,6 +2,9 @@
 [![codecov](https://codecov.io/gh/embedded-dev-research/itlab_2023/graph/badge.svg?token=L3OS8C4BI6)](https://codecov.io/gh/embedded-dev-research/itlab_2023)
 
 # AlexNet-MNIST-Inference
+## Model Performance
+
+<!--ACCURACY_PLACEHOLDER-->Accuracy: 0.0% (updated: 1970-01-01)<!--END_ACCURACY-->
 ## Short description
 A lightweight C++ library for performing high-performance inference on MNIST handwritten digits using a modified AlexNet architecture. Designed for efficiency and educational purposes, this project demonstrates how classic CNNs can be optimized for small-scale tasks in native environments.
 ### Key Features:
