@@ -246,7 +246,11 @@ jobs:
           libpng-dev \
           libtiff-dev
         sudo ldconfig
-
+    - name: Generate model JSON
+      run: |
+        pip install -r requirements.txt
+        cd app/Alexnet
+        parser.py
     # 2. Загрузка тестовых данных
     - name: Download MNIST test dataset
       run: |
