@@ -41,13 +41,13 @@ jobs:
     - name: Prepare OpenCV libs
       run: |
        mkdir -p build/bin/opencv_libs
-       cp -P 3rdparty/opencv/build/lib/libopencv_*so* build/bin/opencv_libs/
-       chmod +x build/bin/opencv_libs/*.so*
-       # Проверка
-       ls -la build/bin/opencv_libs/libopencv_imgcodecs.so*
-       # Создаём скрипт для настройки переменных окружения
-       echo 'export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:$LD_LIBRARY_PATH' > build/setenv.sh
-       chmod +x build/setenv.sh
+       # Копируем с сохранением всех атрибутов
+       cp -a 3rdparty/opencv/build/lib/libopencv_* build/bin/opencv_libs/
+       # Дополнительная проверка
+       echo "Library permissions after copy:"
+       stat -c "%A %n" build/bin/opencv_libs/libopencv_imgcodecs.so*
+       # Проверка ELF-файла
+       file build/bin/opencv_libs/libopencv_imgcodecs.so.4.9.0
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -284,19 +284,31 @@ jobs:
         echo "Final LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
     # 5. Проверка зависимостей
-    - name: Verify dependencies
+    - name: Verify library integrity
       run: |
-        echo "### TBB library ###"
-        ls -la /usr/lib/x86_64-linux-gnu/libtbb*
-        echo "### Binary dependencies ###"
-        ldd build/bin/ACC_MNIST* || true
+       echo "### Library verification ###"
+       # Проверка, что это действительно shared library
+       file build/bin/opencv_libs/libopencv_imgcodecs.so.4.9.0 | grep "shared object"
+       # Проверка зависимостей самой библиотеки
+       ldd build/bin/opencv_libs/libopencv_imgcodecs.so.4.9.0 || true
+       # Проверка пути
+       realpath build/bin/opencv_libs/libopencv_imgcodecs.so.409
 
     # 6. Запуск оценки
     - name: Run evaluation
       run: |
-        echo "Test images: $(ls docs/mnist/mnist/test | wc -l) files"
-        ./build/bin/ACC_MNIST* > accuracy.txt
-        echo "Accuracy: $(cat accuracy.txt)"
+       echo "### Pre-run checks ###"
+       export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
+       echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+    
+       # Проверка доступности библиотеки
+       LD_DEBUG=files ./build/bin/ACC_MNIST* 2> ld_debug.log || true
+       echo "### Library loading debug ###"
+       grep -i "opencv_imgcodecs" ld_debug.log
+    
+       # Основной запуск
+       ./build/bin/ACC_MNIST* > accuracy.txt
+       echo "Accuracy: $(cat accuracy.txt)"
 
     - name: Update README
       run: |
