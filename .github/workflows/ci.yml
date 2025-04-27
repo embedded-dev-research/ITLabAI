@@ -317,16 +317,35 @@ jobs:
 
     - name: Update README
       run: |
-        ACCURACY=$(cat accuracy.txt)
-        DATE=$(date '+%Y-%m-%d')
-        sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->/" README.md
-
-    - name: Commit changes
+       # Проверяем содержимое accuracy.txt
+       echo "Accuracy value: $(cat accuracy.txt)"
+    
+       # Проверяем текущее содержимое README
+       echo "Current README:"
+       grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md || echo "Placeholder not found"
+    
+       # Обновляем README
+       ACCURACY=$(cat accuracy.txt)
+       DATE=$(date '+%Y-%m-%d')
+       sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->/" README.md
+    
+       # Проверяем изменения
+       echo "Updated README:"
+       grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md
+  
+    - name: Commit and push changes
       if: github.ref == 'refs/heads/main'
       run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add README.md
-        git commit -m "[CI] Update accuracy: $(cat accuracy.txt)%"
-        git pull --rebase origin main
-        git push
+       # Настройка git
+       git config --global user.name "GitHub Actions"
+       git config --global user.email "actions@github.com"
+    
+       # Проверяем изменения
+       git status
+       git diff
+    
+       # Коммит и push
+       git add README.md
+       git commit -m "[CI] Update accuracy: $(cat accuracy.txt)%"
+       git pull --rebase origin main
+       git push
