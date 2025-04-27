@@ -304,14 +304,13 @@ jobs:
       run: |
        echo "Accuracy value: $(cat accuracy.txt)"
 
-       echo "Current README:"
+       echo "Current README content:"
        grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md || echo "Placeholder not found"
-
-       ACCURACY=$(cat accuracy.txt)
-       DATE=$(date '+%Y-%m-%d')
-       sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->/" README.md
-
-       echo "Updated README:"
+    
+       # Обновляем README (убираем Stat:)
+       sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY} (updated: ${DATE})<!--END_ACCURACY-->/" README.md
+    
+       echo "Updated README content:"
        grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md
   
     - name: Commit and push changes
