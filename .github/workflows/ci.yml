@@ -302,14 +302,18 @@ jobs:
 
     - name: Update README
       run: |
-       echo "Accuracy value: $(cat accuracy.txt)"
-
+       ACCURACY=$(cat accuracy.txt | sed 's/%//g')
+       DATE=$(date '+%Y-%m-%d')
+    
+       echo "Updating README with:"
+       echo "Accuracy: $ACCURACY"
+       echo "Date: $DATE"
+    
        echo "Current README content:"
        grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md || echo "Placeholder not found"
     
-       # Обновляем README (убираем Stat:)
        sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY} (updated: ${DATE})<!--END_ACCURACY-->/" README.md
-    
+       
        echo "Updated README content:"
        grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md
   
