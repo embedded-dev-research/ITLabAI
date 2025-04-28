@@ -166,7 +166,7 @@ jobs:
           -DCMAKE_C_FLAGS="--coverage" \
           -DCMAKE_CXX_FLAGS="--coverage" \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
