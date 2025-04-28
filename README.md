@@ -4,7 +4,7 @@
 # AlexNet-MNIST-Inference
 ## Model Performance
 
-<!--ACCURACY_PLACEHOLDER-->Accuracy: Stat: 98.01 (updated: 2025-04-27)<!--END_ACCURACY-->
+<!--ACCURACY_PLACEHOLDER-->Accuracy: Stat: 98.01% (updated: 2025-04-28)<!--END_ACCURACY-->
 ## Short description
 A lightweight C++ library for performing high-performance inference on MNIST handwritten digits using a modified AlexNet architecture. Designed for efficiency and educational purposes, this project demonstrates how classic CNNs can be optimized for small-scale tasks in native environments.
 ### Key Features:
