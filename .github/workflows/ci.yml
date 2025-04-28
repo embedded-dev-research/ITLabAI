@@ -117,6 +117,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_FLAGS="-I$(brew --prefix libomp)/include" \
           -DCMAKE_CXX_FLAGS="-I$(brew --prefix libomp)/include"
+        cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
       env:
