@@ -44,7 +44,6 @@ jobs:
        cp -a 3rdparty/opencv/build/lib/libopencv_* build/bin/opencv_libs/
        echo "Library permissions after copy:"
        stat -c "%A %n" build/bin/opencv_libs/libopencv_imgcodecs.so*
-       file build/bin/opencv_libs/libopencv_imgcodecs.so.4.9.0
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -228,12 +227,6 @@ jobs:
 
     - name: Prepare environment
       run: |
-        # Проверка файлов
-        echo "Binary:"
-        ls -la build/bin/ACC_MNIST*
-        echo "OpenCV libs:"
-        ls -la build/bin/opencv_libs/
-        
         chmod +x build/bin/ACC_MNIST*
         
         export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
@@ -259,37 +252,36 @@ jobs:
        ./build/bin/ACC_MNIST* > accuracy.txt
        echo "Accuracy: $(cat accuracy.txt)"
 
-    - name: Update README
+    - name: Update README (master only)
+      if: github.ref == 'refs/heads/master'
       run: |
-       ACCURACY=$(cat accuracy.txt | sed 's/%//g')
-       DATE=$(date '+%Y-%m-%d')
+        ACCURACY=$(cat accuracy.txt | sed 's/%//g')
+        DATE=$(date '+%Y-%m-%d')
     
-       echo "Updating README with:"
-       echo "Accuracy: $ACCURACY"
-       echo "Date: $DATE"
+        echo "Updating README with:"
+        echo "Accuracy: $ACCURACY"
+        echo "Date: $DATE"
     
-       echo "Current README content:"
-       grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md || echo "Placeholder not found"
+        echo "Current README content:"
+        grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md || echo "Placeholder not found"
     
-       sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->/" README.md
+        sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->/" README.md
        
-       echo "Updated README content:"
-       grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md
-  
-    - name: Commit and push changes
+        echo "Updated README content:"
+        grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md
+
+    - name: Commit and push changes (master only)
+      if: github.ref == 'refs/heads/master'
       run: |
-       git config --global user.name "GitHub Actions"
-       git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
     
-       BRANCH_NAME=${GITHUB_REF#refs/heads/}
-       echo "Current branch: $BRANCH_NAME"
+        git add README.md
 
-       git add README.md
-
-       if git diff-index --quiet HEAD --; then
-         echo "No changes to commit"
-       else
-         git commit -m "[CI] Update accuracy: $(cat accuracy.txt)%"
-         git push origin $BRANCH_NAME
-         echo "Changes pushed to $BRANCH_NAME"
-       fi
+        if git diff-index --quiet HEAD --; then
+          echo "No changes to commit"
+        else
+          git commit -m "[CI] Update accuracy: $(cat accuracy.txt)%"
+          git push origin master
+          echo "Changes pushed to master branch"
+        fi
