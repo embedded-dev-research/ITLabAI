@@ -70,5 +70,6 @@ file(DOWNLOAD
 )
 
 add_definitions(-DIMAGE1_PATH="${CMAKE_SOURCE_DIR}/docs/input/")
-add_definitions(-DMODEL_PATH="${CMAKE_SOURCE_DIR}/docs/model_data_alexnet_1.json")
+add_definitions(-DMODEL_PATH_H5="${CMAKE_SOURCE_DIR}/docs/jsons/model_data_alexnet_1.json")
+add_definitions(-DMODEL_PATH_GOOGLENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/googlenet_onnx_model.json")
 add_definitions(-DMNIST_PATH="${CMAKE_SOURCE_DIR}/docs/mnist/mnist/test")

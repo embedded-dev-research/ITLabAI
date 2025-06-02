@@ -1,0 +1,6 @@
+add_executable(Reader_weights reader_weights_sample.cpp)
+
+target_link_libraries(Reader_weights PUBLIC perf_lib layers_lib reader_lib)
+
+add_definitions(-DMODEL_PATH_H5="${CMAKE_SOURCE_DIR}/docs/jsons/model_data_alexnet_1.json")
+add_definitions(-DMODEL_PATH_GOOGLENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/googlenet_onnx_model.json")
