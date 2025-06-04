@@ -7,11 +7,9 @@ from onnx import helper, numpy_helper
 def onnx_to_json(model_path, output_json_path):
     # Загрузка модели
     model = onnx.load(model_path)
-
-    # Проверка валидности модели
     onnx.checker.check_model(model)
 
-    # Создаем словарь для быстрого доступа к инициализаторам по их именам
+    # Словарь инициализаторов
     initializers_dict = {
         init.name: {
             "data_type": init.data_type,
@@ -21,10 +19,7 @@ def onnx_to_json(model_path, output_json_path):
         for init in model.graph.initializer
     }
 
-    # Создаем список слоев в формате Keras
     layer_info = []
-
-    # Обрабатываем входные данные как первый слой
     input_layer = {
         "index": 0,
         "name": "input_1",
@@ -34,33 +29,25 @@ def onnx_to_json(model_path, output_json_path):
     }
     layer_info.append(input_layer)
 
-    # Обработка узлов (операций) как слоев
     for node in model.graph.node:
-        # Создаем запись слоя
         layer_data = {
             "index": len(layer_info),
             "name": node.name.replace('/', '_'),
             "type": node.op_type,
-            "weights": [],
-            "attributes": {}  # Сохраняем все атрибуты здесь
+            "attributes": {}
         }
 
-        # Обрабатываем все атрибуты узла
+        # Обработка атрибутов
         for attr in node.attribute:
             attr_value = helper.get_attribute_value(attr)
-
-            # Преобразуем разные типы атрибутов
             if isinstance(attr_value, bytes):
                 attr_value = attr_value.decode('utf-8', errors='ignore')
             elif hasattr(attr_value, 'tolist'):
                 attr_value = attr_value.tolist()
             elif str(type(attr_value)).endswith("RepeatedScalarContainer'>"):
                 attr_value = list(attr_value)
-
-            # Сохраняем атрибут
             layer_data["attributes"][attr.name] = attr_value
 
-            # Специальная обработка для удобства (можно использовать или игнорировать)
             if attr.name == "pads":
                 layer_data["padding"] = "same" if any(p > 0 for p in attr_value) else "valid"
             elif attr.name == "kernel_shape":
@@ -68,22 +55,38 @@ def onnx_to_json(model_path, output_json_path):
             elif attr.name == "strides":
                 layer_data["strides"] = attr_value
 
-        # Добавляем веса в формате Keras (один список с ядрами и bias)
-        layer_weights = []
+        # Собираем все initializers для этого узла
+        node_init = []
         for input_name in node.input:
             if input_name in initializers_dict:
-                init = initializers_dict[input_name]
-                if len(init["dims"]) > 1:  # Ядра свертки/матрицы весов
-                    layer_weights.extend(init["values"])
-                else:  # Bias
-                    layer_weights.append(init["values"])
+                node_init.append(initializers_dict[input_name])
 
-        if layer_weights:
-            layer_data["weights"] = layer_weights
+        # Новая логика: разделяем weights/value/bias
+        if len(node_init) == 1:
+            init = node_init[0]
+            if len(init["dims"]) == 0 or (len(init["dims"]) == 1 and init["dims"][0] == 1):
+                # Скалярное значение или массив из одного элемента
+                layer_data["value"] = init["values"] if len(init["dims"]) == 0 else init["values"][0]
+            else:
+                # Многомерные данные
+                layer_data["weights"] = init["values"]
+        elif len(node_init) > 1:
+            # Для нескольких инициализаторов: weights + bias
+            weights = []
+            for init in node_init[:-1]:
+                if len(init["dims"]) > 0:
+                    weights.extend(init["values"]) if isinstance(init["values"][0], list) else weights.append(
+                        init["values"])
+
+            if weights:
+                layer_data["weights"] = weights
+
+            # Последний инициализатор - bias (если одномерный)
+            if len(node_init[-1]["dims"]) == 1:
+                layer_data["bias"] = node_init[-1]["values"]
 
         layer_info.append(layer_data)
 
-    # Custom JSON encoder
     class CustomEncoder(json.JSONEncoder):
         def default(self, obj):
             if hasattr(obj, 'tolist'):
@@ -92,7 +95,6 @@ def onnx_to_json(model_path, output_json_path):
                 return list(obj)
             return super().default(obj)
 
-    # Сохранение в JSON файл
     with open(output_json_path, 'w') as f:
         json.dump(layer_info, f, indent=2, cls=CustomEncoder)
 
