@@ -1,10 +1,10 @@
 ﻿#include <iostream>
 
-#include "Weights_Reader/reader_weights_onnx.hpp"
+#include "Weights_Reader/reader_weights.hpp"
 
 int main() {
-  std::string json_file = MODEL_PATH_GOOGLENET_ONNX;
-  json model_data = read_json_onnx(json_file);
+  std::string json_file = MODEL_PATH_YOLO11NET_ONNX;
+  json model_data = read_json(json_file);
 
   std::cout << "Model contains " << model_data.size()
             << " layers:" << std::endl;
@@ -22,7 +22,6 @@ int main() {
     std::cout << "Layer " << layer_index << ": " << layer_name << " ("
               << layer_type << ")" << std::endl;
 
-    // Вывод атрибутов
     if (layer_data.contains("attributes") &&
         !layer_data["attributes"].empty()) {
       std::cout << "  Attributes:" << std::endl;
@@ -46,7 +45,6 @@ int main() {
       }
     }
 
-    // Обработка value (скалярных значений)
     if (has_value) {
       try {
         float value = layer_data["value"].get<float>();
@@ -56,10 +54,9 @@ int main() {
       }
     }
 
-    // Обработка весов
     if (has_weights) {
       try {
-        Tensor tensor = create_tensor_from_json_onnx(layer_data, Type::kFloat);
+        Tensor tensor = create_tensor_from_json(layer_data, Type::kFloat);
 
         std::cout << "  Weights shape: " << tensor.get_shape() << std::endl;
 

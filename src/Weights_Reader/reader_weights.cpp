@@ -60,13 +60,11 @@ Tensor create_tensor_from_json(const json& layer_data, Type type) {
     extract_values_from_json(layer_data["weights"], weights);
   }
 
-  // Извлекаем bias (если есть)
   std::vector<float> bias;
   if (layer_data.contains("bias") && !layer_data["bias"].empty()) {
     extract_values_from_json(layer_data["bias"], bias);
   }
 
-  // Определяем shape
   std::vector<size_t> shape;
   if (layer_data.contains("weights")) {
     parse_json_shape(layer_data["weights"], shape);

@@ -1,10 +1,35 @@
 import json
 import onnx
 import os
+from onnx import TensorProto
 from onnx import helper, numpy_helper
+from ultralytics import YOLO
+
+def convert_pt_to_onnx(pt_model_path, onnx_model_path=None):
+    """Конвертирует YOLO .pt модель в ONNX формат"""
+    if not pt_model_path.endswith('.pt'):
+        raise ValueError("Файл модели должен иметь расширение .pt")
+
+    if onnx_model_path is None:
+        onnx_model_path = pt_model_path.replace('.pt', '.onnx')
+
+    # Загрузка и экспорт модели
+    model = YOLO(pt_model_path)
+    model.export(format="onnx", dynamic=False, simplify=True)
+
+    # Проверяем, что файл создан
+    if not os.path.exists(onnx_model_path):
+        raise RuntimeError(f"Не удалось создать ONNX файл по пути: {onnx_model_path}")
+
+    return onnx_model_path
 
 
 def onnx_to_json(model_path, output_json_path):
+    # Проверяем формат модели
+    if model_path.endswith('.pt'):
+        print(f"Обнаружена модель .pt, конвертируем в ONNX...")
+        model_path = convert_pt_to_onnx(model_path)
+
     # Загрузка модели
     model = onnx.load(model_path)
     onnx.checker.check_model(model)
@@ -40,7 +65,9 @@ def onnx_to_json(model_path, output_json_path):
         # Обработка атрибутов
         for attr in node.attribute:
             attr_value = helper.get_attribute_value(attr)
-            if isinstance(attr_value, bytes):
+            if isinstance(attr_value, TensorProto):
+                attr_value = numpy_helper.to_array(attr_value).tolist()
+            elif isinstance(attr_value, bytes):
                 attr_value = attr_value.decode('utf-8', errors='ignore')
             elif hasattr(attr_value, 'tolist'):
                 attr_value = attr_value.tolist()
@@ -61,17 +88,13 @@ def onnx_to_json(model_path, output_json_path):
             if input_name in initializers_dict:
                 node_init.append(initializers_dict[input_name])
 
-        # Новая логика: разделяем weights/value/bias
         if len(node_init) == 1:
             init = node_init[0]
             if len(init["dims"]) == 0 or (len(init["dims"]) == 1 and init["dims"][0] == 1):
-                # Скалярное значение или массив из одного элемента
                 layer_data["value"] = init["values"] if len(init["dims"]) == 0 else init["values"][0]
             else:
-                # Многомерные данные
                 layer_data["weights"] = init["values"]
         elif len(node_init) > 1:
-            # Для нескольких инициализаторов: weights + bias
             weights = []
             for init in node_init[:-1]:
                 if len(init["dims"]) > 0:
@@ -81,7 +104,6 @@ def onnx_to_json(model_path, output_json_path):
             if weights:
                 layer_data["weights"] = weights
 
-            # Последний инициализатор - bias (если одномерный)
             if len(node_init[-1]["dims"]) == 1:
                 layer_data["bias"] = node_init[-1]["values"]
 
@@ -89,7 +111,14 @@ def onnx_to_json(model_path, output_json_path):
 
     class CustomEncoder(json.JSONEncoder):
         def default(self, obj):
-            if hasattr(obj, 'tolist'):
+            if isinstance(obj, TensorProto):
+                return {
+                    "name": obj.name,
+                    "dims": list(obj.dims),
+                    "data_type": obj.data_type,
+                    "raw_data": obj.raw_data.hex() if obj.raw_data else None,
+                }
+            elif hasattr(obj, 'tolist'):
                 return obj.tolist()
             elif str(type(obj)).endswith("RepeatedScalarContainer'>"):
                 return list(obj)
@@ -101,7 +130,10 @@ def onnx_to_json(model_path, output_json_path):
     print(f"Модель успешно сохранена в {output_json_path}")
 
 
+# Пример использования
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'GoogLeNet.onnx')
-MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'googlenet_onnx_model.json')
+
+MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'yolo11x-cls.pt')
+MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'yolo11x-cls_onnx_model.json')
+
 onnx_to_json(MODEL_PATH, MODEL_DATA_PATH)

@@ -92,39 +92,23 @@ TEST(ParseJsonShapeTests, HandlesNestedArray) {
 TEST(ExtractValuesWithoutBiasTest, HandlesCaseWithoutBias) {
   json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
   std::vector<float> values;
-  extract_values_without_bias(j, values);
-  std::vector<float> expected = {1.0, 2.0};
+  extract_values_from_json(j, values);
+  std::vector<float> expected = {1.0, 2.0, 3.0, 4.0};
   EXPECT_EQ(values, expected);
 }
 
 TEST(ExtractValuesWithoutBiasTest, HandlesEmptyJson) {
   json j = json::array({});
   std::vector<float> values;
-  extract_values_without_bias(j, values);
+  extract_values_from_json(j, values);
   EXPECT_TRUE(values.empty());
 }
 
 TEST(ExtractValuesWithoutBiasTest, HandlesComplexNestedCase) {
   json j = json::array({{{1.0, 2.0}, {3.0, 4.0}}, {5.0, 6.0}});
   std::vector<float> values;
-  extract_values_without_bias(j, values);
-  std::vector<float> expected = {1.0, 2.0, 3.0, 4.0};
-  EXPECT_EQ(values, expected);
-}
-
-TEST(ExtractBiasFromJsonTests, extract_bias) {
-  json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
-  std::vector<float> values;
-  extract_bias_from_json(j, values);
-  std::vector<float> expected = {3.0, 4.0};
-  EXPECT_EQ(values, expected);
-}
-
-TEST(ExtractBiasFromJsonTests, extract_bias_error_array) {
-  json j = json::array({{1.0, 2.0}, {3.0, 4.0}});
-  std::vector<float> values;
-  extract_bias_from_json(j, values);
-  std::vector<float> expected = {3.0, 4.0};
+  extract_values_from_json(j, values);
+  std::vector<float> expected = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
   EXPECT_EQ(values, expected);
 }
 
