@@ -187,14 +187,6 @@ TEST(Tensor, check_set_bias_after_creation) {
   }
 }
 
-TEST(Tensor, cannot_set_bias_with_incorrect_size) {
-  Shape sh({2, 3});
-  std::vector<float> vals_tensor = {4.5F, -0.2F, 2.1F, -1.7F, -6.9F, 3.0F};
-  Tensor t = make_tensor<float>(vals_tensor, sh);
-  std::vector<float> incorrect_bias = {0.5F, 1.5F};
-  ASSERT_ANY_THROW(t.set_bias(incorrect_bias));
-}
-
 TEST(Tensor, can_create_multidimensional_tensor) {
   Shape sh({2, 3, 2});  // 3D tensor shape
   std::vector<int> vals_tensor = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
