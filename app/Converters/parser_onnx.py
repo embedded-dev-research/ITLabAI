@@ -6,35 +6,21 @@ from onnx import helper, numpy_helper
 from ultralytics import YOLO
 
 def convert_pt_to_onnx(pt_model_path, onnx_model_path=None):
-    """Конвертирует YOLO .pt модель в ONNX формат"""
-    if not pt_model_path.endswith('.pt'):
-        raise ValueError("Файл модели должен иметь расширение .pt")
-
     if onnx_model_path is None:
         onnx_model_path = pt_model_path.replace('.pt', '.onnx')
 
-    # Загрузка и экспорт модели
     model = YOLO(pt_model_path)
     model.export(format="onnx", dynamic=False, simplify=True)
 
-    # Проверяем, что файл создан
-    if not os.path.exists(onnx_model_path):
-        raise RuntimeError(f"Не удалось создать ONNX файл по пути: {onnx_model_path}")
-
     return onnx_model_path
 
-
 def onnx_to_json(model_path, output_json_path):
-    # Проверяем формат модели
     if model_path.endswith('.pt'):
-        print(f"Обнаружена модель .pt, конвертируем в ONNX...")
         model_path = convert_pt_to_onnx(model_path)
 
-    # Загрузка модели
     model = onnx.load(model_path)
     onnx.checker.check_model(model)
 
-    # Словарь инициализаторов
     initializers_dict = {
         init.name: {
             "data_type": init.data_type,
@@ -62,7 +48,6 @@ def onnx_to_json(model_path, output_json_path):
             "attributes": {}
         }
 
-        # Обработка атрибутов
         for attr in node.attribute:
             attr_value = helper.get_attribute_value(attr)
             if isinstance(attr_value, TensorProto):
@@ -82,7 +67,6 @@ def onnx_to_json(model_path, output_json_path):
             elif attr.name == "strides":
                 layer_data["strides"] = attr_value
 
-        # Собираем все initializers для этого узла
         node_init = []
         for input_name in node.input:
             if input_name in initializers_dict:
@@ -130,7 +114,6 @@ def onnx_to_json(model_path, output_json_path):
     print(f"Модель успешно сохранена в {output_json_path}")
 
 
-# Пример использования
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'yolo11x-cls.pt')

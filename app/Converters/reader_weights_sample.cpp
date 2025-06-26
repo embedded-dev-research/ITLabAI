@@ -15,8 +15,7 @@ int main() {
               << layer_name << "):" << std::endl;
 
     try {
-      Tensor tensor =
-          create_tensor_from_json(layer_data, Type::kFloat);
+      Tensor tensor = create_tensor_from_json(layer_data, Type::kFloat);
       // std::cout << tensor << std::endl;
     } catch (const std::exception& e) {
       std::cerr << "Error processing layer " << layer_name << ": " << e.what()

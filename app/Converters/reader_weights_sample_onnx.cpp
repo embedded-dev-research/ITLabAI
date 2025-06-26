@@ -3,7 +3,7 @@
 #include "Weights_Reader/reader_weights.hpp"
 
 int main() {
-  std::string json_file = MODEL_PATH_YOLO11NET_ONNX;
+  std::string json_file = MODEL_PATH_GOOGLENET_ONNX;
   json model_data = read_json(json_file);
 
   std::cout << "Model contains " << model_data.size()

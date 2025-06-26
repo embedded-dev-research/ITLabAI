@@ -38,12 +38,10 @@ for index, layer in enumerate(model.layers):
         'bias': []
     }
 
-    # Обработка параметров слоя
     if isinstance(layer, tf.keras.layers.Conv2D):
         layer_data['padding'] = layer_config.get('padding', None)
         layer_activation = layer_config.get('activation', None)
 
-        # Для Conv2D веса имеют форму (kernel_size[0], kernel_size[1], in_channels, out_channels)
         if len(weights) > 0:
             layer_data['weights'] = weights[0].tolist()
         if len(weights) > 1:
@@ -56,13 +54,11 @@ for index, layer in enumerate(model.layers):
             layer_data['bias'] = weights[1].tolist()
 
     else:
-        # Для других слоев сохраняем все веса как есть
         if weights:
             layer_data['weights'] = [w.tolist() for w in weights]
 
     layer_info.append(layer_data)
 
-    # Обработка встроенной активации
     if isinstance(layer, (tf.keras.layers.Conv2D)) and layer_activation:
         activation_layer = {
             'index': len(layer_info),

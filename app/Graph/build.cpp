@@ -35,8 +35,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments,
     if (comments)
       std::cout << "Processing layer of type: " << layer_type << std::endl;
 
-    Tensor tensor =
-        create_tensor_from_json(layer_data, Type::kFloat);
+    Tensor tensor = create_tensor_from_json(layer_data, Type::kFloat);
 
     if (layer_type.find("Conv") != std::string::npos) {
       Tensor tmp_tensor = tensor;
