@@ -203,6 +203,8 @@ jobs:
         sudo ldconfig
     - name: Generate model JSON
       run: |
+        cd docs && mkdir jsons
+        cd ..
         cd app/Converters
         pip install -r requirements.txt
         python parser.py
