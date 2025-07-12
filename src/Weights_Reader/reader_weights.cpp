@@ -9,22 +9,14 @@
 using json = nlohmann::json;
 
 json read_json(const std::string& filename) {
-  std::ifstream ifs(filename, std::ifstream::binary);
+  std::ifstream ifs(filename);
   if (!ifs.is_open()) {
     throw std::runtime_error("Failed to open JSON file: " + filename);
   }
 
-  ifs.seekg(0, std::ios::end);
-  size_t size = ifs.tellg();
-  ifs.seekg(0, std::ios::beg);
-
-  std::vector<char> buffer(size);
-  ifs.read(buffer.data(), size);
-  ifs.close();
-
   json model_data;
   try {
-    model_data = json::parse(buffer.begin(), buffer.end());
+    ifs >> model_data;
   } catch (const json::parse_error& e) {
     throw std::runtime_error("JSON parse error: " + std::string(e.what()));
   }
@@ -42,74 +34,47 @@ void extract_values_from_json(const json& j, std::vector<float>& values) {
   }
 }
 
-void extract_values_without_bias(const json& j, std::vector<float>& values) {
-  std::vector<float> temp_values;
-  extract_values_from_json(j, temp_values);
-  size_t bias_size = 0;
-  if (j.is_array() && !j.empty() && j.back().is_array()) {
-    bias_size = j.back().size();
+void parse_json_shape(const json& j, std::vector<size_t>& shape,
+                      size_t dim = 0) {
+  if (!j.is_array()) {
+    if (dim == 0) shape.push_back(0);
+    return;
   }
-  // std::cout << "Bias size: " << bias_size << std::endl;
-  if (temp_values.size() >= bias_size) {
-    values.assign(temp_values.begin(), temp_values.end() - bias_size);
-  }
-}
 
-void parse_json_shape(const json& j, std::vector<size_t>& shape, size_t dim) {
-  if (dim == 0) {
-    if (j.is_array()) {
-      if (j.empty()) {
-        shape.push_back(0);
-        return;
-      }
-      parse_json_shape(j.front(), shape, dim + 1);
-    } else {
-      shape.push_back(0);
-    }
-  } else {
-    if (j.is_array()) {
-      if (shape.size() <= dim - 1) {
-        shape.push_back(j.size());
-      }
-      if (!j.empty()) {
-        parse_json_shape(j.front(), shape, dim + 1);
-      }
-    }
+  if (shape.size() <= dim) {
+    shape.push_back(j.size());
+  }
+
+  if (!j.empty()) {
+    parse_json_shape(j[0], shape, dim + 1);
   }
 }
 
-void extract_bias_from_json(const json& j, std::vector<float>& bias) {
-  if (j.is_array()) {
-    if (!j.empty() && j.back().is_array()) {
-      for (const auto& item : j.back()) {
-        if (item.is_number()) {
-          bias.push_back(item.get<float>());
-        }
-      }
-    }
+Tensor create_tensor_from_json(const json& layer_data, Type type) {
+  if (type != Type::kFloat) {
+    throw std::invalid_argument("Only float type is supported");
   }
-}
 
-Tensor create_tensor_from_json(const json& j, Type type) {
-  if (type == Type::kFloat) {
-    std::vector<float> vals;
-    std::vector<size_t> shape;
-    std::vector<float> bias;
-    extract_values_without_bias(j, vals);
-    // std::cout << "Extracted values size: " << vals.size() << std::endl;
-
-    parse_json_shape(j, shape, 0);
-    // std::cout << "Shape: ";
-    /*for (size_t i = 0; i < shape.size() - 1; i++) {
-      std::cout << shape[i] << ", ";
-    }
-    std::cout << shape[shape.size() - 1];
-    std::cout << std::endl;*/
-
-    extract_bias_from_json(j, bias);
-    // std::cout << "Extracted bias size: " << bias.size() << std::endl;
-    Shape sh(shape);
-    return make_tensor<float>(vals, sh, bias);
+  std::vector<float> weights;
+  if (layer_data.contains("weights") && !layer_data["weights"].empty()) {
+    extract_values_from_json(layer_data["weights"], weights);
   }
-  throw std::invalid_argument("Unsupported type or invalid JSON format");
+
+  std::vector<float> bias;
+  if (layer_data.contains("bias") && !layer_data["bias"].empty()) {
+    extract_values_from_json(layer_data["bias"], bias);
+  }
+
+  std::vector<size_t> shape;
+  if (layer_data.contains("weights")) {
+    parse_json_shape(layer_data["weights"], shape);
+  }
+
+  std::cout << "Extracted weights size: " << weights.size() << std::endl;
+  std::cout << "Shape: ";
+  for (auto dim : shape) std::cout << dim << " ";
+  std::cout << std::endl;
+  std::cout << "Extracted bias size: " << bias.size() << std::endl;
+
+  return make_tensor<float>(weights, Shape(shape), bias);
 }

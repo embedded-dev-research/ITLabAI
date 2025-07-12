@@ -203,7 +203,9 @@ jobs:
         sudo ldconfig
     - name: Generate model JSON
       run: |
-        cd app/AlexNet
+        cd docs && mkdir jsons
+        cd ..
+        cd app/Converters
         pip install -r requirements.txt
         python parser.py
         cd ../..

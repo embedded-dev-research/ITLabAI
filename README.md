@@ -20,6 +20,14 @@ A lightweight C++ library for performing high-performance inference on MNIST han
 ### Neural network models
 You need to download [Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5) to the folder *docs*
 
+Other models:</br>
+[GoogLeNet.onnx](https://huggingface.co/qualcomm/GoogLeNet/resolve/main/GoogLeNet.onnx)</br>
+[yolo11x-cls.pt](https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11x-cls.pt)</br>
+[resnest101e_Opset16.onnx](https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/resnest101e_Opset16_timm/resnest101e_Opset16.onnx?download=)</br>
+[densenet121_Opset16.onnx](https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/densenet121_Opset16_timm/densenet121_Opset16.onnx?download=)
+
+
+
 ## **How do I launch the inference?**
 * Make sure you install the project dependencies by running: *pip install -r requirements.txt*
 * You need to run the script *parser.py* that is located in app/AlexNet to read weights from a model *Alexnet-model.h5* and the json file with the weights will be stored in the *docs* folder.
