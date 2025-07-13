@@ -1,17 +1,12 @@
-file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build")
-
 set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/build.hpp")
 set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/build.cpp")
 add_library(BuildGraph STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 
 set_target_properties(BuildGraph PROPERTIES LINKER_LANGUAGE CXX)
 
-find_package(OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build")
-include_directories(${OpenCV_INCLUDE_DIRS})
-
-target_link_libraries(BuildGraph PUBLIC ${OpenCV_LIBS})
+target_link_libraries(BuildGraph PUBLIC opencv_interface)
 target_link_libraries(BuildGraph PUBLIC reader_lib)
-target_link_libraries(BuildGraph PUBLIC tbb)
+target_link_libraries(BuildGraph PUBLIC TBB::tbb)
 target_link_libraries(BuildGraph PUBLIC layers_lib)
 target_link_libraries(BuildGraph PUBLIC gtest_main)
 
