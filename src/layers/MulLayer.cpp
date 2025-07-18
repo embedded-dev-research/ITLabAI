@@ -3,12 +3,23 @@
 namespace itlab_2023 {
 
 void MulLayer::run(const Tensor& A, const Tensor& B, Tensor& output) {
-  if (B.get_shape().dims().empty() || B.get_shape() == Shape{1}) {
-    run_with_scalar(A, B.as<float>()->at(0), output);
+  if (B.get_shape().dims() == 0 ||
+      (B.get_shape().dims() == 1 && B.get_shape()[0] == 1)) {
+    if (B.get_type() == Type::kFloat) {
+      run_with_scalar(A, B.as<float>()->at(0), output);
+    } else {
+      run_with_scalar(A, static_cast<float>(B.as<int>()->at(0)), output);
+    }
     return;
   }
-  if (A.get_shape().dims().empty() || A.get_shape() == Shape{1}) {
-    run_with_scalar(B, A.as<float>()->at(0), output);
+
+  if (A.get_shape().dims() == 0 ||
+      (A.get_shape().dims() == 1 && A.get_shape()[0] == 1)) {
+    if (A.get_type() == Type::kFloat) {
+      run_with_scalar(B, A.as<float>()->at(0), output);
+    } else {
+      run_with_scalar(B, static_cast<float>(A.as<int>()->at(0)), output);
+    }
     return;
   }
 
@@ -19,23 +30,23 @@ void MulLayer::run(const Tensor& A, const Tensor& B, Tensor& output) {
   if (A.get_shape() == B.get_shape()) {
     switch (A.get_type()) {
       case Type::kFloat: {
-        auto a_data = A.as<float>()->get_data();
-        auto b_data = B.as<float>()->get_data();
+        const auto& a_data = *A.as<float>();
+        const auto& b_data = *B.as<float>();
         std::vector<float> result;
         result.reserve(a_data.size());
         std::transform(a_data.begin(), a_data.end(), b_data.begin(),
                        std::back_inserter(result), std::multiplies<float>());
-        output = Tensor(result, A.get_shape());
+        output = make_tensor(result, A.get_shape());
         break;
       }
       case Type::kInt: {
-        auto a_data = A.as<int>()->get_data();
-        auto b_data = B.as<int>()->get_data();
+        const auto& a_data = *A.as<int>();
+        const auto& b_data = *B.as<int>();
         std::vector<int> result;
         result.reserve(a_data.size());
         std::transform(a_data.begin(), a_data.end(), b_data.begin(),
                        std::back_inserter(result), std::multiplies<int>());
-        output = Tensor(result, A.get_shape());
+        output = make_tensor(result, A.get_shape());
         break;
       }
       default:
@@ -49,8 +60,8 @@ void MulLayer::run(const Tensor& A, const Tensor& B, Tensor& output) {
 
   switch (A.get_type()) {
     case Type::kFloat: {
-      auto a_data = A.as<float>()->get_data();
-      auto b_data = B.as<float>()->get_data();
+      const auto& a_data = *A.as<float>();
+      const auto& b_data = *B.as<float>();
       std::vector<float> result(output_shape.count());
 
       for (size_t i = 0; i < result.size(); ++i) {
@@ -58,12 +69,12 @@ void MulLayer::run(const Tensor& A, const Tensor& B, Tensor& output) {
         size_t b_idx = get_broadcasted_index(i, B.get_shape(), output_shape);
         result[i] = a_data[a_idx] * b_data[b_idx];
       }
-      output = Tensor(result, output_shape);
+      output = make_tensor(result, output_shape);
       break;
     }
     case Type::kInt: {
-      auto a_data = A.as<int>()->get_data();
-      auto b_data = B.as<int>()->get_data();
+      const auto& a_data = *A.as<int>();
+      const auto& b_data = *B.as<int>();
       std::vector<int> result(output_shape.count());
 
       for (size_t i = 0; i < result.size(); ++i) {
@@ -71,7 +82,7 @@ void MulLayer::run(const Tensor& A, const Tensor& B, Tensor& output) {
         size_t b_idx = get_broadcasted_index(i, B.get_shape(), output_shape);
         result[i] = a_data[a_idx] * b_data[b_idx];
       }
-      output = Tensor(result, output_shape);
+      output = make_tensor(result, output_shape);
       break;
     }
     default:
@@ -84,21 +95,23 @@ void MulLayer::run_with_scalar(const Tensor& input, float scalar,
   const auto& shape = input.get_shape();
   switch (input.get_type()) {
     case Type::kFloat: {
-      auto input_data = input.as<float>()->get_data();
-      std::vector<float> result(shape.count());
-      for (size_t i = 0; i < result.size(); ++i) {
-        result[i] = input_data[i] * scalar;
+      const auto& input_data = *input.as<float>();
+      std::vector<float> result;
+      result.reserve(shape.count());
+      for (auto val : input_data) {
+        result.push_back(val * scalar);
       }
-      output = Tensor(result, shape);
+      output = make_tensor(result, shape);
       break;
     }
     case Type::kInt: {
-      auto input_data = input.as<int>()->get_data();
-      std::vector<int> result(shape.count());
-      for (size_t i = 0; i < result.size(); ++i) {
-        result[i] = input_data[i] * static_cast<int>(scalar);
+      const auto& input_data = *input.as<int>();
+      std::vector<int> result;
+      result.reserve(shape.count());
+      for (auto val : input_data) {
+        result.push_back(val * static_cast<int>(scalar));
       }
-      output = Tensor(result, shape);
+      output = make_tensor(result, shape);
       break;
     }
     default:
@@ -143,7 +156,7 @@ std::vector<size_t> MulLayer::get_strides(const Shape& shape) {
   if (strides.empty()) return strides;
 
   strides.back() = 1;
-  for (int i = shape.dims() - 2; i >= 0; --i) {
+  for (int i = (int)shape.dims() - 2; i >= 0; --i) {
     strides[i] = strides[i + 1] * shape[i + 1];
   }
   return strides;
