@@ -50,6 +50,7 @@ class Shape {
   bool operator!=(const Shape& other) const noexcept {
     return !(*this == other);
   }
+
  private:
   std::vector<size_t> dims_;
 };

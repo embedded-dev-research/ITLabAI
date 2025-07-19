@@ -172,14 +172,18 @@ size_t MulLayer::get_broadcasted_index(size_t flat_index,
 
   for (size_t i = 0; i < output_dims; ++i) {
     size_t output_dim = output_shape[i];
-    size_t input_dim =
-        (i < input_dims) ? input_shape[input_dims - output_dims + i] : 1;
+    size_t input_dim = (i >= output_dims - input_dims)
+                           ? input_shape[i - (output_dims - input_dims)]
+                           : 1;
 
     if (input_dim == 1) continue;
 
     size_t pos_in_dim =
         (flat_index / get_strides(output_shape)[i]) % output_dim;
-    index += pos_in_dim * strides[input_dims - output_dims + i];
+    if (i >= output_dims - input_dims) {
+      size_t input_pos = i - (output_dims - input_dims);
+      index += pos_in_dim * strides[input_pos];
+    }
   }
   return index;
 }
