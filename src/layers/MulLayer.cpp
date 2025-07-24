@@ -35,7 +35,7 @@ void MulLayer::run(const Tensor& A, const Tensor& B, Tensor& output) {
         std::vector<float> result;
         result.reserve(a_data.size());
         std::transform(a_data.begin(), a_data.end(), b_data.begin(),
-                       std::back_inserter(result), std::multiplies<float>());
+                       std::back_inserter(result), std::multiplies<>());
         output = make_tensor(result, A.get_shape());
         break;
       }
@@ -45,7 +45,7 @@ void MulLayer::run(const Tensor& A, const Tensor& B, Tensor& output) {
         std::vector<int> result;
         result.reserve(a_data.size());
         std::transform(a_data.begin(), a_data.end(), b_data.begin(),
-                       std::back_inserter(result), std::multiplies<int>());
+                       std::back_inserter(result), std::multiplies<>());
         output = make_tensor(result, A.get_shape());
         break;
       }
