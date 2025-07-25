@@ -12,7 +12,7 @@ namespace itlab_2023 {
 
 class BinaryOpLayer : public Layer {
  public:
-  enum class Operation { MUL, ADD, SUB };
+  enum class Operation : uint8_t { kMul, kAdd, kSub };
 
   BinaryOpLayer() = default;
   explicit BinaryOpLayer(Operation op) : op_(op) {}
@@ -20,6 +20,7 @@ class BinaryOpLayer : public Layer {
   static std::string get_name() { return "Binary Operation Layer"; }
   void run(const Tensor& input, Tensor& output) override;
   void run(const Tensor& A, const Tensor& B, Tensor& output);
+  bool is_scalar_tensor(const Tensor& t);
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override {
@@ -29,7 +30,7 @@ class BinaryOpLayer : public Layer {
 #endif
 
  private:
-  Operation op_ = Operation::MUL;
+  Operation op_ = Operation::kMul;
   std::shared_ptr<void> impl_;
 
   template <typename ValueType>

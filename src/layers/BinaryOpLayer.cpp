@@ -6,11 +6,11 @@ namespace {
 template <typename T>
 T apply_binary_op(T a, T b, BinaryOpLayer::Operation op) {
   switch (op) {
-    case BinaryOpLayer::Operation::MUL:
+    case BinaryOpLayer::Operation::kMul:
       return a * b;
-    case BinaryOpLayer::Operation::ADD:
+    case BinaryOpLayer::Operation::kAdd:
       return a + b;
-    case BinaryOpLayer::Operation::SUB:
+    case BinaryOpLayer::Operation::kSub:
       return a - b;
     default:
       throw std::runtime_error("Unsupported binary operation");
@@ -32,26 +32,27 @@ void BinaryOpLayer::run(const Tensor& A, const Tensor& B, Tensor& output) {
         "BinaryOpLayer: Input tensors must have the same type");
   }
 
-  if (B.get_shape().dims() == 0 ||
-      (B.get_shape().dims() == 1 && B.get_shape()[0] == 1)) {
+  if (is_scalar_tensor(B)) {
     switch (B.get_type()) {
       case Type::kFloat:
-        return run_with_scalar(A, B.as<float>()->at(0), output);
+        run_with_scalar(A, B.as<float>()->at(0), output);
+        return;
       case Type::kInt:
-        return run_with_scalar(A, static_cast<float>(B.as<int>()->at(0)),
-                               output);
+        run_with_scalar(A, static_cast<float>(B.as<int>()->at(0)), output);
+        return;
       default:
-        throw std::runtime_error("BinaryOpLayer: Unsupported scalar type");
+        throw std::runtime_error("Unsupported scalar type");
     }
   }
-  if (A.get_shape().dims() == 0 ||
-      (A.get_shape().dims() == 1 && A.get_shape()[0] == 1)) {
+
+  if (is_scalar_tensor(A)) {
     switch (A.get_type()) {
       case Type::kFloat:
-        return run_with_scalar(B, A.as<float>()->at(0), output);
+        run_with_scalar(B, A.as<float>()->at(0), output);
+        return;
       case Type::kInt:
-        return run_with_scalar(B, static_cast<float>(A.as<int>()->at(0)),
-                               output);
+        run_with_scalar(B, static_cast<float>(A.as<int>()->at(0)), output);
+        return;
       default:
         throw std::runtime_error("BinaryOpLayer: Unsupported scalar type");
     }
@@ -214,6 +215,20 @@ size_t BinaryOpLayer::get_broadcasted_index(size_t flat_index,
     }
   }
   return index;
+}
+
+bool BinaryOpLayer::is_scalar_tensor(const Tensor& t) {
+  const auto& shape = t.get_shape();
+  const size_t dims = shape.dims();
+
+  if (dims == 0) return true;
+
+  for (size_t i = 0; i < dims; ++i) {
+    if (shape[i] != 1) {
+      return false;
+    }
+  }
+  return true;
 }
 
 template class BinaryOpLayer::BinaryOpLayerImpl<int>;

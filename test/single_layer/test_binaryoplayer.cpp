@@ -24,7 +24,7 @@ class BinaryOpLayerMulTests : public ::testing::Test {
 };
 
 TEST_F(BinaryOpLayerMulTests, MulSameShapeFloat) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::MUL);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<float>(data1, {2, 2});
   Tensor input2 = make_tensor<float>(data2, {2, 2});
   Tensor output;
@@ -39,7 +39,7 @@ TEST_F(BinaryOpLayerMulTests, MulSameShapeFloat) {
 }
 
 TEST_F(BinaryOpLayerMulTests, MulSameShapeInt) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::MUL);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<int>(data_int, {2, 2});
   Tensor input2 = make_tensor<int>(data_int, {2, 2});
   Tensor output;
@@ -54,7 +54,7 @@ TEST_F(BinaryOpLayerMulTests, MulSameShapeInt) {
 }
 
 TEST_F(BinaryOpLayerMulTests, MulSameShapeIntResNet1) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::MUL);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<int>({1, 2, 64, 64, 64}, {5});
   Tensor input2 = make_tensor<int>({1, 2, 64, 1, 1}, {5});
   Tensor output;
@@ -70,7 +70,7 @@ TEST_F(BinaryOpLayerMulTests, MulSameShapeIntResNet1) {
 }
 
 TEST_F(BinaryOpLayerMulTests, MulWithScalarFloat) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::MUL);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input = make_tensor<float>(data1, {2, 2});
   Tensor output;
 
@@ -84,7 +84,7 @@ TEST_F(BinaryOpLayerMulTests, MulWithScalarFloat) {
 }
 
 TEST_F(BinaryOpLayerMulTests, MulWithScalarInt) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::MUL);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input = make_tensor<int>(data_int, {2, 2});
   Tensor output;
 
@@ -98,7 +98,7 @@ TEST_F(BinaryOpLayerMulTests, MulWithScalarInt) {
 }
 
 TEST_F(BinaryOpLayerMulTests, BroadcastingTest1) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::MUL);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<float>({1.0f, 2.0f}, {2, 1});
   Tensor input2 = make_tensor<float>({3.0f, 4.0f}, {1, 2});
   Tensor output;
@@ -113,7 +113,7 @@ TEST_F(BinaryOpLayerMulTests, BroadcastingTest1) {
 }
 
 TEST_F(BinaryOpLayerMulTests, Broadcasting3D) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::MUL);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 =
       make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f}, {2, 1, 3});
   Tensor input2 =
@@ -139,7 +139,7 @@ TEST_F(BinaryOpLayerMulTests, Broadcasting3D) {
 }
 
 TEST_F(BinaryOpLayerMulTests, BroadcastingDifferentRanks) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::MUL);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<float>({1.0f, 2.0f, 3.0f}, {3});
   Tensor input2 =
       make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f}, {2, 1, 3});
@@ -156,7 +156,7 @@ TEST_F(BinaryOpLayerMulTests, BroadcastingDifferentRanks) {
 }
 
 TEST_F(BinaryOpLayerMulTests, IncompatibleShapes) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::MUL);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<float>(data1, {4});
   Tensor input2 = make_tensor<float>(data2, {2, 2});
   Tensor output;
@@ -169,7 +169,7 @@ TEST_F(BinaryOpLayerMulTests, LayerName) {
 }
 
 TEST_F(BinaryOpLayerMulTests, EmptyTensors) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::MUL);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor empty1({}, Type::kFloat);
   Tensor empty2({}, Type::kFloat);
   Tensor output;
@@ -178,7 +178,7 @@ TEST_F(BinaryOpLayerMulTests, EmptyTensors) {
 }
 
 TEST_F(BinaryOpLayerMulTests, BroadcastingTestAdd) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::ADD);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kAdd);
 
   Tensor input1 =
       make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f, 5.0f}, {5, 1, 1, 1});
@@ -202,7 +202,7 @@ TEST_F(BinaryOpLayerMulTests, BroadcastingTestAdd) {
 }
 
 TEST_F(BinaryOpLayerMulTests, BroadcastingTestSubGooglNet) {
-  BinaryOpLayer layer(BinaryOpLayer::Operation::SUB);
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kSub);
   Tensor input1 = make_tensor<float>(
       {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f,
        12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f},
