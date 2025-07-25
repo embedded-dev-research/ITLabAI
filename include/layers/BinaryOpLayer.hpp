@@ -54,8 +54,12 @@ class BinaryOpLayer::BinaryOpLayerImpl : public LayerImpl<ValueType> {
  public:
   BinaryOpLayerImpl() = delete;
   explicit BinaryOpLayerImpl(BinaryOpLayer::Operation op);
-  BinaryOpLayerImpl(const BinaryOpLayerImpl&) = default;
-  BinaryOpLayerImpl& operator=(const BinaryOpLayerImpl&) = default;
+
+  std::vector<ValueType> run(
+      const std::vector<ValueType>& input) const override {
+    (void)input;
+    throw std::runtime_error("BinaryOpLayer requires two inputs");
+  }
 
   std::vector<ValueType> run(const std::vector<ValueType>& inputA,
                              const std::vector<ValueType>& inputB) const;
