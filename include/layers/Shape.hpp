@@ -39,6 +39,15 @@ class Shape {
   }
   size_t dims() const noexcept { return dims_.size(); }
   size_t get_index(const std::vector<size_t>& coords) const;
+  bool operator==(const Shape& other) const {
+    if (dims_.size() != other.dims_.size()) return false;
+    for (size_t i = 0; i < dims_.size(); ++i) {
+      if (dims_[i] != other.dims_[i]) return false;
+    }
+    return true;
+  }
+
+  bool operator!=(const Shape& other) const { return !(*this == other); }
   friend std::ostream& operator<<(std::ostream& os, const Shape& shape);
 
  private:
