@@ -20,15 +20,15 @@ void ReduceSumLayer::normalize_axes(const Shape& input_shape,
 
   if (axes.empty()) {
     axes.resize(rank);
-    std::iota(axes.begin(), axes.end(), 0);
+    std::iota(axes.begin(), axes.end(), 1);
     return;
   }
 
   for (auto& axis : axes) {
-    if (axis < -rank || axis >= rank) {
-      throw std::runtime_error("ReduceSum: Axis out of range");
+    if (axis < 1 || axis > rank) {
+      throw std::runtime_error(
+          "ReduceSum: Axis out of range. Use 1-based indexing");
     }
-    if (axis < 0) axis += rank;
   }
 
   std::sort(axes.begin(), axes.end());
@@ -44,19 +44,19 @@ Shape ReduceSumLayer::calculate_output_shape(
   std::vector<size_t> new_dims;
 
   if (keepdims_) {
+    new_dims.resize(input_shape.dims(), 1);
     for (size_t i = 0; i < input_shape.dims(); ++i) {
-      new_dims.push_back(input_shape[i]);
-    }
-
-    for (int64_t axis : axes) {
-      if (axis >= 0 && axis < static_cast<int64_t>(new_dims.size())) {
-        new_dims[axis] = 1;
+      bool is_axis = std::find(axes.begin(), axes.end(),
+                               static_cast<int64_t>(i + 1)) != axes.end();
+      if (!is_axis) {
+        new_dims[i] = input_shape[i];
       }
     }
   } else {
     for (size_t i = 0; i < input_shape.dims(); ++i) {
-      if (std::find(axes.begin(), axes.end(), static_cast<int64_t>(i)) ==
-          axes.end()) {
+      bool is_axis = std::find(axes.begin(), axes.end(),
+                               static_cast<int64_t>(i + 1)) != axes.end();
+      if (!is_axis) {
         new_dims.push_back(input_shape[i]);
       }
     }
@@ -78,57 +78,70 @@ void ReduceSumLayer::compute(const Tensor& input, const Shape& output_shape,
   const auto& input_shape = input.get_shape();
   const size_t input_rank = input_shape.dims();
 
-  std::vector<bool> is_reduced(input_rank, false);
-  for (int64_t axis : axes) {
-    is_reduced[axis] = true;
+  std::vector<size_t> reduced_axes;
+  for (auto axis : axes) {
+    reduced_axes.push_back(static_cast<size_t>(axis - 1));
   }
 
-  std::vector<size_t> input_strides(input_rank, 1);
+  std::vector<size_t> strides(input_rank, 1);
   for (size_t i = input_rank - 1; i > 0; --i) {
-    input_strides[i - 1] = input_strides[i] * input_shape[i];
+    strides[i - 1] = strides[i] * input_shape[i];
   }
 
-  for (size_t out_idx = 0; out_idx < output_data.size(); ++out_idx) {
-    size_t remaining = out_idx;
-    size_t input_idx = 0;
+  std::vector<size_t> axis_mapping;
+  for (size_t i = 0; i < input_rank; ++i) {
+    if (std::find(reduced_axes.begin(), reduced_axes.end(), i) ==
+        reduced_axes.end()) {
+      axis_mapping.push_back(i);
+    }
+  }
 
-    for (size_t out_dim = 0; out_dim < output_shape.dims(); ++out_dim) {
-      size_t out_coord = remaining % output_shape[out_dim];
-      remaining /= output_shape[out_dim];
+  std::vector<size_t> out_strides(output_shape.dims(), 1);
+  for (size_t i = output_shape.dims() - 1; i > 0; --i) {
+    out_strides[i - 1] = out_strides[i] * output_shape[i];
+  }
 
-      size_t input_dim = 0;
+  std::vector<size_t> in_coords(input_rank, 0);
+  for (size_t in_idx = 0; in_idx < input_data.size(); ++in_idx) {
+    std::vector<size_t> out_coords;
+    for (size_t i = 0; i < input_rank; ++i) {
+      if (std::find(reduced_axes.begin(), reduced_axes.end(), i) ==
+          reduced_axes.end()) {
+        out_coords.push_back(in_coords[i]);
+      }
+    }
+
+    size_t out_idx = 0;
+    for (size_t i = 0; i < out_coords.size(); ++i) {
+      out_idx += out_coords[i] * out_strides[i];
+    }
+
+    if (keepdims_) {
+      std::vector<size_t> full_out_coords;
+      size_t out_pos = 0;
       for (size_t i = 0; i < input_rank; ++i) {
-        if (!is_reduced[i]) {
-          if (input_dim == out_dim) {
-            input_idx += out_coord * input_strides[i];
-            break;
-          }
-          input_dim++;
+        if (std::find(reduced_axes.begin(), reduced_axes.end(), i) !=
+            reduced_axes.end()) {
+          full_out_coords.push_back(0);
+        } else {
+          full_out_coords.push_back(out_coords[out_pos++]);
         }
       }
-    }
-
-    T sum = 0;
-    size_t reduced_count = 1;
-    for (int64_t axis : axes) {
-      reduced_count *= input_shape[axis];
-    }
-
-    for (size_t offset = 0; offset < reduced_count; ++offset) {
-      size_t current_idx = input_idx;
-      size_t temp = offset;
-
-      for (int64_t axis : axes) {
-        size_t axis_size = input_shape[axis];
-        size_t coord = temp % axis_size;
-        temp /= axis_size;
-        current_idx += coord * input_strides[axis];
+      out_idx = 0;
+      for (size_t i = 0; i < full_out_coords.size(); ++i) {
+        out_idx += full_out_coords[i] * out_strides[i];
       }
-
-      sum += input_data[current_idx];
     }
 
-    output_data[out_idx] = sum;
+    output_data[out_idx] += input_data[in_idx];
+
+    for (size_t i = input_rank - 1;; --i) {
+      ++in_coords[i];
+      if (in_coords[i] < input_shape[i] || i == 0) {
+        break;
+      }
+      in_coords[i] = 0;
+    }
   }
 
   output = make_tensor(output_data, output_shape);
