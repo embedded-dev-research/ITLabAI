@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 #include "layers/DropOutLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 TEST(DropOutLayer, dropoutlayer_int) {
   DropOutLayer layer(1);

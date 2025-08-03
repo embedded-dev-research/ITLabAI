@@ -7,7 +7,7 @@
 
 #include "layers/Layer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 class FCLayer : public Layer {
  private:
@@ -128,4 +128,4 @@ std::vector<ValueType> FCLayerImpl<ValueType>::run(
   return output_values;
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

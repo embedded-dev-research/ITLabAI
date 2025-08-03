@@ -5,7 +5,7 @@
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 class EWTestsParameterized
     : public ::testing::TestWithParam<

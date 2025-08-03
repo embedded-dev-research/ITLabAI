@@ -1,6 +1,6 @@
 #include "layers/FlattenLayer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 // reorder coords
 std::vector<size_t> reorder(std::vector<size_t> order_vec,
@@ -45,4 +45,4 @@ void FlattenLayer::run(const Tensor &input, Tensor &output) {
   }
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

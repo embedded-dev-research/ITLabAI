@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 #include "layers/PoolingLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 TEST(poolinglayer, empty_inputs1) {
   Shape inpshape = 0;
@@ -178,7 +178,7 @@ TEST(poolinglayer, new_pooling_layer_can_run_int_avg) {
 TEST(poolinglayer, new_pooling_layer_can_run_int_avg_tbb) {
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};
-  PoolingLayer a(poolshape, "average", itlab_2023::kTBB);
+  PoolingLayer a(poolshape, "average", it_lab_ai::kTBB);
   std::vector<int> input({9, 8, 7, 6, 5, 4, 3, 2, 2, 3, 4, 5, 6, 7, 8, 9});
   Tensor output = make_tensor<float>({0});
   a.run(make_tensor(input, inpshape), output);
@@ -204,7 +204,7 @@ TEST(poolinglayer, new_pooling_layer_can_run_1d_pooling_float) {
 TEST(poolinglayer, new_pooling_layer_tbb_can_run_1d_pooling_float) {
   Shape inpshape = {8};
   Shape poolshape = {3};
-  PoolingLayer a(poolshape, "average", itlab_2023::kTBB);
+  PoolingLayer a(poolshape, "average", it_lab_ai::kTBB);
   std::vector<float> input({9.0F, 8.0F, 7.0F, 6.0F, 5.0F, 4.0F, 3.0F, 2.0F});
   Tensor output = make_tensor<float>({0});
   a.run(make_tensor(input, inpshape), output);

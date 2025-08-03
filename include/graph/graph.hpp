@@ -10,7 +10,7 @@
 
 #include "layers/Layer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 class Graph {
   int BiggestSize_;
@@ -148,4 +148,4 @@ class Graph {
   std::vector<Tensor> getWEIGHTS() { return weights_; }
 #endif
 };
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

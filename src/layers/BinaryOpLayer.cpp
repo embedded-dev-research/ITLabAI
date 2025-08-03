@@ -1,6 +1,6 @@
 #include "layers/BinaryOpLayer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 namespace {
 template <typename T>
@@ -234,4 +234,4 @@ bool BinaryOpLayer::is_scalar_tensor(const Tensor& t) {
 template class BinaryOpLayer::BinaryOpLayerImpl<int>;
 template class BinaryOpLayer::BinaryOpLayerImpl<float>;
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

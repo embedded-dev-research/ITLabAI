@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 class Shape {
  public:
@@ -55,4 +55,4 @@ class Shape {
   std::vector<size_t> dims_;
 };
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

@@ -8,7 +8,7 @@
 #include "Tensor.hpp"
 #include "layers/Layer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 class BinaryOpLayer : public Layer {
  public:
@@ -69,4 +69,4 @@ class BinaryOpLayer::BinaryOpLayerImpl : public LayerImpl<ValueType> {
   BinaryOpLayer::Operation op_;
 };
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

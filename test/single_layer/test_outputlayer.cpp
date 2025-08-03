@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 #include "layers/OutputLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 void fill_from_file(const std::string& path_from, std::vector<std::string>& to,
                     size_t limit = 0) {

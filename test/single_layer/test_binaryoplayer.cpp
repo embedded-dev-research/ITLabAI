@@ -4,7 +4,7 @@
 #include "layers/BinaryOpLayer.hpp"
 #include "layers/Tensor.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 class BinaryOpLayerMulTests : public ::testing::Test {
  protected:

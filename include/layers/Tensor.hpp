@@ -8,7 +8,7 @@
 
 #include "layers/Shape.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 enum class Type : uint8_t { kUnknown, kInt, kFloat };
 
@@ -207,4 +207,4 @@ Tensor make_tensor(const std::vector<T>& values, const Shape& shape,
 }
 std::ostream& operator<<(std::ostream& out, const Tensor& t);
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

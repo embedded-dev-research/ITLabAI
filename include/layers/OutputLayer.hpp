@@ -7,7 +7,7 @@
 
 #include "layers/Layer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 class OutputLayer : public Layer {
  public:
@@ -111,4 +111,4 @@ std::pair<std::vector<std::string>, std::vector<ValueType>> top_k_vec(
   return std::make_pair(res_labels, res_input);
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

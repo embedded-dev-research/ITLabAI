@@ -1,6 +1,6 @@
 #include "layers/ConvLayer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
   if (input.get_shape().dims() != 4) {
@@ -135,4 +135,4 @@ void ConvolutionalLayer::run(const Tensor& input, Tensor& output) {
   }
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai
