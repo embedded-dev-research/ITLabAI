@@ -1,6 +1,6 @@
 #include "layers/OutputLayer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 std::pair<std::vector<std::string>, Tensor> OutputLayer::top_k(
     const Tensor &input, size_t k) const {
@@ -29,4 +29,4 @@ std::pair<std::vector<std::string>, Tensor> OutputLayer::top_k(
   return make_pair(reslabels, resvector);
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

@@ -1,6 +1,6 @@
 #include "layers/Shape.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 size_t Shape::get_index(const std::vector<size_t>& coords) const {
   if (coords.size() != dims_.size()) {
@@ -29,4 +29,4 @@ std::ostream& operator<<(std::ostream& os, const Shape& shape) {
   return os;
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

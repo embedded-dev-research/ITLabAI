@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 #include "layers/FlattenLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 TEST(flattenlayer, new_flattenlayer_can_flatten_int) {
   FlattenLayer layer;

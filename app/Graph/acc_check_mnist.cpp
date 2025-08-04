@@ -5,7 +5,7 @@
 #include "build.cpp"
 #include "build.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 int main(int argc, char* argv[]) {
   bool parallel = false;

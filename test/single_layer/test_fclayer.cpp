@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 #include "layers/FCLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 class FCTestsParameterized
     : public ::testing::TestWithParam<

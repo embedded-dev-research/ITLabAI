@@ -4,7 +4,7 @@
 #include <functional>
 #include <random>
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 void DropOutLayer::run(const Tensor &input, Tensor &output) {
   const double lower_bound = 0;
@@ -35,4 +35,4 @@ void DropOutLayer::run(const Tensor &input, Tensor &output) {
   }
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

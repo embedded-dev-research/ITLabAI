@@ -2,7 +2,7 @@
 #include "build.hpp"
 
 namespace fs = std::filesystem;
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 int main(int argc, char* argv[]) {
   std::string image_folder = IMAGE1_PATH;

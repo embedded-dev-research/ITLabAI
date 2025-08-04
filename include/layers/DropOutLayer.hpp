@@ -3,7 +3,7 @@
 
 #include "layers/Layer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 class DropOutLayer : public Layer {
  private:
@@ -16,4 +16,4 @@ class DropOutLayer : public Layer {
   void run(const Tensor& input, Tensor& output) override;
 };
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

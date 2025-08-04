@@ -2,7 +2,7 @@
 
 #include "layers/ConvLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 TEST(ConvolutionalLayerTest, FStep2) {
   std::vector<float> image;

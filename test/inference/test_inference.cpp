@@ -9,7 +9,7 @@
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 TEST(bfs, check_result_vec) {
   Graph graph(5);

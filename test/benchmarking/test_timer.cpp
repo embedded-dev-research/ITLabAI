@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 #include "perf/benchmarking.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 void waitfor_function(const size_t ms) {
   std::this_thread::sleep_for(std::chrono::milliseconds(ms));

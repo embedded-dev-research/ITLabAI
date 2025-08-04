@@ -1,6 +1,6 @@
 #include "layers/PoolingLayer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 void PoolingLayer::run(const Tensor& input, Tensor& output) {
   switch (input.get_type()) {
@@ -48,4 +48,4 @@ void PoolingLayer::run(const Tensor& input, Tensor& output) {
   }
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

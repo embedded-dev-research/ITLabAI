@@ -1,6 +1,6 @@
 #include "layers/FCLayer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 void FCLayer::run(const Tensor& input, Tensor& output) {
   if (input.get_type() != weights_.get_type()) {
@@ -32,4 +32,4 @@ void FCLayer::run(const Tensor& input, Tensor& output) {
   }
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

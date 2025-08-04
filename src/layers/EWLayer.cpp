@@ -1,6 +1,6 @@
 #include "layers/EWLayer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 void EWLayer::run(const Tensor &input, Tensor &output) {
   switch (input.get_type()) {
@@ -21,4 +21,4 @@ void EWLayer::run(const Tensor &input, Tensor &output) {
   }
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

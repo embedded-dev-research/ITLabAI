@@ -4,7 +4,7 @@
 
 #include "layers/Layer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 enum LayInOut : uint8_t {
   kNchw,  // 0
@@ -179,4 +179,4 @@ class InputLayer : public Layer {
   }
 };
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

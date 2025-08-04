@@ -5,7 +5,7 @@
 #include "layers/Tensor.hpp"
 
 using json = nlohmann::json;
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 json read_json(const std::string& filename);
 void extract_values_from_json(const json& j, std::vector<float>& values);

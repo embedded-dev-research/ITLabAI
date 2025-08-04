@@ -1,6 +1,6 @@
 #include "layers/Tensor.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 std::ostream& operator<<(std::ostream& out, const Tensor& t) {
   for (size_t i = 0; i < t.get_shape().count(); i++) {
@@ -17,4 +17,4 @@ std::ostream& operator<<(std::ostream& out, const Tensor& t) {
   return out;
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

@@ -3,7 +3,7 @@
 
 #include "layers/Layer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 std::vector<size_t> reorder(std::vector<size_t> order_vec,
                             std::vector<size_t> order);
@@ -51,4 +51,4 @@ void Flatten4D(const Tensor& input, Tensor& output,
                        Shape({input.get_shape().count()}));
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

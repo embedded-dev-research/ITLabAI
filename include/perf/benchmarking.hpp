@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 template <typename DurationContainerType, typename DurationType, class Function,
           typename... Args>
@@ -114,4 +114,4 @@ T accuracy_norm(T* test, T* ref, const size_t size) {
   // typename T should have friend sqrt() function
   return std::sqrt(res);
 }
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

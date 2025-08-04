@@ -6,7 +6,7 @@
 
 #include "layers/Layer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 enum PoolingType : uint8_t { kAverage, kMax };
 
@@ -266,4 +266,4 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
   return res;
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai
