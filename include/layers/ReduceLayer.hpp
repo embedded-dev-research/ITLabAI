@@ -4,17 +4,11 @@
 #include "layers/Layer.hpp"
 #include "layers/Tensor.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 class ReduceLayer : public Layer {
  public:
-  enum class Operation {
-    kSum,
-    kMean,
-    kMult,
-    kMax,
-    kMin
-  };
+  enum class Operation { kSum, kMean, kMult, kMax, kMin };
 
   ReduceLayer(Operation op, int64_t keepdims = 0);
   explicit ReduceLayer(int64_t keepdims = 0)
@@ -28,7 +22,7 @@ class ReduceLayer : public Layer {
   Operation op_;
   int64_t keepdims_;
   static void normalize_axes(const Shape& input_shape,
-                      std::vector<int64_t>& axes);
+                             std::vector<int64_t>& axes);
   Shape calculate_output_shape(const Shape& input_shape,
                                const std::vector<int64_t>& axes) const;
 
@@ -37,4 +31,4 @@ class ReduceLayer : public Layer {
                const std::vector<int64_t>& axes, Tensor& output) const;
 };
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

@@ -49,16 +49,6 @@ class Shape {
 
   bool operator!=(const Shape& other) const { return !(*this == other); }
   friend std::ostream& operator<<(std::ostream& os, const Shape& shape);
-  bool operator==(const Shape& other) const noexcept {
-    if (dims_.size() != other.dims_.size()) {
-      return false;
-    }
-    return std::equal(dims_.begin(), dims_.end(), other.dims_.begin());
-  }
-
-  bool operator!=(const Shape& other) const noexcept {
-    return !(*this == other);
-  }
 
  private:
   std::vector<size_t> dims_;

@@ -3,11 +3,9 @@
 #include "layers/ReduceLayer.hpp"
 #include "layers/Tensor.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
-TEST(ReduceLayer, DefaultConstructor) {
-  ASSERT_NO_THROW(ReduceLayer layer);
-}
+TEST(ReduceLayer, DefaultConstructor) { ASSERT_NO_THROW(ReduceLayer layer); }
 
 TEST(ReduceLayer, SumAllAxesKeepDims) {
   ReduceLayer layer(1);
@@ -146,12 +144,9 @@ TEST(ReduceLayer, Resnet) {
 
   layer.run(input, axes, output);
 
-  EXPECT_EQ(output.get_shape(),
-            Shape({1, 1, 3, 3, 3}));
-  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 0, 0, 0}),
-                  1.0f + 28.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 2, 2, 2}),
-                  27.0f + 54.0f);
+  EXPECT_EQ(output.get_shape(), Shape({1, 1, 3, 3, 3}));
+  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 0, 0, 0}), 1.0f + 28.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 2, 2, 2}), 27.0f + 54.0f);
 }
 
 TEST(ReduceLayer, NegativeAxisBasic) {
@@ -277,4 +272,4 @@ TEST(ReduceLayer, ResnetReduceMean) {
           9.0f);
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

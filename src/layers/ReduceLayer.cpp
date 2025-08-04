@@ -4,7 +4,7 @@
 #include <limits>
 #include <numeric>
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 ReduceLayer::ReduceLayer(Operation op, int64_t keepdims)
     : op_(op), keepdims_(keepdims) {}
@@ -210,4 +210,4 @@ void ReduceLayer::run(const Tensor& input, const Tensor& axes, Tensor& output) {
   }
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai
