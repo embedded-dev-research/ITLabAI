@@ -12,6 +12,9 @@ T apply_binary_op(T a, T b, BinaryOpLayer::Operation op) {
       return a + b;
     case BinaryOpLayer::Operation::kSub:
       return a - b;
+    case BinaryOpLayer::Operation::kDiv:
+      if (b == 0) throw std::runtime_error("Division by zero");
+      return a / b;
     default:
       throw std::runtime_error("Unsupported binary operation");
   }
@@ -67,39 +70,19 @@ void BinaryOpLayer::run(const Tensor& A, const Tensor& B, Tensor& output) {
       calculate_broadcasted_shape(A.get_shape(), B.get_shape());
 
   switch (A.get_type()) {
-    case Type::kFloat: {
-      const auto& a_data = *A.as<float>();
-      const auto& b_data = *B.as<float>();
-      std::vector<float> result(output_shape.count());
-
-      for (size_t i = 0; i < result.size(); ++i) {
-        size_t a_idx = get_broadcasted_index(i, A.get_shape(), output_shape);
-        size_t b_idx = get_broadcasted_index(i, B.get_shape(), output_shape);
-        result[i] = apply_binary_op(a_data[a_idx], b_data[b_idx], op_);
-      }
-      output = make_tensor(result, output_shape);
+    case Type::kFloat:
+      run_broadcast_impl<float>(A, B, output, output_shape);
       break;
-    }
-    case Type::kInt: {
-      const auto& a_data = *A.as<int>();
-      const auto& b_data = *B.as<int>();
-      std::vector<int> result(output_shape.count());
-
-      for (size_t i = 0; i < result.size(); ++i) {
-        size_t a_idx = get_broadcasted_index(i, A.get_shape(), output_shape);
-        size_t b_idx = get_broadcasted_index(i, B.get_shape(), output_shape);
-        result[i] = apply_binary_op(a_data[a_idx], b_data[b_idx], op_);
-      }
-      output = make_tensor(result, output_shape);
+    case Type::kInt:
+      run_broadcast_impl<int>(A, B, output, output_shape);
       break;
-    }
     default:
-      throw std::runtime_error("BinaryOpLayer: Unsupported tensor type");
+      throw std::runtime_error("Unsupported tensor type");
   }
 }
 
 void BinaryOpLayer::run_with_scalar(const Tensor& input, float scalar,
-                                    Tensor& output) {
+                                    Tensor& output) const {
   switch (input.get_type()) {
     case Type::kFloat: {
       run_with_scalar_impl<float>(input, scalar, output);
@@ -130,23 +113,25 @@ void BinaryOpLayer::run_with_scalar_impl(const Tensor& input, ValueType scalar,
 }
 
 template <typename ValueType>
-BinaryOpLayer::BinaryOpLayerImpl<ValueType>::BinaryOpLayerImpl(
-    BinaryOpLayer::Operation op)
-    : LayerImpl<ValueType>(Shape({1}), Shape({1})), op_(op) {}
+void BinaryOpLayer::run_broadcast_impl(const Tensor& A, const Tensor& B,
+                                       Tensor& output,
+                                       const Shape& output_shape) const {
+  const auto& a_data = *A.as<ValueType>();
+  const auto& b_data = *B.as<ValueType>();
+  std::vector<ValueType> result(output_shape.count());
+  const auto strides_A = get_strides(A.get_shape());
+  const auto strides_B = get_strides(B.get_shape());
+  const auto strides_output = get_strides(output_shape);
 
-template <typename ValueType>
-std::vector<ValueType> BinaryOpLayer::BinaryOpLayerImpl<ValueType>::run(
-    const std::vector<ValueType>& inputA,
-    const std::vector<ValueType>& inputB) const {
-  if (inputA.size() != inputB.size()) {
-    throw std::runtime_error("BinaryOpLayer: Input sizes must match");
-  }
-
-  std::vector<ValueType> result(inputA.size());
   for (size_t i = 0; i < result.size(); ++i) {
-    result[i] = apply_binary_op(inputA[i], inputB[i], op_);
+    size_t a_idx = get_broadcasted_index(i, A.get_shape(), output_shape,
+                                         strides_A, strides_output);
+    size_t b_idx = get_broadcasted_index(i, B.get_shape(), output_shape,
+                                         strides_B, strides_output);
+    result[i] = apply_binary_op(a_data[a_idx], b_data[b_idx], op_);
   }
-  return result;
+
+  output = make_tensor(result, output_shape);
 }
 
 bool BinaryOpLayer::can_broadcast(const Shape& shape_A, const Shape& shape_B) {
@@ -191,13 +176,13 @@ std::vector<size_t> BinaryOpLayer::get_strides(const Shape& shape) {
   return strides;
 }
 
-size_t BinaryOpLayer::get_broadcasted_index(size_t flat_index,
-                                            const Shape& input_shape,
-                                            const Shape& output_shape) {
+size_t BinaryOpLayer::get_broadcasted_index(
+    size_t flat_index, const Shape& input_shape, const Shape& output_shape,
+    const std::vector<size_t>& input_strides,
+    const std::vector<size_t>& output_strides) {
   size_t input_dims = input_shape.dims();
   size_t output_dims = output_shape.dims();
   size_t index = 0;
-  auto strides = get_strides(input_shape);
 
   for (size_t i = 0; i < output_dims; ++i) {
     size_t output_dim = output_shape[i];
@@ -207,11 +192,10 @@ size_t BinaryOpLayer::get_broadcasted_index(size_t flat_index,
 
     if (input_dim == 1) continue;
 
-    size_t pos_in_dim =
-        (flat_index / get_strides(output_shape)[i]) % output_dim;
+    size_t pos_in_dim = (flat_index / output_strides[i]) % output_dim;
     if (i >= output_dims - input_dims) {
       size_t input_pos = i - (output_dims - input_dims);
-      index += pos_in_dim * strides[input_pos];
+      index += pos_in_dim * input_strides[input_pos];
     }
   }
   return index;
@@ -230,8 +214,5 @@ bool BinaryOpLayer::is_scalar_tensor(const Tensor& t) {
   }
   return true;
 }
-
-template class BinaryOpLayer::BinaryOpLayerImpl<int>;
-template class BinaryOpLayer::BinaryOpLayerImpl<float>;
 
 }  // namespace it_lab_ai

@@ -12,7 +12,7 @@ namespace it_lab_ai {
 
 class BinaryOpLayer : public Layer {
  public:
-  enum class Operation : uint8_t { kMul, kAdd, kSub };
+  enum class Operation : uint8_t { kMul, kAdd, kSub, kDiv };
 
   BinaryOpLayer() = default;
   explicit BinaryOpLayer(Operation op) : op_(op) {}
@@ -31,42 +31,26 @@ class BinaryOpLayer : public Layer {
 
  private:
   Operation op_ = Operation::kMul;
-  std::shared_ptr<void> impl_;
 
   template <typename ValueType>
   void run_with_scalar_impl(const Tensor& input, ValueType scalar,
                             Tensor& output) const;
-  void run_with_scalar(const Tensor& input, float scalar, Tensor& output);
+  template <typename ValueType>
+  void run_broadcast_impl(const Tensor& A, const Tensor& B, Tensor& output,
+                          const Shape& output_shape) const;
+  void run_with_scalar(const Tensor& input, float scalar, Tensor& output) const;
 
   static bool can_broadcast(const Shape& shape_A, const Shape& shape_B);
   static Shape calculate_broadcasted_shape(const Shape& shape_A,
                                            const Shape& shape_B);
   static std::vector<size_t> get_strides(const Shape& shape);
-  static size_t get_broadcasted_index(size_t flat_index,
-                                      const Shape& input_shape,
-                                      const Shape& output_shape);
+  static size_t get_broadcasted_index(
+      size_t flat_index, const Shape& input_shape, const Shape& output_shape,
+      const std::vector<size_t>& input_strides,
+      const std::vector<size_t>& output_strides);
 
   template <typename ValueType>
   class BinaryOpLayerImpl;
-};
-
-template <typename ValueType>
-class BinaryOpLayer::BinaryOpLayerImpl : public LayerImpl<ValueType> {
- public:
-  BinaryOpLayerImpl() = delete;
-  explicit BinaryOpLayerImpl(BinaryOpLayer::Operation op);
-
-  std::vector<ValueType> run(
-      const std::vector<ValueType>& input) const override {
-    (void)input;
-    throw std::runtime_error("BinaryOpLayer requires two inputs");
-  }
-
-  std::vector<ValueType> run(const std::vector<ValueType>& inputA,
-                             const std::vector<ValueType>& inputB) const;
-
- private:
-  BinaryOpLayer::Operation op_;
 };
 
 }  // namespace it_lab_ai
