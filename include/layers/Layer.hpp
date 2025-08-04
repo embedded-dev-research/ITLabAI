@@ -9,7 +9,7 @@
 #include "layers/Tensor.hpp"
 #include "oneapi/tbb.h"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 enum LayerType : uint8_t {
   kInput,
@@ -65,4 +65,4 @@ class LayerImpl {
   Shape outputShape_;
 };
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

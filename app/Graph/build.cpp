@@ -86,7 +86,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments,
       Tensor tmp_bias = make_tensor(tensor.get_bias());
       Tensor tmp_tensor =
           Tensor(Shape({tensor.get_shape()[1], tensor.get_shape()[0]}),
-                 itlab_2023::Type::kFloat);
+                 it_lab_ai::Type::kFloat);
       // kernel is always transposed ?
       for (size_t h = 0; h < tensor.get_shape()[0]; h++) {
         for (size_t w = 0; w < tensor.get_shape()[1]; w++) {

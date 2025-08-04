@@ -7,7 +7,7 @@
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 int main() {
   std::string image_path = IMAGE1_PATH;

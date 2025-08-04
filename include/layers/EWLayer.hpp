@@ -6,7 +6,7 @@
 
 #include "layers/Layer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 template <typename T>
 T relu(const T& value) {
@@ -93,4 +93,4 @@ std::vector<ValueType> EWLayerImpl<ValueType>::run(
   return res;
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai

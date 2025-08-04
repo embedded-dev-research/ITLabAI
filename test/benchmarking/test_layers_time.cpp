@@ -8,7 +8,7 @@
 #include "layers/PoolingLayer.hpp"
 #include "perf/benchmarking.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 void test_func(Layer& p, const Tensor& input, Tensor& output) {
   p.run(input, output);

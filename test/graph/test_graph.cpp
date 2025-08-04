@@ -6,7 +6,7 @@
 #include "layers/FCLayer.hpp"
 #include "layers/InputLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 TEST(graph, check_connection) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};

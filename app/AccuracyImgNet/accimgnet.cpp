@@ -10,7 +10,7 @@
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 bool cmp_by_first(const std::pair<size_t, std::string>& a,
                   const std::pair<size_t, std::string>& b) {

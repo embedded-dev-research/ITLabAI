@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 #include "layers/InputLayer.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 TEST(input, check_basic) {
   Shape sh1({1, 2, 2, 1});

@@ -5,7 +5,7 @@
 #include "gtest/gtest.h"
 #include "layers/Tensor.hpp"
 
-using namespace itlab_2023;
+using namespace it_lab_ai;
 
 struct TestClass {
  public:

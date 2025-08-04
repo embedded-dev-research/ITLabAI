@@ -6,7 +6,7 @@
 
 #include "layers/Layer.hpp"
 
-namespace itlab_2023 {
+namespace it_lab_ai {
 
 class ConvolutionalLayer : public Layer {
  private:
@@ -402,4 +402,4 @@ void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   output = make_tensor<ValueType>(one_d_vector, sh);
 }
 
-}  // namespace itlab_2023
+}  // namespace it_lab_ai
