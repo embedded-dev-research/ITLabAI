@@ -119,15 +119,15 @@ void BinaryOpLayer::run_broadcast_impl(const Tensor& A, const Tensor& B,
   const auto& a_data = *A.as<ValueType>();
   const auto& b_data = *B.as<ValueType>();
   std::vector<ValueType> result(output_shape.count());
-  const auto strides_A = get_strides(A.get_shape());
-  const auto strides_B = get_strides(B.get_shape());
+  const auto strides_a = get_strides(A.get_shape());
+  const auto strides_b = get_strides(B.get_shape());
   const auto strides_output = get_strides(output_shape);
 
   for (size_t i = 0; i < result.size(); ++i) {
     size_t a_idx = get_broadcasted_index(i, A.get_shape(), output_shape,
-                                         strides_A, strides_output);
+                                         strides_a, strides_output);
     size_t b_idx = get_broadcasted_index(i, B.get_shape(), output_shape,
-                                         strides_B, strides_output);
+                                         strides_b, strides_output);
     result[i] = apply_binary_op(a_data[a_idx], b_data[b_idx], op_);
   }
 
