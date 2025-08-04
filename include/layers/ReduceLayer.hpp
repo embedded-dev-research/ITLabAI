@@ -6,20 +6,29 @@
 
 namespace itlab_2023 {
 
-class ReduceSumLayer : public Layer {
+class ReduceLayer : public Layer {
  public:
-  explicit ReduceSumLayer(int64_t keepdims = 0);
+  enum class Operation {
+    kSum,
+    kMean,
+    kMult,
+    kMax,
+    kMin
+  };
 
+  ReduceLayer(Operation op, int64_t keepdims = 0);
+  explicit ReduceLayer(int64_t keepdims = 0)
+      : ReduceLayer(Operation::kSum, keepdims) {}
   void run(const Tensor& input, Tensor& output) override;
   void run(const Tensor& input, const Tensor& axes, Tensor& output);
 
-  static std::string get_name() { return "ReduceSumLayer"; }
+  static std::string get_name() { return "ReduceLayer"; }
 
  private:
+  Operation op_;
   int64_t keepdims_;
-
-  void normalize_axes(const Shape& input_shape,
-                      std::vector<int64_t>& axes) const;
+  static void normalize_axes(const Shape& input_shape,
+                      std::vector<int64_t>& axes);
   Shape calculate_output_shape(const Shape& input_shape,
                                const std::vector<int64_t>& axes) const;
 
