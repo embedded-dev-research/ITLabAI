@@ -8,7 +8,7 @@ namespace it_lab_ai {
 
 class ReduceLayer : public Layer {
  public:
-  enum class Operation { kSum, kMean, kMult, kMax, kMin };
+  enum class Operation { kSum, kMean, kMult, kMax, kMin } uint8_t;
 
   ReduceLayer(Operation op, int64_t keepdims = 0);
   explicit ReduceLayer(int64_t keepdims = 0)

@@ -100,7 +100,7 @@ void ReduceLayer::compute(const Tensor& input, const Shape& output_shape,
   }
 
   const auto& input_shape = input.get_shape();
-  const int64_t input_rank = static_cast<int64_t>(input_shape.dims());
+  const auto input_rank = static_cast<int64_t>(input_shape.dims());
 
   std::vector<size_t> in_coords(input_rank, 0);
   for (size_t in_idx = 0; in_idx < input_data.size(); ++in_idx) {
