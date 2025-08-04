@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <vector>
 
 #include "layers/Layer.hpp"
@@ -8,7 +9,7 @@ namespace it_lab_ai {
 
 class ReduceLayer : public Layer {
  public:
-  enum class Operation { kSum, kMean, kMult, kMax, kMin } uint8_t;
+  enum class Operation : uint8_t { kSum, kMean, kMult, kMax, kMin };
 
   ReduceLayer(Operation op, int64_t keepdims = 0);
   explicit ReduceLayer(int64_t keepdims = 0)
