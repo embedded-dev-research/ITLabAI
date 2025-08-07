@@ -114,6 +114,12 @@ class Graph {
       weights_.push_back(layers_[i]->get_weights());
 #endif
       inten_ = *outten_;
+      if (layers_[i]->ewops.countlayers > 0) {
+        for (unsigned int j = 0; j < layers_[i]->ewops.countlayers; j++) {
+          layers_[i]->ewops.layers[j]->run(inten_, *outten_);
+        }
+        inten_ = *outten_;
+      }
 #ifdef ENABLE_STATISTIC_TIME
       auto end = std::chrono::high_resolution_clock::now();
       auto elapsed =
