@@ -4,9 +4,7 @@ add_library(ACCLib STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 
 set_target_properties(ReadLib PROPERTIES LINKER_LANGUAGE CXX)
 
-find_package( OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" )
-include_directories( ${OpenCV_INCLUDE_DIRS} )
-target_link_libraries( ACCLib ${OpenCV_LIBS} )
+target_link_libraries( ACCLib opencv_interface )
 target_link_libraries( ACCLib TBB::tbb)
 target_link_libraries( ACCLib layers_lib)
 target_link_libraries( ACCLib gtest_main)
