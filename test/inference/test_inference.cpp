@@ -190,8 +190,8 @@ TEST(bfs, check_struct_layer_added) {
   ConvolutionalLayer a3(1, 0, 1, kernel);
 
   EWLayer a4("linear", 2.0F, 3.0F);
-  a2.ewops.layers.push_back(&a4);
-  a2.ewops.countlayers++;
+  a2.postops.layers.push_back(&a4);
+  a2.postops.count++;
 
   a2.setName(kConvolution);
   a3.setName(kConvolution);

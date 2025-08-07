@@ -27,16 +27,16 @@ enum ImplType : uint8_t { kDefault, kTBB, kSTL };
 
 class Layer;
 
-struct EWoperations {
+struct PostOperations {
   std::vector<Layer*> layers;
-  unsigned int countlayers = 0;
+  unsigned int count = 0;
 };
 
 class Layer {
  public:
   Layer() = default;
   virtual ~Layer() = default;
-  EWoperations ewops;
+  PostOperations postops;
   int getID() const { return id_; }
   void setID(int id) { id_ = id; }
   LayerType getName() const { return type_; }
