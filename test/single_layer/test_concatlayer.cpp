@@ -1,10 +1,74 @@
 ﻿#include <vector>
 
 #include "gtest/gtest.h"
-#include "layers/ConCatLayer.hpp"
+#include "layers/ConсatLayer.hpp"
 #include "layers/Tensor.hpp"
 
 using namespace it_lab_ai;
+
+TEST(ConcatLayerTests, ConcatEmptyTensors) {
+  ConcatLayer layer(0);
+
+  Tensor empty1 = make_tensor<float>({}, {0});
+  Tensor empty2 = make_tensor<float>({}, {2, 0, 3});
+
+  Tensor output;
+
+  EXPECT_THROW(layer.run({empty1, empty2}, output), std::runtime_error);
+}
+
+TEST(ConcatLayerTests, ConcatSingleElementTensors) {
+  ConcatLayer layer(0);
+
+  Tensor single1 = make_tensor<float>({42.0f}, {1});
+  Tensor single2 = make_tensor<float>({99.0f}, {1});
+
+  Tensor output;
+
+  layer.run({single1, single2}, output);
+
+  ASSERT_EQ(output.get_shape(), Shape({2}));
+  EXPECT_FLOAT_EQ(output.get<float>({0}), 42.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({1}), 99.0f);
+}
+
+TEST(ConcatLayerTests, ConcatAlongAxisWithSize1) {
+  ConcatLayer layer(0);
+
+  Tensor input1 = make_tensor<float>({1, 2, 3, 4, 5, 6}, {1, 3, 2});
+  Tensor input2 = make_tensor<float>({7, 8, 9, 10, 11, 12}, {1, 3, 2});
+
+  Tensor output;
+
+  layer.run({input1, input2}, output);
+
+  ASSERT_EQ(output.get_shape(), Shape({2, 3, 2}));
+
+  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 0}), 1.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 1}), 2.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({0, 1, 0}), 3.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({0, 1, 1}), 4.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({0, 2, 0}), 5.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({0, 2, 1}), 6.0f);
+
+  EXPECT_FLOAT_EQ(output.get<float>({1, 0, 0}), 7.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({1, 0, 1}), 8.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({1, 1, 0}), 9.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({1, 1, 1}), 10.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({1, 2, 0}), 11.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({1, 2, 1}), 12.0f);
+}
+
+TEST(ConcatLayerTests, ConcatScalars) {
+  ConcatLayer layer(0);
+
+  Tensor scalar1 = make_tensor<float>({42.0f}, {});
+  Tensor scalar2 = make_tensor<float>({99.0f}, {});
+
+  Tensor output;
+
+  EXPECT_THROW(layer.run({scalar1, scalar2}, output), std::runtime_error);
+}
 
 TEST(ConcatLayerTests, ConcatSameShapeFloatAxis0) {
   ConcatLayer layer;
