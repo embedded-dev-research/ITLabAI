@@ -29,6 +29,7 @@ void ConcatLayer::validate_inputs(const std::vector<Tensor>& inputs) const {
 
   const Shape& first_shape = inputs[0].get_shape();
   Type first_type = inputs[0].get_type();
+  const int64_t normalized_axis = normalize_axis(first_shape.dims());
 
   for (size_t i = 1; i < inputs.size(); ++i) {
     const Shape& shape = inputs[i].get_shape();
@@ -43,10 +44,11 @@ void ConcatLayer::validate_inputs(const std::vector<Tensor>& inputs) const {
     }
 
     for (size_t dim = 0; dim < shape.dims(); ++dim) {
-      if (dim != static_cast<size_t>(axis_) && shape[dim] != first_shape[dim]) {
+      if (dim != static_cast<size_t>(normalized_axis) &&
+          shape[dim] != first_shape[dim]) {
         throw std::runtime_error(
             "ConcatLayer: All input tensors must have the same shape except "
-            "for the concatenation axis_");
+            "for the concatenation axis");
       }
     }
   }
@@ -57,17 +59,23 @@ int64_t ConcatLayer::normalize_axis(size_t rank) const {
     throw std::runtime_error("ConcatLayer: Cannot concatenate scalar tensors");
   }
 
-  if (axis_ < -static_cast<int64_t>(rank) ||
-      axis_ >= static_cast<int64_t>(rank)) {
-    throw std::runtime_error(
-        "ConcatLayer: Axis out of range. Valid range is [-" +
-        std::to_string(rank) + ", " + std::to_string(rank - 1) + "]");
+  int64_t axis = axis_;
+
+  if (axis < 0) {
+    axis += static_cast<int64_t>(rank);
   }
 
-  return axis_ < 0 ? axis_ + rank : axis_;
+  if (axis < 0 || axis >= static_cast<int64_t>(rank)) {
+    throw std::runtime_error("ConcatLayer: Axis " + std::to_string(axis_) +
+                             " out of range for tensor rank " +
+                             std::to_string(rank));
+  }
+
+  return axis;
 }
 
-Shape ConcatLayer::calculate_output_shape(const std::vector<Tensor>& inputs) const {
+Shape ConcatLayer::calculate_output_shape(
+    const std::vector<Tensor>& inputs) const {
   if (inputs.empty()) return Shape({});
 
   const Shape& first_shape = inputs[0].get_shape();
@@ -76,9 +84,10 @@ Shape ConcatLayer::calculate_output_shape(const std::vector<Tensor>& inputs) con
     output_dims[i] = first_shape[i];
   }
 
-  output_dims[axis_] = 0;
+  const int64_t normalized_axis = normalize_axis(first_shape.dims());
+  output_dims[normalized_axis] = 0;
   for (const auto& input : inputs) {
-    output_dims[axis_] += input.get_shape()[axis_];
+    output_dims[normalized_axis] += input.get_shape()[normalized_axis];
   }
 
   return Shape(output_dims);
@@ -90,7 +99,7 @@ void ConcatLayer::concatenate(const std::vector<Tensor>& inputs,
   Shape output_shape = calculate_output_shape(inputs);
   std::vector<T> output_data(output_shape.count(), 0);
 
-  const int64_t axis = axis_;
+  const int64_t axis = normalize_axis(inputs[0].get_shape().dims());
   const size_t outer_size = [&]() {
     size_t size = 1;
     for (int64_t i = 0; i < axis; ++i) {
@@ -115,12 +124,12 @@ void ConcatLayer::concatenate(const std::vector<Tensor>& inputs,
     const size_t input_axis_size = input_shape[axis];
 
     for (size_t outer = 0; outer < outer_size; ++outer) {
-      for (size_t inner = 0; inner < inner_size; ++inner) {
-        for (size_t a = 0; a < input_axis_size; ++a) {
+      for (size_t a = 0; a < input_axis_size; ++a) {
+        for (size_t inner = 0; inner < inner_size; ++inner) {
           size_t input_pos =
               outer * input_axis_size * inner_size + a * inner_size + inner;
 
-          size_t output_pos = outer * (output_shape[axis] * inner_size) +
+          size_t output_pos = outer * output_shape[axis] * inner_size +
                               (output_offset + a) * inner_size + inner;
 
           output_data[output_pos] = input_data[input_pos];
