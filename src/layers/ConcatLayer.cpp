@@ -1,4 +1,4 @@
-#include "layers/ConñatLayer.hpp"
+#include "layers/ConcatLayer.hpp"
 
 namespace it_lab_ai {
 

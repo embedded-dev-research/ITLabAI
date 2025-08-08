@@ -1,7 +1,7 @@
 ﻿#include <vector>
 
 #include "gtest/gtest.h"
-#include "layers/ConсatLayer.hpp"
+#include "layers/ConcatLayer.hpp"
 #include "layers/Tensor.hpp"
 
 using namespace it_lab_ai;
