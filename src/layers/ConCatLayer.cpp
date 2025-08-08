@@ -10,7 +10,6 @@ void ConcatLayer::run(const std::vector<Tensor>& inputs, Tensor& output) {
   }
 
   validate_inputs(inputs);
-  int64_t normalized_axis = normalize_axis(inputs[0].get_shape().dims());
 
   switch (inputs[0].get_type()) {
     case Type::kFloat:

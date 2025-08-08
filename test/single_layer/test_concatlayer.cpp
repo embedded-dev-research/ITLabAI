@@ -6,23 +6,10 @@
 
 using namespace it_lab_ai;
 
-class ConcatLayerTests : public ::testing::Test {
- protected:
-  void SetUp() override {
-    data1 = {1.0f, 2.0f, 3.0f, 4.0f};
-    data2 = {5.0f, 6.0f, 7.0f, 8.0f};
-    data_int = {1, 2, 3, 4};
-  }
-
-  std::vector<float> data1;
-  std::vector<float> data2;
-  std::vector<int> data_int;
-};
-
-TEST_F(ConcatLayerTests, ConcatSameShapeFloatAxis0) {
+TEST(ConcatLayerTests, ConcatSameShapeFloatAxis0) {
   ConcatLayer layer;
-  Tensor input1 = make_tensor<float>(data1, {2, 2});
-  Tensor input2 = make_tensor<float>(data2, {2, 2});
+  Tensor input1 = make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f}, {2, 2});
+  Tensor input2 = make_tensor<float>({5.0f, 6.0f, 7.0f, 8.0f}, {2, 2});
   Tensor output;
 
   layer.run({input1, input2}, output);
@@ -40,7 +27,7 @@ TEST_F(ConcatLayerTests, ConcatSameShapeFloatAxis0) {
   EXPECT_FLOAT_EQ(output.get<float>({3, 1}), 8.0f);
 }
 
-TEST_F(ConcatLayerTests, ConcatSameShapeIntAxis1) {
+TEST(ConcatLayerTests, ConcatSameShapeIntAxis1) {
   ConcatLayer layer(1);
   Tensor input1 = make_tensor<int>({1, 2, 3, 4}, {2, 2});
   Tensor input2 = make_tensor<int>({1, 2, 3, 4}, {2, 2});
@@ -61,7 +48,7 @@ TEST_F(ConcatLayerTests, ConcatSameShapeIntAxis1) {
   EXPECT_EQ(output.get<int>({1, 3}), 4);
 }
 
-TEST_F(ConcatLayerTests, Concat3DTensorsAxis2) {
+TEST(ConcatLayerTests, Concat3DTensorsAxis2) {
   ConcatLayer layer(2);
   Tensor input1 = make_tensor<float>({1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});
   Tensor input2 =
@@ -93,7 +80,7 @@ TEST_F(ConcatLayerTests, Concat3DTensorsAxis2) {
   EXPECT_FLOAT_EQ(output.get<float>({1, 1, 3}), 16.0f);
 }
 
-TEST_F(ConcatLayerTests, NegativeAxis) {
+TEST(ConcatLayerTests, NegativeAxis) {
   ConcatLayer layer(-1);
   Tensor input1 = make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f}, {2, 2});
   Tensor input2 = make_tensor<float>({5.0f, 6.0f, 7.0f, 8.0f}, {2, 2});
@@ -114,7 +101,7 @@ TEST_F(ConcatLayerTests, NegativeAxis) {
   EXPECT_FLOAT_EQ(output.get<float>({1, 3}), 8.0f);
 }
 
-TEST_F(ConcatLayerTests, ConcatResNetStyle) {
+TEST(ConcatLayerTests, ConcatResNetStyle) {
   ConcatLayer layer(1);
   Tensor input1 = make_tensor<float>({1, 2, 3, 4, 5, 6, 7, 8}, {1, 2, 2, 2});
   Tensor input2 =
