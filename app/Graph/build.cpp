@@ -163,11 +163,11 @@ void build_graph(Tensor& input, Tensor& output, bool comments,
 
   for (size_t i = 0; i < layers.size() - 1; ++i) {
     if (layerpostop[i]) {
-      layers[i-1]->postops.layers.push_back(layers[i].get());
-      layers[i-1]->postops.count++;
-      graph.makeConnection(*layers[i-1], *layers[i + 1]);
+      layers[i - 1]->postops.layers.push_back(layers[i].get());
+      layers[i - 1]->postops.count++;
+      graph.makeConnection(*layers[i - 1], *layers[i + 1]);
     } else
-    graph.makeConnection(*layers[i], *layers[i + 1]);
+      graph.makeConnection(*layers[i], *layers[i + 1]);
   }
 
   graph.setOutput(*layers.back(), output);
