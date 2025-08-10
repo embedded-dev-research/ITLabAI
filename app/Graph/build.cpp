@@ -74,14 +74,14 @@ void build_graph(Tensor& input, Tensor& output, bool comments,
           1, pads, 1, tmp_values, tmp_bias, impl2);
       conv_layer->setName(kConvolution);
       layers.push_back(conv_layer);
-      layerpostop.push_back(0);
+      layerpostop.push_back(false);
       if (comments) std::cout << "ConvLayer added to layers." << std::endl;
     }
     if (layer_type.find("relu") != std::string::npos) {
       auto ew_layer = std::make_shared<EWLayer>("relu");
       ew_layer->setName(kElementWise);
       layers.push_back(ew_layer);
-      layerpostop.push_back(1);
+      layerpostop.push_back(true);
       if (comments)
         std::cout << "Element wise (relu) added to layers" << std::endl;
     }
@@ -102,7 +102,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments,
       auto fc_layer = std::make_shared<FCLayer>(tensor, tmp_bias);
       fc_layer->setName(kFullyConnected);
       layers.push_back(fc_layer);
-      layerpostop.push_back(0);
+      layerpostop.push_back(false);
       if (comments) std::cout << "DenseLayer added to layers." << std::endl;
     }
 
@@ -120,7 +120,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments,
       auto pool_layer = std::make_shared<PoolingLayer>(shape, pooltype, impl1);
       pool_layer->setName(kPooling);
       layers.push_back(pool_layer);
-      layerpostop.push_back(0);
+      layerpostop.push_back(false);
       if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
     }
 
@@ -129,7 +129,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments,
           std::make_shared<FlattenLayer>(std::vector<size_t>({0, 3, 2, 1}));
       flatten_layer->setName(kFlatten);
       layers.push_back(flatten_layer);
-      layerpostop.push_back(0);
+      layerpostop.push_back(false);
       if (comments) std::cout << "FlattenLayer added to layers." << std::endl;
     }
 
@@ -137,7 +137,7 @@ void build_graph(Tensor& input, Tensor& output, bool comments,
       auto dropout_layer = std::make_shared<DropOutLayer>(0.0);
       dropout_layer->setName(kDropout);
       layers.push_back(dropout_layer);
-      layerpostop.push_back(0);
+      layerpostop.push_back(false);
       if (comments)
         std::cout
             << "DropOutLayer added to layers with probability 0.4 (turned "
