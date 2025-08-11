@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <vector>
 
 #include "graph/graph.hpp"
@@ -42,9 +43,9 @@ TEST(bfs, check_result_vec) {
   std::vector<int> res = {81, 81, 81};
 #ifdef ENABLE_STATISTIC_TENSORS
   std::vector<Tensor> tensors = graph.getTensors();
-  for (int i = 0; i < tensors.size(); i++) {
+  for (size_t i = 0; i < tensors.size(); i++) {
     std::vector<int> ten = *tensors[i].as<int>();
-    for (int j = 0; j < ten.size(); j++) {
+    for (size_t j = 0; j < ten.size(); j++) {
       std::cout << ten[j] << ' ';
     }
     std::cout << '\n';
@@ -52,18 +53,18 @@ TEST(bfs, check_result_vec) {
 #endif
 #ifdef ENABLE_STATISTIC_TIME
   std::vector<std::string> times = graph.getTimeInfo();
-  for (int j = 0; j < times.size(); j++) {
+  for (size_t j = 0; j < times.size(); j++) {
     std::cout << times[j] << ' ';
   }
   std::cout << '\n';
 #endif
 #ifdef ENABLE_STATISTIC_WEIGHTS
   std::vector<Tensor> weights = graph.getWEIGHTS();
-  for (int i = 0; i < weights.size(); i++) {
+  for (size_t i = 0; i < weights.size(); i++) {
     switch (weights[i].get_type()) {
       case Type::kInt: {
         std::vector<int> ten = *weights[i].as<int>();
-        for (int j = 0; j < ten.size(); j++) {
+        for (size_t j = 0; j < ten.size(); j++) {
           std::cout << ten[j] << ' ';
         }
         std::cout << '\n';
@@ -71,10 +72,15 @@ TEST(bfs, check_result_vec) {
       }
       case Type::kFloat: {
         std::vector<float> ten = *weights[i].as<float>();
-        for (int j = 0; j < ten.size(); j++) {
+        for (size_t j = 0; j < ten.size(); j++) {
           std::cout << ten[j] << ' ';
         }
         std::cout << '\n';
+        break;
+      }
+      case Type::kUnknown:
+      default: {
+        throw std::runtime_error("Unknown tensor type encountered");
         break;
       }
     }
@@ -112,11 +118,11 @@ TEST(bfs, check_end_to_end) {
   graph.inference();
 #ifdef ENABLE_STATISTIC_WEIGHTS
   std::vector<Tensor> weights = graph.getWEIGHTS();
-  for (int i = 0; i < weights.size(); i++) {
+  for (size_t i = 0; i < weights.size(); i++) {
     switch (weights[i].get_type()) {
       case Type::kInt: {
         std::vector<int> ten = *weights[i].as<int>();
-        for (int j = 0; j < ten.size(); j++) {
+        for (size_t j = 0; j < ten.size(); j++) {
           std::cout << ten[j] << ' ';
         }
         std::cout << '\n';
@@ -124,10 +130,15 @@ TEST(bfs, check_end_to_end) {
       }
       case Type::kFloat: {
         std::vector<float> ten = *weights[i].as<float>();
-        for (int j = 0; j < ten.size(); j++) {
+        for (size_t j = 0; j < ten.size(); j++) {
           std::cout << ten[j] << ' ';
         }
         std::cout << '\n';
+        break;
+      }
+      case Type::kUnknown:
+      default: {
+        throw std::runtime_error("Unknown tensor type encountered");
         break;
       }
     }

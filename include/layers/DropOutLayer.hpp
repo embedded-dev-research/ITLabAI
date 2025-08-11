@@ -14,6 +14,9 @@ class DropOutLayer : public Layer {
   DropOutLayer(double drop_rate) { drop_rate_ = drop_rate; }
   static std::string get_name() { return "DropOut layer"; }
   void run(const Tensor& input, Tensor& output) override;
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override { return Tensor(); }
+#endif
 };
 
 }  // namespace it_lab_ai
