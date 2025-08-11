@@ -17,7 +17,11 @@ jobs:
   build-linux:
     strategy:
       matrix:
-        build_type: [DEBUG, RELEASE]
+        include:
+          - build_type: DEBUG
+          - build_type: RELEASE
+          - build_type: RELEASE
+            stats: true
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -34,7 +38,10 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DOPENCV_PATH=3rdparty/opencv/build
+            -DOPENCV_PATH=3rdparty/opencv/build \
+            ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
+            ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
+            ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
             cmake --build build --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
@@ -83,7 +90,7 @@ jobs:
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER=clang \
-          -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_CXX_COMPILER=clang++
         cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
