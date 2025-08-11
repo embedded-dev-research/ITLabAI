@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(itlab_2023)
+project(ITLabAI)
 
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
 

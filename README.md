@@ -1,5 +1,5 @@
-[![CI](https://github.com/embedded-dev-research/itlab_2023/actions/workflows/ci.yml/badge.svg)](https://github.com/embedded-dev-research/itlab_2023/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/embedded-dev-research/itlab_2023/graph/badge.svg?token=L3OS8C4BI6)](https://codecov.io/gh/embedded-dev-research/itlab_2023)
+[![CI](https://github.com/embedded-dev-research/ITLabAI/actions/workflows/ci.yml/badge.svg)](https://github.com/embedded-dev-research/ITLabAI/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/embedded-dev-research/ITLabAI/graph/badge.svg?token=L3OS8C4BI6)](https://codecov.io/gh/embedded-dev-research/ITLabAI)
 
 # AlexNet-MNIST-Inference
 ## Model Performance
@@ -41,7 +41,7 @@ To build and run this project locally on Windows, follow these steps:
 1. **Clone the repository:**  
    Clone this repository to your local machine using the following command:
    ```bash
-   git clone https://github.com/embedded-dev-research/itlab_2023.git
+   git clone https://github.com/embedded-dev-research/ITLabAI.git
    ```
 2. **Update submodules:**
    Navigate to the project directory and update the submodules:
@@ -77,7 +77,7 @@ To build and run this project locally on Windows, follow these steps:
 1. **Clone the repository:**  
    Clone this repository to your local machine using the following command:
    ```bash
-   git clone https://github.com/embedded-dev-research/itlab_2023.git
+   git clone https://github.com/embedded-dev-research/ITLabAI.git
    ```
 2. **Update submodules:**
    Navigate to the project directory and update the submodules:
@@ -153,6 +153,6 @@ Now you can run accuracy check - *build\bin\ACC_MNIST.exe*
 * **The accuracy should be 98.02%**
 
 ## **Documentation of project**
-https://github.com/embedded-dev-research/itlab_2023/blob/Semyon1104/Final_documentation/docs/IT_Lab_2023.pdf
+https://github.com/embedded-dev-research/ITLabAI/blob/Semyon1104/Final_documentation/docs/IT_Lab_2023.pdf
 ## **Structure of our library**
 ![Class diagram](./docs/class_diagram.svg)
