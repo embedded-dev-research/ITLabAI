@@ -20,6 +20,7 @@ jobs:
         include:
           - build_type: DEBUG
           - build_type: RELEASE
+            stats: false
           - build_type: RELEASE
             stats: true
     runs-on: ubuntu-latest
