@@ -17,6 +17,9 @@ class FlattenLayer : public Layer {
   FlattenLayer(const std::vector<size_t>& order) : order_(order) {}
   static std::string get_name() { return "Flatten layer"; }
   void run(const Tensor& input, Tensor& output) override;
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override { return Tensor(); }
+#endif
 };
 
 template <typename ValueType>

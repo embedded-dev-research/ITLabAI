@@ -19,6 +19,10 @@ class ReduceLayer : public Layer {
 
   static std::string get_name() { return "ReduceLayer"; }
 
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override { return Tensor(); }
+#endif
+
  private:
   Operation op_;
   int64_t keepdims_;

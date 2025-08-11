@@ -18,6 +18,10 @@ class ConcatLayer : public Layer {
 
   static std::string get_name() { return "ConcatLayer"; }
 
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override { return Tensor(); }
+#endif
+
  private:
   int64_t axis_;
 
