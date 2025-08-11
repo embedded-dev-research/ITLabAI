@@ -19,7 +19,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 target_link_libraries(BuildGraph PUBLIC ${OpenCV_LIBS})
 target_link_libraries(BuildGraph PUBLIC reader_lib)
-target_link_libraries(BuildGraph PUBLIC TBB::tbb)
+target_link_libraries(BuildGraph PUBLIC TBB_unified)
 target_link_libraries(BuildGraph PUBLIC layers_lib)
 target_link_libraries(BuildGraph PUBLIC gtest_main)
 
