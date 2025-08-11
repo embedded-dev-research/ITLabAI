@@ -55,7 +55,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-       name: mnist-${{ matrix.build_type }}
+       name: mnist-${{ matrix.build_type }}${{ matrix.stats && '-stats' || '' }}
        path: |
         build/bin/ACC_MNIST*
         build/bin/opencv_libs/*
