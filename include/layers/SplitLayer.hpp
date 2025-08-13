@@ -18,6 +18,10 @@ class SplitLayer : public Layer {
 
   static std::string get_name() { return "SplitLayer"; }
 
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override { return Tensor(); }
+#endif
+
  private:
   int axis_;
   std::vector<int> splits_;
