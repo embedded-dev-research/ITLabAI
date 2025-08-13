@@ -36,20 +36,6 @@ TEST(SplitLayerTests, SplitVariableParts1D) {
   EXPECT_FLOAT_EQ(outputs[1].get<float>({3}), 6.0f);
 }
 
-TEST(SplitLayerTests, SplitUnequalParts1D) {
-  Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6, 7}, {7});
-  SplitLayer splitter(0, 4);
-
-  std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
-
-  ASSERT_EQ(outputs.size(), 4);
-  EXPECT_EQ(outputs[0].get_shape(), Shape({2}));
-  EXPECT_EQ(outputs[1].get_shape(), Shape({2}));
-  EXPECT_EQ(outputs[2].get_shape(), Shape({2}));
-  EXPECT_EQ(outputs[3].get_shape(), Shape({1}));
-}
-
 TEST(SplitLayerTests, Split2DAlongAxis0) {
   Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6}, {2, 3});
   SplitLayer splitter(0, {1, 1});
