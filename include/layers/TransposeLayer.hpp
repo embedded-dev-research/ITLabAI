@@ -22,7 +22,12 @@ class TransposeLayer : public Layer {
  private:
   std::vector<int64_t> perm_;
 
-  void validate_perm(const Shape& input_shape) const;
+  void validate_perm(const Shape& input_shape,
+                     const std::vector<int64_t>& perm) const;
+
+  template <typename T>
+  void transpose_impl(const Tensor& input, Tensor& output,
+                      const std::vector<int64_t>& perm) const;
 };
 
 }  // namespace it_lab_ai

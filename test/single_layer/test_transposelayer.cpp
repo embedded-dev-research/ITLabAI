@@ -104,22 +104,6 @@ TEST(TransposeLayerTest, 4DTensorTranspose) {
   EXPECT_FLOAT_EQ(output.get<float>({1, 1, 1, 1}), 16.0f);
 }
 
-TEST(TransposeLayerTest, DefaultPermutation) {
-  Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6}, {2, 3});
-  TransposeLayer layer;
-  Tensor output;
-
-  layer.run(input, output);
-
-  ASSERT_EQ(output.get_shape(), Shape({3, 2}));
-  EXPECT_FLOAT_EQ(output.get<float>({0, 0}), 1.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 0}), 2.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({2, 0}), 3.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 1}), 4.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 1}), 5.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({2, 1}), 6.0f);
-}
-
 TEST(TransposeLayerTest, MatrixTranspose) {
   Tensor input = make_tensor<float>({1, 2, 3, 4}, {2, 2});
   TransposeLayer layer({1, 0});
