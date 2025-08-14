@@ -1,5 +1,8 @@
 #include "layers/SplitLayer.hpp"
 
+#include <algorithm>
+#include <cstring>
+
 namespace it_lab_ai {
 
 void SplitLayer::run(const Tensor& input, Tensor& output) { output = input; }
@@ -51,18 +54,18 @@ void SplitLayer::split_impl(const Tensor& input,
   }
 
   const size_t input_axis_stride = shape[axis] * inner_size;
-  const size_t input_inner_stride = inner_size;
 
   outputs.clear();
   outputs.reserve(part_sizes.size());
 
   size_t input_offset = 0;
   for (size_t part = 0; part < part_sizes.size(); ++part) {
-    const size_t output_axis_size = part_sizes[part];
+    const size_t output_axis_size = static_cast<size_t>(part_sizes[part]);
 
     std::vector<size_t> output_shape_vec(shape.dims());
     for (size_t i = 0; i < shape.dims(); ++i) {
-      output_shape_vec[i] = (i == axis) ? output_axis_size : shape[i];
+      output_shape_vec[i] =
+          (static_cast<int>(i) == axis) ? output_axis_size : shape[i];
     }
     Shape output_shape(output_shape_vec);
 
@@ -70,7 +73,6 @@ void SplitLayer::split_impl(const Tensor& input,
     auto& output_data = *outputs.back().as<T>();
 
     const size_t output_part_size = output_axis_size * inner_size;
-    const size_t input_part_size = output_part_size;
 
     for (size_t outer = 0; outer < outer_size; ++outer) {
       const T* input_start =
@@ -106,12 +108,6 @@ void SplitLayer::validate(const Tensor& input) const {
     if (*num_outputs_ <= 0) {
       throw std::runtime_error("num_outputs must be positive");
     }
-    if (*num_outputs_ > axis_size) {
-      throw std::runtime_error("num_outputs cannot be greater than axis size");
-    }
-  }
-
-  if (!splits_ && num_outputs_) {
     if (*num_outputs_ > axis_size) {
       throw std::runtime_error("num_outputs (" + std::to_string(*num_outputs_) +
                                ") cannot be greater than axis size (" +
