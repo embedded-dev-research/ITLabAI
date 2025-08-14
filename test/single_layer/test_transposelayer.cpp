@@ -132,7 +132,7 @@ TEST(TransposeLayerTest, 3DTensor) {
   EXPECT_FLOAT_EQ(output.get<float>({3, 1, 2}), 24.0f);
 }
 
-TEST(TransposeLayer, IntTensor) {
+TEST(TransposeLayerTest, IntTensor) {
   Tensor input = make_tensor<int>({1, 2, 3, 4}, {2, 2});
   TransposeLayer layer({1, 0});
   Tensor output;
@@ -141,4 +141,59 @@ TEST(TransposeLayer, IntTensor) {
   EXPECT_EQ(output.get<int>({1, 0}), 2);
   EXPECT_EQ(output.get<int>({0, 1}), 3);
   EXPECT_EQ(output.get<int>({1, 1}), 4);
+}
+
+TEST(TransposeLayerTest, 1DDefaultPermutationIsNoOp) {
+  Tensor input = make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f}, {4});
+
+  TransposeLayer layer;
+  Tensor output;
+
+  EXPECT_NO_THROW(layer.run(input, output));
+
+  EXPECT_EQ(output.get_shape(), Shape({4}));
+  EXPECT_FLOAT_EQ(output.get<float>({0}), 1.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({1}), 2.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({2}), 3.0f);
+  EXPECT_FLOAT_EQ(output.get<float>({3}), 4.0f);
+}
+
+TEST(TransposeLayerTest, MultipleRunsWithDifferentRanks) {
+  TransposeLayer layer({1, 0});
+
+  {
+    Tensor input = make_tensor<float>({1, 2, 3, 4}, {2, 2});
+    Tensor output;
+    layer.run(input, output);
+    EXPECT_EQ(output.get_shape(), Shape({2, 2}));
+    EXPECT_FLOAT_EQ(output.get<float>({0, 0}), 1.0f);
+    EXPECT_FLOAT_EQ(output.get<float>({1, 0}), 2.0f);
+  }
+
+  {
+    Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6}, {3, 2});
+    Tensor output;
+    layer.run(input, output);
+    EXPECT_EQ(output.get_shape(), Shape({2, 3}));
+  }
+
+  {
+    Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});
+    Tensor output;
+    EXPECT_THROW(layer.run(input, output), std::invalid_argument);
+  }
+}
+
+TEST(TransposeLayerTest, ExplicitPermutationWithDifferentRanks) {
+  TransposeLayer layer({1, 0});
+
+  Tensor input2D = make_tensor<float>({1, 2, 3, 4}, {2, 2});
+  Tensor output2D;
+  layer.run(input2D, output2D);
+  EXPECT_EQ(output2D.get_shape(), Shape({2, 2}));
+  EXPECT_FLOAT_EQ(output2D.get<float>({1, 0}), 2.0f);
+
+  Tensor input3D = make_tensor<float>({1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});
+  Tensor output3D;
+  EXPECT_THROW(layer.run(input3D, output3D), std::invalid_argument);
 }

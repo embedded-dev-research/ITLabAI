@@ -105,7 +105,7 @@ void TransposeLayer::transpose_impl(const Tensor& input, Tensor& output,
         new_index += coord * output_strides[dim];
       }
 
-      if(new_index >= output_values.size()) {
+      if (new_index >= output_values.size()) {
         throw std::runtime_error("Index out of bounds during transposition");
       }
       output_values[new_index] = (*input_data)[i];
