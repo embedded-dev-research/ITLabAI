@@ -87,6 +87,11 @@ std::vector<ValueType> EWLayerImpl<ValueType>::run(
              static_cast<ValueType>(beta_);
     };
     std::transform(input.begin(), input.end(), res.begin(), linear);
+  } else if (func_ == "sigmoid") {
+    auto sigmoid = [&](const ValueType& value) -> ValueType {
+      return static_cast<ValueType>(1.0 / (1.0 + std::exp(-value)));
+    };
+    std::transform(input.begin(), input.end(), res.begin(), sigmoid);
   } else {
     throw std::invalid_argument("No such function for EWLayer");
   }

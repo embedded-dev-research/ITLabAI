@@ -54,7 +54,13 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple(basic_data2,
                         EWLayerImpl<double>({2, 2}, "linear", 2.0F, 1.0F),
                         std::vector<double>({3.0, -1.0, 5.0, -3.0}),
-                        std::function<double(double)>())));
+                        std::function<double(double)>()),
+        std::make_tuple(std::vector<double>({0.0, 1.0, -1.0}),
+                        EWLayerImpl<double>({3}, "sigmoid"),
+                        std::vector<double>(),
+                        std::function<double(double)>([](double x) {
+                          return 1.0 / (1.0 + std::exp(-x));
+                        }))));
 
 TEST(ewlayer, new_ewlayer_can_relu_float) {
   EWLayer layer("relu");
@@ -99,4 +105,20 @@ TEST(ewlayer, new_ewlayer_throws_with_invalid_function) {
 
 TEST(ewlayer, get_layer_name) {
   EXPECT_EQ(EWLayer::get_name(), "Element-wise layer");
+}
+
+TEST(ewlayer, new_ewlayer_can_sigmoid_float) {
+  EWLayer layer("sigmoid");
+  Tensor input = make_tensor<float>({0.0F, -1.0F, 1.0F, 2.0F});
+  Tensor output;
+  std::vector<float> expected_output = {
+      0.5F,
+      1.0F / (1.0F + std::exp(1.0F)),
+      1.0F / (1.0F + std::exp(-1.0F)),
+      1.0F / (1.0F + std::exp(-2.0F))
+  };
+  layer.run(input, output);
+  for (size_t i = 0; i < 4; i++) {
+    EXPECT_NEAR((*output.as<float>())[i], expected_output[i], 1e-5F);
+  }
 }
