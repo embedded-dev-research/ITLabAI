@@ -59,8 +59,8 @@ void SplitLayer::split_impl(const Tensor& input,
   outputs.reserve(part_sizes.size());
 
   size_t input_offset = 0;
-  for (size_t part = 0; part < part_sizes.size(); ++part) {
-    const size_t output_axis_size = static_cast<size_t>(part_sizes[part]);
+  for (const auto part_size : part_sizes) {
+    const auto output_axis_size = static_cast<size_t>(part_size);
 
     std::vector<size_t> output_shape_vec(shape.dims());
     for (size_t i = 0; i < shape.dims(); ++i) {
