@@ -22,8 +22,8 @@ class TransposeLayer : public Layer {
  private:
   std::vector<int64_t> perm_;
 
-  void validate_perm(const Shape& input_shape,
-                     const std::vector<int64_t>& perm) const;
+  static void validate_perm(const Shape& input_shape,
+                     const std::vector<int64_t>& perm);
 
   template <typename T>
   void transpose_impl(const Tensor& input, Tensor& output,

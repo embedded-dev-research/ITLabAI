@@ -82,7 +82,7 @@ void TransposeLayer::transpose_impl(const Tensor& input, Tensor& output,
         size_t new_index = 0;
 
         for (size_t dim = 0; dim < perm.size(); ++dim) {
-          const size_t axis = static_cast<size_t>(perm[dim]);
+          const auto axis = static_cast<size_t>(perm[dim]);
           const size_t coord = (old_index / input_strides[axis]) % shape[axis];
           new_index += coord * output_strides[dim];
         }
@@ -100,7 +100,7 @@ void TransposeLayer::transpose_impl(const Tensor& input, Tensor& output,
       size_t new_index = 0;
 
       for (size_t dim = 0; dim < perm.size(); ++dim) {
-        const size_t axis = static_cast<size_t>(perm[dim]);
+        const auto axis = static_cast<size_t>(perm[dim]);
         const size_t coord = (old_index / input_strides[axis]) % shape[axis];
         new_index += coord * output_strides[dim];
       }
@@ -116,7 +116,7 @@ void TransposeLayer::transpose_impl(const Tensor& input, Tensor& output,
 }
 
 void TransposeLayer::validate_perm(const Shape& input_shape,
-                                   const std::vector<int64_t>& perm) const {
+                                   const std::vector<int64_t>& perm) {
   if (perm.size() != input_shape.dims()) {
     throw std::invalid_argument("Permutation size must match input dimensions");
   }
