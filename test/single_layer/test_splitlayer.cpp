@@ -153,8 +153,7 @@ TEST(SplitLayerTests, UnevenSplitWithRemainder) {
   EXPECT_EQ(outputs[2].get_shape(), Shape({1}));
   EXPECT_FLOAT_EQ(outputs[0].get<float>({1}), 2.0f);
   EXPECT_FLOAT_EQ(outputs[1].get<float>({1}), 4.0f);
-  EXPECT_FLOAT_EQ(outputs[2].get<float>({0}),
-                  5.0f);
+  EXPECT_FLOAT_EQ(outputs[2].get<float>({0}), 5.0f);
 }
 
 TEST(SplitLayerTests, NumOutputsGreaterThanAxisSize) {

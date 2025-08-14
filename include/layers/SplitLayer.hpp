@@ -13,7 +13,6 @@ class SplitLayer : public Layer {
   SplitLayer(int axis, std::vector<int> splits)
       : axis_(axis), splits_(std::move(splits)) {}
 
-  // Режим 2: количество выходных тензоров
   SplitLayer(int axis, int num_outputs)
       : axis_(axis), num_outputs_(num_outputs) {}
   void run(const Tensor& input, Tensor& output) override;

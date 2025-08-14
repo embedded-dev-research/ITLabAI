@@ -40,9 +40,6 @@ void SplitLayer::split_impl(const Tensor& input,
     }
   }
 
-  outputs.clear();
-  outputs.reserve(part_sizes.size());
-
   size_t outer_size = 1;
   for (int i = 0; i < axis; ++i) {
     outer_size *= shape[i];
@@ -52,6 +49,12 @@ void SplitLayer::split_impl(const Tensor& input,
   for (size_t i = axis + 1; i < shape.dims(); ++i) {
     inner_size *= shape[i];
   }
+
+  const size_t input_axis_stride = shape[axis] * inner_size;
+  const size_t input_inner_stride = inner_size;
+
+  outputs.clear();
+  outputs.reserve(part_sizes.size());
 
   size_t input_offset = 0;
   for (size_t part = 0; part < part_sizes.size(); ++part) {
@@ -66,17 +69,17 @@ void SplitLayer::split_impl(const Tensor& input,
     outputs.emplace_back(output_shape, input.get_type());
     auto& output_data = *outputs.back().as<T>();
 
+    const size_t output_part_size = output_axis_size * inner_size;
+    const size_t input_part_size = output_part_size;
+
     for (size_t outer = 0; outer < outer_size; ++outer) {
-      for (size_t a = 0; a < output_axis_size; ++a) {
-        for (size_t inner = 0; inner < inner_size; ++inner) {
-          size_t input_pos = outer * shape[axis] * inner_size +
-                             (input_offset + a) * inner_size + inner;
-          size_t output_pos =
-              outer * output_axis_size * inner_size + a * inner_size + inner;
-          output_data[output_pos] = input_data[input_pos];
-        }
-      }
+      const T* input_start =
+          &input_data[outer * input_axis_stride + input_offset * inner_size];
+      T* output_start = &output_data[outer * output_part_size];
+
+      std::copy_n(input_start, output_part_size, output_start);
     }
+
     input_offset += output_axis_size;
   }
 }
@@ -105,6 +108,14 @@ void SplitLayer::validate(const Tensor& input) const {
     }
     if (*num_outputs_ > axis_size) {
       throw std::runtime_error("num_outputs cannot be greater than axis size");
+    }
+  }
+
+  if (!splits_ && num_outputs_) {
+    if (*num_outputs_ > axis_size) {
+      throw std::runtime_error("num_outputs (" + std::to_string(*num_outputs_) +
+                               ") cannot be greater than axis size (" +
+                               std::to_string(axis_size) + ")");
     }
   }
 }
