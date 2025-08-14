@@ -131,3 +131,14 @@ TEST(TransposeLayerTest, 3DTensor) {
   EXPECT_FLOAT_EQ(output.get<float>({0, 0, 0}), 1.0f);
   EXPECT_FLOAT_EQ(output.get<float>({3, 1, 2}), 24.0f);
 }
+
+TEST(TransposeLayer, IntTensor) {
+  Tensor input = make_tensor<int>({1, 2, 3, 4}, {2, 2});
+  TransposeLayer layer({1, 0});
+  Tensor output;
+  layer.run(input, output);
+  EXPECT_EQ(output.get<int>({0, 0}), 1);
+  EXPECT_EQ(output.get<int>({1, 0}), 2);
+  EXPECT_EQ(output.get<int>({0, 1}), 3);
+  EXPECT_EQ(output.get<int>({1, 1}), 4);
+}

@@ -39,6 +39,7 @@ void TransposeLayer::transpose_impl(const Tensor& input, Tensor& output,
   }
 
   std::vector<size_t> new_dims;
+  new_dims.reserve(shape.dims());
   for (const auto& axis : perm) {
     new_dims.push_back(shape[static_cast<size_t>(axis)]);
   }
@@ -67,7 +68,12 @@ void TransposeLayer::transpose_impl(const Tensor& input, Tensor& output,
     if (perm[0] == 1 && perm[1] == 0) {
       for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
-          output_values[j * rows + i] = (*input_data)[i * cols + j];
+          const size_t new_index = j * rows + i;
+          if (new_index >= output_values.size()) {
+            throw std::runtime_error(
+                "Index out of bounds during 2D transposition");
+          }
+          output_values[new_index] = (*input_data)[i * cols + j];
         }
       }
     } else {
@@ -81,6 +87,10 @@ void TransposeLayer::transpose_impl(const Tensor& input, Tensor& output,
           new_index += coord * output_strides[dim];
         }
 
+        if (new_index >= output_values.size()) {
+          throw std::runtime_error(
+              "Index out of bounds during 2D transposition");
+        }
         output_values[new_index] = (*input_data)[i];
       }
     }
@@ -95,6 +105,9 @@ void TransposeLayer::transpose_impl(const Tensor& input, Tensor& output,
         new_index += coord * output_strides[dim];
       }
 
+      if(new_index >= output_values.size()) {
+        throw std::runtime_error("Index out of bounds during transposition");
+      }
       output_values[new_index] = (*input_data)[i];
     }
   }
