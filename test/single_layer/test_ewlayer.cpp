@@ -111,12 +111,9 @@ TEST(ewlayer, new_ewlayer_can_sigmoid_float) {
   EWLayer layer("sigmoid");
   Tensor input = make_tensor<float>({0.0F, -1.0F, 1.0F, 2.0F});
   Tensor output;
-  std::vector<float> expected_output = {
-      0.5F,
-      1.0F / (1.0F + std::exp(1.0F)),
-      1.0F / (1.0F + std::exp(-1.0F)),
-      1.0F / (1.0F + std::exp(-2.0F))
-  };
+  std::vector<float> expected_output = {0.5F, 1.0F / (1.0F + std::exp(1.0F)),
+                                        1.0F / (1.0F + std::exp(-1.0F)),
+                                        1.0F / (1.0F + std::exp(-2.0F))};
   layer.run(input, output);
   for (size_t i = 0; i < 4; i++) {
     EXPECT_NEAR((*output.as<float>())[i], expected_output[i], 1e-5F);
