@@ -1,4 +1,6 @@
 #pragma once
+#include <optional>
+#include <stdexcept>
 #include <vector>
 
 #include "layers/Layer.hpp"
@@ -8,9 +10,10 @@ namespace it_lab_ai {
 
 class SplitLayer : public Layer {
  public:
-  SplitLayer(int axis, const std::vector<int>& splits)
-      : axis_(axis), splits_(splits) {}
+  SplitLayer(int axis, std::vector<int> splits)
+      : axis_(axis), splits_(std::move(splits)) {}
 
+  // Режим 2: количество выходных тензоров
   SplitLayer(int axis, int num_outputs)
       : axis_(axis), num_outputs_(num_outputs) {}
   void run(const Tensor& input, Tensor& output) override;
@@ -24,8 +27,8 @@ class SplitLayer : public Layer {
 
  private:
   int axis_;
-  std::vector<int> splits_;
-  int num_outputs_ = 0;
+  std::optional<std::vector<int>> splits_;
+  std::optional<int> num_outputs_;
 
   void validate(const Tensor& input) const;
   int get_normalized_axis(int rank) const;

@@ -139,3 +139,78 @@ TEST(SplitLayerTests, Split192IntoTwo96) {
   EXPECT_FLOAT_EQ(outputs[0].get<float>({0, 0, 0, 0}), 0.0f);
   EXPECT_FLOAT_EQ(outputs[1].get<float>({0, 0, 0, 0}), 96 * 56 * 56);
 }
+
+TEST(SplitLayerTests, UnevenSplitWithRemainder) {
+  Tensor input = make_tensor<float>({1, 2, 3, 4, 5}, {5});
+  SplitLayer splitter(0, 3);
+
+  std::vector<Tensor> outputs;
+  splitter.run(input, outputs);
+
+  ASSERT_EQ(outputs.size(), 3);
+  EXPECT_EQ(outputs[0].get_shape(), Shape({2}));
+  EXPECT_EQ(outputs[1].get_shape(), Shape({2}));
+  EXPECT_EQ(outputs[2].get_shape(), Shape({1}));
+  EXPECT_FLOAT_EQ(outputs[0].get<float>({1}), 2.0f);
+  EXPECT_FLOAT_EQ(outputs[1].get<float>({1}), 4.0f);
+  EXPECT_FLOAT_EQ(outputs[2].get<float>({0}),
+                  5.0f);
+}
+
+TEST(SplitLayerTests, NumOutputsGreaterThanAxisSize) {
+  Tensor input = make_tensor<float>({1, 2, 3}, {3});
+  SplitLayer splitter(0, 5);
+
+  std::vector<Tensor> outputs;
+  EXPECT_THROW(splitter.run(input, outputs), std::runtime_error);
+}
+
+TEST(SplitLayerTests, IntegerDataType) {
+  Tensor input = make_tensor<int>({1, 2, 3, 4, 5, 6}, {2, 3});
+  SplitLayer splitter(1, {1, 2});
+
+  std::vector<Tensor> outputs;
+  splitter.run(input, outputs);
+
+  ASSERT_EQ(outputs.size(), 2);
+  EXPECT_EQ(outputs[0].get_shape(), Shape({2, 1}));
+  EXPECT_EQ(outputs[1].get_shape(), Shape({2, 2}));
+  EXPECT_EQ(outputs[0].get<int>({1, 0}), 4);
+  EXPECT_EQ(outputs[1].get<int>({0, 1}), 3);
+}
+
+TEST(SplitLayerTests, NegativeAxis2D) {
+  Tensor input = make_tensor<float>({1, 2, 3, 4}, {2, 2});
+  SplitLayer splitter(-2, {1, 1});
+
+  std::vector<Tensor> outputs;
+  splitter.run(input, outputs);
+
+  ASSERT_EQ(outputs.size(), 2);
+  EXPECT_EQ(outputs[0].get_shape(), Shape({1, 2}));
+  EXPECT_EQ(outputs[1].get_shape(), Shape({1, 2}));
+}
+
+TEST(SplitLayerTests, NegativeAxis3D) {
+  std::vector<float> data(2 * 3 * 4);
+  std::iota(data.begin(), data.end(), 1.0f);
+  Tensor input = make_tensor<float>(data, {2, 3, 4});
+
+  SplitLayer splitter(-1, {1, 3});
+
+  std::vector<Tensor> outputs;
+  splitter.run(input, outputs);
+
+  ASSERT_EQ(outputs.size(), 2);
+  EXPECT_EQ(outputs[0].get_shape(), Shape({2, 3, 1}));
+  EXPECT_EQ(outputs[1].get_shape(), Shape({2, 3, 3}));
+  EXPECT_FLOAT_EQ(outputs[0].get<float>({1, 2, 0}), 21.0f);
+}
+
+TEST(SplitLayerTests, LargeAxisValue) {
+  Tensor input = make_tensor<float>({1, 2, 3, 4}, {2, 2});
+
+  SplitLayer splitter(10, {1, 1});
+  std::vector<Tensor> outputs;
+  EXPECT_THROW(splitter.run(input, outputs), std::runtime_error);
+}
