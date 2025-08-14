@@ -44,33 +44,59 @@ void TransposeLayer::transpose_impl(const Tensor& input, Tensor& output,
   }
   Shape new_shape(new_dims);
 
+  std::vector<size_t> input_strides(shape.dims());
+  size_t stride = 1;
+  for (size_t dim = shape.dims(); dim-- > 0;) {
+    input_strides[dim] = stride;
+    stride *= shape[dim];
+  }
+
+  std::vector<size_t> output_strides(new_shape.dims());
+  stride = 1;
+  for (size_t dim = new_shape.dims(); dim-- > 0;) {
+    output_strides[dim] = stride;
+    stride *= new_shape[dim];
+  }
+
   std::vector<T> output_values(input_data->size());
 
-  std::vector<size_t> new_indices(shape.dims());
-  std::vector<size_t> old_indices(shape.dims());
+  if (shape.dims() == 2) {
+    const size_t rows = shape[0];
+    const size_t cols = shape[1];
 
-  for (size_t i = 0; i < input_data->size(); ++i) {
-    size_t remaining = i;
-    for (size_t dim = shape.dims(); dim-- > 0;) {
-      old_indices[dim] = remaining % shape[dim];
-      remaining /= shape[dim];
-    }
+    if (perm[0] == 1 && perm[1] == 0) {
+      for (size_t i = 0; i < rows; ++i) {
+        for (size_t j = 0; j < cols; ++j) {
+          output_values[j * rows + i] = (*input_data)[i * cols + j];
+        }
+      }
+    } else {
+      for (size_t i = 0; i < input_data->size(); ++i) {
+        size_t old_index = i;
+        size_t new_index = 0;
 
-    for (size_t dim = 0; dim < perm.size(); ++dim) {
-      new_indices[dim] = old_indices[static_cast<size_t>(perm[dim])];
-    }
+        for (size_t dim = 0; dim < perm.size(); ++dim) {
+          const size_t axis = static_cast<size_t>(perm[dim]);
+          const size_t coord = (old_index / input_strides[axis]) % shape[axis];
+          new_index += coord * output_strides[dim];
+        }
 
-    size_t new_index = 0;
-    size_t stride = 1;
-    for (size_t dim = new_shape.dims(); dim-- > 0;) {
-      new_index += new_indices[dim] * stride;
-      stride *= new_shape[dim];
+        output_values[new_index] = (*input_data)[i];
+      }
     }
+  } else {
+    for (size_t i = 0; i < input_data->size(); ++i) {
+      size_t old_index = i;
+      size_t new_index = 0;
 
-    if (new_index >= output_values.size()) {
-      throw std::runtime_error("Index out of bounds during transposition");
+      for (size_t dim = 0; dim < perm.size(); ++dim) {
+        const size_t axis = static_cast<size_t>(perm[dim]);
+        const size_t coord = (old_index / input_strides[axis]) % shape[axis];
+        new_index += coord * output_strides[dim];
+      }
+
+      output_values[new_index] = (*input_data)[i];
     }
-    output_values[new_index] = (*input_data)[i];
   }
 
   output = make_tensor(output_values, new_shape);
