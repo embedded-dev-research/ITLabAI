@@ -150,6 +150,21 @@ jobs:
       run: |
         cd build
         ctest --output-on-failure
+  build-linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: Install prerequisites
+      run: sudo apt-get update && sudo apt-get install -y libomp-dev build-essential cmake
+    - name: Build and Test
+      run: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --parallel
+        cmake --build build -t test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
   codecov:
     runs-on: ubuntu-latest
     steps:
