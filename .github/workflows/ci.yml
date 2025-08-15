@@ -233,17 +233,25 @@ jobs:
         python parser.py
         cd ../..
 
+    - name: Cache MNIST test dataset
+      id: cache-mnist
+      uses: actions/cache@v4
+      with:
+        path: docs/mnist/mnist/test
+        key: mnist-dataset-e2d09c892023700f68bfa9f30ac91a4dffaa23b151deeaca627101b3d73ef83d
+
     - name: Download MNIST test dataset
+      if: steps.cache-mnist.outputs.cache-hit != 'true'
       run: |
+        set -e
         mkdir -p docs/mnist/mnist/test
-        if [ ! -f "docs/mnist/mnist/test/0_000000.png" ]; then
-          echo "Downloading test images..."
-          wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip
-          unzip -q main.zip
-          cp MNIST_dataset-main/mnist/test/*.png docs/mnist/mnist/test/
-          rm -rf main.zip MNIST_dataset-main
-          echo "Downloaded $(ls docs/mnist/mnist/test | wc -l) images"
-        fi
+        echo "Downloading test images..."
+        wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip -O main.zip
+        echo "e2d09c892023700f68bfa9f30ac91a4dffaa23b151deeaca627101b3d73ef83d  main.zip" | sha256sum -c -
+        unzip -q main.zip
+        cp MNIST_dataset-main/mnist/test/*.png docs/mnist/mnist/test/
+        rm -rf main.zip MNIST_dataset-main
+        echo "Downloaded $(ls docs/mnist/mnist/test | wc -l) images"
 
     - name: Download binary and libs
       uses: actions/download-artifact@v4
@@ -262,8 +270,6 @@ jobs:
       run: |
        echo "### Library verification ###"
        file build/bin/opencv_libs/libopencv_imgcodecs.so.4.9.0 | grep "shared object"
-       ldd build/bin/opencv_libs/libopencv_imgcodecs.so.4.9.0 || true
-       realpath build/bin/opencv_libs/libopencv_imgcodecs.so.409
 
     - name: Run evaluation
       run: |
@@ -271,7 +277,7 @@ jobs:
        export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
     
-       LD_DEBUG=files ./build/bin/ACC_MNIST* 2> ld_debug.log || true
+       LD_DEBUG=files ./build/bin/ACC_MNIST* 2> ld_debug.log
        echo "### Library loading debug ###"
        grep -i "opencv_imgcodecs" ld_debug.log
 
