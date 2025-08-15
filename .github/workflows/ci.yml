@@ -33,6 +33,10 @@ jobs:
       with:
         key: ccache-${{ github.job }}-${{ matrix.build_type }}
         max-size: 2G
+    - name: Check CPU info
+      run: |
+          lscpu
+          cat /proc/cpuinfo | grep "model name" | head -n 1
     - name: Build
       run: |
             cmake -S . -B build \
