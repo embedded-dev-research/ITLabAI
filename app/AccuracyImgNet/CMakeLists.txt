@@ -1,6 +1,6 @@
 add_executable(ACCImgNet accimgnet.cpp)
 
-find_package( OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build" )
+find_package( OpenCV REQUIRED PATHS "${OPENCV_BUILD_DIR}" )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 target_link_libraries( ACCImgNet ${OpenCV_LIBS} )
 target_link_libraries( ACCImgNet TBB_unified)

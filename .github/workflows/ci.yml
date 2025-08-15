@@ -39,7 +39,7 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DOPENCV_PATH=3rdparty/opencv/build \
+            -DOPENCV_PATH=build/3rdparty/opencv_build \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
@@ -49,7 +49,7 @@ jobs:
     - name: Prepare OpenCV libs
       run: |
        mkdir -p build/bin/opencv_libs
-       cp -a 3rdparty/opencv/build/lib/libopencv_* build/bin/opencv_libs/
+       cp -a build/3rdparty/opencv_build/lib/libopencv_* build/bin/opencv_libs/
        echo "Library permissions after copy:"
        stat -c "%A %n" build/bin/opencv_libs/libopencv_imgcodecs.so*
 

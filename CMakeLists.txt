@@ -28,6 +28,8 @@ include_directories("include")
 
 add_subdirectory(3rdparty)
 
+include(cmake/opencv_config.cmake)
+
 if (NOT WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
