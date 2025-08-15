@@ -91,17 +91,16 @@ std::vector<ValueType> EWLayerImpl<ValueType>::run(
   } else if (func_ == "sigmoid") {
     auto sigmoid = [](ValueType x) -> ValueType {
       if constexpr (std::is_integral_v<ValueType>) {
-        float x_float = static_cast<float>(x);
-        float result = 1.0f / (1.0f + std::exp(-x_float));
+        auto x_float = static_cast<float>(x);
+        float result = 1.0F / (1.0F + std::exp(-x_float));
         return static_cast<ValueType>(std::round(result));
       } else {
         if (x >= ValueType(0)) {
           ValueType z = std::exp(-x);
           return ValueType(1) / (ValueType(1) + z);
-        } else {
-          ValueType z = std::exp(x);
-          return z / (ValueType(1) + z);
         }
+        ValueType z = std::exp(x);
+        return z / (ValueType(1) + z);
       }
     };
     std::transform(input.cbegin(), input.cend(), res.begin(), sigmoid);
