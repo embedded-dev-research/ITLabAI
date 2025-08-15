@@ -1,5 +1,3 @@
-file(MAKE_DIRECTORY "${OPENCV_BUILD_DIR}")
-
 set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/reader_img.hpp")
 set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/reader_img_s.cpp")
 add_library(ReadLib STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
