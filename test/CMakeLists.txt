@@ -1,9 +1,5 @@
 file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-if (NOT WIN32)
-    find_package(OpenMP REQUIRED)
-endif()
-
 add_executable(run_test ${TEST_SRC_FILES})
 if (NOT WIN32)
     target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
