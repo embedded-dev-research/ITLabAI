@@ -4,7 +4,7 @@
 
 int main() {
   std::string json_file = MODEL_PATH_GOOGLENET_ONNX;
-  json model_data = read_json(json_file);
+  it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
 
   std::cout << "Model contains " << model_data.size()
             << " layers:" << std::endl;
@@ -56,7 +56,8 @@ int main() {
 
     if (has_weights) {
       try {
-        Tensor tensor = create_tensor_from_json(layer_data, Type::kFloat);
+        it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
+            layer_data, it_lab_ai::Type::kFloat);
 
         std::cout << "  Weights shape: " << tensor.get_shape() << std::endl;
 
