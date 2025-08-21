@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <vector>
 
+namespace it_lab_ai {
+
 using json = nlohmann::json;
 
 json read_json(const std::string& filename) {
@@ -78,3 +80,5 @@ Tensor create_tensor_from_json(const json& layer_data, Type type) {
 
   return make_tensor<float>(weights, Shape(shape), bias);
 }
+
+}  // namespace it_lab_ai

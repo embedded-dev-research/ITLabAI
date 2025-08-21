@@ -4,6 +4,8 @@
 
 #include "Weights_Reader/reader_weights.hpp"
 
+using namespace it_lab_ai;
+
 std::string get_test_data_path(const std::string& filename) {
   return std::string(TEST_DATA_PATH) + "/" + filename;
 }

@@ -4,7 +4,7 @@
 
 int main() {
   std::string json_file = MODEL_PATH_H5;
-  json model_data = read_json(json_file);
+  it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
 
   for (const auto& layer_data : model_data) {
     int layer_index = layer_data["index"];
@@ -15,7 +15,8 @@ int main() {
               << layer_name << "):" << std::endl;
 
     try {
-      Tensor tensor = create_tensor_from_json(layer_data, Type::kFloat);
+      it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
+          layer_data, it_lab_ai::Type::kFloat);
       // std::cout << tensor << std::endl;
     } catch (const std::exception& e) {
       std::cerr << "Error processing layer " << layer_name << ": " << e.what()
