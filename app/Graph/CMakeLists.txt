@@ -59,6 +59,11 @@ file(DOWNLOAD
     LOG log_file
 )
 
+add_custom_target(create_dirs ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/docs/jsons
+    COMMENT "Creating docs/jsons directory"
+)
+
 add_definitions(-DIMAGE1_PATH="${CMAKE_SOURCE_DIR}/docs/input/")
 add_definitions(-DMODEL_PATH_H5="${CMAKE_SOURCE_DIR}/docs/jsons/model_data_alexnet_1.json")
 add_definitions(-DMODEL_PATH_GOOGLENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/googlenet_onnx_model.json")
