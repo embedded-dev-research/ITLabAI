@@ -17,15 +17,11 @@ target_include_directories(BuildGraph PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/Json/i
 
 add_custom_target(create_graph_dirs ALL
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/docs/jsons
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/bin/mnist
     COMMENT "Creating necessary directories"
 )
 
 add_executable(Graph_Build graph_build.cpp)
 add_executable(ACC_MNIST acc_check_mnist.cpp)
-
-add_dependencies(Graph_Build create_graph_dirs download_mnist)
-add_dependencies(ACC_MNIST create_graph_dirs download_mnist)
 
 target_link_libraries(Graph_Build BuildGraph)
 target_link_libraries(ACC_MNIST BuildGraph)
