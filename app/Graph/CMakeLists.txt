@@ -15,10 +15,19 @@ target_link_libraries(BuildGraph PUBLIC gtest_main)
 
 target_include_directories(BuildGraph PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/Json/include)
 
-add_executable(Graph_Build graph_build.cpp)
-target_link_libraries(Graph_Build BuildGraph)
+add_custom_target(create_graph_dirs ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/docs/jsons
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/bin/mnist
+    COMMENT "Creating necessary directories"
+)
 
+add_executable(Graph_Build graph_build.cpp)
 add_executable(ACC_MNIST acc_check_mnist.cpp)
+
+add_dependencies(Graph_Build create_graph_dirs download_mnist)
+add_dependencies(ACC_MNIST create_graph_dirs download_mnist)
+
+target_link_libraries(Graph_Build BuildGraph)
 target_link_libraries(ACC_MNIST BuildGraph)
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -26,12 +35,12 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (WIN32)
-	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
-	    set(CMAKE_BUILD_TYPE "Debug")
-	endif()
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
+        set(CMAKE_BUILD_TYPE "Debug")
+    endif()
     if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
-	    set(CMAKE_BUILD_TYPE "Release")
-	endif()
+        set(CMAKE_BUILD_TYPE "Release")
+    endif()
     add_custom_command(TARGET Graph_Build POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BUILD_DIR}/bin/${CMAKE_BUILD_TYPE}/."
@@ -39,12 +48,12 @@ if (WIN32)
 endif()
 
 if (WIN32)
-	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
-	    set(CMAKE_BUILD_TYPE "Debug")
-	endif()
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
+        set(CMAKE_BUILD_TYPE "Debug")
+    endif()
     if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
-	    set(CMAKE_BUILD_TYPE "Release")
-	endif()
+        set(CMAKE_BUILD_TYPE "Release")
+    endif()
     add_custom_command(TARGET ACC_MNIST POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BUILD_DIR}/bin/${CMAKE_BUILD_TYPE}/."
@@ -53,18 +62,11 @@ endif()
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/DeepTrackAI/MNIST_dataset/main/mnist/test/1_000008.png"
-    "${CMAKE_SOURCE_DIR}/docs/input/test1.png"
+    "${CMAKE_CURRENT_BINARY_DIR}/bin/test1.png"
     SHOW_PROGRESS
-    STATUS status_code
-    LOG log_file
 )
 
-add_custom_target(create_dirs ALL
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/docs/jsons
-    COMMENT "Creating docs/jsons directory"
-)
-
-add_definitions(-DIMAGE1_PATH="${CMAKE_SOURCE_DIR}/docs/input/")
+add_definitions(-DIMAGE1_PATH="${CMAKE_CURRENT_BINARY_DIR}/bin/")
 add_definitions(-DMODEL_PATH_H5="${CMAKE_SOURCE_DIR}/docs/jsons/model_data_alexnet_1.json")
 add_definitions(-DMODEL_PATH_GOOGLENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/googlenet_onnx_model.json")
 add_definitions(-DMODEL_PATH_DENSENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/densenet121_Opset16_onnx_model.json")
