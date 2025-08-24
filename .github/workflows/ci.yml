@@ -37,6 +37,11 @@ jobs:
       run: |
           lscpu
           cat /proc/cpuinfo | grep "model name" | head -n 1
+    - name: Check RAM info  # <- Новый шаг
+      run: |
+          echo "=== RAM Information ==="
+          free -h
+          echo "-----"
     - name: Build
       run: |
             cmake -S . -B build \
