@@ -15,8 +15,8 @@ class SplitLayer : public Layer {
 
   SplitLayer(int axis, int num_outputs)
       : axis_(axis), num_outputs_(num_outputs) {}
-  void run(const Tensor& input, Tensor& output) override;
-  void run(const Tensor& input, std::vector<Tensor>& outputs);
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override;
 
   static std::string get_name() { return "SplitLayer"; }
 

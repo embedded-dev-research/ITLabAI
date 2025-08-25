@@ -24,7 +24,8 @@ class EWLayer : public Layer {
       : func_(std::move(function)), alpha_(alpha), beta_(beta) {}
 
   static std::string get_name() { return "Element-wise layer"; }
-  void run(const Tensor& input, Tensor& output) override;
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override {
     std::vector<int> v = {0};

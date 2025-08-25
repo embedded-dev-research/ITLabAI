@@ -11,7 +11,8 @@ TEST(SplitLayerTests, SplitEqualParts1D) {
   SplitLayer splitter(0, 3);
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 3);
   EXPECT_EQ(outputs[0].get_shape(), Shape({2}));
@@ -27,7 +28,8 @@ TEST(SplitLayerTests, SplitVariableParts1D) {
   SplitLayer splitter(0, {2, 4});
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 2);
   EXPECT_EQ(outputs[0].get_shape(), Shape({2}));
@@ -41,7 +43,8 @@ TEST(SplitLayerTests, Split2DAlongAxis0) {
   SplitLayer splitter(0, {1, 1});
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 2);
   EXPECT_EQ(outputs[0].get_shape(), Shape({1, 3}));
@@ -55,7 +58,8 @@ TEST(SplitLayerTests, Split2DAlongAxis1) {
   SplitLayer splitter(1, {1, 2});
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 2);
   EXPECT_EQ(outputs[0].get_shape(), Shape({2, 1}));
@@ -72,7 +76,8 @@ TEST(SplitLayerTests, Split3DEqualParts) {
   SplitLayer splitter(1, 3);
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 3);
   EXPECT_EQ(outputs[0].get_shape(), Shape({2, 1, 4}));
@@ -87,7 +92,8 @@ TEST(SplitLayerTests, Split4DVariableParts) {
   SplitLayer splitter(2, {1, 1});
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 2);
   EXPECT_EQ(outputs[0].get_shape(), Shape({1, 3, 1, 4}));
@@ -99,7 +105,8 @@ TEST(SplitLayerTests, SplitNegativeAxis) {
   SplitLayer splitter(-1, {1, 2});
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 2);
   EXPECT_EQ(outputs[0].get_shape(), Shape({2, 1}));
@@ -112,7 +119,20 @@ TEST(SplitLayerTests, InvalidSplitSizes) {
   SplitLayer splitter(0, {1, 2});
 
   std::vector<Tensor> outputs;
-  EXPECT_THROW(splitter.run(input, outputs), std::runtime_error);
+  std::vector<Tensor> in{input};
+
+  EXPECT_THROW(splitter.run(in, outputs), std::runtime_error);
+}
+
+TEST(SplitLayerTests, InvalidInput) {
+  Tensor input = make_tensor<float>({1, 2, 3, 4}, {4});
+
+  SplitLayer splitter(0, {1, 2});
+
+  std::vector<Tensor> outputs;
+  std::vector<Tensor> in{input, input};
+
+  EXPECT_THROW(splitter.run(in, outputs), std::runtime_error);
 }
 
 TEST(SplitLayerTests, EmptyInputTensor) {
@@ -121,7 +141,9 @@ TEST(SplitLayerTests, EmptyInputTensor) {
   SplitLayer splitter(0, {});
 
   std::vector<Tensor> outputs;
-  EXPECT_THROW(splitter.run(input, outputs), std::runtime_error);
+  std::vector<Tensor> in{input};
+
+  EXPECT_THROW(splitter.run(in, outputs), std::runtime_error);
 }
 
 TEST(SplitLayerTests, Split192IntoTwo96) {
@@ -131,7 +153,8 @@ TEST(SplitLayerTests, Split192IntoTwo96) {
 
   SplitLayer splitter(1, {96, 96});
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 2);
   EXPECT_EQ(outputs[0].get_shape(), Shape({1, 96, 56, 56}));
@@ -145,7 +168,8 @@ TEST(SplitLayerTests, UnevenSplitWithRemainder) {
   SplitLayer splitter(0, 3);
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 3);
   EXPECT_EQ(outputs[0].get_shape(), Shape({2}));
@@ -161,7 +185,9 @@ TEST(SplitLayerTests, NumOutputsGreaterThanAxisSize) {
   SplitLayer splitter(0, 5);
 
   std::vector<Tensor> outputs;
-  EXPECT_THROW(splitter.run(input, outputs), std::runtime_error);
+  std::vector<Tensor> in{input};
+
+  EXPECT_THROW(splitter.run(in, outputs), std::runtime_error);
 }
 
 TEST(SplitLayerTests, IntegerDataType) {
@@ -169,7 +195,8 @@ TEST(SplitLayerTests, IntegerDataType) {
   SplitLayer splitter(1, {1, 2});
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 2);
   EXPECT_EQ(outputs[0].get_shape(), Shape({2, 1}));
@@ -183,7 +210,8 @@ TEST(SplitLayerTests, NegativeAxis2D) {
   SplitLayer splitter(-2, {1, 1});
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 2);
   EXPECT_EQ(outputs[0].get_shape(), Shape({1, 2}));
@@ -198,7 +226,8 @@ TEST(SplitLayerTests, NegativeAxis3D) {
   SplitLayer splitter(-1, {1, 3});
 
   std::vector<Tensor> outputs;
-  splitter.run(input, outputs);
+  std::vector<Tensor> in{input};
+  splitter.run(in, outputs);
 
   ASSERT_EQ(outputs.size(), 2);
   EXPECT_EQ(outputs[0].get_shape(), Shape({2, 3, 1}));
@@ -211,5 +240,7 @@ TEST(SplitLayerTests, LargeAxisValue) {
 
   SplitLayer splitter(10, {1, 1});
   std::vector<Tensor> outputs;
-  EXPECT_THROW(splitter.run(input, outputs), std::runtime_error);
+  std::vector<Tensor> in{input};
+
+  EXPECT_THROW(splitter.run(in, outputs), std::runtime_error);
 }

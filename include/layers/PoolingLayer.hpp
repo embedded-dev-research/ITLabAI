@@ -19,7 +19,8 @@ class PoolingLayer : public Layer {
         poolingType_(std::move(pooling_type)),
         implType_(implType) {}
   static std::string get_name() { return "Pooling layer"; }
-  void run(const Tensor& input, Tensor& output) override;
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override {
     std::vector<int> v = {0};

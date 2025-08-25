@@ -12,8 +12,20 @@ TEST(TransposeLayerTest, EmptyTensor) {
   Tensor input = make_tensor<float>({}, {0});
   TransposeLayer layer;
   Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
 
-  EXPECT_THROW(layer.run(input, output), std::runtime_error);
+  EXPECT_THROW(layer.run(in, out), std::runtime_error);
+}
+
+TEST(TransposeLayerTest, InvalidInput) {
+  Tensor input = make_tensor<float>({}, {0});
+  TransposeLayer layer;
+  Tensor output;
+  std::vector<Tensor> in{input, input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::runtime_error);
 }
 
 TEST(TransposeLayerTest, IdentityTranspose) {
@@ -21,13 +33,15 @@ TEST(TransposeLayerTest, IdentityTranspose) {
   TransposeLayer layer({0, 1});
   Tensor output;
 
-  layer.run(input, output);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
 
-  ASSERT_EQ(output.get_shape(), Shape({2, 2}));
-  EXPECT_FLOAT_EQ(output.get<float>({0, 0}), 1.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 1}), 2.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 0}), 3.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 1}), 4.0f);
+  ASSERT_EQ(out[0].get_shape(), Shape({2, 2}));
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 0}), 1.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 1}), 2.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 0}), 3.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 1}), 4.0f);
 }
 
 TEST(TransposeLayerTest, VectorTranspose) {
@@ -35,45 +49,55 @@ TEST(TransposeLayerTest, VectorTranspose) {
   TransposeLayer layer({0});
   Tensor output;
 
-  layer.run(input, output);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
 
-  ASSERT_EQ(output.get_shape(), Shape({4}));
-  EXPECT_FLOAT_EQ(output.get<float>({0}), 1.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1}), 2.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({2}), 3.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({3}), 4.0f);
+  ASSERT_EQ(out[0].get_shape(), Shape({4}));
+  EXPECT_FLOAT_EQ(out[0].get<float>({0}), 1.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1}), 2.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({2}), 3.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({3}), 4.0f);
 }
 
 TEST(TransposeLayerTest, InvalidPermutationSize) {
   Tensor input = make_tensor<float>({1, 2, 3, 4}, {2, 2});
   TransposeLayer layer({0});
   Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
 
-  EXPECT_THROW(layer.run(input, output), std::invalid_argument);
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
 }
 
 TEST(TransposeLayerTest, DuplicateAxes) {
   Tensor input = make_tensor<float>({1, 2, 3, 4}, {2, 2});
   TransposeLayer layer({0, 0});
   Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
 
-  EXPECT_THROW(layer.run(input, output), std::invalid_argument);
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
 }
 
 TEST(TransposeLayerTest, NegativeAxis) {
   Tensor input = make_tensor<float>({1, 2, 3, 4}, {2, 2});
   TransposeLayer layer({0, -1});
   Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
 
-  EXPECT_THROW(layer.run(input, output), std::invalid_argument);
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
 }
 
 TEST(TransposeLayerTest, LargeAxis) {
   Tensor input = make_tensor<float>({1, 2, 3, 4}, {2, 2});
   TransposeLayer layer({0, 2});
   Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
 
-  EXPECT_THROW(layer.run(input, output), std::invalid_argument);
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
 }
 
 TEST(TransposeLayerTest, 4DTensorTranspose) {
@@ -83,25 +107,27 @@ TEST(TransposeLayerTest, 4DTensorTranspose) {
   TransposeLayer layer({3, 1, 0, 2});
   Tensor output;
 
-  layer.run(input, output);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
 
-  ASSERT_EQ(output.get_shape(), Shape({2, 2, 2, 2}));
-  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 0, 0}), 1.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 0, 0, 0}), 2.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 1, 0, 0}), 5.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 1, 0, 0}), 6.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 0, 1}), 3.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 0, 0, 1}), 4.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 1, 0, 1}), 7.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 1, 0, 1}), 8.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 1, 0}), 9.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 0, 1, 0}), 10.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 1, 1, 0}), 13.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 1, 1, 0}), 14.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 1, 1}), 11.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 0, 1, 1}), 12.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 1, 1, 1}), 15.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 1, 1, 1}), 16.0f);
+  ASSERT_EQ(out[0].get_shape(), Shape({2, 2, 2, 2}));
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 0, 0, 0}), 1.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 0, 0, 0}), 2.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 1, 0, 0}), 5.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 1, 0, 0}), 6.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 0, 0, 1}), 3.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 0, 0, 1}), 4.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 1, 0, 1}), 7.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 1, 0, 1}), 8.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 0, 1, 0}), 9.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 0, 1, 0}), 10.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 1, 1, 0}), 13.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 1, 1, 0}), 14.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 0, 1, 1}), 11.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 0, 1, 1}), 12.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 1, 1, 1}), 15.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 1, 1, 1}), 16.0f);
 }
 
 TEST(TransposeLayerTest, MatrixTranspose) {
@@ -109,13 +135,15 @@ TEST(TransposeLayerTest, MatrixTranspose) {
   TransposeLayer layer({1, 0});
   Tensor output;
 
-  layer.run(input, output);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
 
-  ASSERT_EQ(output.get_shape(), Shape({2, 2}));
-  EXPECT_FLOAT_EQ(output.get<float>({0, 0}), 1.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({0, 1}), 3.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 0}), 2.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1, 1}), 4.0f);
+  ASSERT_EQ(out[0].get_shape(), Shape({2, 2}));
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 0}), 1.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 1}), 3.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 0}), 2.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 1}), 4.0f);
 }
 
 TEST(TransposeLayerTest, 3DTensor) {
@@ -125,22 +153,26 @@ TEST(TransposeLayerTest, 3DTensor) {
   TransposeLayer layer({2, 0, 1});
   Tensor output;
 
-  layer.run(input, output);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
 
-  ASSERT_EQ(output.get_shape(), Shape({4, 2, 3}));
-  EXPECT_FLOAT_EQ(output.get<float>({0, 0, 0}), 1.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({3, 1, 2}), 24.0f);
+  ASSERT_EQ(out[0].get_shape(), Shape({4, 2, 3}));
+  EXPECT_FLOAT_EQ(out[0].get<float>({0, 0, 0}), 1.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({3, 1, 2}), 24.0f);
 }
 
 TEST(TransposeLayerTest, IntTensor) {
   Tensor input = make_tensor<int>({1, 2, 3, 4}, {2, 2});
   TransposeLayer layer({1, 0});
   Tensor output;
-  layer.run(input, output);
-  EXPECT_EQ(output.get<int>({0, 0}), 1);
-  EXPECT_EQ(output.get<int>({1, 0}), 2);
-  EXPECT_EQ(output.get<int>({0, 1}), 3);
-  EXPECT_EQ(output.get<int>({1, 1}), 4);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  EXPECT_EQ(out[0].get<int>({0, 0}), 1);
+  EXPECT_EQ(out[0].get<int>({1, 0}), 2);
+  EXPECT_EQ(out[0].get<int>({0, 1}), 3);
+  EXPECT_EQ(out[0].get<int>({1, 1}), 4);
 }
 
 TEST(TransposeLayerTest, 1DDefaultPermutationIsNoOp) {
@@ -149,13 +181,16 @@ TEST(TransposeLayerTest, 1DDefaultPermutationIsNoOp) {
   TransposeLayer layer;
   Tensor output;
 
-  EXPECT_NO_THROW(layer.run(input, output));
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
 
-  EXPECT_EQ(output.get_shape(), Shape({4}));
-  EXPECT_FLOAT_EQ(output.get<float>({0}), 1.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({1}), 2.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({2}), 3.0f);
-  EXPECT_FLOAT_EQ(output.get<float>({3}), 4.0f);
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  EXPECT_EQ(out[0].get_shape(), Shape({4}));
+  EXPECT_FLOAT_EQ(out[0].get<float>({0}), 1.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({1}), 2.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({2}), 3.0f);
+  EXPECT_FLOAT_EQ(out[0].get<float>({3}), 4.0f);
 }
 
 TEST(TransposeLayerTest, MultipleRunsWithDifferentRanks) {
@@ -164,23 +199,30 @@ TEST(TransposeLayerTest, MultipleRunsWithDifferentRanks) {
   {
     Tensor input = make_tensor<float>({1, 2, 3, 4}, {2, 2});
     Tensor output;
-    layer.run(input, output);
-    EXPECT_EQ(output.get_shape(), Shape({2, 2}));
-    EXPECT_FLOAT_EQ(output.get<float>({0, 0}), 1.0f);
-    EXPECT_FLOAT_EQ(output.get<float>({1, 0}), 2.0f);
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+    layer.run(in, out);
+    EXPECT_EQ(out[0].get_shape(), Shape({2, 2}));
+    EXPECT_FLOAT_EQ(out[0].get<float>({0, 0}), 1.0f);
+    EXPECT_FLOAT_EQ(out[0].get<float>({1, 0}), 2.0f);
   }
 
   {
     Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6}, {3, 2});
     Tensor output;
-    layer.run(input, output);
-    EXPECT_EQ(output.get_shape(), Shape({2, 3}));
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+    layer.run(in, out);
+    EXPECT_EQ(out[0].get_shape(), Shape({2, 3}));
   }
 
   {
     Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});
     Tensor output;
-    EXPECT_THROW(layer.run(input, output), std::invalid_argument);
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_THROW(layer.run(in, out), std::invalid_argument);
   }
 }
 
@@ -189,11 +231,15 @@ TEST(TransposeLayerTest, ExplicitPermutationWithDifferentRanks) {
 
   Tensor input2D = make_tensor<float>({1, 2, 3, 4}, {2, 2});
   Tensor output2D;
-  layer.run(input2D, output2D);
-  EXPECT_EQ(output2D.get_shape(), Shape({2, 2}));
-  EXPECT_FLOAT_EQ(output2D.get<float>({1, 0}), 2.0f);
+  std::vector<Tensor> in{input2D};
+  std::vector<Tensor> out{output2D};
+  layer.run(in, out);
+  EXPECT_EQ(out[0].get_shape(), Shape({2, 2}));
+  EXPECT_FLOAT_EQ(out[0].get<float>({1, 0}), 2.0f);
 
   Tensor input3D = make_tensor<float>({1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});
   Tensor output3D;
-  EXPECT_THROW(layer.run(input3D, output3D), std::invalid_argument);
+  std::vector<Tensor> in3{input3D};
+  std::vector<Tensor> out3{output3D};
+  EXPECT_THROW(layer.run(in3, out3), std::invalid_argument);
 }

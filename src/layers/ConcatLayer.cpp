@@ -2,21 +2,25 @@
 
 namespace it_lab_ai {
 
-void ConcatLayer::run(const Tensor& input, Tensor& output) { output = input; }
-
-void ConcatLayer::run(const std::vector<Tensor>& inputs, Tensor& output) {
-  if (inputs.empty()) {
+void ConcatLayer::run(const std::vector<Tensor>& input,
+                      std::vector<Tensor>& output) {
+  if (input.empty()) {
     throw std::runtime_error("ConcatLayer: No input tensors provided");
   }
 
-  validate_inputs(inputs);
+  if (input.size() == 1) {
+    output = input;
+    return;
+  }
 
-  switch (inputs[0].get_type()) {
+  validate_inputs(input);
+
+  switch (input[0].get_type()) {
     case Type::kFloat:
-      concatenate<float>(inputs, output);
+      concatenate<float>(input, output[0]);
       break;
     case Type::kInt:
-      concatenate<int>(inputs, output);
+      concatenate<int>(input, output[0]);
       break;
     default:
       throw std::runtime_error("ConcatLayer: Unsupported input tensor type");

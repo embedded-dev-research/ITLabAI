@@ -19,23 +19,24 @@ std::vector<size_t> reorder(std::vector<size_t> order_vec,
   return order_vec;
 }
 
-void FlattenLayer::run(const Tensor &input, Tensor &output) {
-  switch (input.get_type()) {
+void FlattenLayer::run(const std::vector<Tensor>& input,
+                       std::vector<Tensor>& output) {
+  switch (input[0].get_type()) {
     case Type::kInt: {
-      if (input.get_shape().dims() == 4) {
-        Flatten4D<int>(input, output, order_);
+      if (input[0].get_shape().dims() == 4) {
+        Flatten4D<int>(input[0], output[0], order_);
       } else {
-        output =
-            make_tensor(*input.as<int>(), Shape({input.get_shape().count()}));
+        output[0] = make_tensor(*input[0].as<int>(),
+                                Shape({input[0].get_shape().count()}));
       }
       break;
     }
     case Type::kFloat: {
-      if (input.get_shape().dims() == 4) {
-        Flatten4D<float>(input, output, order_);
+      if (input[0].get_shape().dims() == 4) {
+        Flatten4D<float>(input[0], output[0], order_);
       } else {
-        output =
-            make_tensor(*input.as<float>(), Shape({input.get_shape().count()}));
+        output[0] = make_tensor(*input[0].as<float>(),
+                                Shape({input[0].get_shape().count()}));
       }
       break;
     }

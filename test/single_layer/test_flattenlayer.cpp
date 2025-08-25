@@ -10,9 +10,11 @@ TEST(flattenlayer, new_flattenlayer_can_flatten_int) {
   Shape sh({2, 2});
   Tensor input = make_tensor<int>({1, -1, 2, -2}, sh);
   Tensor output;
-  layer.run(input, output);
-  EXPECT_EQ(output.get_shape().dims(), 1);
-  EXPECT_EQ(output.get_shape()[0], 4);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  EXPECT_EQ(out[0].get_shape().dims(), 1);
+  EXPECT_EQ(out[0].get_shape()[0], 4);
 }
 
 TEST(flattenlayer, new_flattenlayer_can_flatten_float) {
@@ -20,9 +22,11 @@ TEST(flattenlayer, new_flattenlayer_can_flatten_float) {
   Shape sh({2, 2});
   Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F}, sh);
   Tensor output;
-  layer.run(input, output);
-  EXPECT_EQ(output.get_shape().dims(), 1);
-  EXPECT_EQ(output.get_shape()[0], 4);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  EXPECT_EQ(out[0].get_shape().dims(), 1);
+  EXPECT_EQ(out[0].get_shape()[0], 4);
 }
 
 TEST(flattenlayer, new_flattenlayer_can_flatten_float_reorder) {
@@ -44,12 +48,14 @@ TEST(flattenlayer, new_flattenlayer_can_flatten_float_reorder) {
                                    15.0f, 21.0f, 16.0f, 22.0f, 17.0f, 23.0f};
   Tensor input = make_tensor<float>(input_vec, sh);
   Tensor output;
-  layer1.run(input, output);
-  EXPECT_EQ(*output.as<float>(), input_vec);
-  layer2.run(input, output);
-  EXPECT_EQ(*output.as<float>(), expected_2);
-  layer3.run(input, output);
-  EXPECT_EQ(*output.as<float>(), expected_3);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer1.run(in, out);
+  EXPECT_EQ(*out[0].as<float>(), input_vec);
+  layer2.run(in, out);
+  EXPECT_EQ(*out[0].as<float>(), expected_2);
+  layer3.run(in, out);
+  EXPECT_EQ(*out[0].as<float>(), expected_3);
 }
 
 TEST(flattenlayer, new_flattenlayer_can_flatten_int_reorder) {
@@ -68,12 +74,14 @@ TEST(flattenlayer, new_flattenlayer_can_flatten_int_reorder) {
                                  14, 20, 15, 21, 16, 22, 17, 23};
   Tensor input = make_tensor<int>(input_vec, sh);
   Tensor output;
-  layer1.run(input, output);
-  EXPECT_EQ(*output.as<int>(), input_vec);
-  layer2.run(input, output);
-  EXPECT_EQ(*output.as<int>(), expected_2);
-  layer3.run(input, output);
-  EXPECT_EQ(*output.as<int>(), expected_3);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer1.run(in, out);
+  EXPECT_EQ(*out[0].as<int>(), input_vec);
+  layer2.run(in, out);
+  EXPECT_EQ(*out[0].as<int>(), expected_2);
+  layer3.run(in, out);
+  EXPECT_EQ(*out[0].as<int>(), expected_3);
 }
 
 TEST(flattenlayer, get_layer_name) {

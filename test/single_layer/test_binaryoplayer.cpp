@@ -27,11 +27,12 @@ TEST_F(BinaryOpLayerTests, MulSameShapeFloat) {
   BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<float>(data1, {2, 2});
   Tensor input2 = make_tensor<float>(data2, {2, 2});
-  Tensor output;
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
 
-  layer.run(input1, input2, output);
+  layer.run(in, output);
 
-  auto* result = output.as<float>();
+  auto* result = output[0].as<float>();
   EXPECT_FLOAT_EQ((*result)[0], 2.0f);
   EXPECT_FLOAT_EQ((*result)[1], 6.0f);
   EXPECT_FLOAT_EQ((*result)[2], 12.0f);
@@ -42,11 +43,12 @@ TEST_F(BinaryOpLayerTests, MulSameShapeInt) {
   BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<int>(data_int, {2, 2});
   Tensor input2 = make_tensor<int>(data_int, {2, 2});
-  Tensor output;
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
 
-  layer.run(input1, input2, output);
+  layer.run(in, output);
 
-  auto* result = output.as<int>();
+  auto* result = output[0].as<int>();
   EXPECT_EQ((*result)[0], 1);
   EXPECT_EQ((*result)[1], 4);
   EXPECT_EQ((*result)[2], 9);
@@ -57,11 +59,12 @@ TEST_F(BinaryOpLayerTests, MulSameShapeIntResNet1) {
   BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<int>({1, 2, 64, 64, 64}, {5});
   Tensor input2 = make_tensor<int>({1, 2, 64, 1, 1}, {5});
-  Tensor output;
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
 
-  layer.run(input1, input2, output);
+  layer.run(in, output);
 
-  auto* result = output.as<int>();
+  auto* result = output[0].as<int>();
   EXPECT_EQ((*result)[0], 1);
   EXPECT_EQ((*result)[1], 4);
   EXPECT_EQ((*result)[2], 4096);
@@ -72,11 +75,12 @@ TEST_F(BinaryOpLayerTests, MulSameShapeIntResNet1) {
 TEST_F(BinaryOpLayerTests, MulWithScalarFloat) {
   BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input = make_tensor<float>(data1, {2, 2});
-  Tensor output;
+  std::vector<Tensor> in{input, scalar};
+  std::vector<Tensor> output{input};
 
-  layer.run(input, scalar, output);
+  layer.run(in, output);
 
-  auto* result = output.as<float>();
+  auto* result = output[0].as<float>();
   EXPECT_FLOAT_EQ((*result)[0], 2.0f);
   EXPECT_FLOAT_EQ((*result)[1], 4.0f);
   EXPECT_FLOAT_EQ((*result)[2], 6.0f);
@@ -86,11 +90,12 @@ TEST_F(BinaryOpLayerTests, MulWithScalarFloat) {
 TEST_F(BinaryOpLayerTests, MulWithScalarInt) {
   BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input = make_tensor<int>(data_int, {2, 2});
-  Tensor output;
+  std::vector<Tensor> in{input, scalar_int};
+  std::vector<Tensor> output{input};
 
-  layer.run(input, scalar_int, output);
+  layer.run(in, output);
 
-  auto* result = output.as<int>();
+  auto* result = output[0].as<int>();
   EXPECT_EQ((*result)[0], 2);
   EXPECT_EQ((*result)[1], 4);
   EXPECT_EQ((*result)[2], 6);
@@ -101,11 +106,12 @@ TEST_F(BinaryOpLayerTests, BroadcastingTest1) {
   BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<float>({1.0f, 2.0f}, {2, 1});
   Tensor input2 = make_tensor<float>({3.0f, 4.0f}, {1, 2});
-  Tensor output;
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
 
-  layer.run(input1, input2, output);
+  layer.run(in, output);
 
-  auto* result = output.as<float>();
+  auto* result = output[0].as<float>();
   EXPECT_FLOAT_EQ((*result)[0], 3.0f);
   EXPECT_FLOAT_EQ((*result)[1], 4.0f);
   EXPECT_FLOAT_EQ((*result)[2], 6.0f);
@@ -118,12 +124,13 @@ TEST_F(BinaryOpLayerTests, Broadcasting3D) {
       make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f}, {2, 1, 3});
   Tensor input2 =
       make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f}, {2, 3, 1});
-  Tensor output;
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
 
-  layer.run(input1, input2, output);
+  layer.run(in, output);
 
-  ASSERT_EQ(output.get_shape(), Shape({2, 3, 3}));
-  auto* result = output.as<float>();
+  ASSERT_EQ(output[0].get_shape(), Shape({2, 3, 3}));
+  auto* result = output[0].as<float>();
   EXPECT_FLOAT_EQ((*result)[0], 1.0f);
   EXPECT_FLOAT_EQ((*result)[1], 2.0f);
   EXPECT_FLOAT_EQ((*result)[2], 3.0f);
@@ -143,12 +150,13 @@ TEST_F(BinaryOpLayerTests, BroadcastingDifferentRanks) {
   Tensor input1 = make_tensor<float>({1.0f, 2.0f, 3.0f}, {3});
   Tensor input2 =
       make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f}, {2, 1, 3});
-  Tensor output;
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
 
-  layer.run(input1, input2, output);
+  layer.run(in, output);
 
-  ASSERT_EQ(output.get_shape(), Shape({2, 1, 3}));
-  auto* result = output.as<float>();
+  ASSERT_EQ(output[0].get_shape(), Shape({2, 1, 3}));
+  auto* result = output[0].as<float>();
   EXPECT_FLOAT_EQ((*result)[0], 1.0f);
   EXPECT_FLOAT_EQ((*result)[1], 4.0f);
   EXPECT_FLOAT_EQ((*result)[2], 9.0f);
@@ -159,9 +167,10 @@ TEST_F(BinaryOpLayerTests, IncompatibleShapes) {
   BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor input1 = make_tensor<float>(data1, {4});
   Tensor input2 = make_tensor<float>(data2, {2, 2});
-  Tensor output;
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
 
-  EXPECT_THROW(layer.run(input1, input2, output), std::runtime_error);
+  EXPECT_THROW(layer.run(in, output), std::runtime_error);
 }
 
 TEST_F(BinaryOpLayerTests, LayerName) {
@@ -172,9 +181,10 @@ TEST_F(BinaryOpLayerTests, EmptyTensors) {
   BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor empty1({}, Type::kFloat);
   Tensor empty2({}, Type::kFloat);
-  Tensor output;
+  std::vector<Tensor> in{empty1, empty2};
+  std::vector<Tensor> output{empty1};
 
-  EXPECT_NO_THROW(layer.run(empty1, empty2, output));
+  EXPECT_NO_THROW(layer.run(in, output));
 }
 
 TEST_F(BinaryOpLayerTests, BroadcastingTestAdd) {
@@ -188,12 +198,13 @@ TEST_F(BinaryOpLayerTests, BroadcastingTestAdd) {
        11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f},
       {5, 4, 1, 1});
 
-  Tensor output;
-  layer.run(input1, input2, output);
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
+  layer.run(in, output);
 
-  ASSERT_EQ(output.get_shape(), Shape({5, 4, 1, 1}));
+  ASSERT_EQ(output[0].get_shape(), Shape({5, 4, 1, 1}));
 
-  auto* result = output.as<float>();
+  auto* result = output[0].as<float>();
 
   EXPECT_FLOAT_EQ((*result)[0], 2.0f);
   EXPECT_FLOAT_EQ((*result)[1], 3.0f);
@@ -207,13 +218,33 @@ TEST_F(BinaryOpLayerTests, BroadcastingTestSubGooglNet) {
       {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f,
        12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f},
       {1, 2, 3, 3});
-  Tensor output;
+  std::vector<Tensor> in{input1, scalar};
+  std::vector<Tensor> output{input1};
 
-  layer.run(input1, scalar, output);
+  layer.run(in, output);
 
-  auto* result = output.as<float>();
+  auto* result = output[0].as<float>();
   EXPECT_FLOAT_EQ((*result)[2], 1.0f);
   EXPECT_FLOAT_EQ((*result)[5], 4.0f);
   EXPECT_FLOAT_EQ((*result)[12], 11.0f);
   EXPECT_FLOAT_EQ((*result)[17], 16.0f);
+}
+
+TEST_F(BinaryOpLayerTests, IncompatibleInput) {
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
+  Tensor input1 = make_tensor<float>(data1, {4});
+  std::vector<Tensor> in{input1};
+  std::vector<Tensor> output{input1};
+
+  EXPECT_THROW(layer.run(in, output), std::runtime_error);
+}
+
+TEST_F(BinaryOpLayerTests, IncompatibleInputType) {
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
+  Tensor input1 = make_tensor<float>(data1, {4});
+  Tensor input2 = make_tensor<int>(data_int, {2, 2});
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
+
+  EXPECT_THROW(layer.run(in, output), std::runtime_error);
 }

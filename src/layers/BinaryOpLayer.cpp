@@ -21,60 +21,59 @@ T apply_binary_op(T a, T b, BinaryOpLayer::Operation op) {
 }
 }  // namespace
 
-void BinaryOpLayer::run(const Tensor& input, Tensor& output) {
-  (void)input;
-  (void)output;
-  throw std::runtime_error(
-      "Use run(const Tensor& A, const Tensor& B, Tensor& output) for binary "
-      "operations");
-}
+void BinaryOpLayer::run(const std::vector<Tensor>& input,
+                        std::vector<Tensor>& output) {
+  if (input.size() != 2) {
+    throw std::runtime_error("BinaryOpLayer: Input tensors not 2");
+  }
 
-void BinaryOpLayer::run(const Tensor& A, const Tensor& B, Tensor& output) {
-  if (A.get_type() != B.get_type()) {
+  if (input[0].get_type() != input[1].get_type()) {
     throw std::runtime_error(
         "BinaryOpLayer: Input tensors must have the same type");
   }
 
-  if (is_scalar_tensor(B)) {
-    switch (B.get_type()) {
+  if (is_scalar_tensor(input[1])) {
+    switch (input[1].get_type()) {
       case Type::kFloat:
-        run_with_scalar(A, B.as<float>()->at(0), output);
+        run_with_scalar(input[0], input[1].as<float>()->at(0), output[0]);
         return;
       case Type::kInt:
-        run_with_scalar(A, static_cast<float>(B.as<int>()->at(0)), output);
+        run_with_scalar(input[0], static_cast<float>(input[1].as<int>()->at(0)),
+                        output[0]);
         return;
       default:
         throw std::runtime_error("Unsupported scalar type");
     }
   }
 
-  if (is_scalar_tensor(A)) {
-    switch (A.get_type()) {
+  if (is_scalar_tensor(input[0])) {
+    switch (input[0].get_type()) {
       case Type::kFloat:
-        run_with_scalar(B, A.as<float>()->at(0), output);
+        run_with_scalar(input[1], input[0].as<float>()->at(0), output[0]);
         return;
       case Type::kInt:
-        run_with_scalar(B, static_cast<float>(A.as<int>()->at(0)), output);
+        run_with_scalar(input[1], static_cast<float>(input[0].as<int>()->at(0)),
+                        output[0]);
         return;
       default:
         throw std::runtime_error("BinaryOpLayer: Unsupported scalar type");
     }
   }
 
-  if (!can_broadcast(A.get_shape(), B.get_shape())) {
+  if (!can_broadcast(input[0].get_shape(), input[1].get_shape())) {
     throw std::runtime_error(
         "BinaryOpLayer: Incompatible shapes for broadcasting");
   }
 
   Shape output_shape =
-      calculate_broadcasted_shape(A.get_shape(), B.get_shape());
+      calculate_broadcasted_shape(input[0].get_shape(), input[1].get_shape());
 
-  switch (A.get_type()) {
+  switch (input[0].get_type()) {
     case Type::kFloat:
-      run_broadcast_impl<float>(A, B, output, output_shape);
+      run_broadcast_impl<float>(input[0], input[1], output[0], output_shape);
       break;
     case Type::kInt:
-      run_broadcast_impl<int>(A, B, output, output_shape);
+      run_broadcast_impl<int>(input[0], input[1], output[0], output_shape);
       break;
     default:
       throw std::runtime_error("Unsupported tensor type");

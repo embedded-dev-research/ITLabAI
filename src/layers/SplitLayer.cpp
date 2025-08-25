@@ -5,17 +5,20 @@
 
 namespace it_lab_ai {
 
-void SplitLayer::run(const Tensor& input, Tensor& output) { output = input; }
+void SplitLayer::run(const std::vector<Tensor>& input,
+                     std::vector<Tensor>& output) {
+  if (input.size() != 1) {
+    throw std::runtime_error("SplitLayer: Input tensors not 1");
+  }
 
-void SplitLayer::run(const Tensor& input, std::vector<Tensor>& outputs) {
-  validate(input);
+  validate(input[0]);
 
-  switch (input.get_type()) {
+  switch (input[0].get_type()) {
     case Type::kFloat:
-      split_impl<float>(input, outputs);
+      split_impl<float>(input[0], output);
       break;
     case Type::kInt:
-      split_impl<int>(input, outputs);
+      split_impl<int>(input[0], output);
       break;
     default:
       throw std::runtime_error("Unsupported tensor data type");

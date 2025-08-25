@@ -37,7 +37,7 @@ class Tensor {
   Shape shape_;
   std::vector<uint8_t> values_;
   std::vector<float> bias_;
-  Type type_;
+  Type type_ = Type::kUnknown;
 
   std::vector<uint8_t> SetRightTypeValues() {
     if (type_ == Type::kInt) {

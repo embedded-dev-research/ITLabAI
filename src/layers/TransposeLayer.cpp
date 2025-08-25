@@ -5,8 +5,13 @@
 
 namespace it_lab_ai {
 
-void TransposeLayer::run(const Tensor& input, Tensor& output) {
-  const auto& shape = input.get_shape();
+void TransposeLayer::run(const std::vector<Tensor>& input,
+                         std::vector<Tensor>& output) {
+  if (input.size() != 1) {
+    throw std::runtime_error("TransposeLayer: Input tensors not 1");
+  }
+
+  const auto& shape = input[0].get_shape();
 
   std::vector<int64_t> perm = perm_;
   if (perm.empty()) {
@@ -16,12 +21,12 @@ void TransposeLayer::run(const Tensor& input, Tensor& output) {
 
   validate_perm(shape, perm);
 
-  switch (input.get_type()) {
+  switch (input[0].get_type()) {
     case Type::kFloat:
-      transpose_impl<float>(input, output, perm);
+      transpose_impl<float>(input[0], output[0], perm);
       break;
     case Type::kInt:
-      transpose_impl<int>(input, output, perm);
+      transpose_impl<int>(input[0], output[0], perm);
       break;
     default:
       throw std::runtime_error("Unsupported tensor data type");
