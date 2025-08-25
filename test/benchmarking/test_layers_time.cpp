@@ -11,7 +11,9 @@
 using namespace it_lab_ai;
 
 void test_func(Layer& p, const Tensor& input, Tensor& output) {
-  p.run(input, output);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  p.run(in, out);
 }
 
 TEST(pooling_test, is_pooling_tbb_ok) {

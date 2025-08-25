@@ -21,8 +21,10 @@ TEST(ConvolutionalLayerTest, FStep2) {
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
   ConvolutionalLayer layer(step, 0, 1, kernel);
-  layer.run(input, output);
-  std::vector<float> tmp = *output.as<float>();
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  std::vector<float> tmp = *out[0].as<float>();
   ASSERT_EQ(tmp.size(), expected_output.size());
   for (size_t i = 0; i < tmp.size(); ++i) {
     ASSERT_FLOAT_EQ(tmp[i], expected_output[i]);
@@ -45,8 +47,10 @@ TEST(ConvolutionalLayerTest, FStep1) {
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
   ConvolutionalLayer layer(step, 0, 1, kernel);
-  layer.run(input, output);
-  std::vector<float> tmp = *output.as<float>();
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  std::vector<float> tmp = *out[0].as<float>();
   ASSERT_EQ(tmp.size(), expected_output.size());
   for (size_t i = 0; i < tmp.size(); ++i) {
     ASSERT_FLOAT_EQ(tmp[i], expected_output[i]);
@@ -69,8 +73,10 @@ TEST(ConvolutionalLayerTest, IntStep2) {
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
   ConvolutionalLayer layer(step, 0, 1, kernel);
-  layer.run(input, output);
-  std::vector<int> tmp = *output.as<int>();
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  std::vector<int> tmp = *out[0].as<int>();
   ASSERT_EQ(tmp.size(), expected_output.size());
   for (size_t i = 0; i < tmp.size(); ++i) {
     ASSERT_EQ(tmp[i], expected_output[i]);
@@ -93,8 +99,10 @@ TEST(ConvolutionalLayerTest, IntStep1) {
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
   ConvolutionalLayer layer(step, 0, 1, kernel);
-  layer.run(input, output);
-  std::vector<int> tmp = *output.as<int>();
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  std::vector<int> tmp = *out[0].as<int>();
   ASSERT_EQ(tmp.size(), expected_output.size());
   for (size_t i = 0; i < tmp.size(); ++i) {
     ASSERT_EQ(tmp[i], expected_output[i]);
@@ -119,9 +127,11 @@ TEST(ConvolutionalLayerTest, FloatWithBias) {
   std::vector<float> expected_output(27, 5.5f);
 
   ConvolutionalLayer layer(1, 0, 1, kernel, bias);
-  layer.run(input, output);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
 
-  std::vector<float> tmp = *output.as<float>();
+  std::vector<float> tmp = *out[0].as<float>();
   ASSERT_EQ(tmp.size(), expected_output.size());
 
   for (size_t i = 0; i < tmp.size(); ++i) {
@@ -143,7 +153,10 @@ TEST(ConvolutionalLayerTest, InvalidInputShapeDims) {
 
   ConvolutionalLayer layer(1, 0, 1, kernel);
 
-  EXPECT_THROW(layer.run(input, output), std::out_of_range);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::out_of_range);
 }
 TEST(ConvImplTest, RunReturnsInput) {
   std::vector<float> input = {1.0, 2.0, 3.0, 4.0};
@@ -174,8 +187,10 @@ TEST(ConvolutionalLayerTest, Conv4DKern) {
   Shape sh2({3, 3, 3, 2});
   Tensor kernel = make_tensor(kernelvec, sh2);
   ConvolutionalLayer layer(step, 1, 1, kernel);
-  layer.run(input, output);
-  std::vector<float> tmp = *output.as<float>();
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  std::vector<float> tmp = *out[0].as<float>();
   ASSERT_EQ(tmp.size(), expected_output.size());
 }
 TEST(ConvolutionalLayerTest, Conv4DKern_int) {
@@ -199,8 +214,10 @@ TEST(ConvolutionalLayerTest, Conv4DKern_int) {
   Shape sh2({5, 5, 1, 16});
   Tensor kernel = make_tensor(kernelvec, sh2);
   ConvolutionalLayer layer(step, 0, 2, kernel);
-  layer.run(input, output);
-  std::vector<int> tmp = *output.as<int>();
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  std::vector<int> tmp = *out[0].as<int>();
   ASSERT_EQ(tmp, expected_output);
 }
 TEST(ConvolutionalLayerTest, Conv4DKern_int_36) {
@@ -224,7 +241,9 @@ TEST(ConvolutionalLayerTest, Conv4DKern_int_36) {
   Shape sh2({5, 5, 16, 36});
   Tensor kernel = make_tensor(kernelvec, sh2);
   ConvolutionalLayer layer(step, (kernel.get_shape()[0] - 1) / 2, 1, kernel);
-  layer.run(input, output);
-  std::vector<int> tmp = *output.as<int>();
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  std::vector<int> tmp = *out[0].as<int>();
   ASSERT_EQ(tmp.size(), expected_output.size());
 }
