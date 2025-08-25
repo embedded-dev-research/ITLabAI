@@ -46,7 +46,8 @@ class Layer {
   void setID(int id) { id_ = id; }
   LayerType getName() const { return type_; }
   void setName(LayerType type) { type_ = type; }
-  virtual void run(const std::vector<Tensor>& input, std::vector<Tensor>& output) = 0;
+  virtual void run(const std::vector<Tensor>& input,
+                   std::vector<Tensor>& output) = 0;
 #ifdef ENABLE_STATISTIC_WEIGHTS
   virtual Tensor get_weights() = 0;
 #endif

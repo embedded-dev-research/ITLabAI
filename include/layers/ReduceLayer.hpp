@@ -11,10 +11,13 @@ class ReduceLayer : public Layer {
  public:
   enum class Operation : uint8_t { kSum, kMean, kMult, kMax, kMin };
 
-  ReduceLayer(Operation op, int64_t keepdims = 0, const Tensor& axes = make_tensor(std::vector<int>{}));
-  explicit ReduceLayer(int64_t keepdims = 0, const Tensor& axes = make_tensor(std::vector<int>{}))
+  ReduceLayer(Operation op, int64_t keepdims = 0,
+              const Tensor& axes = make_tensor(std::vector<int>{}));
+  explicit ReduceLayer(int64_t keepdims = 0,
+                       const Tensor& axes = make_tensor(std::vector<int>{}))
       : ReduceLayer(Operation::kSum, keepdims, axes) {}
-  void run(const std::vector<Tensor>& input, std::vector<Tensor>& output) override;
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override;
 
   static std::string get_name() { return "ReduceLayer"; }
 

@@ -34,10 +34,10 @@ class InputLayer : public Layer {
     return a;
   }
 #endif
-  void run(const std::vector<Tensor>& input, std::vector<Tensor>& output) override {
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override {
     if (input.size() != 1) {
-    throw std::runtime_error(
-        "InputLayer: Input tensors not 1");
+      throw std::runtime_error("InputLayer: Input tensors not 1");
     }
     switch (input[0].get_type()) {
       case Type::kInt: {
