@@ -122,8 +122,8 @@ class Graph {
           bool check = false;
           if (arrayE_[arrayV_[top_branch.ind_layer]] == traversal[i]) {
             std::vector<Tensor> r = {top_branch.give_for_all[0]};
-            for (size_t k = 0; k < inten_.size(); k++) {
-              r.push_back(inten_[k]);
+            for (const auto& k : inten_) {
+              r.push_back(k);
             }
             inten_ = r;
           } else {
@@ -237,11 +237,7 @@ class Graph {
         new_branch.give_for_all = inten_;
         new_branch.count_used_ten = 0;
         new_branch.ind_layer = static_cast<uint8_t>(traversal[i]);
-        if (layers_[traversal[i]]->getName() == kSplit) {
-          new_branch.split = true;
-        } else {
-          new_branch.split = false;
-        }
+        new_branch.split = layers_[traversal[i]]->getName() == kSplit;
         branch_stack_.push(new_branch);
       }
 
