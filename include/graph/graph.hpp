@@ -117,7 +117,7 @@ class Graph {
 #endif
       if (countinout[traversal[i]].first > 1) {
         inten_ = branch_stack.top().buf;
-        if (inten_.size() < countinout[traversal[i]].first) {
+        if (static_cast<int>(inten_.size()) < countinout[traversal[i]].first) {
           BranchState& top_branch = branch_stack.top();
           bool check = 0;
           if (arrayE_[arrayV_[top_branch.ind_layer]] == traversal[i]) {
@@ -127,8 +127,8 @@ class Graph {
             }
             inten_ = r;
           } else {
-            for (size_t i1 = 1; i1 < arrayV_[top_branch.ind_layer + 1] -
-                                         arrayV_[top_branch.ind_layer];
+            for (int i1 = 1; i1 < arrayV_[top_branch.ind_layer + 1] -
+                                      arrayV_[top_branch.ind_layer];
                  ++i1)
               if (arrayE_[arrayV_[top_branch.ind_layer] + i1] == traversal[i])
                 check = 1;
@@ -143,13 +143,15 @@ class Graph {
           }
         }
         branch_stack.pop();
-        while (inten_.size() < countinout[traversal[i]].first) {
+        while (static_cast<int>(inten_.size()) <
+               countinout[traversal[i]].first) {
           std::vector<Tensor> r = branch_stack.top().buf;
           for (size_t k = 0; k < inten_.size(); k++) {
             r.push_back(inten_[k]);
           }
           inten_ = r;
-          if (inten_.size() < countinout[traversal[i]].first) {
+          if (static_cast<int>(inten_.size()) <
+              countinout[traversal[i]].first) {
             BranchState& top_branch = branch_stack.top();
             bool check = 0;
             if (arrayE_[arrayV_[top_branch.ind_layer]] == traversal[i]) {
@@ -159,8 +161,8 @@ class Graph {
               }
               inten_ = r1;
             } else {
-              for (size_t i1 = 1; i1 < arrayV_[top_branch.ind_layer + 1] -
-                                           arrayV_[top_branch.ind_layer];
+              for (int i1 = 1; i1 < arrayV_[top_branch.ind_layer + 1] -
+                                        arrayV_[top_branch.ind_layer];
                    ++i1)
                 if (arrayE_[arrayV_[top_branch.ind_layer] + i1] == traversal[i])
                   check = 1;
