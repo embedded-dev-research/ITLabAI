@@ -18,6 +18,16 @@ TEST(TransposeLayerTest, EmptyTensor) {
   EXPECT_THROW(layer.run(in, out), std::runtime_error);
 }
 
+TEST(TransposeLayerTest, InvalidInput) {
+  Tensor input = make_tensor<float>({}, {0});
+  TransposeLayer layer;
+  Tensor output;
+  std::vector<Tensor> in{input, input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::runtime_error);
+}
+
 TEST(TransposeLayerTest, IdentityTranspose) {
   Tensor input = make_tensor<float>({1, 2, 3, 4}, {2, 2});
   TransposeLayer layer({0, 1});

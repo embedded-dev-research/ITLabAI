@@ -33,7 +33,7 @@ class Graph {
   Tensor* outtenres_;
   int start_;
   int end_;
-  std::stack<BranchState> branch_stack;
+  std::stack<BranchState> branch_stack_;
 #ifdef ENABLE_STATISTIC_TENSORS
   std::vector<Tensor> tensors_;
 #endif
@@ -62,15 +62,15 @@ class Graph {
     V_++;
   }
   void makeConnection(const Layer& layPrev, Layer& layNext) {
-    bool layerExists = false;
+    bool layer_exists = false;
     for (const auto* layer : layers_) {
       if (layer == &layNext) {
-        layerExists = true;
+        layer_exists = true;
         break;
       }
     }
 
-    if (!layerExists) {
+    if (!layer_exists) {
       layNext.setID(V_);
       layers_.push_back(&layNext);
       arrayV_.push_back(static_cast<int>(arrayE_.size()));
@@ -116,10 +116,10 @@ class Graph {
       auto start = std::chrono::high_resolution_clock::now();
 #endif
       if (countinout[traversal[i]].first > 1) {
-        inten_ = branch_stack.top().buf;
+        inten_ = branch_stack_.top().buf;
         if (static_cast<int>(inten_.size()) < countinout[traversal[i]].first) {
-          BranchState& top_branch = branch_stack.top();
-          bool check = 0;
+          BranchState& top_branch = branch_stack_.top();
+          bool check = false;
           if (arrayE_[arrayV_[top_branch.ind_layer]] == traversal[i]) {
             std::vector<Tensor> r = {top_branch.give_for_all[0]};
             for (size_t k = 0; k < inten_.size(); k++) {
@@ -131,7 +131,7 @@ class Graph {
                                       arrayV_[top_branch.ind_layer];
                  ++i1)
               if (arrayE_[arrayV_[top_branch.ind_layer] + i1] == traversal[i])
-                check = 1;
+                check = true;
           }
           if (check) {
             if (!top_branch.split)
@@ -142,22 +142,22 @@ class Graph {
             }
           }
         }
-        branch_stack.pop();
+        branch_stack_.pop();
         while (static_cast<int>(inten_.size()) <
                countinout[traversal[i]].first) {
-          std::vector<Tensor> r = branch_stack.top().buf;
-          for (size_t k = 0; k < inten_.size(); k++) {
-            r.push_back(inten_[k]);
+          std::vector<Tensor> r = branch_stack_.top().buf;
+          for (const auto& k : inten_) {
+            r.push_back(k);
           }
           inten_ = r;
           if (static_cast<int>(inten_.size()) <
               countinout[traversal[i]].first) {
-            BranchState& top_branch = branch_stack.top();
-            bool check = 0;
+            BranchState& top_branch = branch_stack_.top();
+            bool check = false;
             if (arrayE_[arrayV_[top_branch.ind_layer]] == traversal[i]) {
               std::vector<Tensor> r1 = {top_branch.give_for_all[0]};
-              for (size_t k = 0; k < inten_.size(); k++) {
-                r1.push_back(inten_[k]);
+              for (const auto& k : inten_) {
+                r1.push_back(k);
               }
               inten_ = r1;
             } else {
@@ -165,7 +165,7 @@ class Graph {
                                         arrayV_[top_branch.ind_layer];
                    ++i1)
                 if (arrayE_[arrayV_[top_branch.ind_layer] + i1] == traversal[i])
-                  check = 1;
+                  check = true;
             }
             if (check) {
               if (!top_branch.split)
@@ -177,12 +177,12 @@ class Graph {
               }
             }
           }
-          branch_stack.pop();
+          branch_stack_.pop();
         }
       } else {
         if (countinout[traversal[i]].first != 0) {
           if (countinout[arrayE_[arrayV_[traversal[i - 1]]]].first > 1) {
-            BranchState& top_branch = branch_stack.top();
+            BranchState& top_branch = branch_stack_.top();
             if (!top_branch.split) {
               inten_ = top_branch.give_for_all;
             } else {
@@ -190,7 +190,7 @@ class Graph {
               top_branch.count_used_ten++;
             }
           } else if (layers_[traversal[i - 1]]->getName() == kSplit) {
-            BranchState& top_branch = branch_stack.top();
+            BranchState& top_branch = branch_stack_.top();
             if (top_branch.count_used_ten == 0) {
               inten_ = {top_branch.give_for_all[top_branch.count_used_ten]};
               top_branch.count_used_ten++;
@@ -229,7 +229,7 @@ class Graph {
       }
       if (countinout[traversal[i]].second == 1 &&
           countinout[arrayE_[arrayV_[traversal[i]]]].first > 1) {
-        BranchState& top_branch = branch_stack.top();
+        BranchState& top_branch = branch_stack_.top();
         top_branch.buf.push_back(inten_[0]);
       }
       if (countinout[traversal[i]].second > 1) {
@@ -238,11 +238,11 @@ class Graph {
         new_branch.count_used_ten = 0;
         new_branch.ind_layer = static_cast<uint8_t>(traversal[i]);
         if (layers_[traversal[i]]->getName() == kSplit) {
-          new_branch.split = 1;
+          new_branch.split = true;
         } else {
-          new_branch.split = 0;
+          new_branch.split = false;
         }
-        branch_stack.push(new_branch);
+        branch_stack_.push(new_branch);
       }
 
 #ifdef ENABLE_STATISTIC_TIME
@@ -283,30 +283,30 @@ class Graph {
   std::vector<Tensor> getWEIGHTS() { return weights_; }
 #endif
   std::vector<std::pair<int, int>> getInOutDegrees() const {
-    std::vector<int> inDegree(V_, 0);
+    std::vector<int> in_degree(V_, 0);
 
     for (int i = 0; i < V_; ++i) {
       for (int j = arrayV_[i]; j < arrayV_[i + 1]; ++j) {
-        int targetVertex = arrayE_[j];
-        if (targetVertex >= 0 && targetVertex < V_) {
-          inDegree[targetVertex]++;
+        int target_vertex = arrayE_[j];
+        if (target_vertex >= 0 && target_vertex < V_) {
+          in_degree[target_vertex]++;
         }
       }
     }
 
     std::vector<std::pair<int, int>> result;
     for (int i = 0; i < V_; ++i) {
-      int outDegree = arrayV_[i + 1] - arrayV_[i];
-      result.emplace_back(inDegree[i], outDegree);
+      int out_degree = arrayV_[i + 1] - arrayV_[i];
+      result.emplace_back(in_degree[i], out_degree);
     }
 
     return result;
   }
   std::vector<int> getTraversalOrder() const {
-    auto inOutDegrees = getInOutDegrees();
-    std::vector<int> inDegree(V_);
+    auto in_out_degrees = getInOutDegrees();
+    std::vector<int> in_degree(V_);
     for (int i = 0; i < V_; ++i) {
-      inDegree[i] = inOutDegrees[i].first;
+      in_degree[i] = in_out_degrees[i].first;
     }
 
     std::vector<int> traversal;
@@ -326,15 +326,15 @@ class Graph {
       std::sort(children.begin(), children.end());
 
       for (int child : children) {
-        inDegree[child]--;
-        if (inDegree[child] == 0 && !visited[child]) {
+        in_degree[child]--;
+        if (in_degree[child] == 0 && !visited[child]) {
           dfs(child);
         }
       }
     };
 
     for (int i = 0; i < V_; ++i) {
-      if (inDegree[i] == 0 && !visited[i]) {
+      if (in_degree[i] == 0 && !visited[i]) {
         dfs(i);
       }
     }

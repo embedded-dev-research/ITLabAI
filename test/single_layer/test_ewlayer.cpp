@@ -113,6 +113,16 @@ TEST(ewlayer, new_ewlayer_can_linear_float) {
   }
 }
 
+TEST(ewlayer, IncompatibleInput) {
+  EWLayer layer("abra");
+  Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F});
+  Tensor output;
+  std::vector<float> converted_input = {1.0F, 0.0F, 2.0F, 0.0F};
+  std::vector<Tensor> in{input, input};
+  std::vector<Tensor> out{output};
+  ASSERT_ANY_THROW(layer.run(in, out));
+}
+
 TEST(ewlayer, new_ewlayer_throws_with_invalid_function) {
   EWLayer layer("abra");
   Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F});

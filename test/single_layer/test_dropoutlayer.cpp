@@ -6,6 +6,16 @@
 
 using namespace it_lab_ai;
 
+TEST(DropOutLayer, IncompatibleInput) {
+  DropOutLayer layer(1);
+  Shape sh({2, 2});
+  Tensor input = make_tensor<int>({1, -1, 2, -2}, sh);
+  Tensor output;
+  std::vector<Tensor> in{input, input};
+  std::vector<Tensor> out{output};
+  ASSERT_ANY_THROW(layer.run(in, out));
+}
+
 TEST(DropOutLayer, dropoutlayer_int) {
   DropOutLayer layer(1);
   Shape sh({2, 2});

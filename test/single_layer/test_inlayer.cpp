@@ -122,3 +122,14 @@ TEST(input, run_float_NHWC_NCHW_C3) {
   std::vector<float> res = {1, 4, 7, 10, 2, 5, 8, 11, 3, 6, 9, 12};
   ASSERT_EQ(tmp, res);
 }
+
+TEST(input, InvalidInput) {
+  Shape sh1({1, 2, 2, 3});
+  std::vector<float> vec = {3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25};
+  Tensor input = make_tensor(vec, sh1);
+  Tensor output = make_tensor(vec, sh1);
+  InputLayer layer(kNhwc, kNchw, 1, 2);
+  std::vector<Tensor> in{input, input};
+  std::vector<Tensor> out{output};
+  ASSERT_ANY_THROW(layer.run(in, out));
+}

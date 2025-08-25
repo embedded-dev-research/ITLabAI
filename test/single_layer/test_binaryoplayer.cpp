@@ -229,3 +229,22 @@ TEST_F(BinaryOpLayerTests, BroadcastingTestSubGooglNet) {
   EXPECT_FLOAT_EQ((*result)[12], 11.0f);
   EXPECT_FLOAT_EQ((*result)[17], 16.0f);
 }
+
+TEST_F(BinaryOpLayerTests, IncompatibleInput) {
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
+  Tensor input1 = make_tensor<float>(data1, {4});
+  std::vector<Tensor> in{input1};
+  std::vector<Tensor> output{input1};
+
+  EXPECT_THROW(layer.run(in, output), std::runtime_error);
+}
+
+TEST_F(BinaryOpLayerTests, IncompatibleInputType) {
+  BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
+  Tensor input1 = make_tensor<float>(data1, {4});
+  Tensor input2 = make_tensor<int>(data_int, {2, 2});
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
+
+  EXPECT_THROW(layer.run(in, output), std::runtime_error);
+}

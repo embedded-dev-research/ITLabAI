@@ -124,6 +124,17 @@ TEST(SplitLayerTests, InvalidSplitSizes) {
   EXPECT_THROW(splitter.run(in, outputs), std::runtime_error);
 }
 
+TEST(SplitLayerTests, InvalidInput) {
+  Tensor input = make_tensor<float>({1, 2, 3, 4}, {4});
+
+  SplitLayer splitter(0, {1, 2});
+
+  std::vector<Tensor> outputs;
+  std::vector<Tensor> in{input, input};
+
+  EXPECT_THROW(splitter.run(in, outputs), std::runtime_error);
+}
+
 TEST(SplitLayerTests, EmptyInputTensor) {
   Tensor input = make_tensor<float>({}, {0});
 

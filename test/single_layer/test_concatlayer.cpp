@@ -17,6 +17,33 @@ TEST(ConcatLayerTests, ConcatEmptyTensors) {
   EXPECT_THROW(layer.run({empty1, empty2}, output), std::runtime_error);
 }
 
+TEST(ConcatLayerTests, IncompatibleInput) {
+  ConcatLayer layer(0);
+
+  Tensor empty1 = make_tensor<float>({}, {0});
+
+  std::vector<Tensor> input;
+
+  std::vector<Tensor> output{empty1};
+
+  EXPECT_THROW(layer.run(input, output), std::runtime_error);
+}
+
+TEST(ConcatLayerTests, ConcatInput1) {
+  ConcatLayer layer(1);
+  Tensor input1 = make_tensor<int>({1, 2, 3, 4}, {2, 2});
+  std::vector<Tensor> output{input1};
+
+  layer.run({input1}, output);
+
+  ASSERT_EQ(output[0].get_shape(), Shape({2, 2}));
+
+  EXPECT_EQ(output[0].get<int>({0, 0}), 1);
+  EXPECT_EQ(output[0].get<int>({0, 1}), 2);
+  EXPECT_EQ(output[0].get<int>({1, 0}), 3);
+  EXPECT_EQ(output[0].get<int>({1, 1}), 4);
+}
+
 TEST(ConcatLayerTests, ConcatSingleElementTensors) {
   ConcatLayer layer(0);
 

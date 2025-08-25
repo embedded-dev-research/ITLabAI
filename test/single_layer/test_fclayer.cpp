@@ -192,6 +192,19 @@ TEST(fclayer, new_fc_layer_throws_with_incorrect_bias_type) {
   ASSERT_ANY_THROW(layer.run(in, out));
 }
 
+TEST(fclayer, IncompatibleInput) {
+  const std::vector<float> a1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(a1, {3, 2});
+  Tensor output;
+  Shape wshape({3, 2});
+  Tensor bias = make_tensor<int>({2, 5, 6});
+  FCLayer layer;
+  std::vector<Tensor> in{make_tensor<float>({2.0F, 3.0F}),
+                         make_tensor<float>({2.0F, 3.0F})};
+  std::vector<Tensor> out{output};
+  ASSERT_ANY_THROW(layer.run(in, out));
+}
+
 TEST(fclayer, new_fc_layer_throws_with_incorrect_input_type) {
   const std::vector<float> a1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   Tensor weights = make_tensor<float>(a1, {3, 2});

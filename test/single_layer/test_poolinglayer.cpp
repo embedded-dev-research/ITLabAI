@@ -223,3 +223,15 @@ TEST(poolinglayer, new_pooling_layer_tbb_can_run_1d_pooling_float) {
     EXPECT_NEAR((*out[0].as<float>())[i], true_output[i], 1e-5);
   }
 }
+
+TEST(poolinglayer, IncompatibleInput) {
+  Shape inpshape = {8};
+  Shape poolshape = {3};
+  PoolingLayer a(poolshape, "average");
+  std::vector<float> input({9.0F, 8.0F, 7.0F, 6.0F, 5.0F, 4.0F, 3.0F, 2.0F});
+  Tensor output = make_tensor<float>({0});
+  std::vector<Tensor> in{make_tensor(input, inpshape),
+                         make_tensor(input, inpshape)};
+  std::vector<Tensor> out{output};
+  EXPECT_THROW(a.run(in, out), std::runtime_error);
+}

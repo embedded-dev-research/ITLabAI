@@ -50,6 +50,18 @@ TEST(ReduceLayer, SumAlongAxis1KeepDims) {
   EXPECT_FLOAT_EQ(out[0].get<float>({1, 0}), 7.0f);
 }
 
+TEST(ReduceLayer, IncompatibleInput) {
+  Tensor input = make_tensor<float>({1.0f, 2.0f}, {2});
+  Tensor axes = make_tensor<int>({2});
+  ReduceLayer layer(0, axes);
+
+  Tensor output;
+
+  std::vector<Tensor> in{input, input};
+  std::vector<Tensor> out{output};
+  ASSERT_THROW(layer.run(in, out), std::runtime_error);
+}
+
 TEST(ReduceLayer, InvalidAxisThrows) {
   Tensor input = make_tensor<float>({1.0f, 2.0f}, {2});
   Tensor axes = make_tensor<int>({2});
