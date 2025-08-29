@@ -2,8 +2,8 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <list>
 #include <queue>
-#include <stack>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -15,11 +15,11 @@
 namespace it_lab_ai {
 
 struct BranchState {
+  int ind_layer;
   std::vector<Tensor> give_for_all;
-  std::vector<Tensor> buf;
-  uint8_t count_used_ten;
+  int count_used_ten;
   bool split;
-  uint8_t ind_layer;
+  std::vector<std::pair<int, int>> distribution;
 };
 
 class Graph {
@@ -33,7 +33,8 @@ class Graph {
   Tensor* outtenres_;
   int start_;
   int end_;
-  std::stack<BranchState> branch_stack_;
+  std::list<BranchState> branch_list_;
+  std::vector<std::vector<int>> in_edges_;
 #ifdef ENABLE_STATISTIC_TENSORS
   std::vector<Tensor> tensors_;
 #endif
@@ -52,6 +53,7 @@ class Graph {
     }
     arrayV_.push_back(0);
     V_ = 0;
+    in_edges_.clear();
   }
   void setInput(Layer& lay, Tensor& vec) {
     lay.setID(0);
@@ -60,6 +62,7 @@ class Graph {
     inten_ = {vec};
     start_ = lay.getID();
     V_++;
+    in_edges_.resize(1);
   }
   void makeConnection(const Layer& layPrev, Layer& layNext) {
     bool layer_exists = false;
@@ -74,6 +77,11 @@ class Graph {
       layNext.setID(V_);
       layers_.push_back(&layNext);
       arrayV_.push_back(static_cast<int>(arrayE_.size()));
+
+      if (V_ >= in_edges_.size()) {
+        in_edges_.resize(V_ + 1);
+      }
+
       V_++;
     }
 
@@ -84,9 +92,14 @@ class Graph {
     for (int i = layPrev.getID() + 1; i < V_; ++i) {
       arrayV_[i]++;
     }
-
     arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.getID()], layNext.getID());
     arrayV_[V_] = static_cast<int>(arrayE_.size());
+
+    if (layNext.getID() >= in_edges_.size()) {
+      in_edges_.resize(layNext.getID() + 1);
+    }
+
+    in_edges_[layNext.getID()].push_back(layPrev.getID());
   }
   bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
     for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];
@@ -100,6 +113,12 @@ class Graph {
   void inference() {
     std::vector<std::pair<int, int>> countinout = getInOutDegrees();
     std::vector<int> traversal = getTraversalOrder();
+    // for (size_t i = 0; i < in_edges_.size(); ++i) {
+    //   for (size_t j = 0; j < in_edges_[i].size(); ++j) {
+    //     std::cout << in_edges_[i][j] << " ";
+    //   }
+    //   std::cout << std::endl;
+    // }
     // for (size_t i = 0; i < countinout.size(); ++i) {
     //   std::cout << "Vertex " << i << ": in=" << countinout[i].first
     //             << ", out=" << countinout[i].second << std::endl;
@@ -109,95 +128,34 @@ class Graph {
     // }
     // std::cout << std::endl;
 
-    // std::cout << std::endl;
-
     for (size_t i = 0; i < traversal.size(); ++i) {
 #ifdef ENABLE_STATISTIC_TIME
       auto start = std::chrono::high_resolution_clock::now();
 #endif
-      if (countinout[traversal[i]].first > 1) {
-        inten_ = branch_stack_.top().buf;
-        if (static_cast<int>(inten_.size()) < countinout[traversal[i]].first) {
-          BranchState& top_branch = branch_stack_.top();
-          bool check = false;
-          if (arrayE_[arrayV_[top_branch.ind_layer]] == traversal[i]) {
-            std::vector<Tensor> r = {top_branch.give_for_all[0]};
-            for (const auto& k : inten_) {
-              r.push_back(k);
-            }
-            inten_ = r;
-          } else {
-            for (int i1 = 1; i1 < arrayV_[top_branch.ind_layer + 1] -
-                                      arrayV_[top_branch.ind_layer];
-                 ++i1)
-              if (arrayE_[arrayV_[top_branch.ind_layer] + i1] == traversal[i])
-                check = true;
-          }
-          if (check) {
-            if (!top_branch.split)
-              inten_.push_back(top_branch.give_for_all[0]);
-            else {
-              inten_.push_back(
-                  top_branch.give_for_all[top_branch.give_for_all.size() - 1]);
-            }
-          }
-        }
-        branch_stack_.pop();
-        while (static_cast<int>(inten_.size()) <
-               countinout[traversal[i]].first) {
-          std::vector<Tensor> r = branch_stack_.top().buf;
-          for (const auto& k : inten_) {
-            r.push_back(k);
-          }
-          inten_ = r;
-          if (static_cast<int>(inten_.size()) <
-              countinout[traversal[i]].first) {
-            BranchState& top_branch = branch_stack_.top();
-            bool check = false;
-            if (arrayE_[arrayV_[top_branch.ind_layer]] == traversal[i]) {
-              std::vector<Tensor> r1 = {top_branch.give_for_all[0]};
-              for (const auto& k : inten_) {
-                r1.push_back(k);
-              }
-              inten_ = r1;
-            } else {
-              for (int i1 = 1; i1 < arrayV_[top_branch.ind_layer + 1] -
-                                        arrayV_[top_branch.ind_layer];
-                   ++i1)
-                if (arrayE_[arrayV_[top_branch.ind_layer] + i1] == traversal[i])
-                  check = true;
-            }
-            if (check) {
-              if (!top_branch.split)
-                inten_.push_back(top_branch.give_for_all[0]);
-              else {
-                inten_.push_back(
-                    top_branch
-                        .give_for_all[top_branch.give_for_all.size() - 1]);
+      if (i != 0) {
+        inten_.clear();
+        for (size_t k = 0; k < in_edges_[traversal[i]].size(); ++k) {
+          auto target_value = in_edges_[traversal[i]][k];
+
+          auto it = std::find_if(branch_list_.rbegin(), branch_list_.rend(),
+                                 [target_value](const BranchState& s) {
+                                   return s.ind_layer == target_value;
+                                 });
+          if (it != branch_list_.rend()) {
+            for (size_t f = 0; f < it->distribution.size(); ++f) {
+              if (it->distribution[f].first == traversal[i]) {
+                inten_.push_back(it->give_for_all[it->distribution[f].second]);
               }
             }
           }
-          branch_stack_.pop();
-        }
-      } else {
-        if (countinout[traversal[i]].first != 0) {
-          if (countinout[arrayE_[arrayV_[traversal[i - 1]]]].first > 1) {
-            BranchState& top_branch = branch_stack_.top();
-            if (!top_branch.split) {
-              inten_ = top_branch.give_for_all;
-            } else {
-              inten_ = {top_branch.give_for_all[top_branch.count_used_ten]};
-              top_branch.count_used_ten++;
-            }
-          } else if (layers_[traversal[i - 1]]->getName() == kSplit) {
-            BranchState& top_branch = branch_stack_.top();
-            if (top_branch.count_used_ten == 0) {
-              inten_ = {top_branch.give_for_all[top_branch.count_used_ten]};
-              top_branch.count_used_ten++;
-            }
+          it->count_used_ten--;
+          if (it->count_used_ten < 1) {
+            auto rit = std::next(it).base();
+            it = std::reverse_iterator<decltype(rit)>(branch_list_.erase(rit));
           }
         }
       }
+
       //   std::cout << "inten_" << std::endl;
       // for (size_t m = 0; m < inten_.size(); ++m) {
       //   std::cout << inten_[m] << " ";
@@ -219,7 +177,6 @@ class Graph {
 #endif
 
       inten_ = outten_;
-      if (outten_.size() > 1) outten_.resize(1);
       if (layers_[traversal[i]]->postops.count > 0) {
         for (unsigned int j = 0; j < layers_[traversal[i]]->postops.count;
              j++) {
@@ -227,19 +184,26 @@ class Graph {
         }
         inten_ = outten_;
       }
-      if (countinout[traversal[i]].second == 1 &&
-          countinout[arrayE_[arrayV_[traversal[i]]]].first > 1) {
-        BranchState& top_branch = branch_stack_.top();
-        top_branch.buf.push_back(inten_[0]);
+
+      BranchState new_branch;
+      new_branch.give_for_all = inten_;
+      new_branch.count_used_ten = countinout[traversal[i]].second;
+      new_branch.ind_layer = traversal[i];
+      new_branch.split = layers_[traversal[i]]->getName() == kSplit;
+      if (layers_[traversal[i]]->getName() == kSplit) {
+        std::vector<std::pair<int, int>> dis(countinout[traversal[i]].second);
+        for (size_t m = 0; m < dis.size(); ++m) {
+          dis[m] = {arrayE_[arrayV_[traversal[i]] + m], static_cast<int>(m)};
+        }
+        new_branch.distribution = dis;
+      } else {
+        std::vector<std::pair<int, int>> dis(countinout[traversal[i]].second);
+        for (size_t m = 0; m < dis.size(); ++m) {
+          dis[m] = {arrayE_[arrayV_[traversal[i]] + m], 0};
+        }
+        new_branch.distribution = dis;
       }
-      if (countinout[traversal[i]].second > 1) {
-        BranchState new_branch;
-        new_branch.give_for_all = inten_;
-        new_branch.count_used_ten = 0;
-        new_branch.ind_layer = static_cast<uint8_t>(traversal[i]);
-        new_branch.split = layers_[traversal[i]]->getName() == kSplit;
-        branch_stack_.push(new_branch);
-      }
+      branch_list_.push_back(new_branch);
 
 #ifdef ENABLE_STATISTIC_TIME
       auto end = std::chrono::high_resolution_clock::now();

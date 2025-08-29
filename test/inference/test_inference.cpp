@@ -71,8 +71,8 @@ TEST(bfs, check_struct_graph) {
   graph.makeConnection(a3_2, a3_2_1);
   graph.makeConnection(a3_2_1, a4);
   graph.makeConnection(a4, a5);
-  graph.makeConnection(a5, a6_1);
   graph.makeConnection(a5, a7);
+  graph.makeConnection(a5, a6_1);
   graph.makeConnection(a5, a6_2);
   graph.makeConnection(a6_1, a7);
   graph.makeConnection(a6_2, a7);
@@ -84,8 +84,8 @@ TEST(bfs, check_struct_graph) {
   graph.makeConnection(a9_2, a10);
   graph.makeConnection(a9_3, a10);
   graph.makeConnection(a10, a11_1);
-  graph.makeConnection(a10, a12);
   graph.makeConnection(a11_1, a12);
+  graph.makeConnection(a10, a12);
   graph.setOutput(a12, output);
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
@@ -93,63 +93,63 @@ TEST(bfs, check_struct_graph) {
   ASSERT_EQ(tmp, res);
 }
 
-// TEST(bfs, check_struct_graph_not_used_yolo) { //densenet not working too
-//   Graph graph(151);
-//   Shape sh1({1, 4, 2, 2});
-//   std::vector<int> vec;
-//   vec.reserve(16);
-//   for (int i = 0; i < 16; ++i) {
-//     vec.push_back(3);
-//   }
-//   Tensor input = make_tensor(vec, sh1);
-//   Tensor output = make_tensor(vec, sh1);
+TEST(bfs, check_struct_graph_not_used_yolo) {
+  Graph graph(151);
+  Shape sh1({1, 4, 2, 2});
+  std::vector<int> vec;
+  vec.reserve(16);
+  for (int i = 0; i < 16; ++i) {
+    vec.push_back(3);
+  }
+  Tensor input = make_tensor(vec, sh1);
+  Tensor output = make_tensor(vec, sh1);
 
-//   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
-//   Shape sh2({3, 3});
-//   Tensor kernel = make_tensor(kernelvec, sh2);
-//   // EWLayer a2("relu"); //split 1 , 4
-//   SplitLayer a2(1, 4);
+  std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+  Shape sh2({3, 3});
+  Tensor kernel = make_tensor(kernelvec, sh2);
+  // EWLayer a2("relu"); //split 1 , 4
+  SplitLayer a2(1, 4);
 
-//   EWLayer a3_1("relu");
-//   EWLayer a3_1_1("relu");
+  EWLayer a3_1("relu");
+  EWLayer a3_1_1("relu");
 
-//   ConcatLayer a3_2(0);
-//   EWLayer a3_2_1("relu");
+  ConcatLayer a3_2(0);
+  EWLayer a3_2_1("relu");
 
-//   EWLayer a3_3("relu");
-//   ConcatLayer a3_3_1(0);
-//   EWLayer a3_3_2("relu");
-//   EWLayer a3_3_3("relu");
-//   EWLayer a3_3_4("relu");
+  EWLayer a3_3("relu");
+  ConcatLayer a3_3_1(0);
+  EWLayer a3_3_2("relu");
+  EWLayer a3_3_3("relu");
+  EWLayer a3_3_4("relu");
 
-//   ConcatLayer a4(0);
+  ConcatLayer a4(0);
 
-//   a2.setName(kSplit);
-//   a3_1.setName(kConvolution);
-//   a3_2.setName(kConvolution);
-//   a4.setName(kConcat);
+  a2.setName(kSplit);
+  a3_1.setName(kConvolution);
+  a3_2.setName(kConvolution);
+  a4.setName(kConcat);
 
-//   graph.setInput(a2, input);
-//   graph.makeConnection(a2, a3_1);
-//   graph.makeConnection(a2, a3_2);
-//   graph.makeConnection(a2, a3_3);
-//   graph.makeConnection(a3_1, a3_1_1);
-//   graph.makeConnection(a3_1_1, a4);
-//   graph.makeConnection(a3_2, a3_2_1);
-//   graph.makeConnection(a3_2_1, a4);
-//   graph.makeConnection(a3_3, a3_3_1);
-//   graph.makeConnection(a2, a3_3_1);
-//   graph.makeConnection(a3_3_1, a3_3_2);
-//   graph.makeConnection(a3_3_2, a3_3_3);
-//   graph.makeConnection(a3_3_3, a3_3_4);
-//   graph.makeConnection(a3_3_4, a3_2);
+  graph.setInput(a2, input);
+  graph.makeConnection(a2, a3_1);
+  graph.makeConnection(a2, a3_2);
+  graph.makeConnection(a2, a3_3);
+  graph.makeConnection(a3_1, a3_1_1);
+  graph.makeConnection(a3_1_1, a4);
+  graph.makeConnection(a3_2, a3_2_1);
+  graph.makeConnection(a3_2_1, a4);
+  graph.makeConnection(a3_3, a3_3_1);
+  graph.makeConnection(a2, a3_3_1);
+  graph.makeConnection(a3_3_1, a3_3_2);
+  graph.makeConnection(a3_3_2, a3_3_3);
+  graph.makeConnection(a3_3_3, a3_3_4);
+  graph.makeConnection(a3_3_4, a3_2);
 
-//   graph.setOutput(a4, output);
-//   graph.inference();
-//   std::vector<int> tmp = *output.as<int>();
-//   std::vector<int> res (12, 81);
-//   ASSERT_EQ(tmp, res);
-// }
+  graph.setOutput(a4, output);
+  graph.inference();
+  std::vector<int> tmp = *output.as<int>();
+  std::vector<int> res(16, 3);
+  ASSERT_EQ(tmp, res);
+}
 
 TEST(bfs, check_struct_graph_resnet1) {
   Graph graph(151);
