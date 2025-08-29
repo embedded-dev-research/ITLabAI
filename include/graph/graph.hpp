@@ -78,7 +78,7 @@ class Graph {
       layers_.push_back(&layNext);
       arrayV_.push_back(static_cast<int>(arrayE_.size()));
 
-      if (V_ >= in_edges_.size()) {
+      if (V_ >= static_cast<int>(in_edges_.size())) {
         in_edges_.resize(V_ + 1);
       }
 
@@ -95,7 +95,7 @@ class Graph {
     arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.getID()], layNext.getID());
     arrayV_[V_] = static_cast<int>(arrayE_.size());
 
-    if (layNext.getID() >= in_edges_.size()) {
+    if (layNext.getID() >= static_cast<int>(in_edges_.size())) {
       in_edges_.resize(layNext.getID() + 1);
     }
 
