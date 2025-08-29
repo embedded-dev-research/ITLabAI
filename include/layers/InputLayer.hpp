@@ -34,11 +34,15 @@ class InputLayer : public Layer {
     return a;
   }
 #endif
-  void run(const Tensor& input, Tensor& output) override {
-    switch (input.get_type()) {
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override {
+    if (input.size() != 1) {
+      throw std::runtime_error("InputLayer: Input tensors not 1");
+    }
+    switch (input[0].get_type()) {
       case Type::kInt: {
-        std::vector<int> in = *input.as<int>();
-        if (input.get_shape().dims() != 4) {
+        std::vector<int> in = *input[0].as<int>();
+        if (input[0].get_shape().dims() != 4) {
           throw std::out_of_range(
               "The size of the shape does not match what is needed for the "
               "input layer");
@@ -46,7 +50,7 @@ class InputLayer : public Layer {
         for (int& re : in) {
           re = (re - mean_) / std_;
         }
-        Shape sh(input.get_shape());
+        Shape sh(input[0].get_shape());
         if (layin_ == kNchw && layout_ == kNhwc) {
           int n = static_cast<int>(sh[0]);
           int c = static_cast<int>(sh[1]);
@@ -71,7 +75,7 @@ class InputLayer : public Layer {
                      static_cast<unsigned long long>(h),
                      static_cast<unsigned long long>(w),
                      static_cast<unsigned long long>(c)});
-          output = make_tensor<int>(res, sh1);
+          output[0] = make_tensor<int>(res, sh1);
           break;
         }
         if (layin_ == kNhwc && layout_ == kNchw) {
@@ -98,15 +102,15 @@ class InputLayer : public Layer {
                      static_cast<unsigned long long>(c),
                      static_cast<unsigned long long>(h),
                      static_cast<unsigned long long>(w)});
-          output = make_tensor<int>(res, sh1);
+          output[0] = make_tensor<int>(res, sh1);
           break;
         }
-        output = make_tensor<int>(in, sh);
+        output[0] = make_tensor<int>(in, sh);
         break;
       }
       case Type::kFloat: {
-        std::vector<float> in = *input.as<float>();
-        if (input.get_shape().dims() != 4) {
+        std::vector<float> in = *input[0].as<float>();
+        if (input[0].get_shape().dims() != 4) {
           throw std::out_of_range(
               "The size of the shape does not match what is needed for the "
               "input layer");
@@ -114,7 +118,7 @@ class InputLayer : public Layer {
         for (float& re : in) {
           re = static_cast<float>((re - mean_) / std_);
         }
-        Shape sh(input.get_shape());
+        Shape sh(input[0].get_shape());
         if (layin_ == kNchw && layout_ == kNhwc) {
           int n = static_cast<int>(sh[0]);
           int c = static_cast<int>(sh[1]);
@@ -139,7 +143,7 @@ class InputLayer : public Layer {
                      static_cast<unsigned long long>(h),
                      static_cast<unsigned long long>(w),
                      static_cast<unsigned long long>(c)});
-          output = make_tensor<float>(res, sh1);
+          output[0] = make_tensor<float>(res, sh1);
           break;
         }
         if (layin_ == kNhwc && layout_ == kNchw) {
@@ -166,10 +170,10 @@ class InputLayer : public Layer {
                      static_cast<unsigned long long>(c),
                      static_cast<unsigned long long>(h),
                      static_cast<unsigned long long>(w)});
-          output = make_tensor<float>(res, sh1);
+          output[0] = make_tensor<float>(res, sh1);
           break;
         }
-        output = make_tensor<float>(in, sh);
+        output[0] = make_tensor<float>(in, sh);
         break;
       }
       default: {

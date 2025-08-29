@@ -14,7 +14,10 @@ class OutputLayer : public Layer {
   OutputLayer() = default;
   OutputLayer(const std::vector<std::string>& labels) : labels_(labels) {}
   static std::string get_name() { return "Output layer"; }
-  void run(const Tensor& input, Tensor& output) override { output = input; }
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override {
+    output = input;
+  }
   std::vector<std::string> get_labels() const { return labels_; }
   std::pair<std::vector<std::string>, Tensor> top_k(const Tensor& input,
                                                     size_t k) const;
