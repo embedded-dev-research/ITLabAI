@@ -179,7 +179,7 @@ class Graph {
       new_branch.ind_layer = traversal[i];
       new_branch.split = layers_[traversal[i]]->getName() == kSplit;
       if (layers_[traversal[i]]->getName() == kSplit) {
-        if (split_distribution_.size() == 0) {
+        if (static_cast<int>(split_distribution_.size()) == 0) {
           std::vector<std::pair<int, int>> dis(countinout[traversal[i]].second);
           for (size_t m = 0; m < dis.size(); ++m) {
             dis[m] = {arrayE_[arrayV_[traversal[i]] + m], static_cast<int>(m)};
