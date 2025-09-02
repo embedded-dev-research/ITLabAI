@@ -58,7 +58,7 @@ class Graph {
   }
 
   Graph(int vertices, std::vector<std::vector<std::pair<int, int>>> split)
-      : BiggestSize_(vertices), split_distribution_(split) {
+      : BiggestSize_(vertices), split_distribution_(std::move(split)) {
     if (BiggestSize_ < 0) {
       throw std::out_of_range("Vertices cannot be less than zero");
     }
