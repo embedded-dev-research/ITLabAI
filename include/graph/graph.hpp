@@ -1,7 +1,6 @@
 #pragma once
 #include <algorithm>
 #include <chrono>
-#include <iostream>
 #include <list>
 #include <queue>
 #include <stdexcept>
@@ -35,6 +34,8 @@ class Graph {
   int end_;
   std::list<BranchState> branch_list_;
   std::vector<std::vector<int>> in_edges_;
+  std::vector<std::vector<std::pair<int, int>>> split_distribution_;
+  int count_used_split_distribution_;
 #ifdef ENABLE_STATISTIC_TENSORS
   std::vector<Tensor> tensors_;
 #endif
@@ -55,6 +56,17 @@ class Graph {
     V_ = 0;
     in_edges_.clear();
   }
+
+  Graph(int vertices, std::vector<std::vector<std::pair<int, int>>> split)
+      : BiggestSize_(vertices), split_distribution_(split) {
+    if (BiggestSize_ < 0) {
+      throw std::out_of_range("Vertices cannot be less than zero");
+    }
+    arrayV_.push_back(0);
+    V_ = 0;
+    in_edges_.clear();
+  }
+
   void setInput(Layer& lay, Tensor& vec) {
     lay.setID(0);
     layers_.push_back(&lay);
@@ -113,20 +125,7 @@ class Graph {
   void inference() {
     std::vector<std::pair<int, int>> countinout = getInOutDegrees();
     std::vector<int> traversal = getTraversalOrder();
-    // for (size_t i = 0; i < in_edges_.size(); ++i) {
-    //   for (size_t j = 0; j < in_edges_[i].size(); ++j) {
-    //     std::cout << in_edges_[i][j] << " ";
-    //   }
-    //   std::cout << std::endl;
-    // }
-    // for (size_t i = 0; i < countinout.size(); ++i) {
-    //   std::cout << "Vertex " << i << ": in=" << countinout[i].first
-    //             << ", out=" << countinout[i].second << std::endl;
-    // }
-    // for (size_t i = 0; i < traversal.size(); ++i) {
-    //   std::cout << traversal[i] << " ";
-    // }
-    // std::cout << std::endl;
+    count_used_split_distribution_ = 0;
 
     for (size_t i = 0; i < traversal.size(); ++i) {
 #ifdef ENABLE_STATISTIC_TIME
@@ -155,18 +154,7 @@ class Graph {
           }
         }
       }
-
-      //   std::cout << "inten_" << std::endl;
-      // for (size_t m = 0; m < inten_.size(); ++m) {
-      //   std::cout << inten_[m] << " ";
-      // }
-      // std::cout << std::endl;
       layers_[traversal[i]]->run(inten_, outten_);
-      //   std::cout << "outten_" << std::endl;
-      // for (size_t m = 0; m < outten_.size(); ++m) {
-      //   std::cout << outten_[m] << " ";
-      // }
-      // std::cout << std::endl;
 
 #ifdef ENABLE_STATISTIC_TENSORS
       tensors_.push_back(inten_[0]);
@@ -191,11 +179,17 @@ class Graph {
       new_branch.ind_layer = traversal[i];
       new_branch.split = layers_[traversal[i]]->getName() == kSplit;
       if (layers_[traversal[i]]->getName() == kSplit) {
-        std::vector<std::pair<int, int>> dis(countinout[traversal[i]].second);
-        for (size_t m = 0; m < dis.size(); ++m) {
-          dis[m] = {arrayE_[arrayV_[traversal[i]] + m], static_cast<int>(m)};
+        if (split_distribution_.size() == 0) {
+          std::vector<std::pair<int, int>> dis(countinout[traversal[i]].second);
+          for (size_t m = 0; m < dis.size(); ++m) {
+            dis[m] = {arrayE_[arrayV_[traversal[i]] + m], static_cast<int>(m)};
+          }
+          new_branch.distribution = dis;
+        } else {
+          new_branch.distribution =
+              split_distribution_[count_used_split_distribution_];
+          count_used_split_distribution_++;
         }
-        new_branch.distribution = dis;
       } else {
         std::vector<std::pair<int, int>> dis(countinout[traversal[i]].second);
         for (size_t m = 0; m < dis.size(); ++m) {
