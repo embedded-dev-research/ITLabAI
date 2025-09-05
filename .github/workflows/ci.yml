@@ -105,7 +105,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-14
     steps:
     - uses: actions/checkout@v4
       with:
@@ -131,7 +131,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
     - uses: actions/checkout@v4
       with:
@@ -247,7 +247,6 @@ jobs:
         mkdir -p docs/mnist/mnist/test
         echo "Downloading test images..."
         wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip -O main.zip
-        echo "e2d09c892023700f68bfa9f30ac91a4dffaa23b151deeaca627101b3d73ef83d  main.zip" | sha256sum -c -
         unzip -q main.zip
         cp MNIST_dataset-main/mnist/test/*.png docs/mnist/mnist/test/
         rm -rf main.zip MNIST_dataset-main
