@@ -143,14 +143,9 @@ jobs:
         key: ccache-${{ github.job }}
         max-size: 2G
         variant: sccache
-    - name: Fix CMake string function in libjpeg-turbo
-      shell: pwsh
-      run: |
-        $file = "3rdparty/opencv/3rdparty/libjpeg-turbo/simd/CMakeLists.txt"
-        (Get-Content $file) -replace 'string\(TOUPPER \$\{CMAKE_BUILD_TYPE\} CMAKE_BUILD_TYPE_UC\)', 'string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UC)' | Set-Content $file
     - name: Build
       run: |
-        cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_BUILD_TYPE=Release
         cmake --build build --parallel --config Release
     - name: Test
       run: |
