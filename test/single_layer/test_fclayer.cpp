@@ -144,9 +144,11 @@ TEST(fclayer, new_fc_layer_can_run_float) {
   Shape wshape({3, 2});
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
   FCLayer layer(weights, bias);
-  layer.run(make_tensor<float>({2.0F, 3.0F}), output);
+  std::vector<Tensor> in{make_tensor<float>({2.0F, 3.0F})};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
   for (size_t i = 0; i < a2.size(); i++) {
-    EXPECT_NEAR((*output.as<float>())[i], a2[i], 1e-5);
+    EXPECT_NEAR((*out[0].as<float>())[i], a2[i], 1e-5);
   }
 }
 
@@ -158,9 +160,11 @@ TEST(fclayer, new_fc_layer_can_run_int) {
   Shape wshape({3, 2});
   Tensor bias = make_tensor<int>({0, 0, 1});
   FCLayer layer(weights, bias);
-  layer.run(make_tensor<int>({2, 3}), output);
+  std::vector<Tensor> in{make_tensor<int>({2, 3})};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
   for (size_t i = 0; i < a2.size(); i++) {
-    EXPECT_NEAR((*output.as<int>())[i], a2[i], 1e-5);
+    EXPECT_NEAR((*out[0].as<int>())[i], a2[i], 1e-5);
   }
 }
 
@@ -171,7 +175,9 @@ TEST(fclayer, new_fc_layer_throws_when_big_input) {
   Shape wshape({3, 2});
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
   FCLayer layer;
-  ASSERT_ANY_THROW(layer.run(make_tensor<float>({2.0F, 3.0F, 4.0F}), output));
+  std::vector<Tensor> in{make_tensor<float>({2.0F, 3.0F, 4.0F})};
+  std::vector<Tensor> out{output};
+  ASSERT_ANY_THROW(layer.run(in, out));
 }
 
 TEST(fclayer, new_fc_layer_throws_with_incorrect_bias_type) {
@@ -181,7 +187,22 @@ TEST(fclayer, new_fc_layer_throws_with_incorrect_bias_type) {
   Shape wshape({3, 2});
   Tensor bias = make_tensor<int>({2, 5, 6});
   FCLayer layer;
-  ASSERT_ANY_THROW(layer.run(make_tensor<float>({2.0F, 3.0F}), output));
+  std::vector<Tensor> in{make_tensor<float>({2.0F, 3.0F})};
+  std::vector<Tensor> out{output};
+  ASSERT_ANY_THROW(layer.run(in, out));
+}
+
+TEST(fclayer, IncompatibleInput) {
+  const std::vector<float> a1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(a1, {3, 2});
+  Tensor output;
+  Shape wshape({3, 2});
+  Tensor bias = make_tensor<int>({2, 5, 6});
+  FCLayer layer;
+  std::vector<Tensor> in{make_tensor<float>({2.0F, 3.0F}),
+                         make_tensor<float>({2.0F, 3.0F})};
+  std::vector<Tensor> out{output};
+  ASSERT_ANY_THROW(layer.run(in, out));
 }
 
 TEST(fclayer, new_fc_layer_throws_with_incorrect_input_type) {
@@ -191,7 +212,9 @@ TEST(fclayer, new_fc_layer_throws_with_incorrect_input_type) {
   Shape wshape({3, 2});
   Tensor bias = make_tensor<float>({2, 5, 6});
   FCLayer layer;
-  ASSERT_ANY_THROW(layer.run(make_tensor<int>({2, 3}), output));
+  std::vector<Tensor> in{make_tensor<int>({2, 3})};
+  std::vector<Tensor> out{output};
+  ASSERT_ANY_THROW(layer.run(in, out));
 }
 
 TEST(fclayer, get_layer_name) {

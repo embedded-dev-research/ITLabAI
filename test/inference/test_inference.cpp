@@ -3,14 +3,287 @@
 
 #include "graph/graph.hpp"
 #include "gtest/gtest.h"
+#include "layers/BinaryOpLayer.hpp"
+#include "layers/ConcatLayer.hpp"
 #include "layers/ConvLayer.hpp"
 #include "layers/EWLayer.hpp"
 #include "layers/FCLayer.hpp"
 #include "layers/InputLayer.hpp"
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
+#include "layers/SplitLayer.hpp"
 
 using namespace it_lab_ai;
+
+TEST(bfs, check_struct_graph) {
+  Graph graph(151);
+  Shape sh1({1, 5, 5, 3});
+  std::vector<int> vec;
+  vec.reserve(75);
+  for (int i = 0; i < 75; ++i) {
+    vec.push_back(3);
+  }
+  Tensor input = make_tensor(vec, sh1);
+  Tensor output = make_tensor(vec, sh1);
+  InputLayer a1(kNhwc, kNchw, 1, 2);
+  a1.setName(kInput);
+  std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+  Shape sh2({3, 3});
+  Tensor kernel = make_tensor(kernelvec, sh2);
+  ConvolutionalLayer a2(1, 0, 1, kernel);
+
+  ConvolutionalLayer a3_1(1, 0, 1, kernel);
+  EWLayer a3_1_1("relu");
+  ConvolutionalLayer a3_2(1, 0, 1, kernel);
+  EWLayer a3_2_1("relu");
+
+  ConcatLayer a4(0);
+  EWLayer a5("relu");
+
+  EWLayer a6_1("relu");
+  EWLayer a6_2("relu");
+
+  ConcatLayer a7(0);
+  // EWLayer a8("relu");
+  SplitLayer a8(1, 3);
+  a8.setName(kSplit);
+
+  EWLayer a9_1("relu");
+  EWLayer a9_2("relu");
+  EWLayer a9_3("relu");
+
+  ConcatLayer a10(0);
+  EWLayer a11_1("relu");
+
+  ConcatLayer a12(0);
+
+  a2.setName(kConvolution);
+  a3_1.setName(kConvolution);
+  a3_2.setName(kConvolution);
+  a4.setName(kConcat);
+
+  graph.setInput(a1, input);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3_1);
+  graph.makeConnection(a2, a3_2);
+  graph.makeConnection(a3_1, a3_1_1);
+  graph.makeConnection(a3_1_1, a4);
+  graph.makeConnection(a3_2, a3_2_1);
+  graph.makeConnection(a3_2_1, a4);
+  graph.makeConnection(a4, a5);
+  graph.makeConnection(a5, a7);
+  graph.makeConnection(a5, a6_1);
+  graph.makeConnection(a5, a6_2);
+  graph.makeConnection(a6_1, a7);
+  graph.makeConnection(a6_2, a7);
+  graph.makeConnection(a7, a8);
+  graph.makeConnection(a8, a9_1);
+  graph.makeConnection(a8, a9_2);
+  graph.makeConnection(a8, a9_3);
+  graph.makeConnection(a9_1, a10);
+  graph.makeConnection(a9_2, a10);
+  graph.makeConnection(a9_3, a10);
+  graph.makeConnection(a10, a11_1);
+  graph.makeConnection(a11_1, a12);
+  graph.makeConnection(a10, a12);
+  graph.setOutput(a12, output);
+  graph.inference();
+  std::vector<int> tmp = *output.as<int>();
+  std::vector<int> res(36, 81);
+  ASSERT_EQ(tmp, res);
+}
+
+TEST(bfs, check_struct_graph_not_used_yolo) {
+  Graph graph(151);
+  Shape sh1({1, 4, 2, 2});
+  std::vector<int> vec;
+  vec.reserve(16);
+  for (int i = 0; i < 16; ++i) {
+    vec.push_back(3);
+  }
+  Tensor input = make_tensor(vec, sh1);
+  Tensor output = make_tensor(vec, sh1);
+
+  std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+  Shape sh2({3, 3});
+  Tensor kernel = make_tensor(kernelvec, sh2);
+  // EWLayer a2("relu"); //split 1 , 4
+  SplitLayer a2(1, 4);
+
+  EWLayer a3_1("relu");
+  EWLayer a3_1_1("relu");
+
+  ConcatLayer a3_2(0);
+  EWLayer a3_2_1("relu");
+
+  EWLayer a3_3("relu");
+  ConcatLayer a3_3_1(0);
+  EWLayer a3_3_2("relu");
+  EWLayer a3_3_3("relu");
+  EWLayer a3_3_4("relu");
+
+  ConcatLayer a4(0);
+
+  a2.setName(kSplit);
+  a3_1.setName(kConvolution);
+  a3_2.setName(kConvolution);
+  a4.setName(kConcat);
+
+  graph.setInput(a2, input);
+  graph.makeConnection(a2, a3_1);
+  graph.makeConnection(a2, a3_2);
+  graph.makeConnection(a2, a3_3);
+  graph.makeConnection(a3_1, a3_1_1);
+  graph.makeConnection(a3_1_1, a4);
+  graph.makeConnection(a3_2, a3_2_1);
+  graph.makeConnection(a3_2_1, a4);
+  graph.makeConnection(a3_3, a3_3_1);
+  graph.makeConnection(a2, a3_3_1);
+  graph.makeConnection(a3_3_1, a3_3_2);
+  graph.makeConnection(a3_3_2, a3_3_3);
+  graph.makeConnection(a3_3_3, a3_3_4);
+  graph.makeConnection(a3_3_4, a3_2);
+
+  graph.setOutput(a4, output);
+  graph.inference();
+  std::vector<int> tmp = *output.as<int>();
+  std::vector<int> res(16, 3);
+  ASSERT_EQ(tmp, res);
+}
+
+TEST(bfs, check_struct_graph_resnet1) {
+  Graph graph(151);
+  Shape sh1({1, 2, 2, 2});
+  std::vector<int> vec;
+  vec.reserve(8);
+  for (int i = 0; i < 8; ++i) {
+    vec.push_back(3);
+  }
+  Tensor input = make_tensor(vec, sh1);
+  Tensor output = make_tensor(vec, sh1);
+
+  SplitLayer a2(1, 2);
+
+  EWLayer a2_1("relu");
+  EWLayer a2_1_1("relu");
+
+  EWLayer a2_1_1_1("relu");
+  EWLayer a2_1_1_2("relu");
+
+  BinaryOpLayer a2_1_2(BinaryOpLayer::Operation::kMul);
+  EWLayer a2_1_3("relu");
+  EWLayer a2_2("relu");
+  BinaryOpLayer a3(BinaryOpLayer::Operation::kAdd);
+  EWLayer a4("relu");
+
+  a2.setName(kSplit);
+
+  graph.setInput(a2, input);
+  graph.makeConnection(a2, a2_1);
+  graph.makeConnection(a2, a2_2);
+  graph.makeConnection(a2_1, a2_1_1);
+  graph.makeConnection(a2_1_1, a2_1_1_1);
+  graph.makeConnection(a2_1_1_1, a2_1_1_2);
+  graph.makeConnection(a2_1_1_2, a2_1_2);
+  graph.makeConnection(a2_1_1, a2_1_2);
+  graph.makeConnection(a2_1_2, a2_1_3);
+  graph.makeConnection(a2_1_3, a3);
+  graph.makeConnection(a2_2, a3);
+  graph.makeConnection(a3, a4);
+  graph.setOutput(a4, output);
+  graph.inference();
+  std::vector<int> tmp = *output.as<int>();
+  std::vector<int> res(4, 12);
+  ASSERT_EQ(tmp, res);
+}
+
+TEST(bfs, check_struct_graph_resnet2) {
+  Graph graph(151);
+  Shape sh1({1, 2, 2, 2});
+  std::vector<int> vec;
+  vec.reserve(8);
+  for (int i = 0; i < 8; ++i) {
+    vec.push_back(3);
+  }
+  Tensor input = make_tensor(vec, sh1);
+  Tensor output = make_tensor(vec, sh1);
+
+  SplitLayer a2(1, 2);
+
+  EWLayer a2_1("relu");
+  EWLayer a2_1_1("relu");
+
+  EWLayer a2_1_1_1("relu");
+  EWLayer a2_1_1_2("relu");
+
+  BinaryOpLayer a2_1_2(BinaryOpLayer::Operation::kMul);
+  EWLayer a2_1_3("relu");
+  BinaryOpLayer a3(BinaryOpLayer::Operation::kAdd);
+  EWLayer a4("relu");
+
+  a2.setName(kSplit);
+
+  graph.setInput(a2, input);
+  graph.makeConnection(a2, a2_1);
+  graph.makeConnection(a2_1, a2_1_1);
+  graph.makeConnection(a2_1_1, a2_1_1_1);
+  graph.makeConnection(a2_1_1_1, a2_1_1_2);
+  graph.makeConnection(a2_1_1_2, a2_1_2);
+  graph.makeConnection(a2_1_1, a2_1_2);
+  graph.makeConnection(a2_1_2, a2_1_3);
+  graph.makeConnection(a2_1_3, a3);
+  graph.makeConnection(a2, a3);
+  graph.makeConnection(a3, a4);
+  graph.setOutput(a4, output);
+  graph.inference();
+  std::vector<int> tmp = *output.as<int>();
+  std::vector<int> res(4, 12);
+  ASSERT_EQ(tmp, res);
+}
+
+TEST(bfs, check_struct_graph_google1) {
+  Graph graph(151);
+  Shape sh1({1, 2, 2, 2});
+  std::vector<int> vec;
+  vec.reserve(8);
+  for (int i = 0; i < 8; ++i) {
+    vec.push_back(3);
+  }
+  Tensor input = make_tensor(vec, sh1);
+  Tensor output = make_tensor(vec, sh1);
+
+  EWLayer a2("relu");
+
+  EWLayer a2_1("relu");
+  EWLayer a2_2("relu");
+  EWLayer a2_3("relu");
+  EWLayer a2_4("relu");
+
+  EWLayer a2_2_1("linear", 2.0F, 3.0F);
+  EWLayer a2_3_1("linear", 2.0F, 3.0F);
+
+  ConcatLayer a3(0);
+
+  graph.setInput(a2, input);
+  graph.makeConnection(a2, a2_1);
+  graph.makeConnection(a2, a2_2);
+  graph.makeConnection(a2, a2_3);
+  graph.makeConnection(a2, a2_4);
+  graph.makeConnection(a2_2, a2_2_1);
+  graph.makeConnection(a2_3, a2_3_1);
+  graph.makeConnection(a2_4, a3);
+  graph.makeConnection(a2_3_1, a3);
+  graph.makeConnection(a2_2_1, a3);
+  graph.makeConnection(a2_1, a3);
+  graph.setOutput(a3, output);
+  graph.inference();
+  std::vector<int> tmp = *output.as<int>();
+  std::vector<int> res(32, 3);
+  for (int c = 8; c < 24; c++) {
+    res[c] = 9;
+  }
+  ASSERT_EQ(tmp, res);
+}
 
 TEST(bfs, check_result_vec) {
   Graph graph(5);
@@ -35,7 +308,6 @@ TEST(bfs, check_result_vec) {
   a4.setName(kConvolution);
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
-  graph.makeConnection(a1, a3);
   graph.makeConnection(a2, a4);
   graph.setOutput(a4, output);
   graph.inference();
@@ -113,7 +385,6 @@ TEST(bfs, check_end_to_end) {
   graph.makeConnection(a2, a3);
   graph.makeConnection(a3, a4);
   graph.makeConnection(a4, a5);
-  graph.makeConnection(a5, a6);
   graph.setOutput(a5, output);
   graph.inference();
 #ifdef ENABLE_STATISTIC_WEIGHTS
@@ -213,5 +484,85 @@ TEST(bfs, check_struct_layer_added) {
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res = {189, 189, 189};
+  ASSERT_EQ(tmp, res);
+}
+
+TEST(bfs, check_struct_graph_split) {
+  std::vector<std::vector<std::pair<int, int>>> split = {
+      {{12, 0}, {13, 0}, {14, 0}}};
+  Graph graph(151, split);
+  Shape sh1({1, 5, 5, 3});
+  std::vector<int> vec;
+  vec.reserve(75);
+  for (int i = 0; i < 75; ++i) {
+    vec.push_back(3);
+  }
+  Tensor input = make_tensor(vec, sh1);
+  Tensor output = make_tensor(vec, sh1);
+  InputLayer a1(kNhwc, kNchw, 1, 2);
+  a1.setName(kInput);
+  std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+  Shape sh2({3, 3});
+  Tensor kernel = make_tensor(kernelvec, sh2);
+  ConvolutionalLayer a2(1, 0, 1, kernel);
+
+  ConvolutionalLayer a3_1(1, 0, 1, kernel);
+  EWLayer a3_1_1("relu");
+  ConvolutionalLayer a3_2(1, 0, 1, kernel);
+  EWLayer a3_2_1("relu");
+
+  ConcatLayer a4(0);
+  EWLayer a5("relu");
+
+  EWLayer a6_1("relu");
+  EWLayer a6_2("relu");
+
+  ConcatLayer a7(0);
+  // EWLayer a8("relu");
+  SplitLayer a8(1, 3);
+  a8.setName(kSplit);
+
+  EWLayer a9_1("relu");
+  EWLayer a9_2("relu");
+  EWLayer a9_3("relu");
+
+  ConcatLayer a10(0);
+  EWLayer a11_1("relu");
+
+  ConcatLayer a12(0);
+
+  a2.setName(kConvolution);
+  a3_1.setName(kConvolution);
+  a3_2.setName(kConvolution);
+  a4.setName(kConcat);
+
+  graph.setInput(a1, input);
+  graph.makeConnection(a1, a2);
+  graph.makeConnection(a2, a3_1);
+  graph.makeConnection(a2, a3_2);
+  graph.makeConnection(a3_1, a3_1_1);
+  graph.makeConnection(a3_1_1, a4);
+  graph.makeConnection(a3_2, a3_2_1);
+  graph.makeConnection(a3_2_1, a4);
+  graph.makeConnection(a4, a5);
+  graph.makeConnection(a5, a7);
+  graph.makeConnection(a5, a6_1);
+  graph.makeConnection(a5, a6_2);
+  graph.makeConnection(a6_1, a7);
+  graph.makeConnection(a6_2, a7);
+  graph.makeConnection(a7, a8);
+  graph.makeConnection(a8, a9_1);
+  graph.makeConnection(a8, a9_2);
+  graph.makeConnection(a8, a9_3);
+  graph.makeConnection(a9_1, a10);
+  graph.makeConnection(a9_2, a10);
+  graph.makeConnection(a9_3, a10);
+  graph.makeConnection(a10, a11_1);
+  graph.makeConnection(a11_1, a12);
+  graph.makeConnection(a10, a12);
+  graph.setOutput(a12, output);
+  graph.inference();
+  std::vector<int> tmp = *output.as<int>();
+  std::vector<int> res(36, 81);
   ASSERT_EQ(tmp, res);
 }

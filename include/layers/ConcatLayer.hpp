@@ -13,8 +13,8 @@ class ConcatLayer : public Layer {
  public:
   explicit ConcatLayer(int64_t axis = 0) : axis_(axis) {}
 
-  void run(const Tensor& input, Tensor& output) override;
-  void run(const std::vector<Tensor>& inputs, Tensor& output);
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override;
 
   static std::string get_name() { return "ConcatLayer"; }
 

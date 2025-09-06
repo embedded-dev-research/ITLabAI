@@ -18,8 +18,8 @@ class BinaryOpLayer : public Layer {
   explicit BinaryOpLayer(Operation op) : op_(op) {}
 
   static std::string get_name() { return "Binary Operation Layer"; }
-  void run(const Tensor& input, Tensor& output) override;
-  void run(const Tensor& A, const Tensor& B, Tensor& output);
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override;
   static bool is_scalar_tensor(const Tensor& t);
 
 #ifdef ENABLE_STATISTIC_WEIGHTS

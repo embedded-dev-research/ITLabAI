@@ -6,8 +6,8 @@
 
 namespace it_lab_ai {
 
-ReduceLayer::ReduceLayer(Operation op, int64_t keepdims)
-    : op_(op), keepdims_(keepdims) {}
+ReduceLayer::ReduceLayer(Operation op, int64_t keepdims, const Tensor& axes)
+    : op_(op), keepdims_(keepdims), axes_(axes) {}
 
 void ReduceLayer::normalize_axes(const Shape& input_shape,
                                  std::vector<int64_t>& axes) {
@@ -173,35 +173,37 @@ template void ReduceLayer::compute<int>(const Tensor&, const Shape&,
                                         const std::vector<int64_t>&,
                                         Tensor&) const;
 
-void ReduceLayer::run(const Tensor& input, Tensor& output) {
-  run(input, Tensor(), output);
-}
+void ReduceLayer::run(const std::vector<Tensor>& input,
+                      std::vector<Tensor>& output) {
+  if (input.size() != 1) {
+    throw std::runtime_error("ReduceLayer: Input tensors not 1");
+  }
 
-void ReduceLayer::run(const Tensor& input, const Tensor& axes, Tensor& output) {
-  if (input.get_shape().count() == 0) {
-    output = make_tensor<float>({0.0F}, {});
+  if (input[0].get_shape().count() == 0) {
+    output[0] = make_tensor<float>({0.0F}, {});
     return;
   }
 
   std::vector<int64_t> axes_indices;
-  if (axes.get_shape().dims() > 0) {
-    if (axes.get_type() == Type::kInt) {
-      const auto* axes_data = axes.as<int>();
+  if (axes_.get_shape().dims() > 0) {
+    if (axes_.get_type() == Type::kInt) {
+      const auto* axes_data = axes_.as<int>();
       axes_indices.assign(axes_data->begin(), axes_data->end());
     } else {
       throw std::runtime_error("ReduceLayer: Axes tensor must be of type int");
     }
   }
 
-  normalize_axes(input.get_shape(), axes_indices);
-  Shape output_shape = calculate_output_shape(input.get_shape(), axes_indices);
+  normalize_axes(input[0].get_shape(), axes_indices);
+  Shape output_shape =
+      calculate_output_shape(input[0].get_shape(), axes_indices);
 
-  switch (input.get_type()) {
+  switch (input[0].get_type()) {
     case Type::kFloat:
-      compute<float>(input, output_shape, axes_indices, output);
+      compute<float>(input[0], output_shape, axes_indices, output[0]);
       break;
     case Type::kInt:
-      compute<int>(input, output_shape, axes_indices, output);
+      compute<int>(input[0], output_shape, axes_indices, output[0]);
       break;
     default:
       throw std::runtime_error(

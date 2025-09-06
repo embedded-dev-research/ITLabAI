@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "layers/Layer.hpp"
@@ -23,7 +24,8 @@ class EWLayer : public Layer {
       : func_(std::move(function)), alpha_(alpha), beta_(beta) {}
 
   static std::string get_name() { return "Element-wise layer"; }
-  void run(const Tensor& input, Tensor& output) override;
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override {
     std::vector<int> v = {0};
@@ -87,9 +89,26 @@ std::vector<ValueType> EWLayerImpl<ValueType>::run(
              static_cast<ValueType>(beta_);
     };
     std::transform(input.begin(), input.end(), res.begin(), linear);
+  } else if (func_ == "sigmoid") {
+    auto sigmoid = [](ValueType x) -> ValueType {
+      if constexpr (std::is_integral_v<ValueType>) {
+        auto x_float = static_cast<float>(x);
+        float result = 1.0F / (1.0F + std::exp(-x_float));
+        return static_cast<ValueType>(std::round(result));
+      } else {
+        if (x >= ValueType(0)) {
+          ValueType z = std::exp(-x);
+          return ValueType(1) / (ValueType(1) + z);
+        }
+        ValueType z = std::exp(x);
+        return z / (ValueType(1) + z);
+      }
+    };
+    std::transform(input.cbegin(), input.cend(), res.begin(), sigmoid);
   } else {
     throw std::invalid_argument("No such function for EWLayer");
   }
+
   return res;
 }
 

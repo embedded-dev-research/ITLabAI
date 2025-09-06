@@ -16,4 +16,5 @@
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
 
-void build_graph(Tensor& input, Tensor& output, bool comments, bool parallel);
+void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
+                 bool comments, bool parallel);

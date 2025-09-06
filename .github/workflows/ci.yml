@@ -5,6 +5,7 @@ on:
   pull_request:
   schedule:
     - cron: '0 8 * * *'
+  workflow_dispatch:
 
 jobs:
   clang-format:
@@ -39,7 +40,7 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DOPENCV_PATH=3rdparty/opencv/build \
+            -DOPENCV_PATH=build/3rdparty/opencv_build \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
@@ -49,7 +50,7 @@ jobs:
     - name: Prepare OpenCV libs
       run: |
        mkdir -p build/bin/opencv_libs
-       cp -a 3rdparty/opencv/build/lib/libopencv_* build/bin/opencv_libs/
+       cp -a build/3rdparty/opencv_build/lib/libopencv_* build/bin/opencv_libs/
        echo "Library permissions after copy:"
        stat -c "%A %n" build/bin/opencv_libs/libopencv_imgcodecs.so*
 
@@ -105,7 +106,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-14
     steps:
     - uses: actions/checkout@v4
       with:
@@ -131,7 +132,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
     - uses: actions/checkout@v4
       with:
@@ -150,6 +151,21 @@ jobs:
       run: |
         cd build
         ctest --output-on-failure
+  build-linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: Install prerequisites
+      run: sudo apt-get update && sudo apt-get install -y libomp-dev build-essential cmake
+    - name: Build and Test
+      run: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --parallel
+        cmake --build build -t test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
   codecov:
     runs-on: ubuntu-latest
     steps:
@@ -218,17 +234,24 @@ jobs:
         python parser.py
         cd ../..
 
+    - name: Cache MNIST test dataset
+      id: cache-mnist
+      uses: actions/cache@v4
+      with:
+        path: docs/mnist/mnist/test
+        key: mnist-dataset-e2d09c892023700f68bfa9f30ac91a4dffaa23b151deeaca627101b3d73ef83d
+
     - name: Download MNIST test dataset
+      if: steps.cache-mnist.outputs.cache-hit != 'true'
       run: |
+        set -e
         mkdir -p docs/mnist/mnist/test
-        if [ ! -f "docs/mnist/mnist/test/0_000000.png" ]; then
-          echo "Downloading test images..."
-          wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip
-          unzip -q main.zip
-          cp MNIST_dataset-main/mnist/test/*.png docs/mnist/mnist/test/
-          rm -rf main.zip MNIST_dataset-main
-          echo "Downloaded $(ls docs/mnist/mnist/test | wc -l) images"
-        fi
+        echo "Downloading test images..."
+        wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip -O main.zip
+        unzip -q main.zip
+        cp MNIST_dataset-main/mnist/test/*.png docs/mnist/mnist/test/
+        rm -rf main.zip MNIST_dataset-main
+        echo "Downloaded $(ls docs/mnist/mnist/test | wc -l) images"
 
     - name: Download binary and libs
       uses: actions/download-artifact@v4
@@ -247,8 +270,6 @@ jobs:
       run: |
        echo "### Library verification ###"
        file build/bin/opencv_libs/libopencv_imgcodecs.so.4.9.0 | grep "shared object"
-       ldd build/bin/opencv_libs/libopencv_imgcodecs.so.4.9.0 || true
-       realpath build/bin/opencv_libs/libopencv_imgcodecs.so.409
 
     - name: Run evaluation
       run: |
@@ -256,7 +277,7 @@ jobs:
        export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
     
-       LD_DEBUG=files ./build/bin/ACC_MNIST* 2> ld_debug.log || true
+       LD_DEBUG=files ./build/bin/ACC_MNIST* 2> ld_debug.log
        echo "### Library loading debug ###"
        grep -i "opencv_imgcodecs" ld_debug.log
 

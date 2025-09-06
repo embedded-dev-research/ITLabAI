@@ -1,9 +1,5 @@
 file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-if (NOT WIN32)
-    find_package(OpenMP REQUIRED)
-endif()
-
 add_executable(run_test ${TEST_SRC_FILES})
 if (NOT WIN32)
     target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
@@ -29,7 +25,7 @@ if (WIN32)
 	endif()
     add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_SOURCE_DIR}/3rdparty/opencv/build/bin/${CMAKE_BUILD_TYPE}/."
+            "${OPENCV_BUILD_DIR}/bin/${CMAKE_BUILD_TYPE}/."
             "${CMAKE_BINARY_DIR}/bin/")
 endif()
 
