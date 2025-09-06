@@ -106,7 +106,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-macos:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@v4
       with:
@@ -132,7 +132,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
-    runs-on: windows-2022
+    runs-on: windows-2025
     steps:
     - uses: actions/checkout@v4
       with:
@@ -143,10 +143,15 @@ jobs:
         key: ccache-${{ github.job }}
         max-size: 2G
         variant: sccache
+    - name: Fix CMake string function in libjpeg-turbo
+      shell: pwsh
+      run: |
+        $file = "3rdparty/opencv/3rdparty/libjpeg-turbo/simd/CMakeLists.txt"
+        (Get-Content $file) -replace 'string\(TOUPPER \$\{CMAKE_BUILD_TYPE\} CMAKE_BUILD_TYPE_UC\)', 'string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UC)' | Set-Content $file
     - name: Build
       run: |
         cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-        cmake --build build --parallel
+        cmake --build build --parallel --config Release
     - name: Test
       run: |
         cd build
