@@ -269,7 +269,7 @@ jobs:
     - name: Verify library integrity
       run: |
        echo "### Library verification ###"
-       file build/bin/opencv_libs/libopencv_imgcodecs.so.4.9.0 | grep "shared object"
+       file build/bin/opencv_libs/libopencv_imgcodecs.so.4.12.0 | grep "shared object"
 
     - name: Run evaluation
       run: |
