@@ -14,6 +14,7 @@ def convert_pt_to_onnx(pt_model_path, onnx_model_path=None):
 
     return onnx_model_path
 
+
 def onnx_to_json(model_path, output_json_path):
     if model_path.endswith('.pt'):
         model_path = convert_pt_to_onnx(model_path)
@@ -31,12 +32,32 @@ def onnx_to_json(model_path, output_json_path):
     }
 
     layer_info = []
+
+    # Extract input information from ONNX model
+    input_info = {}
+    for input in model.graph.input:
+        # Skip initializers (they are weights, not actual inputs)
+        if input.name in initializers_dict:
+            continue
+
+        input_info = {
+            "name": input.name,
+            "shape": [dim.dim_value for dim in input.type.tensor_type.shape.dim],
+            "data_type": input.type.tensor_type.elem_type
+        }
+        break  # Take the first actual input
+
+    # Create input layer with proper information
     input_layer = {
         "index": 0,
-        "name": "input_1",
+        "name": input_info.get("name", "input_1"),
         "type": "InputLayer",
         "weights": [],
-        "attributes": {}
+        "bias": [],
+        "attributes": {
+            "shape": input_info.get("shape", []),
+            "data_type": input_info.get("data_type", 1)
+        }
     }
     layer_info.append(input_layer)
 
@@ -45,8 +66,14 @@ def onnx_to_json(model_path, output_json_path):
             "index": len(layer_info),
             "name": node.name.replace('/', '_'),
             "type": node.op_type,
-            "attributes": {}
+            "attributes": {},
+            "inputs": []  # Add inputs information
         }
+
+        # Add input connections
+        for input_name in node.input:
+            if input_name not in initializers_dict:  # Only track layer connections, not weights
+                layer_data["inputs"].append(input_name.replace('/', '_'))
 
         for attr in node.attribute:
             attr_value = helper.get_attribute_value(attr)
@@ -112,11 +139,12 @@ def onnx_to_json(model_path, output_json_path):
         json.dump(layer_info, f, indent=2, cls=CustomEncoder)
 
     print(f"Модель успешно сохранена в {output_json_path}")
+    print(f"Input shape: {input_info.get('shape', [])}")
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'yolo11x-cls.pt')
-MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'yolo11x-cls_onnx_model.json')
+MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'GoogLeNet.onnx')
+MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'googlenet_onnx_model.json')
 
 onnx_to_json(MODEL_PATH, MODEL_DATA_PATH)

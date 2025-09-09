@@ -13,14 +13,14 @@ void ConcatLayer::run(const std::vector<Tensor>& input,
     return;
   }
 
-  validate_inputs(input);
+  this->validate_inputs(input);
 
   switch (input[0].get_type()) {
     case Type::kFloat:
-      concatenate<float>(input, output[0]);
+      this->concatenate<float>(input, output[0]);
       break;
     case Type::kInt:
-      concatenate<int>(input, output[0]);
+      this->concatenate<float>(input, output[0]);
       break;
     default:
       throw std::runtime_error("ConcatLayer: Unsupported input tensor type");

@@ -1,3 +1,6 @@
+#pragma once
+#include <functional>
+#include <opencv2/opencv.hpp>
 #include <filesystem>
 #include <iostream>
 #include <opencv2/opencv.hpp>
@@ -15,6 +18,11 @@
 #include "layers/InputLayer.hpp"
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
+#include "layers/Tensor.hpp"
+#include "layers/ConcatLayer.hpp"
+#include "layers/BinaryOpLayer.hpp"
+#include "layers/SplitLayer.hpp"
 
 void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                 bool comments, bool parallel);
+                 const std::string& json_path, bool comments,
+                 bool parallel = false);
