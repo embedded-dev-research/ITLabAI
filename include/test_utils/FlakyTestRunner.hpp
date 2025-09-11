@@ -23,8 +23,10 @@ static int getFlakyRetries() {
 
 static bool isFlakyTestsEnabled() {
   const char* disabled = std::getenv("DISABLE_FLAKY_TESTS");
-  return !(disabled != nullptr && (std::strcmp(disabled, "1") == 0 ||
-                                   std::strcmp(disabled, "true") == 0));
+  if (disabled == nullptr) {
+    return true;
+  }
+  return std::strcmp(disabled, "1") != 0 && std::strcmp(disabled, "true") != 0;
 }
 
 template <typename TestFunc>
@@ -51,7 +53,7 @@ void runFlakyTest(const char* test_name, TestFunc test_func) {
       }
       return;
 
-    } catch (const ::testing::AssertionException&) {
+    } catch (...) {
       if (attempt == max_retries) {
         std::cout << "[FLAKY EXHAUSTED] " << test_name << " failed after "
                   << max_retries << " attempts" << std::endl;
@@ -66,12 +68,17 @@ void runFlakyTest(const char* test_name, TestFunc test_func) {
 
 #define FLAKY_TEST(test_case_name, test_name) \
   TEST(test_case_name, test_name) {           \
-        test_utils::runFlakyTest(#test_case_name "." #test_name, []() {
+    auto flaky_test_body = []()
+
 #define FLAKY_TEST_F(test_fixture, test_name) \
   TEST_F(test_fixture, test_name) {           \
-        test_utils::runFlakyTest(#test_fixture "." #test_name, [this]() {
-#define FLAKY_END_TEST \
-  });            \
+    auto flaky_test_body = [this]()
+
+#define FLAKY_END_TEST                                               \
+  ;                                                                  \
+  test_utils::runFlakyTest(                                          \
+      testing::UnitTest::GetInstance()->current_test_info()->name(), \
+      flaky_test_body);                                              \
   }
 
 }

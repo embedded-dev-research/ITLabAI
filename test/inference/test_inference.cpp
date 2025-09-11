@@ -3,7 +3,6 @@
 
 #include "graph/graph.hpp"
 #include "gtest/gtest.h"
-#include "test_utils/FlakyTestRunner.hpp"
 #include "layers/BinaryOpLayer.hpp"
 #include "layers/ConcatLayer.hpp"
 #include "layers/ConvLayer.hpp"
@@ -13,6 +12,7 @@
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
 #include "layers/SplitLayer.hpp"
+#include "test_utils/FlakyTestRunner.hpp"
 
 using namespace it_lab_ai;
 
@@ -488,7 +488,7 @@ TEST(bfs, check_struct_layer_added) {
   ASSERT_EQ(tmp, res);
 }
 
-FLAKY_TEST(bfs, check_struct_graph_split)
+FLAKY_TEST(bfs, check_struct_graph_split) {
   std::vector<std::vector<std::pair<int, int>>> split = {
       {{12, 0}, {13, 0}, {14, 0}}};
   Graph graph(151, split);
@@ -566,4 +566,5 @@ FLAKY_TEST(bfs, check_struct_graph_split)
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(36, 81);
   ASSERT_EQ(tmp, res);
+}
 FLAKY_END_TEST
