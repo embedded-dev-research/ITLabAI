@@ -1,10 +1,16 @@
 #pragma once
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
+#include <numeric>
+#include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "layers/Layer.hpp"
+#include "tbb/blocked_range2d.h"
+#include "tbb/parallel_for.h"
 
 namespace it_lab_ai {
 
@@ -61,8 +67,8 @@ class PoolingLayer : public Layer {
   ImplType implType_;
 };
 
-inline size_t coord_size(int coord, const Shape& shape) {
-  if (coord >= 0 && static_cast<size_t>(coord) < shape.dims()) {
+inline size_t coord_size(size_t coord, const Shape& shape) {
+  if (coord < shape.dims()) {
     return shape[coord];
   }
   return 1;
@@ -117,8 +123,7 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
     const Shape& input_shape, const Shape& pooling_shape, const Shape& strides,
     const Shape& pads, const Shape& dilations, bool ceil_mode,
     const std::string& pooling_type)
-    : LayerImpl<ValueType>(input_shape,
-                           input_shape),  // временно, потом исправим
+    : LayerImpl<ValueType>(input_shape, input_shape),
       poolingShape_(pooling_shape),
       strides_(strides),
       pads_(pads),
@@ -144,38 +149,34 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
     throw std::invalid_argument("Pooling type " + pooling_type +
                                 " is not supported");
   }
-  size_t input_h_index = input_shape.dims() > 2 ? (input_shape.dims() - 2) : 0;
-
+  this->outputShape_ = input_shape;
   for (size_t i = 0; i < pooling_shape.dims(); i++) {
-    if (pooling_shape[i] == 0) {
-      throw std::runtime_error("Zero division, pooling shape has zeroes");
-    }
-
-    // Формула для расчета выходного размера с учетом padding, stride, dilation
-    size_t input_size = input_shape[input_h_index + i];
+    size_t input_size =
+        input_shape[input_shape.dims() - pooling_shape.dims() + i];
     size_t kernel_size = pooling_shape[i];
     size_t stride = strides[i];
-    size_t padding = pads[i];  // берем только верхний/левый padding
+    size_t pad =
+        pads[i] +
+        pads[pooling_shape.dims() + i];  // top + bottom или left + right
     size_t dilation = dilations[i];
 
-    // Эффективный размер ядра с учетом dilation
     size_t effective_kernel_size = (kernel_size - 1) * dilation + 1;
 
-    // Расчет выходного размера
     size_t output_size;
     if (ceil_mode) {
-      output_size = static_cast<size_t>(std::ceil(
-                        (input_size + 2 * padding - effective_kernel_size) /
-                        static_cast<float>(stride))) +
+      output_size = static_cast<size_t>(
+                        std::ceil((input_size + pad - effective_kernel_size) /
+                                  static_cast<float>(stride))) +
                     1;
     } else {
-      output_size = static_cast<size_t>(std::floor(
-                        (input_size + 2 * padding - effective_kernel_size) /
-                        static_cast<float>(stride))) +
+      output_size = static_cast<size_t>(
+                        std::floor((input_size + pad - effective_kernel_size) /
+                                   static_cast<float>(stride))) +
                     1;
     }
 
-    this->outputShape_[input_h_index + i] = output_size;
+    this->outputShape_[input_shape.dims() - pooling_shape.dims() + i] =
+        output_size;
   }
 }
 
@@ -186,60 +187,90 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
     throw std::invalid_argument("Input size doesn't fit pooling layer");
   }
 
-  std::vector<ValueType> res(this->outputShape_.count());
-  int input_h_index = this->inputShape_.dims() > 2
-                          ? (static_cast<int>(this->inputShape_.dims()) - 2)
-                          : 0;
+  std::vector<ValueType> res(this->outputShape_.count(), ValueType(0));
 
-  for (size_t n = 0; n < coord_size(input_h_index - 2, this->outputShape_);
+  // Определяем индексы измерений
+  size_t spatial_dims = poolingShape_.dims();
+  int batch_dim = this->inputShape_.dims() > spatial_dims ? 0 : -1;
+  int channel_dim = this->inputShape_.dims() > spatial_dims + 1 ? 1 : -1;
+
+  // Итерируемся по всем измерениям
+  for (size_t n = 0; n < (batch_dim >= 0 ? this->outputShape_[batch_dim] : 1);
        n++) {
-    for (size_t c = 0; c < coord_size(input_h_index - 1, this->outputShape_);
-         c++) {
-      for (size_t i = 0; i < coord_size(input_h_index, this->outputShape_);
-           i++) {
-        for (size_t j = 0;
-             j < coord_size(input_h_index + 1, this->outputShape_); j++) {
+    for (size_t c = 0;
+         c < (channel_dim >= 0 ? this->outputShape_[channel_dim] : 1); c++) {
+      for (size_t h = 0;
+           h < this->outputShape_[this->outputShape_.dims() - spatial_dims];
+           h++) {
+        for (size_t w = 0;
+             w < (spatial_dims > 1
+                      ? this->outputShape_[this->outputShape_.dims() -
+                                           spatial_dims + 1]
+                      : 1);
+             w++) {
           std::vector<ValueType> pooling_buf;
 
-          // Рассчитываем начальные позиции с учетом stride и padding
-          size_t start_h = i * strides_[0] - pads_[0];  // pads_[0] = top
-          size_t start_w = j * strides_[1] - pads_[2];  // pads_[2] = left
+          // Рассчитываем стартовые позиции с учетом паддинга
+          int start_h =
+              static_cast<int>(h * strides_[0]) - static_cast<int>(pads_[0]);
+          int start_w = spatial_dims > 1 ? static_cast<int>(w * strides_[1]) -
+                                               static_cast<int>(pads_[2])
+                                         : 0;
 
-          for (size_t k = 0; k < poolingShape_[0]; k++) {
-            for (size_t l = 0; l < poolingShape_[1]; l++) {
-              // Рассчитываем позиции с учетом dilation
-              size_t pos_h = start_h + k * dilations_[0];
-              size_t pos_w = start_w + l * dilations_[1];
+          // Собираем значения из окна пулинга
+          for (size_t kh = 0; kh < poolingShape_[0]; kh++) {
+            for (size_t kw = 0; kw < (spatial_dims > 1 ? poolingShape_[1] : 1);
+                 kw++) {
+              int pos_h = start_h + static_cast<int>(kh * dilations_[0]);
+              int pos_w = spatial_dims > 1
+                              ? start_w + static_cast<int>(kw * dilations_[1])
+                              : 0;
 
-              // Проверяем границы с учетом padding
-              if (pos_h >= 0 && pos_h < this->inputShape_[input_h_index] &&
-                  pos_w >= 0 && pos_w < this->inputShape_[input_h_index + 1]) {
-                std::vector<size_t> coords = {n, c, pos_h, pos_w};
-                pooling_buf.push_back(input[this->inputShape_.get_index(
-                    std::vector<size_t>(coords.end() - this->inputShape_.dims(),
-                                        coords.end()))]);
+              // Проверяем границы
+              if (pos_h >= 0 &&
+                  pos_h < static_cast<int>(
+                              this->inputShape_[this->inputShape_.dims() -
+                                                spatial_dims]) &&
+                  (spatial_dims <= 1 ||
+                   (pos_w >= 0 &&
+                    pos_w < static_cast<int>(
+                                this->inputShape_[this->inputShape_.dims() -
+                                                  spatial_dims + 1])))) {
+                // Рассчитываем индекс во входном тензоре
+                std::vector<size_t> input_coords(this->inputShape_.dims(), 0);
+                if (batch_dim >= 0) input_coords[batch_dim] = n;
+                if (channel_dim >= 0) input_coords[channel_dim] = c;
+                input_coords[this->inputShape_.dims() - spatial_dims] = pos_h;
+                if (spatial_dims > 1)
+                  input_coords[this->inputShape_.dims() - spatial_dims + 1] =
+                      pos_w;
+
+                size_t input_index = this->inputShape_.get_index(input_coords);
+                pooling_buf.push_back(input[input_index]);
               }
             }
           }
 
-          // Применяем pooling только если есть данные
+          // Рассчитываем индекс в выходном тензоре
+          std::vector<size_t> output_coords(this->outputShape_.dims(), 0);
+          if (batch_dim >= 0) output_coords[batch_dim] = n;
+          if (channel_dim >= 0) output_coords[channel_dim] = c;
+          output_coords[this->outputShape_.dims() - spatial_dims] = h;
+          if (spatial_dims > 1)
+            output_coords[this->outputShape_.dims() - spatial_dims + 1] = w;
+
+          size_t output_index = this->outputShape_.get_index(output_coords);
+
+          // Применяем пулинг
           if (!pooling_buf.empty()) {
-            size_t output_index = this->outputShape_.get_index({n, c, i, j});
-            switch (poolingType_) {
+            switch (this->poolingType_) {
               case kAverage:
                 res[output_index] = avg_pooling(pooling_buf);
                 break;
               case kMax:
                 res[output_index] = max_pooling(pooling_buf);
                 break;
-              default:
-                throw std::runtime_error("Unknown pooling type");
             }
-          } else {
-            // Обработка случая когда нет данных (можно установить 0 или другое
-            // значение)
-            size_t output_index = this->outputShape_.get_index({n, c, i, j});
-            res[output_index] = ValueType(0);
           }
         }
       }
@@ -269,83 +300,139 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
   if (input.size() != this->inputShape_.count()) {
     throw std::invalid_argument("Input size doesn't fit pooling layer");
   }
-  std::vector<ValueType> res(this->outputShape_.count());
-  int input_h_index = this->inputShape_.dims() > 2
-                          ? (static_cast<int>(this->inputShape_.dims()) - 2)
-                          : 0;
+
+  std::vector<ValueType> res(this->outputShape_.count(), ValueType(0));
+
+  size_t spatial_dims = this->poolingShape_.dims();
+  int batch_dim = this->inputShape_.dims() > spatial_dims ? 0 : -1;
+  int channel_dim = this->inputShape_.dims() > spatial_dims + 1 ? 1 : -1;
+
+  // Use nested TBB loops
   oneapi::tbb::parallel_for(
-      oneapi::tbb::blocked_range2d<size_t>(
-          0, coord_size(input_h_index - 2, this->outputShape_), 0,
-          coord_size(input_h_index - 1, this->outputShape_)),
-      [&](oneapi::tbb::blocked_range2d<size_t> r) {
-        for (size_t n = r.rows().begin(); n < r.rows().end(); n++) {
-          for (size_t c = r.cols().begin(); c < r.cols().end(); c++) {
-            oneapi::tbb::parallel_for(
-                oneapi::tbb::blocked_range2d<size_t>(
-                    0, coord_size(input_h_index, this->outputShape_), 0,
-                    coord_size(input_h_index + 1, this->outputShape_)),
-                [&](oneapi::tbb::blocked_range2d<size_t> r1) {
-                  for (size_t i = r1.rows().begin(); i < r1.rows().end(); i++) {
-                    for (size_t j = r1.cols().begin(); j < r1.cols().end();
-                         j++) {
+      oneapi::tbb::blocked_range<size_t>(
+          0, batch_dim >= 0 ? this->outputShape_[batch_dim] : 1),
+      [&](const oneapi::tbb::blocked_range<size_t>& r1) {
+        for (size_t n = r1.begin(); n < r1.end(); n++) {
+          oneapi::tbb::parallel_for(
+              oneapi::tbb::blocked_range<size_t>(
+                  0, channel_dim >= 0 ? this->outputShape_[channel_dim] : 1),
+              [&](const oneapi::tbb::blocked_range<size_t>& r2) {
+                for (size_t c = r2.begin(); c < r2.end(); c++) {
+                  for (size_t h = 0;
+                       h < this->outputShape_[this->outputShape_.dims() -
+                                              spatial_dims];
+                       h++) {
+                    for (size_t w = 0;
+                         w <
+                         (spatial_dims > 1
+                              ? this->outputShape_[this->outputShape_.dims() -
+                                                   spatial_dims + 1]
+                              : 1);
+                         w++) {
                       std::vector<ValueType> pooling_buf;
-                      std::vector<size_t> coords;
-                      size_t tmpwidth;
-                      size_t tmpheight;
-                      tmpheight = this->poolingShape_[0] * i;
-                      if (this->poolingShape_.dims() == 1) {
-                        tmpwidth = j;
-                      } else {
-                        tmpwidth = this->poolingShape_[1] * j;
-                      }
-                      for (size_t k = 0; k < coord_size(0, this->poolingShape_);
-                           k++) {
-                        for (size_t l = 0;
-                             l < coord_size(1, this->poolingShape_); l++) {
-                          if (this->inputShape_.dims() == 1) {
-                            pooling_buf.push_back(input[tmpheight + k]);
-                          } else {
-                            coords = std::vector<size_t>(
-                                {n, c, tmpheight + k, tmpwidth + l});
-                            pooling_buf.push_back(
-                                input[this->inputShape_.get_index(
-                                    std::vector<size_t>(
-                                        coords.end() - this->inputShape_.dims(),
-                                        coords.end()))]);
+
+                      // Calculate start positions with padding - FIXED
+                      int start_h = static_cast<int>(h * this->strides_[0]) -
+                                    static_cast<int>(this->pads_[0]);
+                      int start_w =
+                          spatial_dims > 1
+                              ? static_cast<int>(w * this->strides_[1]) -
+                                    static_cast<int>(this->pads_[2])
+                              : 0;
+
+                      // Collect values from pooling window
+                      for (size_t kh = 0; kh < this->poolingShape_[0]; kh++) {
+                        for (size_t kw = 0;
+                             kw <
+                             (spatial_dims > 1 ? this->poolingShape_[1] : 1);
+                             kw++) {
+                          int pos_h = start_h + static_cast<int>(
+                                                    kh * this->dilations_[0]);
+                          int pos_w =
+                              spatial_dims > 1
+                                  ? start_w + static_cast<int>(
+                                                  kw * this->dilations_[1])
+                                  : 0;
+
+                          // Check boundaries - FIXED for 1D case
+                          bool within_h_bounds =
+                              pos_h >= 0 &&
+                              pos_h < static_cast<int>(
+                                          this->inputShape_[this->inputShape_
+                                                                .dims() -
+                                                            spatial_dims]);
+
+                          bool within_w_bounds = true;
+                          if (spatial_dims > 1) {
+                            within_w_bounds =
+                                pos_w >= 0 &&
+                                pos_w <
+                                    static_cast<int>(
+                                        this->inputShape_[this->inputShape_
+                                                              .dims() -
+                                                          spatial_dims + 1]);
+                          }
+
+                          if (within_h_bounds && within_w_bounds) {
+                            // Calculate index in input tensor
+                            std::vector<size_t> input_coords(
+                                this->inputShape_.dims(), 0);
+                            if (batch_dim >= 0) input_coords[batch_dim] = n;
+                            if (channel_dim >= 0) input_coords[channel_dim] = c;
+
+                            // Handle 1D vs 2D cases properly
+                            if (spatial_dims == 1) {
+                              input_coords[this->inputShape_.dims() - 1] =
+                                  pos_h;
+                            } else {
+                              input_coords[this->inputShape_.dims() - 2] =
+                                  pos_h;
+                              input_coords[this->inputShape_.dims() - 1] =
+                                  pos_w;
+                            }
+
+                            size_t input_index =
+                                this->inputShape_.get_index(input_coords);
+                            pooling_buf.push_back(input[input_index]);
                           }
                         }
                       }
-                      coords = std::vector<size_t>({n, c, i, j});
-                      switch (this->poolingType_) {
-                        case kAverage:
-                          if (this->inputShape_.dims() == 1) {
-                            res[i] = avg_pooling(pooling_buf);
-                          } else {
-                            res[this->outputShape_.get_index(
-                                std::vector<size_t>(
-                                    coords.end() - this->inputShape_.dims(),
-                                    coords.end()))] = avg_pooling(pooling_buf);
-                          }
-                          break;
-                        case kMax:
-                          if (this->inputShape_.dims() == 1) {
-                            res[i] = max_pooling(pooling_buf);
-                          } else {
-                            res[this->outputShape_.get_index(
-                                std::vector<size_t>(
-                                    coords.end() - this->inputShape_.dims(),
-                                    coords.end()))] = max_pooling(pooling_buf);
+
+                      // Calculate index in output tensor
+                      std::vector<size_t> output_coords(
+                          this->outputShape_.dims(), 0);
+                      if (batch_dim >= 0) output_coords[batch_dim] = n;
+                      if (channel_dim >= 0) output_coords[channel_dim] = c;
+
+                      // Handle 1D vs 2D cases properly
+                      if (spatial_dims == 1) {
+                        output_coords[this->outputShape_.dims() - 1] = h;
+                      } else {
+                        output_coords[this->outputShape_.dims() - 2] = h;
+                        output_coords[this->outputShape_.dims() - 1] = w;
+                      }
+
+                      size_t output_index =
+                          this->outputShape_.get_index(output_coords);
+
+                      // Apply pooling
+                      if (!pooling_buf.empty()) {
+                        switch (this->poolingType_) {
+                          case kAverage:
+                            res[output_index] = avg_pooling(pooling_buf);
                             break;
-                            default:
-                              throw std::runtime_error("Unknown pooling type");
-                          }
+                          case kMax:
+                            res[output_index] = max_pooling(pooling_buf);
+                            break;
+                        }
                       }
                     }
                   }
-                });
-          }
+                }
+              });
         }
       });
+
   return res;
 }
 

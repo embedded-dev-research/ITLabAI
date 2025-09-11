@@ -25,7 +25,10 @@ enum LayerType : uint8_t {
   kSplit,
   kBinaryOp,
   kReduce,
-  kTranspose
+  kTranspose,
+  kReshape,
+  kSoftmax,
+  kMatmul
 };
 
 enum ImplType : uint8_t { kDefault, kTBB, kSTL };
