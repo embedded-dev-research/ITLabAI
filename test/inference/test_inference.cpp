@@ -12,7 +12,7 @@
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
 #include "layers/SplitLayer.hpp"
-#include "test_utils/FlakyTestRunner.hpp"
+#include "utils/flaky_test_runner.hpp"
 
 using namespace it_lab_ai;
 
