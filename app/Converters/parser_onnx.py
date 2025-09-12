@@ -5,6 +5,7 @@ from onnx import TensorProto
 from onnx import helper, numpy_helper
 from ultralytics import YOLO
 
+
 def convert_pt_to_onnx(pt_model_path, onnx_model_path=None):
     if onnx_model_path is None:
         onnx_model_path = pt_model_path.replace('.pt', '.onnx')
@@ -33,10 +34,8 @@ def onnx_to_json(model_path, output_json_path):
 
     layer_info = []
 
-    # Extract input information from ONNX model
     input_info = {}
     for input in model.graph.input:
-        # Skip initializers (they are weights, not actual inputs)
         if input.name in initializers_dict:
             continue
 
@@ -45,9 +44,8 @@ def onnx_to_json(model_path, output_json_path):
             "shape": [dim.dim_value for dim in input.type.tensor_type.shape.dim],
             "data_type": input.type.tensor_type.elem_type
         }
-        break  # Take the first actual input
+        break
 
-    # Create input layer with proper information
     input_layer = {
         "index": 0,
         "name": input_info.get("name", "input_1"),
@@ -67,12 +65,11 @@ def onnx_to_json(model_path, output_json_path):
             "name": node.name.replace('/', '_'),
             "type": node.op_type,
             "attributes": {},
-            "inputs": []  # Add inputs information
+            "inputs": []
         }
 
-        # Add input connections
         for input_name in node.input:
-            if input_name not in initializers_dict:  # Only track layer connections, not weights
+            if input_name not in initializers_dict:
                 layer_data["inputs"].append(input_name.replace('/', '_'))
 
         for attr in node.attribute:
@@ -94,29 +91,44 @@ def onnx_to_json(model_path, output_json_path):
             elif attr.name == "strides":
                 layer_data["strides"] = attr_value
 
-        node_init = []
-        for input_name in node.input:
-            if input_name in initializers_dict:
-                node_init.append(initializers_dict[input_name])
+        if node.op_type == "BatchNormalization":
+            bn_params = []
+            for input_name in node.input:
+                if input_name in initializers_dict:
+                    bn_params.append(initializers_dict[input_name])
 
-        if len(node_init) == 1:
-            init = node_init[0]
-            if len(init["dims"]) == 0 or (len(init["dims"]) == 1 and init["dims"][0] == 1):
-                layer_data["value"] = init["values"] if len(init["dims"]) == 0 else init["values"][0]
-            else:
-                layer_data["weights"] = init["values"]
-        elif len(node_init) > 1:
-            weights = []
-            for init in node_init[:-1]:
-                if len(init["dims"]) > 0:
-                    weights.extend(init["values"]) if isinstance(init["values"][0], list) else weights.append(
-                        init["values"])
+            if len(bn_params) >= 4:
+                layer_data["scale"] = bn_params[0]["values"]
+                layer_data["bias"] = bn_params[1]["values"]
+                layer_data["mean"] = bn_params[2]["values"]
+                layer_data["var"] = bn_params[3]["values"]
 
-            if weights:
-                layer_data["weights"] = weights
+                layer_data["weights"] = []
 
-            if len(node_init[-1]["dims"]) == 1:
-                layer_data["bias"] = node_init[-1]["values"]
+        else:
+            node_init = []
+            for input_name in node.input:
+                if input_name in initializers_dict:
+                    node_init.append(initializers_dict[input_name])
+
+            if len(node_init) == 1:
+                init = node_init[0]
+                if len(init["dims"]) == 0 or (len(init["dims"]) == 1 and init["dims"][0] == 1):
+                    layer_data["value"] = init["values"] if len(init["dims"]) == 0 else init["values"][0]
+                else:
+                    layer_data["weights"] = init["values"]
+            elif len(node_init) > 1:
+                weights = []
+                for init in node_init[:-1]:
+                    if len(init["dims"]) > 0:
+                        weights.extend(init["values"]) if isinstance(init["values"][0], list) else weights.append(
+                            init["values"])
+
+                if weights:
+                    layer_data["weights"] = weights
+
+                if len(node_init[-1]["dims"]) == 1:
+                    layer_data["bias"] = node_init[-1]["values"]
 
         layer_info.append(layer_data)
 
@@ -144,7 +156,7 @@ def onnx_to_json(model_path, output_json_path):
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'GoogLeNet.onnx')
-MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'googlenet_onnx_model.json')
+MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'densenet121_Opset16.onnx')
+MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'densenet121_Opset16_onnx_model.json')
 
 onnx_to_json(MODEL_PATH, MODEL_DATA_PATH)

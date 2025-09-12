@@ -27,6 +27,7 @@
 #include "layers/MatmulLayer.hpp"
 #include "layers/SoftmaxLayer.hpp"
 #include "layers/ReduceLayer.hpp"
+#include "layers/BatchNormalizationLayer.hpp"
 
 void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                  const std::string& json_path, bool comments,

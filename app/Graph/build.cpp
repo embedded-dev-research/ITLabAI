@@ -255,6 +255,8 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
       return "Softmax";
     case it_lab_ai::kReduce:
       return "Reduce";
+    case it_lab_ai::kBatchNormalization:
+      return "BatchNormalization";
     default:
       return "Unknown";
   }
@@ -302,7 +304,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                                                              it_lab_ai::kNchw);
   input_layer->setName(it_lab_ai::kInput);
   layers.push_back(input_layer);
-  if (json_path == MODEL_PATH_RESNET_ONNX) {
+  if (json_path == MODEL_PATH_RESNET_ONNX ||
+      json_path == MODEL_PATH_DENSENET_ONNX) {
     name_to_layer["x"] = input_layer;
   }
   else {
@@ -342,7 +345,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
               attributes["strides"].is_array()) {
             auto strides = attributes["strides"];
             if (strides.size() >= 2) {
-              stride = strides[0].get<size_t>();  // Используем первый stride
+              stride = strides[0].get<size_t>();
             }
           }
 
@@ -352,8 +355,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
               pads_vec = {
                   pads_array[0].get<size_t>(), pads_array[1].get<size_t>(),
                   pads_array[2].get<size_t>(), pads_array[3].get<size_t>()};
-              // Используем симметричный padding (предполагаем, что top=bottom,
-              // left=right)
               pads = pads_vec[0];
             }
           } else if (layer_data.contains("padding") &&
@@ -361,9 +362,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             pads = 0;
           } else if (layer_data.contains("padding") &&
                      layer_data["padding"] == "same") {
-            // Для "same" padding вычисляем автоматически
             size_t kernel_size =
-                tensor.get_shape()[0];  // предполагаем квадратное ядро
+                tensor.get_shape()[0];
             pads = (kernel_size - 1) / 2;
           }
 
@@ -381,7 +381,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
 
-        // Транспонирование ядра (если нужно)
         it_lab_ai::Tensor tmp_tensor = tensor;
         /*
         // Раскомментируйте если нужно транспонирование
@@ -399,13 +398,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
 
-        // Создаем сверточный слой со всеми параметрами
         auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
             stride, pads, group, tmp_tensor, tmp_bias, impl2);
-
-        // Устанавливаем дополнительные параметры если они есть в реализации
-        // (возможно нужно будет добавить методы setDilations, setPads в ваш
-        // ConvolutionalLayer)
         conv_layer->setName(it_lab_ai::kConvolution);
         layer = conv_layer;
       } else if (layer_type.find("Relu") != std::string::npos ||
@@ -455,18 +449,15 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         std::string pooltype =
             (layer_type.find("Max") != std::string::npos) ? "max" : "average";
 
-        // Параметры по умолчанию
         it_lab_ai::Shape shape = {2, 2};
         it_lab_ai::Shape strides = {2, 2};
-        it_lab_ai::Shape pads = {0, 0, 0, 0};  // [top, bottom, left, right]
+        it_lab_ai::Shape pads = {0, 0, 0, 0};
         it_lab_ai::Shape dilations = {1, 1};
         bool ceil_mode = false;
 
-        // Извлекаем параметры из attributes
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
 
-          // kernel_shape
           if (attributes.contains("kernel_shape") &&
               attributes["kernel_shape"].is_array()) {
             auto kernel_shape = attributes["kernel_shape"];
@@ -476,7 +467,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             }
           }
 
-          // strides
           if (attributes.contains("strides") &&
               attributes["strides"].is_array()) {
             auto strides_array = attributes["strides"];
@@ -486,7 +476,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             }
           }
 
-          // pads
           if (attributes.contains("pads") && attributes["pads"].is_array()) {
             auto pads_array = attributes["pads"];
             if (pads_array.size() >= 4) {
@@ -496,7 +485,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             }
           }
 
-          // dilations
           if (attributes.contains("dilations") &&
               attributes["dilations"].is_array()) {
             auto dilations_array = attributes["dilations"];
@@ -506,35 +494,27 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             }
           }
 
-          // ceil_mode
           if (attributes.contains("ceil_mode")) {
             ceil_mode = attributes["ceil_mode"].get<int>() != 0;
           }
         }
 
-        // Создаем pooling слой
         auto pool_layer =
             std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, impl1);
 
-        // Устанавливаем дополнительные параметры, если они поддерживаются
-        // (вам可能需要 добавить соответствующие методы в PoolingLayer)
         try {
-          // Проверяем и устанавливаем strides
           if (strides[0] != 2 || strides[1] != 2) {
             pool_layer->setStrides(strides[0], strides[1]);
           }
 
-          // Проверяем и устанавливаем padding
           if (pads[0] != 0 || pads[1] != 0 || pads[2] != 0 || pads[3] != 0) {
             pool_layer->setPads(pads[0], pads[1], pads[2], pads[3]);
           }
 
-          // Проверяем и устанавливаем dilations
           if (dilations[0] != 1 || dilations[1] != 1) {
             pool_layer->setDilations(dilations[0], dilations[1]);
           }
 
-          // Устанавливаем ceil_mode
           pool_layer->setCeilMode(ceil_mode);
 
         } catch (const std::exception& e) {
@@ -671,7 +651,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         layer = fc_layer;
       } else if (layer_type == "Transpose" ||
                  layer_type.find("transpose") != std::string::npos) {
-        // Извлекаем параметр perm из attributes
         std::vector<int64_t> perm;
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
@@ -686,8 +665,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         auto transpose_layer =
             std::make_shared<it_lab_ai::TransposeLayer>(perm);
         transpose_layer->setName(
-            it_lab_ai::kTranspose);  // Убедитесь, что kTranspose определен в
-                                     // LayerType
+            it_lab_ai::kTranspose);
         layer = transpose_layer;
 
         if (comments) {
@@ -702,7 +680,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         bool allowzero = false;
         std::vector<int64_t> shape;
 
-        // Пытаемся получить shape из предыдущего Constant слоя
         if (layer_data.contains("inputs") && layer_data["inputs"].is_array()) {
           auto inputs = layer_data["inputs"];
           if (inputs.size() >= 2) {
@@ -715,7 +692,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
 
-        // Извлекаем параметры из attributes
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
           if (attributes.contains("allowzero")) {
@@ -723,7 +699,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
 
-        // Извлекаем форму из weights (если есть)
         if (layer_data.contains("weights") &&
             layer_data["weights"].is_array()) {
           auto weights = layer_data["weights"];
@@ -756,9 +731,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           std::cout << "ReduceMean layer: " << layer_name << std::endl;
         }
 
-        // Извлекаем параметры
         std::vector<int64_t> axes;
-        int64_t keepdims = 1;  // значение по умолчанию
+        int64_t keepdims = 1;
 
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
@@ -782,7 +756,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           std::cout << "ReduceSum layer: " << layer_name << std::endl;
         }
 
-        // Извлекаем keepdims из attributes
         int64_t keepdims = 0;
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
@@ -791,7 +764,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
 
-        // Пытаемся получить axes из предыдущего Constant слоя
         std::vector<int64_t> axes;
         if (layer_data.contains("inputs") && layer_data["inputs"].is_array()) {
           auto inputs = layer_data["inputs"];
@@ -815,7 +787,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           std::cout << "Constant layer: " << layer_name << std::endl;
         }
 
-        // Извлекаем значение из attributes
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
           if (attributes.contains("value") && attributes["value"].is_array()) {
@@ -838,9 +809,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           std::cout << "MatMul layer added" << std::endl;
         }
       } else if (layer_type == "Softmax") {
-        int axis = -1;  // значение по умолчанию
+        int axis = -1;
 
-        // Извлекаем параметр axis из attributes
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
           if (attributes.contains("axis")) {
@@ -855,6 +825,77 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         if (comments) {
           std::cout << "Softmax layer added with axis: " << axis << std::endl;
         }
+      } else if (layer_type == "BatchNormalization") {
+        if (comments) {
+          std::cout << "BatchNormalization layer: " << layer_name << std::endl;
+        }
+
+        float epsilon = 1e-5f;
+        float momentum = 0.9f;
+        bool training_mode = false;
+
+        if (layer_data.contains("attributes")) {
+          const auto& attributes = layer_data["attributes"];
+          if (attributes.contains("epsilon")) {
+            epsilon = attributes["epsilon"].get<float>();
+          }
+          if (attributes.contains("momentum")) {
+            momentum = attributes["momentum"].get<float>();
+          }
+          if (attributes.contains("training_mode")) {
+            training_mode = attributes["training_mode"].get<int64_t>() != 0;
+          }
+        }
+
+        std::vector<float> scale_data;
+        std::vector<float> bias_data;
+        std::vector<float> mean_data;
+        std::vector<float> var_data;
+
+        if (layer_data.contains("scale") && layer_data["scale"].is_array()) {
+          const auto& scale_array = layer_data["scale"];
+          for (const auto& value : scale_array) {
+            scale_data.push_back(value.get<float>());
+          }
+        }
+
+        if (layer_data.contains("bias") && layer_data["bias"].is_array()) {
+          const auto& bias_array = layer_data["bias"];
+          for (const auto& value : bias_array) {
+            bias_data.push_back(value.get<float>());
+          }
+        }
+
+        if (layer_data.contains("mean") && layer_data["mean"].is_array()) {
+          const auto& mean_array = layer_data["mean"];
+          for (const auto& value : mean_array) {
+            mean_data.push_back(value.get<float>());
+          }
+        }
+
+        if (layer_data.contains("var") && layer_data["var"].is_array()) {
+          const auto& var_array = layer_data["var"];
+          for (const auto& value : var_array) {
+            var_data.push_back(value.get<float>());
+          }
+        }
+
+        size_t num_channels = scale_data.size();
+
+        it_lab_ai::Tensor scale = it_lab_ai::make_tensor(
+            scale_data, it_lab_ai::Shape({num_channels}));
+        it_lab_ai::Tensor bias =
+            it_lab_ai::make_tensor(bias_data, it_lab_ai::Shape({num_channels}));
+        it_lab_ai::Tensor mean =
+            it_lab_ai::make_tensor(mean_data, it_lab_ai::Shape({num_channels}));
+        it_lab_ai::Tensor var =
+            it_lab_ai::make_tensor(var_data, it_lab_ai::Shape({num_channels}));
+
+        auto bn_layer = std::make_shared<it_lab_ai::BatchNormalizationLayer>(
+            scale, bias, mean, var, epsilon, momentum, training_mode);
+        bn_layer->setName(
+            it_lab_ai::kBatchNormalization);
+        layer = bn_layer;
       } else {
         if (comments) {
           std::cout << "Warning: Unknown layer type: " << layer_type
@@ -947,14 +988,12 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     }
   }
 
-  // Безопасная сортировка
   try {
     std::sort(
         connection_list.begin(), connection_list.end(),
         [&](const auto& a, const auto& b) {
-          // Проверяем существование слоев
           if (!name_to_layer.count(a.first) || !name_to_layer.count(b.first)) {
-            return false;  // Сохраняем порядок если слои не найдены
+            return false;
           }
           return name_to_layer[a.first]->getID() <
                  name_to_layer[b.first]->getID();
@@ -965,7 +1004,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     }
   } catch (const std::exception& e) {
     std::cerr << "ERROR during sorting: " << e.what() << std::endl;
-    // Продолжаем без сортировки
   }
 
   if (comments) {
@@ -1005,7 +1043,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       }
     }
   }
-  // добавить обработку в цикл output layer, переделать все jsonы, сделать чтоб output у всех моделей был корректный, посмотреть на работу с output ранее с alexnet и исправить текущий подход
+
   auto output_layer = layers.back();
   graph.setOutput(*output_layer, output);
   auto in_out_degrees = graph.getInOutDegrees();

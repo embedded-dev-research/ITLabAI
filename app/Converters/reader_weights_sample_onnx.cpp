@@ -1,4 +1,4 @@
-﻿﻿#include <iostream>
+﻿#include <iostream>
 
 #include "Weights_Reader/reader_weights.hpp"
 
