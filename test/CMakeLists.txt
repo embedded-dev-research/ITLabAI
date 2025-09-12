@@ -26,7 +26,7 @@ if (WIN32)
 	endif()
     add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${OPENCV_BUILD_DIR}/bin/${CMAKE_BUILD_TYPE}/."
+            "${OPENCV_BUILD_DIR}/bin/."
             "${CMAKE_BINARY_DIR}/bin/")
 endif()
 
