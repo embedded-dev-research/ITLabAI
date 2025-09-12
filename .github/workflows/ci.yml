@@ -159,9 +159,16 @@ jobs:
         submodules: true
     - name: Install prerequisites
       run: sudo apt-get update && sudo apt-get install -y libomp-dev build-essential cmake
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ccache-${{ github.job }}
     - name: Build and Test
       run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        cmake -S . -B build \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_BUILD_TYPE=Release
         cmake --build build --parallel
         cmake --build build -t test
       env:
