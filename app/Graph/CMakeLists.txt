@@ -26,28 +26,16 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (WIN32)
-	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
-	    set(CMAKE_BUILD_TYPE "Debug")
-	endif()
-    if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
-	    set(CMAKE_BUILD_TYPE "Release")
-	endif()
     add_custom_command(TARGET Graph_Build POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${OPENCV_BUILD_DIR}/bin/${CMAKE_BUILD_TYPE}/."
+            "${OPENCV_BUILD_DIR}/bin/."
             "${CMAKE_BINARY_DIR}/bin/")
 endif()
 
 if (WIN32)
-	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
-	    set(CMAKE_BUILD_TYPE "Debug")
-	endif()
-    if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
-	    set(CMAKE_BUILD_TYPE "Release")
-	endif()
     add_custom_command(TARGET ACC_MNIST POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${OPENCV_BUILD_DIR}/bin/${CMAKE_BUILD_TYPE}/."
+            "${OPENCV_BUILD_DIR}/bin/."
             "${CMAKE_BINARY_DIR}/bin/")
 endif()
 
