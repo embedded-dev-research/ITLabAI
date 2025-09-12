@@ -21,10 +21,11 @@ template <typename T>
 const std::vector<uint8_t>* to_byte(const std::vector<T>& v) {
   return reinterpret_cast<const std::vector<uint8_t>*>(&v);
 }
-
 template <typename T>
 Type GetTypeEnum() {
   if constexpr (std::is_same_v<T, int>) {
+    return Type::kInt;
+  } else if constexpr (std::is_same_v<T, int64_t>) {
     return Type::kInt;
   } else if constexpr (std::is_same_v<T, float>) {
     return Type::kFloat;

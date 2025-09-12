@@ -22,7 +22,7 @@ TEST(ReduceLayer, SumAllAxesKeepDims) {
 
 TEST(ReduceLayer, SumAlongAxis0) {
   Tensor input = make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f}, {2, 2});
-  Tensor axes = make_tensor<int>({0});
+  std::vector<int64_t> axes = {0};
   ReduceLayer layer(0, axes);
   Tensor output;
 
@@ -37,7 +37,7 @@ TEST(ReduceLayer, SumAlongAxis0) {
 
 TEST(ReduceLayer, SumAlongAxis1KeepDims) {
   Tensor input = make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f}, {2, 2});
-  Tensor axes = make_tensor<int>({1});
+  std::vector<int64_t> axes = {1};
   ReduceLayer layer(1, axes);
   Tensor output;
 
@@ -52,7 +52,7 @@ TEST(ReduceLayer, SumAlongAxis1KeepDims) {
 
 TEST(ReduceLayer, IncompatibleInput) {
   Tensor input = make_tensor<float>({1.0f, 2.0f}, {2});
-  Tensor axes = make_tensor<int>({2});
+  std::vector<int64_t> axes = {2};
   ReduceLayer layer(0, axes);
 
   Tensor output;
@@ -64,7 +64,7 @@ TEST(ReduceLayer, IncompatibleInput) {
 
 TEST(ReduceLayer, InvalidAxisThrows) {
   Tensor input = make_tensor<float>({1.0f, 2.0f}, {2});
-  Tensor axes = make_tensor<int>({2});
+  std::vector<int64_t> axes = {2};
   ReduceLayer layer(0, axes);
 
   Tensor output;
@@ -76,7 +76,7 @@ TEST(ReduceLayer, InvalidAxisThrows) {
 
 TEST(ReduceLayer, IntTensorSupport) {
   Tensor input = make_tensor<int>({1, 2, 3, 4}, {2, 2});
-  Tensor axes = make_tensor<int>({0});
+  std::vector<int64_t> axes = {0};
   ReduceLayer layer(0, axes);
   Tensor output;
 
@@ -91,7 +91,7 @@ TEST(ReduceLayer, IntTensorSupport) {
 
 TEST(ReduceLayer, 3DTensorReduction) {
   Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});
-  Tensor axes = make_tensor<int>({2});
+  std::vector<int64_t> axes = {2};
   ReduceLayer layer(1, axes);
   Tensor output;
 
@@ -108,7 +108,7 @@ TEST(ReduceLayer, 3DTensorReduction) {
 
 TEST(ReduceLayer, 3DReductionAxis2) {
   Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});
-  Tensor axes = make_tensor<int>({1});
+  std::vector<int64_t> axes = {1};
   ReduceLayer layer(1, axes);
   Tensor output;
 
@@ -127,7 +127,7 @@ TEST(ReduceLayer, 3DReductionAxis10) {
   Tensor input = make_tensor<float>(
       {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, {2, 2, 2, 2});
 
-  Tensor axes = make_tensor<int>({0});
+  std::vector<int64_t> axes = {0};
   ReduceLayer layer(1, axes);
   Tensor output;
 
@@ -169,7 +169,7 @@ TEST(ReduceLayer, Resnet) {
        46.0f, 47.0f, 48.0f, 49.0f, 50.0f, 51.0f, 52.0f, 53.0f, 54.0f},
       {1, 2, 3, 3, 3});
 
-  Tensor axes = make_tensor<int>({1});
+  std::vector<int64_t> axes = {1};
   ReduceLayer layer(1, axes);
   Tensor output;
 
@@ -184,7 +184,7 @@ TEST(ReduceLayer, Resnet) {
 
 TEST(ReduceLayer, NegativeAxisBasic) {
   Tensor input = make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f}, {2, 2});
-  Tensor axes = make_tensor<int>({-1});
+  std::vector<int64_t> axes = {-1};
   ReduceLayer layer(0, axes);
   Tensor output;
 
@@ -199,7 +199,7 @@ TEST(ReduceLayer, NegativeAxisBasic) {
 
 TEST(ReduceLayer, NegativeAxis3DTensor) {
   Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});
-  Tensor axes = make_tensor<int>({-2});
+  std::vector<int64_t> axes = {-2};
   ReduceLayer layer(1, axes);
   Tensor output;
 
@@ -217,7 +217,7 @@ TEST(ReduceLayer, NegativeAxis3DTensor) {
 TEST(ReduceLayer, ReduceMean) {
   Tensor input = make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f}, {2, 2});
   Tensor output;
-  Tensor axes = make_tensor<int>({0});
+  std::vector<int64_t> axes = {0};
   ReduceLayer layer(ReduceLayer::Operation::kMean, 1, axes);
 
   std::vector<Tensor> in{input};
@@ -231,7 +231,7 @@ TEST(ReduceLayer, ReduceMean) {
 TEST(ReduceLayer, ReduceMeanResnet) {
   Tensor input = make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f}, {2, 2});
   Tensor output;
-  Tensor axes = make_tensor<int>({0});
+  std::vector<int64_t> axes = {0};
   ReduceLayer layer(ReduceLayer::Operation::kMean, 1, axes);
 
   std::vector<Tensor> in{input};
@@ -244,7 +244,7 @@ TEST(ReduceLayer, ReduceMeanResnet) {
 
 TEST(ReduceLayer, MultAlongAxis0) {
   Tensor input = make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f}, {2, 2});
-  Tensor axes = make_tensor<int>({0});
+  std::vector<int64_t> axes = {0};
   ReduceLayer layer(ReduceLayer::Operation::kMult, 0, axes);
   Tensor output;
 
@@ -259,7 +259,7 @@ TEST(ReduceLayer, MultAlongAxis0) {
 
 TEST(ReduceLayer, MaxAlongAxis1KeepDims) {
   Tensor input = make_tensor<float>({1.0f, 2.0f, 3.0f, 4.0f}, {2, 2});
-  Tensor axes = make_tensor<int>({1});
+  std::vector<int64_t> axes = {1};
   ReduceLayer layer(ReduceLayer::Operation::kMax, 1, axes);
   Tensor output;
 
@@ -274,7 +274,7 @@ TEST(ReduceLayer, MaxAlongAxis1KeepDims) {
 
 TEST(ReduceLayer, Min3DTensorReduction) {
   Tensor input = make_tensor<float>({1, 2, 3, 4, 5, 6, 7, 8}, {2, 2, 2});
-  Tensor axes = make_tensor<int>({2});
+  std::vector<int64_t> axes = {2};
   ReduceLayer layer(ReduceLayer::Operation::kMin, 1, axes);
   Tensor output;
 
@@ -296,7 +296,7 @@ TEST(ReduceLayer, ResnetReduceMean) {
        19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f},
       {1, 1, 3, 3, 3});
 
-  Tensor axes = make_tensor<int>({2, 3});
+  std::vector<int64_t> axes = {2, 3};
 
   ReduceLayer layer(ReduceLayer::Operation::kMean, 1, axes);
   Tensor output;

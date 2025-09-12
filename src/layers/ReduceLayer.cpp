@@ -6,7 +6,8 @@
 
 namespace it_lab_ai {
 
-ReduceLayer::ReduceLayer(Operation op, int64_t keepdims, const Tensor& axes)
+ReduceLayer::ReduceLayer(Operation op, int64_t keepdims,
+                         const std::vector<int64_t>& axes)
     : op_(op), keepdims_(keepdims), axes_(axes) {}
 
 void ReduceLayer::normalize_axes(const Shape& input_shape,
@@ -166,13 +167,6 @@ void ReduceLayer::compute(const Tensor& input, const Shape& output_shape,
   output = make_tensor(output_data, output_shape);
 }
 
-template void ReduceLayer::compute<float>(const Tensor&, const Shape&,
-                                          const std::vector<int64_t>&,
-                                          Tensor&) const;
-template void ReduceLayer::compute<int>(const Tensor&, const Shape&,
-                                        const std::vector<int64_t>&,
-                                        Tensor&) const;
-
 void ReduceLayer::run(const std::vector<Tensor>& input,
                       std::vector<Tensor>& output) {
   if (input.size() != 1) {
@@ -184,16 +178,8 @@ void ReduceLayer::run(const std::vector<Tensor>& input,
     return;
   }
 
-  std::vector<int64_t> axes_indices;
-  if (axes_.get_shape().dims() > 0) {
-    if (axes_.get_type() == Type::kInt) {
-      const auto* axes_data = axes_.as<int>();
-      axes_indices.assign(axes_data->begin(), axes_data->end());
-    } else {
-      throw std::runtime_error("ReduceLayer: Axes tensor must be of type int");
-    }
-  }
-
+  // Просто используем сохраненные axes
+  std::vector<int64_t> axes_indices = axes_;
   normalize_axes(input[0].get_shape(), axes_indices);
   Shape output_shape =
       calculate_output_shape(input[0].get_shape(), axes_indices);
@@ -211,5 +197,12 @@ void ReduceLayer::run(const std::vector<Tensor>& input,
           "supported");
   }
 }
+
+template void ReduceLayer::compute<float>(const Tensor&, const Shape&,
+                                          const std::vector<int64_t>&,
+                                          Tensor&) const;
+template void ReduceLayer::compute<int>(const Tensor&, const Shape&,
+                                        const std::vector<int64_t>&,
+                                        Tensor&) const;
 
 }  // namespace it_lab_ai

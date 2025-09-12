@@ -1,6 +1,7 @@
+#include <unordered_map>
+
 #include "build.cpp"
 #include "build.hpp"
-#include <unordered_map>
 
 namespace fs = std::filesystem;
 using namespace it_lab_ai;
@@ -20,7 +21,15 @@ std::vector<int> get_input_shape_from_json(const std::string& json_path) {
         layer_data.contains("attributes")) {
       auto attributes = layer_data["attributes"];
       if (attributes.contains("shape")) {
-        return attributes["shape"].get<std::vector<int>>();
+        auto shape = attributes["shape"].get<std::vector<int>>();
+
+        if (shape.size() == 2) {
+          if (shape[1] == 784) {
+            return {shape[0], 1, 28, 28};
+          }
+        } else if (shape.size() == 4) {
+          return shape;
+        }
       }
     }
   }
@@ -39,6 +48,37 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
   int height = input_shape[2];
   int width = input_shape[3];
 
+  if (height == 28 && width == 28 && channels == 1) {
+    cv::Mat processed_image;
+
+    if (image.channels() == 3) {
+      cv::cvtColor(image, processed_image, cv::COLOR_BGR2GRAY);
+    } else {
+      processed_image = image.clone();
+    }
+
+    cv::resize(processed_image, processed_image, cv::Size(28, 28));
+
+    cv::Mat float_image;
+    processed_image.convertTo(float_image, CV_32FC1);
+    float_image /= 255.0;
+
+    std::vector<float> data;
+    data.reserve(batch_size * channels * height * width);
+
+    for (int i = 0; i < 28; ++i) {
+      for (int j = 0; j < 28; ++j) {
+        data.push_back(float_image.at<float>(j, i));
+      }
+    }
+
+    it_lab_ai::Shape shape(
+        {static_cast<size_t>(batch_size), static_cast<size_t>(channels),
+         static_cast<size_t>(height), static_cast<size_t>(width)});
+
+    return it_lab_ai::make_tensor(data, shape);
+  }
+
   cv::Mat resized;
   cv::resize(image, resized, cv::Size(width, height));
 
@@ -55,15 +95,12 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
     image_channels[2] = (image_channels[2] - 0.406) / 0.225;
 
     cv::merge(image_channels, float_image);
-  }
-
-  else if (channels == 1) {
+  } else if (channels == 1) {
     cv::cvtColor(float_image, float_image, cv::COLOR_BGR2GRAY);
   }
 
   std::vector<float> data;
   data.reserve(batch_size * channels * height * width);
-
 
   std::vector<cv::Mat> processed_channels;
   cv::split(float_image, processed_channels);
@@ -75,7 +112,6 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
       }
     }
   }
-
 
   it_lab_ai::Shape shape(
       {static_cast<size_t>(batch_size), static_cast<size_t>(channels),
@@ -113,15 +149,20 @@ int main(int argc, char* argv[]) {
   }
 
   std::string image_folder;
-  if (input_shape[2] == 28 && input_shape[3] == 28) {
+  if (input_shape[1] == 1 && input_shape[2] == 28 && input_shape[3] == 28) {
     image_folder = IMAGE28_PATH;
+    std::cout << "Using MNIST image folder: " << image_folder << std::endl;
   } else if (input_shape[2] == 224 && input_shape[3] == 224) {
     image_folder = IMAGE224_PATH;
+    std::cout << "Using 224x224 image folder: " << image_folder << std::endl;
   } else if (input_shape[2] == 256 && input_shape[3] == 256) {
     image_folder = IMAGE256_PATH;
+    std::cout << "Using 256x256 image folder: " << image_folder << std::endl;
   } else {
     image_folder = IMAGE28_PATH;
+    std::cout << "Using default image folder: " << image_folder << std::endl;
   }
+
   std::vector<std::string> image_paths;
 
   for (const auto& entry : fs::directory_iterator(image_folder)) {
@@ -131,24 +172,56 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  std::cout << "Found " << image_paths.size() << " images to process"
+            << std::endl;
+
   for (const auto& image_path : image_paths) {
     cv::Mat image = cv::imread(image_path);
-    if (image.empty()) continue;
+    if (image.empty()) {
+      std::cerr << "Failed to load image: " << image_path << std::endl;
+      continue;
+    }
 
     try {
+      std::cout << "Processing image: " << image_path << std::endl;
       it_lab_ai::Tensor input = prepare_image(image, input_shape);
 
-      it_lab_ai::Tensor output({1, 1000}, it_lab_ai::Type::kFloat);
+      if (model_name == "alexnet_mnist") {
+        it_lab_ai::Shape sh1({1, 5, 5, 3});
+        std::vector<float> vec(75, 3);
+        it_lab_ai::Tensor output = it_lab_ai::make_tensor(vec, sh1);
 
-      build_graph(input, output, json_path, true, parallel);
+        build_graph_linear(input, output, json_path, true, parallel);
 
-      std::vector<float> tmp_output = softmax<float>(*output.as<float>());
-      for (size_t i = 0; i < tmp_output.size(); i++) {
-        if (tmp_output[i] >= 1e-6) {
-          std::cout << "Image: " << image_path << " -> Class: " << i
-                    << std::endl;
+        std::vector<float> tmp_output = softmax<float>(*output.as<float>());
+        for (size_t i = 0; i < tmp_output.size(); i++) {
+          if (tmp_output[i] >= 1e-6) {
+            std::cout << "Image: " << image_path << " -> Class: " << i
+                      << std::endl;
+          }
         }
+      } else {
+        size_t output_classes = 1000;
+        it_lab_ai::Tensor output({1, output_classes}, it_lab_ai::Type::kFloat);
+
+        build_graph(input, output, json_path, true, parallel);
+
+        std::vector<float> tmp_output = softmax<float>(*output.as<float>());
+
+        int max_class = 0;
+        float max_prob = tmp_output[0];
+        for (int i = 1; i < tmp_output.size(); i++) {
+          if (tmp_output[i] > max_prob) {
+            max_prob = tmp_output[i];
+            max_class = i;
+          }
+        }
+
+        std::cout << "Image: " << image_path
+                  << " -> Predicted class: " << max_class
+                  << " (probability: " << max_prob << ")" << std::endl;
       }
+
     } catch (const std::exception& e) {
       std::cerr << "Error processing image " << image_path << ": " << e.what()
                 << std::endl;

@@ -22,7 +22,15 @@
 #include "layers/ConcatLayer.hpp"
 #include "layers/BinaryOpLayer.hpp"
 #include "layers/SplitLayer.hpp"
+#include "layers/TransposeLayer.hpp"
+#include "layers/ReshapeLayer.hpp"
+#include "layers/MatmulLayer.hpp"
+#include "layers/SoftmaxLayer.hpp"
+#include "layers/ReduceLayer.hpp"
 
 void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
+                 const std::string& json_path, bool comments,
+                 bool parallel = false);
+void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                  const std::string& json_path, bool comments,
                  bool parallel = false);

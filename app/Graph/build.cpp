@@ -3,6 +3,209 @@
 #include <set>
 #include <unordered_map>
 
+void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
+                        const std::string& json_path, bool comments,
+                        bool parallel){
+  if (comments) {
+    for (size_t i = 0; i < input.get_shape().dims(); i++) {
+      std::cout << input.get_shape()[i] << ' ';
+    }
+    std::cout << std::endl;
+    if (input.get_shape().dims() == 4) {
+      for (size_t n = 0; n < input.get_shape()[0]; n++) {
+        for (size_t h = 0; h < input.get_shape()[2]; h++) {
+          for (size_t w = 0; w < input.get_shape()[3]; w++) {
+            for (size_t c = 0; c < input.get_shape()[1]; c++) {
+              std::cout << input.get<float>({n, c, h, w}) << ' ';
+            }
+          }
+          std::cerr << std::endl;
+        }
+      }
+      std::cout << std::endl << std::endl;
+    }
+  }
+  it_lab_ai::ImplType impl1 = parallel ? it_lab_ai::kTBB : it_lab_ai::kDefault;
+  it_lab_ai::ImplType impl2 = parallel ? it_lab_ai::kSTL : it_lab_ai::kDefault;
+  std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
+  std::vector<bool> layerpostop;
+
+  std::string json_file = json_path;
+  it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
+
+  if (comments) std::cout << "Loaded model data from JSON." << std::endl;
+
+  for (const auto& layer_data : model_data) {
+    std::string layer_type = layer_data["type"];
+    if (comments)
+      std::cout << "Processing layer of type: " << layer_type << std::endl;
+
+    it_lab_ai::Tensor tensor =
+        it_lab_ai::create_tensor_from_json(layer_data, it_lab_ai::Type::kFloat);
+
+    if (layer_type.find("Conv") != std::string::npos) {
+      it_lab_ai::Tensor tmp_tensor = tensor;
+      // kernel is always transposed ?
+      for (size_t n = 0; n < tensor.get_shape()[2]; n++) {
+        for (size_t c = 0; c < tensor.get_shape()[3]; c++) {
+          for (size_t h = 0; h < tensor.get_shape()[0]; h++) {
+            for (size_t w = 0; w < tensor.get_shape()[1]; w++) {
+              tmp_tensor.set<float>(std::vector<size_t>({w, h, n, c}),
+                                    tensor.get<float>({h, w, n, c}));
+            }
+          }
+        }
+      }
+      //
+      tensor = tmp_tensor;
+      it_lab_ai::Shape shape = tensor.get_shape();
+      size_t pads = (tensor.get_shape()[0] - 1) / 2;
+      if (layer_data.contains("padding")) {
+        if (layer_data["padding"] == "valid") {
+          pads = 0;
+        }
+      }
+      if (comments) {
+        std::cout << "PoolingLayer shape: ";
+        for (size_t i = 0; i < shape.dims(); ++i) {
+          std::cout << shape[i] << " ";
+        }
+        std::cout << std::endl;
+      }
+
+      it_lab_ai::Tensor tmp_values = tensor;
+      it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
+      auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
+          1, pads, 1, tmp_values, tmp_bias, impl2);
+      conv_layer->setName(it_lab_ai::kConvolution);
+      layers.push_back(conv_layer);
+      layerpostop.push_back(false);
+      if (comments) std::cout << "ConvLayer added to layers." << std::endl;
+    }
+    if (layer_type.find("relu") != std::string::npos) {
+      auto ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
+      ew_layer->setName(it_lab_ai::kElementWise);
+      layers.push_back(ew_layer);
+      layerpostop.push_back(true);
+      if (comments)
+        std::cout << "Element wise (relu) added to layers" << std::endl;
+    }
+    if (layer_type.find("Dense") != std::string::npos) {
+      it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
+      it_lab_ai::Tensor tmp_tensor = it_lab_ai::Tensor(
+          it_lab_ai::Shape({tensor.get_shape()[1], tensor.get_shape()[0]}),
+          it_lab_ai::Type::kFloat);
+      // kernel is always transposed ?
+      for (size_t h = 0; h < tensor.get_shape()[0]; h++) {
+        for (size_t w = 0; w < tensor.get_shape()[1]; w++) {
+          tmp_tensor.set<float>(std::vector<size_t>({w, h}),
+                                tensor.get<float>({h, w}));
+        }
+      }
+      //
+      tensor = tmp_tensor;
+      auto fc_layer = std::make_shared<it_lab_ai::FCLayer>(tensor, tmp_bias);
+      fc_layer->setName(it_lab_ai::kFullyConnected);
+      layers.push_back(fc_layer);
+      layerpostop.push_back(false);
+      if (comments) std::cout << "DenseLayer added to layers." << std::endl;
+    }
+
+    if (layer_type.find("Pool") != std::string::npos) {
+      it_lab_ai::Shape shape = {2, 2};
+      std::string pooltype;
+      if (layer_type.find("Max") != std::string::npos) {
+        pooltype = "max";
+      } else {
+        pooltype = "average";
+      }
+      if (comments)
+        std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
+                  << std::endl;
+      auto pool_layer =
+          std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, impl1);
+      pool_layer->setName(it_lab_ai::kPooling);
+      layers.push_back(pool_layer);
+      layerpostop.push_back(false);
+      if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
+    }
+
+    if (layer_type.find("Flatten") != std::string::npos) {
+      auto flatten_layer = std::make_shared<it_lab_ai::FlattenLayer>(
+          std::vector<size_t>({0, 3, 2, 1}));
+      flatten_layer->setName(it_lab_ai::kFlatten);
+      layers.push_back(flatten_layer);
+      layerpostop.push_back(false);
+      if (comments) std::cout << "FlattenLayer added to layers." << std::endl;
+    }
+
+    if (layer_type.find("Dropout") != std::string::npos) {
+      auto dropout_layer = std::make_shared<it_lab_ai::DropOutLayer>(0.0);
+      dropout_layer->setName(it_lab_ai::kDropout);
+      layers.push_back(dropout_layer);
+      layerpostop.push_back(false);
+      if (comments)
+        std::cout
+            << "DropOutLayer added to layers with probability 0.4 (turned "
+               "off for inference)."
+            << std::endl;
+    }
+  }
+  if (comments)
+    std::cout << "number of layers - " << layers.size() + 1 << std::endl;
+  it_lab_ai::Graph graph(static_cast<int>(layers.size()));
+  it_lab_ai::InputLayer a1(it_lab_ai::kNchw, it_lab_ai::kNchw);
+  a1.setName(it_lab_ai::kInput);
+
+  if (comments) std::cout << "InputLayer created." << std::endl;
+
+  graph.setInput(a1, input);
+  if (comments) std::cout << "Input set in graph." << std::endl;
+
+  graph.makeConnection(a1, *layers[0]);
+  if (comments)
+    std::cout << "Connection made between InputLayer and first layer."
+              << std::endl;
+
+  for (size_t i = 0; i < layers.size() - 1; ++i) {
+    if (layerpostop[i]) {
+      layers[i - 1]->postops.layers.push_back(layers[i].get());
+      layers[i - 1]->postops.count++;
+      graph.makeConnection(*layers[i - 1], *layers[i + 1]);
+    } else if (!layerpostop[i + 1])
+      graph.makeConnection(*layers[i], *layers[i + 1]);
+  }
+
+  graph.setOutput(*layers.back(), output);
+  if (comments) std::cout << "Output set in graph." << std::endl;
+
+  if (comments) std::cout << "Starting inference..." << std::endl;
+  graph.inference();
+#ifdef ENABLE_STATISTIC_TIME
+  std::vector<std::string> times = graph.getTimeInfo();
+  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
+  for (size_t i = 0; i < times.size(); i++) {
+    std::cout << times[i] << std::endl;
+  }
+  std::vector<int> elps_time = graph.getTime();
+  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
+  std::cout << "Elapsed inference time:" << sum << std::endl;
+  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+#endif
+  if (comments) std::cout << "Inference completed." << std::endl;
+  if (comments) {
+    std::vector<float> tmp_output =
+        it_lab_ai::softmax<float>(*output.as<float>());
+    for (size_t i = 0; i < tmp_output.size(); i++) {
+      if (tmp_output[i] < 1e-6) {
+        std::cout << i << ": 0" << std::endl;
+      } else {
+        std::cout << i << ": " << tmp_output[i] << std::endl;
+      }
+    }
+  }
+}
+
 std::string get_layer_name_by_id(
     const std::unordered_map<std::string, std::shared_ptr<it_lab_ai::Layer>>&
         name_to_layer,
@@ -36,10 +239,22 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
       return "Flatten";
     case it_lab_ai::kConcat:
       return "Concat";
+    case it_lab_ai::kDropout:
+      return "Dropout";
     case it_lab_ai::kSplit:
       return "Split";
     case it_lab_ai::kBinaryOp:
       return "BinaryOp";
+    case it_lab_ai::kTranspose:
+      return "Transpose";
+    case it_lab_ai::kMatmul:
+      return "MatMul";
+    case it_lab_ai::kReshape:
+      return "Reshape";
+    case it_lab_ai::kSoftmax:
+      return "Softmax";
+    case it_lab_ai::kReduce:
+      return "Reduce";
     default:
       return "Unknown";
   }
@@ -70,6 +285,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   it_lab_ai::ImplType impl1 = parallel ? it_lab_ai::kTBB : it_lab_ai::kDefault;
   it_lab_ai::ImplType impl2 = parallel ? it_lab_ai::kSTL : it_lab_ai::kDefault;
 
+  std::unordered_map <std::string, std::vector<int64_t>> layer_parameters;
+
   std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
   std::unordered_map<std::string, std::shared_ptr<it_lab_ai::Layer>>
       name_to_layer;
@@ -85,20 +302,26 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                                                              it_lab_ai::kNchw);
   input_layer->setName(it_lab_ai::kInput);
   layers.push_back(input_layer);
-  name_to_layer["image_tensor"] = input_layer;
+  if (json_path == MODEL_PATH_RESNET_ONNX) {
+    name_to_layer["x"] = input_layer;
+  }
+  else {
+    name_to_layer["image_tensor"] = input_layer;
+  }
   int current_id = 0;
   input_layer->setID(current_id++); 
   for (const auto& layer_data : model_data) {
     try {
-      std::string layer_name = layer_data["name"];
-      int layer_index = layer_data["index"];
       std::string layer_type = layer_data["type"];
 
       if (layer_type == "InputLayer") continue;
+      std::string layer_name = layer_data["name"];
+      int layer_index = layer_data["index"];
       if (comments) {
         std::cout << "Processing layer " << layer_index << ": " << layer_name
                   << " (" << layer_type << ")" << std::endl;
       }
+      
 
       std::shared_ptr<it_lab_ai::Layer> layer;
 
@@ -106,15 +329,12 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
             layer_data, it_lab_ai::Type::kFloat);
 
-        // Параметры по умолчанию
         size_t stride = 1;
         size_t pads = 0;
         size_t group = 1;
         std::vector<size_t> dilations = {1, 1};
-        std::vector<size_t> pads_vec = {0, 0, 0,
-                                        0};  // [top, bottom, left, right]
+        std::vector<size_t> pads_vec = {0, 0, 0, 0};
 
-        // Извлекаем параметры из JSON
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
 
@@ -193,6 +413,14 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         auto ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
         ew_layer->setName(it_lab_ai::kElementWise);
         layer = ew_layer;
+      } else if (layer_type.find("Sigmoid") != std::string::npos) {
+        auto ew_layer = std::make_shared<it_lab_ai::EWLayer>("sigmoid");
+        ew_layer->setName(it_lab_ai::kElementWise);
+        layer = ew_layer;
+
+        if (comments) {
+          std::cout << "Sigmoid layer added" << std::endl;
+        }
       } else if (layer_type.find("Dense") != std::string::npos ||
                  layer_type.find("FullyConnected") != std::string::npos) {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
@@ -213,7 +441,16 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             std::make_shared<it_lab_ai::FCLayer>(tmp_tensor, tmp_bias);
         fc_layer->setName(it_lab_ai::kFullyConnected);
         layer = fc_layer;
-      } else if (layer_type.find("MaxPool") != std::string::npos ||
+      } else if (layer_type.find("Dropout") != std::string::npos) {
+        auto dropout_layer = std::make_shared<it_lab_ai::DropOutLayer>(0.0);
+        dropout_layer->setName(it_lab_ai::kDropout);
+        layer = dropout_layer;
+        if (comments)
+          std::cout
+              << "DropOutLayer added to layers with probability 0.4 (turned "
+                 "off for inference)."
+              << std::endl;
+      } else if (layer_type.find("Pool") != std::string::npos ||
                  layer_type.find("AveragePool") != std::string::npos) {
         std::string pooltype =
             (layer_type.find("Max") != std::string::npos) ? "max" : "average";
@@ -432,6 +669,192 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             std::make_shared<it_lab_ai::FCLayer>(tmp_tensor, tmp_bias);
         fc_layer->setName(it_lab_ai::kFullyConnected);
         layer = fc_layer;
+      } else if (layer_type == "Transpose" ||
+                 layer_type.find("transpose") != std::string::npos) {
+        // Извлекаем параметр perm из attributes
+        std::vector<int64_t> perm;
+        if (layer_data.contains("attributes")) {
+          const auto& attributes = layer_data["attributes"];
+          if (attributes.contains("perm") && attributes["perm"].is_array()) {
+            auto perm_array = attributes["perm"];
+            for (const auto& p : perm_array) {
+              perm.push_back(p.get<int64_t>());
+            }
+          }
+        }
+
+        auto transpose_layer =
+            std::make_shared<it_lab_ai::TransposeLayer>(perm);
+        transpose_layer->setName(
+            it_lab_ai::kTranspose);  // Убедитесь, что kTranspose определен в
+                                     // LayerType
+        layer = transpose_layer;
+
+        if (comments) {
+          std::cout << "TransposeLayer added with perm: [";
+          for (size_t i = 0; i < perm.size(); ++i) {
+            std::cout << perm[i];
+            if (i < perm.size() - 1) std::cout << ", ";
+          }
+          std::cout << "]" << std::endl;
+        }
+      } else if (layer_type == "Reshape") {
+        bool allowzero = false;
+        std::vector<int64_t> shape;
+
+        // Пытаемся получить shape из предыдущего Constant слоя
+        if (layer_data.contains("inputs") && layer_data["inputs"].is_array()) {
+          auto inputs = layer_data["inputs"];
+          if (inputs.size() >= 2) {
+            std::string constant_name = inputs[1].get<std::string>();
+            constant_name = get_base_layer_name(constant_name);
+
+            if (layer_parameters.count(constant_name)) {
+              shape = layer_parameters[constant_name];
+            }
+          }
+        }
+
+        // Извлекаем параметры из attributes
+        if (layer_data.contains("attributes")) {
+          const auto& attributes = layer_data["attributes"];
+          if (attributes.contains("allowzero")) {
+            allowzero = attributes["allowzero"].get<int64_t>() != 0;
+          }
+        }
+
+        // Извлекаем форму из weights (если есть)
+        if (layer_data.contains("weights") &&
+            layer_data["weights"].is_array()) {
+          auto weights = layer_data["weights"];
+          for (const auto& weight : weights) {
+            if (weight.is_number()) {
+              shape.push_back(weight.get<int64_t>());
+            }
+          }
+        }
+
+        auto reshape_layer =
+            std::make_shared<it_lab_ai::ReshapeLayer>(allowzero, shape);
+        reshape_layer->setName(it_lab_ai::kReshape);
+        layer = reshape_layer;
+
+        if (comments) {
+          std::cout << "ReshapeLayer added with allowzero: " << allowzero;
+          if (!shape.empty()) {
+            std::cout << ", shape: [";
+            for (size_t i = 0; i < shape.size(); ++i) {
+              std::cout << shape[i];
+              if (i < shape.size() - 1) std::cout << ", ";
+            }
+            std::cout << "]";
+          }
+          std::cout << std::endl;
+        }
+      } else if (layer_type == "ReduceMean") {
+        if (comments) {
+          std::cout << "ReduceMean layer: " << layer_name << std::endl;
+        }
+
+        // Извлекаем параметры
+        std::vector<int64_t> axes;
+        int64_t keepdims = 1;  // значение по умолчанию
+
+        if (layer_data.contains("attributes")) {
+          const auto& attributes = layer_data["attributes"];
+          if (attributes.contains("axes") && attributes["axes"].is_array()) {
+            auto axes_array = attributes["axes"];
+            for (const auto& axis : axes_array) {
+              axes.push_back(axis.get<int64_t>());
+            }
+          }
+          if (attributes.contains("keepdims")) {
+            keepdims = attributes["keepdims"].get<int64_t>();
+          }
+        }
+        auto reduce_layer = std::make_shared<it_lab_ai::ReduceLayer>(
+            it_lab_ai::ReduceLayer::Operation::kMean, keepdims, axes);
+        reduce_layer->setName(it_lab_ai::kReduce);
+        reduce_layer->setID(current_id++);
+        layer = reduce_layer;
+      } else if (layer_type == "ReduceSum") {
+        if (comments) {
+          std::cout << "ReduceSum layer: " << layer_name << std::endl;
+        }
+
+        // Извлекаем keepdims из attributes
+        int64_t keepdims = 0;
+        if (layer_data.contains("attributes")) {
+          const auto& attributes = layer_data["attributes"];
+          if (attributes.contains("keepdims")) {
+            keepdims = attributes["keepdims"].get<int64_t>();
+          }
+        }
+
+        // Пытаемся получить axes из предыдущего Constant слоя
+        std::vector<int64_t> axes;
+        if (layer_data.contains("inputs") && layer_data["inputs"].is_array()) {
+          auto inputs = layer_data["inputs"];
+          if (inputs.size() >= 2) {
+            std::string constant_name = inputs[1].get<std::string>();
+            constant_name = get_base_layer_name(constant_name);
+
+            if (layer_parameters.count(constant_name)) {
+              axes = layer_parameters[constant_name];
+            }
+          }
+        }
+
+        auto reduce_layer = std::make_shared<it_lab_ai::ReduceLayer>(
+            it_lab_ai::ReduceLayer::Operation::kSum, keepdims, axes);
+        reduce_layer->setName(it_lab_ai::kReduce);
+        reduce_layer->setID(current_id++);
+        layer = reduce_layer;
+      } else if (layer_type == "Constant") {
+        if (comments) {
+          std::cout << "Constant layer: " << layer_name << std::endl;
+        }
+
+        // Извлекаем значение из attributes
+        if (layer_data.contains("attributes")) {
+          const auto& attributes = layer_data["attributes"];
+          if (attributes.contains("value") && attributes["value"].is_array()) {
+            auto values = attributes["value"];
+            std::vector<int64_t> data;
+            for (const auto& val : values) {
+              data.push_back(val.get<int64_t>());
+            }
+            layer_parameters[layer_name] = data;
+          }
+        }
+
+        continue;
+      } else if (layer_type == "MatMul") {
+        auto matmul_layer = std::make_shared<it_lab_ai::MatmulLayer>();
+        matmul_layer->setName(it_lab_ai::kMatmul);
+        layer = matmul_layer;
+
+        if (comments) {
+          std::cout << "MatMul layer added" << std::endl;
+        }
+      } else if (layer_type == "Softmax") {
+        int axis = -1;  // значение по умолчанию
+
+        // Извлекаем параметр axis из attributes
+        if (layer_data.contains("attributes")) {
+          const auto& attributes = layer_data["attributes"];
+          if (attributes.contains("axis")) {
+            axis = attributes["axis"].get<int>();
+          }
+        }
+
+        auto softmax_layer = std::make_shared<it_lab_ai::SoftmaxLayer>(axis);
+        softmax_layer->setName(it_lab_ai::kSoftmax);
+        layer = softmax_layer;
+
+        if (comments) {
+          std::cout << "Softmax layer added with axis: " << axis << std::endl;
+        }
       } else {
         if (comments) {
           std::cout << "Warning: Unknown layer type: " << layer_type
@@ -439,13 +862,25 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         }
         continue;
       }
-      layer->setID(current_id++);
-      layers.push_back(layer);
-      name_to_layer[layer_name] = layer;
-      if (layer_data.contains("inputs")) {
-        for (const auto& input_name : layer_data["inputs"]) {
-          std::string input_tensor = input_name.get<std::string>();
-          connections[input_tensor].push_back(layer_name);
+      if (layer) {
+        layer->setID(current_id++);
+        layers.push_back(layer);
+        name_to_layer[layer_name] = layer;
+
+        if (layer_data.contains("inputs")) {
+          for (const auto& input_name : layer_data["inputs"]) {
+            std::string input_tensor = input_name.get<std::string>();
+            if (input_tensor.find("Constant") != std::string::npos ||
+                input_tensor.find("onnx::") != std::string::npos ||
+                input_tensor.find("_Constant") != std::string::npos) {
+              if (comments) {
+                std::cout << "Skipping connection from: " << input_tensor
+                          << std::endl;
+              }
+              continue;
+            }
+            connections[input_tensor].push_back(layer_name);
+          }
         }
       }
     } catch (const std::exception& e) {
@@ -487,27 +922,90 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
     for (const auto& target_layer_name : target_layers) {
       connection_list.emplace_back(source_layer_name, target_layer_name);
-    }
-  }
-
-  std::sort(connection_list.begin(), connection_list.end(),
-            [&](const auto& a, const auto& b) {
-              return name_to_layer[a.first]->getID() <
-                     name_to_layer[b.first]->getID();
-            });
-
-  for (const auto& [source_name, target_name] : connection_list) {
-    if (name_to_layer.count(source_name) && name_to_layer.count(target_name)) {
-      try {
-        graph.makeConnection(*name_to_layer[source_name],
-                             *name_to_layer[target_name]);
-      } catch (const std::exception& e) {
-        std::cerr << "Failed: " << source_name << " -> " << target_name
-                  << e.what()<<std::endl;
+      if (comments) {
+        std::cout << "Planned connection: " << source_layer_name << " -> "
+                  << target_layer_name << std::endl;
       }
     }
   }
 
+  if (comments) {
+    std::cout << "\n=== BEFORE SORTING CONNECTIONS ===" << std::endl;
+    for (const auto& conn : connection_list) {
+      std::cout << "Connection: " << conn.first << " -> " << conn.second;
+      if (name_to_layer.count(conn.first)) {
+        std::cout << " (ID: " << name_to_layer[conn.first]->getID() << ")";
+      } else {
+        std::cout << " (SOURCE NOT FOUND!)";
+      }
+      if (name_to_layer.count(conn.second)) {
+        std::cout << " -> (ID: " << name_to_layer[conn.second]->getID() << ")";
+      } else {
+        std::cout << " -> (TARGET NOT FOUND!)";
+      }
+      std::cout << std::endl;
+    }
+  }
+
+  // Безопасная сортировка
+  try {
+    std::sort(
+        connection_list.begin(), connection_list.end(),
+        [&](const auto& a, const auto& b) {
+          // Проверяем существование слоев
+          if (!name_to_layer.count(a.first) || !name_to_layer.count(b.first)) {
+            return false;  // Сохраняем порядок если слои не найдены
+          }
+          return name_to_layer[a.first]->getID() <
+                 name_to_layer[b.first]->getID();
+        });
+
+    if (comments) {
+      std::cout << "Sorting completed successfully" << std::endl;
+    }
+  } catch (const std::exception& e) {
+    std::cerr << "ERROR during sorting: " << e.what() << std::endl;
+    // Продолжаем без сортировки
+  }
+
+  if (comments) {
+    std::cout << "\n=== ESTABLISHING CONNECTIONS ===" << std::endl;
+  }
+
+  for (const auto& [source_name, target_name] : connection_list) {
+    if (name_to_layer.count(source_name) && name_to_layer.count(target_name)) {
+      try {
+        if (comments) {
+          std::cout << "Connecting: " << source_name << " -> " << target_name;
+          std::cout << " (ID: " << name_to_layer[source_name]->getID()
+                    << " -> ID: " << name_to_layer[target_name]->getID() << ")"
+                    << std::endl;
+        }
+        graph.makeConnection(*name_to_layer[source_name],
+                             *name_to_layer[target_name]);
+        if (comments) {
+          std::cout << "  Success" << std::endl;
+        }
+      } catch (const std::exception& e) {
+        std::cerr << "Failed: " << source_name << " -> " << target_name << " : "
+                  << e.what() << std::endl;
+      }
+    } else {
+      if (comments) {
+        std::cerr << "Warning: Missing layer for connection " << source_name
+                  << " -> " << target_name << std::endl;
+        if (!name_to_layer.count(source_name)) {
+          std::cerr << "  Source layer '" << source_name << "' not found"
+                    << std::endl;
+        }
+        if (!name_to_layer.count(target_name)) {
+          std::cerr << "  Target layer '" << target_name << "' not found"
+                    << std::endl;
+        }
+      }
+    }
+  }
+  // добавить обработку в цикл output layer, переделать все jsonы, сделать чтоб output у всех моделей был корректный, посмотреть на работу с output ранее с alexnet и исправить текущий подход
   auto output_layer = layers.back();
   graph.setOutput(*output_layer, output);
   auto in_out_degrees = graph.getInOutDegrees();
