@@ -11,9 +11,11 @@ std::vector<size_t> reorder(std::vector<size_t> order_vec,
 class FlattenLayer : public Layer {
  private:
   std::vector<size_t> order_;
+  int axis_;
 
  public:
   FlattenLayer() : order_({0, 1, 2, 3}) {}
+  FlattenLayer(int axis = 1) : axis_(axis) {} 
   FlattenLayer(const std::vector<size_t>& order) : order_(order) {}
   static std::string get_name() { return "Flatten layer"; }
   void run(const std::vector<Tensor>& input,

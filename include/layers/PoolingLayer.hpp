@@ -129,6 +129,25 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
       pads_(pads),
       dilations_(dilations),
       ceil_mode_(ceil_mode) {
+
+    if (pooling_shape[0] == 0 && pooling_shape[1] == 0) {
+    // Global pooling - используем входные пространственные размеры как kernel
+    poolingShape_ = Shape({
+        input_shape[input_shape.dims() - 2],  // Высота
+        input_shape[input_shape.dims() - 1]   // Ширина
+    });
+    strides_ = Shape({1, 1});     // Stride = 1 для global pooling
+    pads_ = Shape({0, 0, 0, 0});  // Без padding
+    dilations_ = Shape({1, 1});   // Без dilation
+
+    // ПЕРЕОПРЕДЕЛЯЕМ ВЫХОДНУЮ ФОРМУ ДЛЯ GLOBAL POOLING
+    this->outputShape_ = input_shape;
+    // Все пространственные измерения становятся 1
+    for (size_t i = 2; i < input_shape.dims(); ++i) {
+      this->outputShape_[i] = 1;
+    }
+    return;  // Выходим раньше, не используя обычный расчет
+  }
   if (input_shape.dims() > 4) {
     throw std::invalid_argument("Input dimensions is bigger than 4");
   }

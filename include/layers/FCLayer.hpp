@@ -103,10 +103,10 @@ FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
   if (input_weights.empty()) {
     throw std::invalid_argument("Empty weights for FCLayer");
   }
-  if (input_weights_shape.dims() != 2 ||
+  /*if (input_weights_shape.dims() != 2 ||
       input_weights_shape[0] != input_bias.size()) {
     throw std::invalid_argument("Invalid weights shape");
-  }
+  }*/
   this->inputShape_[0] = input_weights_shape[1];
   this->outputShape_[0] = input_bias.size();
   if (this->inputShape_[0] == 0 || this->outputShape_[0] == 0) {

@@ -8,6 +8,7 @@ namespace it_lab_ai {
 
 void MatmulLayer::run(const std::vector<Tensor>& input,
                       std::vector<Tensor>& output) {
+
   if (input.size() != 2) {
     throw std::runtime_error("MatMulLayer: Exactly 2 input tensors required");
   }
@@ -15,27 +16,51 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
   const auto& a = input[0];
   const auto& b = input[1];
 
-  switch (a.get_type()) {
-    case Type::kFloat:
-      matmul_impl<float>(a, b, output[0]);
-      break;
-    case Type::kInt:
-      matmul_impl<int>(a, b, output[0]);
-      break;
-    default:
-      throw std::runtime_error("Unsupported tensor data type for MatMul");
+  std::cout << "MatMul input shapes: ";
+  std::cout << "[";
+  for (size_t i = 0; i < a.get_shape().dims(); ++i) {
+    std::cout << a.get_shape()[i] << (i < a.get_shape().dims() - 1 ? ", " : "");
+  }
+  std::cout << "] * [";
+  for (size_t i = 0; i < b.get_shape().dims(); ++i) {
+    std::cout << b.get_shape()[i] << (i < b.get_shape().dims() - 1 ? ", " : "");
+  }
+  std::cout << "]" << std::endl;
+
+  try {
+    switch (a.get_type()) {
+      case Type::kFloat:
+        matmul_impl<float>(a, b, output[0]);
+        break;
+      case Type::kInt:
+        matmul_impl<int>(a, b, output[0]);
+        break;
+      default:
+        throw std::runtime_error("Unsupported tensor data type for MatMul");
+    }
+    std::cout << "MatMul completed successfully" << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "ERROR in MatMul: " << e.what() << std::endl;
+    throw;
+  } catch (...) {
+    std::cerr << "UNKNOWN ERROR in MatMul" << std::endl;
+    throw;
   }
 }
 
 template <typename T>
 void MatmulLayer::matmul_impl(const Tensor& a, const Tensor& b,
                               Tensor& output) const {
+  std::cout << "Entering matmul_impl" << std::endl;
   const auto* a_data = a.as<T>();
   const auto* b_data = b.as<T>();
 
   if (!a_data || !b_data) {
+    std::cerr << "Invalid tensor data pointers" << std::endl;
     throw std::runtime_error("MatMul: Invalid input data");
   }
+
+  std::cout << "Data pointers valid" << std::endl;
 
   const auto& a_shape = a.get_shape();
   const auto& b_shape = b.get_shape();
@@ -265,6 +290,16 @@ void MatmulLayer::matmul_nd_nd(const Tensor& a, const Tensor& b,
         for (size_t l = 0; l < k; ++l) {
           size_t a_index = a_offset + i * k + l;
           size_t b_index = b_offset + l * n + j;
+          if (a_index >= a_data->size()) {
+            std::cerr << "a_idx out of bounds: " << a_index
+                      << " >= " << a_data->size() << std::endl;
+            throw std::runtime_error("MatMul: a index out of bounds");
+          }
+          if (b_index >= b_data->size()) {
+            std::cerr << "b_idx out of bounds: " << b_index
+                      << " >= " << b_data->size() << std::endl;
+            throw std::runtime_error("MatMul: b index out of bounds");
+          }
           sum += (*a_data)[a_index] * (*b_data)[b_index];
         }
         output_values[out_offset + i * n + j] = sum;

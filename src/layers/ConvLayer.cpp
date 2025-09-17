@@ -4,6 +4,18 @@ namespace it_lab_ai {
 
 void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                              std::vector<Tensor>& output) {
+    // Отладочная информация ДО проверок
+    std::cout << "=== CONVOLUTION LAYER DEBUG ===" << std::endl;
+    std::cout << "Number of inputs: " << input.size() << std::endl;
+    
+    for (size_t i = 0; i < input.size(); ++i) {
+        std::cout << "Input " << i << " shape: [";
+        for (size_t d = 0; d < input[i].get_shape().dims(); ++d) {
+            std::cout << input[i].get_shape()[d];
+            if (d < input[i].get_shape().dims() - 1) std::cout << ", ";
+        }
+        std::cout << "]" << std::endl;
+    }
   if (input.size() != 1) {
     throw std::runtime_error("ConvolutionalLayer: Input tensors not 1");
   }
