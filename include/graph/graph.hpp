@@ -23,17 +23,17 @@ struct BranchState {
 
 class Graph {
   int BiggestSize_;
-  int V_;
-  std::vector<Layer*> layers_;
-  std::vector<int> arrayV_;
-  std::vector<int> arrayE_;
+  int V_; // amount of ids
+  std::vector<Layer*> layers_; // layers vector with some ids
+  std::vector<int> arrayV_; // vertices (id -> vertex number)
+  std::vector<int> arrayE_; // edges (vertex number -> id)
   std::vector<Tensor> inten_;
   std::vector<Tensor> outten_;
   Tensor* outtenres_;
   int start_;
   int end_;
   std::list<BranchState> branch_list_;
-  std::vector<std::vector<int>> in_edges_;
+  std::vector<std::vector<int>> in_edges_; // next -> prev
   std::vector<std::vector<std::pair<int, int>>> split_distribution_;
   int count_used_split_distribution_;
 #ifdef ENABLE_STATISTIC_TENSORS
@@ -65,6 +65,35 @@ class Graph {
     arrayV_.push_back(0);
     V_ = 0;
     in_edges_.clear();
+  }
+
+  int getVertexValue(size_t layerID) const {
+    if (layerID >= arrayV_.size()) {
+      throw std::invalid_argument("ArrayV does not contain this ID.");
+    }
+    return arrayV_[layerID];
+  }
+
+  int getEdgeValue(size_t pos) const {
+    if (pos >= arrayE_.size()) {
+      throw std::invalid_argument("ArrayE does not contain this.");
+    }
+    return arrayE_[pos];
+  }
+
+  size_t getInputsSize(size_t layerID) const {
+    if (layerID >= in_edges_.size()) {
+      throw std::invalid_argument("Input edges array do not contain this ID.");
+    }
+    return in_edges_[layerID].size();
+  }
+
+  int getLayersCount() const { return V_; }
+  const Layer* getLayerFromID(size_t layerID) const {
+    if (layerID >= layers_.size()) {
+      throw std::invalid_argument("Layers do not contain this ID.");
+    }
+    return layers_[layerID];
   }
 
   void setInput(Layer& lay, Tensor& vec) {

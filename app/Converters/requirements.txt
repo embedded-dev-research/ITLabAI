@@ -1,4 +1,4 @@
-tensorflow==2.19.0
+tensorflow>=2.19.0
 onnx>=1.15.0
 ultralytics>=8.0.0
 numpy>=1.21.0
