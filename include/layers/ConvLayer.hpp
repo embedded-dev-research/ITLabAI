@@ -15,15 +15,17 @@ class ConvolutionalLayer : public Layer {
   size_t dilations_;
   Tensor kernel_;
   Tensor bias_;
+  size_t group_;
   ImplType implType_;
 
  public:
   ConvolutionalLayer() = default;
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
                      const Tensor& kernel, const Tensor& bias = Tensor(),
-                     ImplType implType = kDefault) {
+                     ImplType implType = kDefault, size_t group = 1) {
     stride_ = step;
     pads_ = pads;
+    group_ = group;
     dilations_ = dilations;
     kernel_ = kernel;
     bias_ = bias;
@@ -132,23 +134,29 @@ class ConvImpl : public LayerImpl<ValueType> {
 // NCHW -> NCHW only
 template <typename ValueType>
 void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
-            Tensor& output, size_t stride_, size_t pads_, size_t dilations_) {
+            Tensor& output, size_t stride_, size_t pads_, size_t group_,
+            size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
   size_t in_channels = input.get_shape()[1];
   size_t in_height = input.get_shape()[2];
   size_t in_width = input.get_shape()[3];
 
-  size_t out_channels = kernel_.get_shape()[0];        // O
-  size_t kernel_in_channels = kernel_.get_shape()[1];  // I
-  size_t kernel_height = kernel_.get_shape()[2];       // H
-  size_t kernel_width = kernel_.get_shape()[3];        // W
+  size_t out_channels = kernel_.get_shape()[0];
+  size_t kernel_in_channels = kernel_.get_shape()[1];
+  size_t kernel_height = kernel_.get_shape()[2];
+  size_t kernel_width = kernel_.get_shape()[3];
 
-  /*if (in_channels != kernel_in_channels) {
-    throw std::runtime_error(
-        "Input channels don't match kernel input channels");
-  }*/
+  // Проверка для grouped convolution
+  if (group_ > 1) {
+    if (in_channels % group_ != 0 || out_channels % group_ != 0) {
+      throw std::runtime_error("Channels must be divisible by group");
+    }
+    if (kernel_in_channels != in_channels / group_) {
+      throw std::runtime_error(
+          "Kernel input channels don't match group configuration");
+    }
+  }
 
-  // Расчет выходных размеров
   size_t out_height =
       (in_height + 2 * pads_ - dilations_ * (kernel_height - 1) - 1) / stride_ +
       1;
@@ -182,12 +190,15 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> dil_kernel(
       out_channels,
       std::vector<std::vector<std::vector<ValueType>>>(
-          in_channels, std::vector<std::vector<ValueType>>(
-                           dilated_kernel_height,
-                           std::vector<ValueType>(dilated_kernel_width, 0))));
+          kernel_in_channels,  // используем kernel_in_channels вместо
+                               // in_channels
+          std::vector<std::vector<ValueType>>(
+              dilated_kernel_height,
+              std::vector<ValueType>(dilated_kernel_width, 0))));
 
   for (size_t oc = 0; oc < out_channels; ++oc) {
-    for (size_t ic = 0; ic < in_channels; ++ic) {
+    for (size_t ic = 0; ic < kernel_in_channels;
+         ++ic) {  // только kernel_in_channels
       for (size_t kh = 0; kh < kernel_height; ++kh) {
         for (size_t kw = 0; kw < kernel_width; ++kw) {
           dil_kernel[oc][ic][kh * dilations_][kw * dilations_] =
@@ -212,7 +223,15 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
           size_t h_start = oh * stride_;
           size_t w_start = ow * stride_;
 
-          for (size_t ic = 0; ic < in_channels; ++ic) {
+          // Для grouped convolution: определяем группу и смещения
+          size_t group = (group_ > 1) ? oc / (out_channels / group_) : 0;
+          size_t group_start_channel = group * (in_channels / group_);
+          size_t group_end_channel = (group + 1) * (in_channels / group_);
+
+          for (size_t ic = group_start_channel; ic < group_end_channel; ++ic) {
+            size_t kernel_ic =
+                ic - group_start_channel;  // относительный индекс в группе
+
             for (size_t kh = 0; kh < dilated_kernel_height; ++kh) {
               for (size_t kw = 0; kw < dilated_kernel_width; ++kw) {
                 size_t h_index = h_start + kh;
@@ -221,7 +240,7 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
                 if (h_index < padded_input[b].size() &&
                     w_index < padded_input[b][h_index].size()) {
                   value += padded_input[b][h_index][w_index][ic] *
-                           dil_kernel[oc][ic][kh][kw];
+                           dil_kernel[oc][kernel_ic][kh][kw];
                 }
               }
             }
@@ -420,4 +439,66 @@ void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   output = make_tensor<ValueType>(one_d_vector, sh);
 }
 
+template <typename ValueType>
+void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
+                     const Tensor& bias_, Tensor& output, size_t stride_,
+                     size_t pads_, size_t dilations_) {
+  size_t batch_size = input.get_shape()[0];
+  size_t channels = input.get_shape()[1];   // 384
+  size_t in_height = input.get_shape()[2];  // 7
+  size_t in_width = input.get_shape()[3];   // 7
+
+  size_t kernel_out_channels = kernel_.get_shape()[0];  // 384
+  size_t kernel_in_channels = kernel_.get_shape()[1];   // 1
+  size_t kernel_height = kernel_.get_shape()[2];        // 3
+  size_t kernel_width = kernel_.get_shape()[3];         // 3
+
+  // Проверка совместимости
+  if (kernel_out_channels != channels || kernel_in_channels != 1) {
+    throw std::runtime_error("Invalid kernel shape for depthwise convolution");
+  }
+
+  size_t out_height =
+      (in_height + 2 * pads_ - dilations_ * (kernel_height - 1) - 1) / stride_ +
+      1;
+  size_t out_width =
+      (in_width + 2 * pads_ - dilations_ * (kernel_width - 1) - 1) / stride_ +
+      1;
+
+  Tensor output_tensor(Shape({batch_size, channels, out_height, out_width}),
+                       input.get_type());
+
+  for (size_t b = 0; b < batch_size; ++b) {
+    for (size_t c = 0; c < channels; ++c) {
+      for (size_t oh = 0; oh < out_height; ++oh) {
+        for (size_t ow = 0; ow < out_width; ++ow) {
+          ValueType sum = 0;
+
+          for (size_t kh = 0; kh < kernel_height; ++kh) {
+            for (size_t kw = 0; kw < kernel_width; ++kw) {
+              size_t ih = oh * stride_ + kh * dilations_ - pads_;
+              size_t iw = ow * stride_ + kw * dilations_ - pads_;
+
+              if (ih < in_height && iw < in_width) {
+                ValueType input_val = input.get<ValueType>({b, c, ih, iw});
+
+                ValueType kernel_val = kernel_.get<ValueType>({c, 0, kh, kw});
+
+                sum += input_val * kernel_val;
+              }
+            }
+          }
+
+          if (!bias_.empty() && c < bias_.get_shape()[0]) {
+            sum += bias_.get<ValueType>({c});
+          }
+
+          output_tensor.set<ValueType>({b, c, oh, ow}, sum);
+        }
+      }
+    }
+  }
+
+  output = output_tensor;
+}
 }  // namespace it_lab_ai

@@ -77,7 +77,7 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       it_lab_ai::Tensor tmp_values = tensor;
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
       auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-          1, pads, 1, tmp_values, tmp_bias, impl2);
+          1, pads, 1, tmp_values, tmp_bias, impl2, 1);
       conv_layer->setName(it_lab_ai::kConvolution);
       layers.push_back(conv_layer);
       layerpostop.push_back(false);
@@ -344,7 +344,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         size_t stride = 1;
         size_t pads = 0;
         size_t group = 1;
-        std::vector<size_t> dilations = {1, 1};
+        size_t dilations = 1;
         std::vector<size_t> pads_vec = {0, 0, 0, 0};
 
         if (layer_data.contains("attributes")) {
@@ -383,8 +383,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
               attributes["dilations"].is_array()) {
             auto dilations_array = attributes["dilations"];
             if (dilations_array.size() >= 2) {
-              dilations = {dilations_array[0].get<size_t>(),
-                           dilations_array[1].get<size_t>()};
+              dilations = dilations_array[0].get<size_t>();
             }
           }
         }
@@ -394,7 +393,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
 
         auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-            stride, pads, group, tmp_tensor, tmp_bias, impl2);
+            stride, pads, dilations, tmp_tensor, tmp_bias, impl2, group);
         conv_layer->setName(it_lab_ai::kConvolution);
         layer = conv_layer;
       } else if (layer_type.find("Relu") != std::string::npos ||

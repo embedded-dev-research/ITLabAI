@@ -8,7 +8,6 @@ namespace it_lab_ai {
 
 void MatmulLayer::run(const std::vector<Tensor>& input,
                       std::vector<Tensor>& output) {
-
   if (input.size() != 2) {
     throw std::runtime_error("MatMulLayer: Exactly 2 input tensors required");
   }
@@ -28,12 +27,52 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
   std::cout << "]" << std::endl;
 
   try {
+    bool should_swap = false;
+
+    const auto& a_shape = a.get_shape();
+    const auto& b_shape = b.get_shape();
+
+    if (a_shape.dims() >= 2 && b_shape.dims() >= 2) {
+      size_t a_rows = a_shape[a_shape.dims() - 2];
+      size_t a_cols = a_shape[a_shape.dims() - 1];
+      size_t b_rows = b_shape[b_shape.dims() - 2];
+      size_t b_cols = b_shape[b_shape.dims() - 1];
+
+      if (b_rows > a_rows) {
+        should_swap = true;
+        std::cout << "Swapping: second tensor has more rows (" << b_rows
+                  << " > " << a_rows << ")" << std::endl;
+      } else if (b_rows == a_rows && b_cols > a_cols) {
+        should_swap = true;
+        std::cout << "Swapping: second tensor has more columns (" << b_cols
+                  << " > " << a_cols << ")" << std::endl;
+      } else if (b_rows == a_rows && b_cols == a_cols) {
+        size_t a_batch = 1, b_batch = 1;
+        for (size_t i = 0; i < a_shape.dims() - 2; ++i) a_batch *= a_shape[i];
+        for (size_t i = 0; i < b_shape.dims() - 2; ++i) b_batch *= b_shape[i];
+
+        if (b_batch > a_batch) {
+          should_swap = true;
+          std::cout << "Swapping: second tensor has larger batch (" << b_batch
+                    << " > " << a_batch << ")" << std::endl;
+        }
+      }
+    }
+
     switch (a.get_type()) {
       case Type::kFloat:
-        matmul_impl<float>(a, b, output[0]);
+        if (should_swap) {
+          matmul_impl<float>(b, a, output[0]);
+        } else {
+          matmul_impl<float>(a, b, output[0]);
+        }
         break;
       case Type::kInt:
-        matmul_impl<int>(a, b, output[0]);
+        if (should_swap) {
+          matmul_impl<int>(b, a, output[0]);
+        } else {
+          matmul_impl<int>(a, b, output[0]);
+        }
         break;
       default:
         throw std::runtime_error("Unsupported tensor data type for MatMul");

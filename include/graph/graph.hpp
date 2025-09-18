@@ -66,7 +66,10 @@ class Graph {
     V_ = 0;
     in_edges_.clear();
   }
-
+  void setSplitDistribution(
+      const std::vector<std::vector<std::pair<int, int>>>& split_dist) {
+    split_distribution_ = split_dist;
+  }
   void setInput(Layer& lay, Tensor& vec) {
     lay.setID(0);
     layers_.push_back(&lay);
@@ -77,6 +80,8 @@ class Graph {
     in_edges_.resize(1);
   }
   void makeConnection(const Layer& layPrev, Layer& layNext) {
+    std::cout << "BEFORE CONNECTION - Prev ID: " << layPrev.getID()
+              << ", Next ID: " << layNext.getID() << std::endl;
     bool layer_exists = false;
     for (const auto* layer : layers_) {
       if (layer == &layNext) {
@@ -112,6 +117,8 @@ class Graph {
     }
 
     in_edges_[layNext.getID()].push_back(layPrev.getID());
+    std::cout << "AFTER CONNECTION - Prev ID: " << layPrev.getID()
+              << ", Next ID: " << layNext.getID() << std::endl;
   }
   bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
     for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];
@@ -127,116 +134,54 @@ class Graph {
     std::vector<int> traversal = getTraversalOrder();
     count_used_split_distribution_ = 0;
 
-    // DEBUG: Print traversal order and in/out degrees
-    std::cout << "=== INFERENCE DEBUG START ===" << std::endl;
-    std::cout << "Traversal order with names: ";
-    for (int layer_id : traversal) {
-      std::string layer_name = "unknown";
-      if (layer_id >= 0 && layer_id < layers_.size()) {
-        layer_name = layers_[layer_id]->getName();
-      }
-      std::cout << layer_id << "(" << layer_name << ") ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "In/Out degrees: " << std::endl;
-    for (size_t i = 0; i < countinout.size(); ++i) {
-      std::string layer_name = "unknown";
-      if (i < layers_.size()) {
-        layer_name = layers_[i]->getName();
-      }
-      std::cout << "Layer " << i << " (" << layer_name
-                << "): " << countinout[i].first << " in, "
-                << countinout[i].second << " out" << std::endl;
-    }
-
     for (size_t i = 0; i < traversal.size(); ++i) {
       int current_layer = traversal[i];
-      std::string current_layer_name = "unknown";
-      if (current_layer >= 0 && current_layer < layers_.size()) {
-        current_layer_name = layers_[current_layer]->getName();
-      }
 
+      // Простой вывод
+      std::string layer_name = getLayerName(current_layer);
+      std::cout << "Processing layer #" << current_layer << " (" << layer_name
+                << ")" << std::endl;
+      if (!inten_.empty()) {
+        std::cout << "Input shape: ";
+        for (size_t d = 0; d < inten_[0].get_shape().dims(); ++d) {
+          std::cout << inten_[0].get_shape()[d] << " ";
+        }
+        std::cout << std::endl;
+      }
+      std::cout << "Layer #" << current_layer << " ("
+                << getLayerName(current_layer) << ") has "
+                << in_edges_[current_layer].size() << " input connections"
+                << std::endl;
+
+      for (int input_id : in_edges_[current_layer]) {
+        std::cout << "  - From layer #" << input_id << " ("
+                  << getLayerName(input_id) << ")" << std::endl;
+      }
 #ifdef ENABLE_STATISTIC_TIME
       auto start = std::chrono::high_resolution_clock::now();
 #endif
-
-      // DEBUG: Print current layer info
-      std::cout << "\n--- Processing layer " << current_layer << " ("
-                << current_layer_name << ") ---" << std::endl;
-      std::cout << "Step " << i << "/" << traversal.size() - 1 << std::endl;
-
       if (i != 0) {
-        std::cout << "Clearing inten_, preparing inputs..." << std::endl;
         inten_.clear();
 
-        // DEBUG: Print input edges with layer names
-        std::cout << "Input edges for layer " << current_layer << " ("
-                  << current_layer_name << "): ";
-        for (size_t k = 0; k < in_edges_[current_layer].size(); ++k) {
-          int source_layer = in_edges_[current_layer][k];
-          std::string source_name = "unknown";
-          if (source_layer >= 0 && source_layer < layers_.size()) {
-            source_name = layers_[source_layer]->getName();
-          }
-          std::cout << source_layer << "(" << source_name << ") ";
-        }
-        std::cout << std::endl;
-
+        // Подготовка входных тензоров
         for (size_t k = 0; k < in_edges_[current_layer].size(); ++k) {
           auto target_value = in_edges_[current_layer][k];
-          std::string source_name = "unknown";
-          if (target_value >= 0 && target_value < layers_.size()) {
-            source_name = layers_[target_value]->getName();
-          }
-
-          std::cout << "Looking for input from layer " << target_value << " ("
-                    << source_name << ")" << std::endl;
-
           auto it = std::find_if(branch_list_.rbegin(), branch_list_.rend(),
                                  [target_value](const BranchState& s) {
                                    return s.ind_layer == target_value;
                                  });
 
           if (it != branch_list_.rend()) {
-            std::string branch_layer_name = "unknown";
-            if (it->ind_layer >= 0 && it->ind_layer < layers_.size()) {
-              branch_layer_name = layers_[it->ind_layer]->getName();
-            }
-
-            std::cout << "Found branch state for layer " << target_value << " ("
-                      << branch_layer_name
-                      << "), distribution size: " << it->distribution.size()
-                      << ", give_for_all size: " << it->give_for_all.size()
-                      << std::endl;
-
             for (size_t f = 0; f < it->distribution.size(); ++f) {
               if (it->distribution[f].first == current_layer) {
-                std::cout << "Adding tensor from distribution index " << f
-                          << " to inten_" << std::endl;
                 inten_.push_back(it->give_for_all[it->distribution[f].second]);
               }
             }
-          } else {
-            std::cout << "WARNING: No branch state found for layer "
-                      << target_value << " (" << source_name << ")"
-                      << std::endl;
           }
 
           if (it != branch_list_.rend()) {
             it->count_used_ten--;
-            std::string branch_layer_name = "unknown";
-            if (it->ind_layer >= 0 && it->ind_layer < layers_.size()) {
-              branch_layer_name = layers_[it->ind_layer]->getName();
-            }
-
-            std::cout << "Decremented count_used_ten to " << it->count_used_ten
-                      << " for layer " << target_value << " ("
-                      << branch_layer_name << ")" << std::endl;
-
             if (it->count_used_ten < 1) {
-              std::cout << "Removing branch state for layer " << target_value
-                        << " (" << branch_layer_name << ")" << std::endl;
               auto rit = std::next(it).base();
               it =
                   std::reverse_iterator<decltype(rit)>(branch_list_.erase(rit));
@@ -244,31 +189,7 @@ class Graph {
           }
         }
       }
-
-      // DEBUG: Print input tensors before layer execution
-      std::cout << "Input tensors before layer " << current_layer << " ("
-                << current_layer_name << ") execution: " << inten_.size()
-                << std::endl;
-      for (size_t t = 0; t < inten_.size(); ++t) {
-        std::cout << "  Tensor " << t << ": shape [";
-        for (size_t d = 0; d < inten_[t].get_shape().dims(); ++d) {
-          std::cout << inten_[t].get_shape()[d];
-          if (d < inten_[t].get_shape().dims() - 1) std::cout << ", ";
-        }
-        std::cout << "]" << std::endl;
-      }
-
-      try {
-        std::cout << "Executing layer " << current_layer << " ("
-                  << current_layer_name << ")..." << std::endl;
-        layers_[current_layer]->run(inten_, outten_);
-        std::cout << "Layer " << current_layer << " (" << current_layer_name
-                  << ") execution completed successfully" << std::endl;
-      } catch (const std::exception& e) {
-        std::cerr << "ERROR in layer " << current_layer << " ("
-                  << current_layer_name << "): " << e.what() << std::endl;
-        throw;
-      }
+      layers_[current_layer]->run(inten_, outten_);
 
 #ifdef ENABLE_STATISTIC_TENSORS
       tensors_.push_back(inten_[0]);
@@ -278,48 +199,33 @@ class Graph {
       weights_.push_back(layers_[i]->get_weights());
 #endif
 
-      std::cout << "Output tensors from layer " << current_layer << " ("
-                << current_layer_name << "): " << outten_.size() << std::endl;
-      for (size_t t = 0; t < outten_.size(); ++t) {
-        std::cout << "  Output tensor " << t << ": shape [";
-        for (size_t d = 0; d < outten_[t].get_shape().dims(); ++d) {
-          std::cout << outten_[t].get_shape()[d];
-          if (d < outten_[t].get_shape().dims() - 1) std::cout << ", ";
+      if (!outten_.empty()) {
+        std::cout << "Output shape: ";
+        for (size_t d = 0; d < outten_[0].get_shape().dims(); ++d) {
+          std::cout << outten_[0].get_shape()[d] << " ";
         }
-        std::cout << "]" << std::endl;
+        std::cout << std::endl << std::endl;
       }
 
       inten_ = outten_;
 
+      // Обработка пост-операций
       if (layers_[current_layer]->postops.count > 0) {
-        std::cout << "Processing " << layers_[current_layer]->postops.count
-                  << " post-operations" << std::endl;
         for (unsigned int j = 0; j < layers_[current_layer]->postops.count;
              j++) {
-          try {
-            layers_[current_layer]->postops.layers[j]->run(inten_, outten_);
-          } catch (const std::exception& e) {
-            std::cerr << "ERROR in post-op " << j << " of layer "
-                      << current_layer << ": " << e.what() << std::endl;
-            throw;
-          }
+          layers_[current_layer]->postops.layers[j]->run(inten_, outten_);
         }
         inten_ = outten_;
       }
 
-      // Create new branch state
+      // Создание нового состояния ветвления
       BranchState new_branch;
       new_branch.give_for_all = inten_;
       new_branch.count_used_ten = countinout[current_layer].second;
       new_branch.ind_layer = current_layer;
       new_branch.split = layers_[current_layer]->getName() == kSplit;
 
-      std::cout << "Creating branch state for layer " << current_layer
-                << ": count_used_ten=" << new_branch.count_used_ten
-                << ", split=" << new_branch.split << std::endl;
-
       if (layers_[current_layer]->getName() == kSplit) {
-        std::cout << "Split layer detected" << std::endl;
         if (static_cast<int>(split_distribution_.size()) == 0) {
           std::vector<std::pair<int, int>> dis(
               countinout[current_layer].second);
@@ -327,14 +233,17 @@ class Graph {
             dis[m] = {arrayE_[arrayV_[current_layer] + m], static_cast<int>(m)};
           }
           new_branch.distribution = dis;
-          std::cout << "Created new distribution for split" << std::endl;
         } else {
           new_branch.distribution =
               split_distribution_[count_used_split_distribution_];
           count_used_split_distribution_++;
-          std::cout << "Using pre-defined distribution "
-                    << count_used_split_distribution_ - 1 << std::endl;
         }
+        std::cout << "  Split distribution: ";
+        for (const auto& dist : new_branch.distribution) {
+          std::cout << "(To Layer #" << dist.first << ", Output " << dist.second
+                    << ") ";
+        }
+        std::cout << std::endl;
       } else {
         std::vector<std::pair<int, int>> dis(countinout[current_layer].second);
         for (size_t m = 0; m < dis.size(); ++m) {
@@ -342,27 +251,31 @@ class Graph {
         }
         new_branch.distribution = dis;
       }
+      if (layers_[current_layer]->getName() == kSplit) {
+        std::cout << "=== SPLIT LAYER DEBUG INFO ===" << std::endl;
+        std::cout << "Split layer #" << current_layer
+                  << " outputs: " << outten_.size() << std::endl;
 
-      // DEBUG: Print distribution
-      std::cout << "Distribution: ";
-      for (const auto& dist : new_branch.distribution) {
-        std::cout << "(" << dist.first << "," << dist.second << ") ";
-      }
-      std::cout << std::endl;
+        for (size_t out_idx = 0; out_idx < outten_.size(); ++out_idx) {
+          std::cout << "  Output " << out_idx << ": shape [";
+          for (size_t d = 0; d < outten_[out_idx].get_shape().dims(); ++d) {
+            std::cout << outten_[out_idx].get_shape()[d];
+            if (d < outten_[out_idx].get_shape().dims() - 1) std::cout << ", ";
+          }
+          std::cout << "]" << std::endl;
 
-      branch_list_.push_back(new_branch);
-
-      std::cout << "Current branch list size: " << branch_list_.size()
-                << std::endl;
-      for (const auto& branch : branch_list_) {
-        std::string branch_layer_name = "unknown";
-        if (branch.ind_layer >= 0 && branch.ind_layer < layers_.size()) {
-          branch_layer_name = layers_[branch.ind_layer]->getName();
+          // Проверяем распределение
+          std::cout << "  Distribution for this output: ";
+          for (const auto& dist : new_branch.distribution) {
+            if (dist.second == static_cast<int>(out_idx)) {
+              std::cout << "-> Layer #" << dist.first << " ";
+            }
+          }
+          std::cout << std::endl;
         }
-        std::cout << "  Layer " << branch.ind_layer << " (" << branch_layer_name
-                  << ") (count: " << branch.count_used_ten
-                  << ", split: " << branch.split << ")" << std::endl;
+        std::cout << "=============================" << std::endl;
       }
+      branch_list_.push_back(new_branch);
 
 #ifdef ENABLE_STATISTIC_TIME
       auto end = std::chrono::high_resolution_clock::now();
@@ -373,7 +286,6 @@ class Graph {
 #endif
     }
 
-    std::cout << "=== INFERENCE COMPLETED ===" << std::endl;
     *outtenres_ = outten_[0];
   }
   void setOutput(const Layer& lay, Tensor& vec) {
@@ -462,5 +374,52 @@ class Graph {
 
     return traversal;
   }
+
+std::string layerTypeToString(it_lab_ai::LayerType type) {
+    switch (type) {
+      case it_lab_ai::kInput:
+        return "Input";
+      case it_lab_ai::kPooling:
+        return "Pooling";
+      case it_lab_ai::kElementWise:
+        return "ElementWise";
+      case it_lab_ai::kConvolution:
+        return "Convolution";
+      case it_lab_ai::kFullyConnected:
+        return "FullyConnected";
+      case it_lab_ai::kFlatten:
+        return "Flatten";
+      case it_lab_ai::kConcat:
+        return "Concat";
+      case it_lab_ai::kDropout:
+        return "Dropout";
+      case it_lab_ai::kSplit:
+        return "Split";
+      case it_lab_ai::kBinaryOp:
+        return "BinaryOp";
+      case it_lab_ai::kTranspose:
+        return "Transpose";
+      case it_lab_ai::kMatmul:
+        return "MatMul";
+      case it_lab_ai::kReshape:
+        return "Reshape";
+      case it_lab_ai::kSoftmax:
+        return "Softmax";
+      case it_lab_ai::kReduce:
+        return "Reduce";
+      case it_lab_ai::kBatchNormalization:
+        return "BatchNormalization";
+      default:
+        return "Unknown";
+    }
+  }
+std::string getLayerName(int layer_index) {
+    if (layer_index >= 0 && layer_index < static_cast<int>(layers_.size())) {
+      it_lab_ai::LayerType type = layers_[layer_index]->getName();
+      // Используем вашу существующую функцию преобразования
+      return layerTypeToString(type);
+    }
+    return "Unknown_Layer";
+}
 };
 }  // namespace it_lab_ai
