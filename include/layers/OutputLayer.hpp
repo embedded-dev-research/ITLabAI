@@ -104,7 +104,8 @@ std::pair<std::vector<std::string>, std::vector<ValueType>> top_k_vec(
   for (size_t i = 0; i < input.size(); i++) {
     sort_buf[i] = std::make_pair(labels[i], input[i]);
   }
-  std::partial_sort(sort_buf.begin(), sort_buf.begin() + k, sort_buf.end(), compare_pair<ValueType>);
+  std::partial_sort(sort_buf.begin(), sort_buf.begin() + k, sort_buf.end(),
+                    compare_pair<ValueType>);
   std::vector<std::string> res_labels(k);
   std::vector<ValueType> res_input(k);
   for (size_t i = 0; i < k; i++) {
