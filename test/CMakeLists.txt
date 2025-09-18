@@ -8,6 +8,8 @@ target_link_libraries(run_test PUBLIC perf_lib layers_lib)
 target_link_libraries(run_test PUBLIC gtest)
 target_link_libraries(run_test PUBLIC ReadLib)
 target_link_libraries(run_test PUBLIC reader_lib)
+target_link_libraries(run_test PUBLIC graph_lib)
+target_link_libraries(run_test PUBLIC graphT_lib)
 
 
 target_include_directories(run_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
