@@ -289,6 +289,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   it_lab_ai::ImplType impl2 = parallel ? it_lab_ai::kSTL : it_lab_ai::kDefault;
 
   std::unordered_map<std::string, std::vector<int64_t>> layer_parameters;
+  std::string last_constant_name;
+  std::vector<int64_t> last_constant_value;
 
   std::unordered_map<std::string, std::shared_ptr<it_lab_ai::SplitLayer>>
       split_layers;
@@ -814,7 +816,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         if (comments) {
           std::cout << "ReduceSum layer: " << layer_name << std::endl;
         }
-
         int64_t keepdims = 0;
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
@@ -830,12 +831,14 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             std::string constant_name = inputs[1].get<std::string>();
             constant_name = get_base_layer_name(constant_name);
 
-            if (layer_parameters.count(constant_name)) {
+            if (layer_parameters.count(constant_name)){
               axes = layer_parameters[constant_name];
+            } else if (constant_name.find("onnx::") != constant_name.npos) {
+              axes = last_constant_value;
+              layer_parameters[constant_name] = last_constant_value;
             }
           }
         }
-
         auto reduce_layer = std::make_shared<it_lab_ai::ReduceLayer>(
             it_lab_ai::ReduceLayer::Operation::kSum, keepdims, axes);
         reduce_layer->setName(it_lab_ai::kReduce);
@@ -854,6 +857,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
               data.push_back(val.get<int64_t>());
             }
             layer_parameters[layer_name] = data;
+            last_constant_name = layer_name;
+            last_constant_value = data;
           }
         }
 

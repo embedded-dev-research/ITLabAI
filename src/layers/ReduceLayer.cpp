@@ -173,7 +173,24 @@ void ReduceLayer::run(const std::vector<Tensor>& input,
     throw std::runtime_error("ReduceLayer: Input tensors not 1");
   }
 
+  // ОТЛАДОЧНЫЙ ВЫВОД
+  std::cout << "=== REDUCE LAYER DEBUG ===" << std::endl;
+  std::cout << "Input shape: [";
+  for (size_t i = 0; i < input[0].get_shape().dims(); ++i) {
+    std::cout << input[0].get_shape()[i];
+    if (i < input[0].get_shape().dims() - 1) std::cout << ", ";
+  }
+  std::cout << "]" << std::endl;
+  std::cout << "Keep dims: " << keepdims_ << std::endl;
+  std::cout << "Axes: [";
+  for (size_t i = 0; i < axes_.size(); ++i) {
+    std::cout << axes_[i];
+    if (i < axes_.size() - 1) std::cout << ", ";
+  }
+  std::cout << "]" << std::endl;
+
   if (input[0].get_shape().count() == 0) {
+    std::cout << "Empty input tensor detected" << std::endl;
     output[0] = make_tensor<float>({0.0F}, {});
     return;
   }
@@ -181,8 +198,25 @@ void ReduceLayer::run(const std::vector<Tensor>& input,
   // Просто используем сохраненные axes
   std::vector<int64_t> axes_indices = axes_;
   normalize_axes(input[0].get_shape(), axes_indices);
+
+  // Отладочный вывод после нормализации
+  std::cout << "Normalized axes: [";
+  for (size_t i = 0; i < axes_indices.size(); ++i) {
+    std::cout << axes_indices[i];
+    if (i < axes_indices.size() - 1) std::cout << ", ";
+  }
+  std::cout << "]" << std::endl;
+
   Shape output_shape =
       calculate_output_shape(input[0].get_shape(), axes_indices);
+
+  std::cout << "Output shape: [";
+  for (size_t i = 0; i < output_shape.dims(); ++i) {
+    std::cout << output_shape[i];
+    if (i < output_shape.dims() - 1) std::cout << ", ";
+  }
+  std::cout << "]" << std::endl;
+  std::cout << "==========================" << std::endl;
 
   switch (input[0].get_type()) {
     case Type::kFloat:
