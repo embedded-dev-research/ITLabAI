@@ -6,6 +6,37 @@
 namespace fs = std::filesystem;
 using namespace it_lab_ai;
 
+std::unordered_map<int, std::string> load_class_names(
+    const std::string& filename) {
+  std::unordered_map<int, std::string> class_names;
+  std::ifstream file(filename);
+  std::string line;
+
+  if (!file.is_open()) {
+    throw std::runtime_error("Cannot open class names file: " + filename);
+  }
+
+  while (std::getline(file, line)) {
+    // Убираем пробелы в начале и конце
+    line = std::regex_replace(line, std::regex("^\\s+|\\s+$"), "");
+
+    // Пропускаем пустые строки
+    if (line.empty()) continue;
+
+    // Ищем формат: число: 'название'
+    std::regex pattern("(\\d+):\\s*'([^']+)'");
+    std::smatch matches;
+
+    if (std::regex_search(line, matches, pattern)) {
+      int class_id = std::stoi(matches[1]);
+      std::string class_name = matches[2];
+      class_names[class_id] = class_name;
+    }
+  }
+
+  return class_names;
+}
+
 std::unordered_map<std::string, std::string> model_paths = {
     {"alexnet_mnist", MODEL_PATH_H5},
     {"googlenet", MODEL_PATH_GOOGLENET_ONNX},
@@ -175,6 +206,14 @@ int main(int argc, char* argv[]) {
   std::cout << "Found " << image_paths.size() << " images to process"
             << std::endl;
 
+  std::unordered_map<int, std::string> class_names;
+  try {
+    class_names = load_class_names(IMAGENET_LABELS);
+  } catch (const std::exception& e) {
+    std::cerr << "Warning: " << e.what() << std::endl;
+    // Создаем пустой словарь - будут выводиться только номера
+  }
+
   for (const auto& image_path : image_paths) {
     cv::Mat image = cv::imread(image_path);
     if (image.empty()) {
@@ -208,6 +247,7 @@ int main(int argc, char* argv[]) {
 
         std::vector<float> tmp_output = softmax<float>(*output.as<float>());
 
+        // Находим топ-1 класс
         int max_class = 0;
         float max_prob = tmp_output[0];
         for (int i = 1; i < tmp_output.size(); i++) {
@@ -217,15 +257,41 @@ int main(int argc, char* argv[]) {
           }
         }
 
-        std::cout << "Image: " << image_path
-                  << " -> Predicted class: " << max_class
-                  << " (probability: " << max_prob << ")" << std::endl;
-      }
+        // Вывод топ-5 классов с названиями
+        std::cout << "Top 5 predictions:" << std::endl;
+        int top_n = std::min(5, static_cast<int>(tmp_output.size()));
 
-    } catch (const std::exception& e) {
-      std::cerr << "Error processing image " << image_path << ": " << e.what()
-                << std::endl;
+        std::vector<int> indices(tmp_output.size());
+        std::iota(indices.begin(), indices.end(), 0);
+        std::partial_sort(
+            indices.begin(), indices.begin() + top_n, indices.end(),
+            [&](int a, int b) { return tmp_output[a] > tmp_output[b]; });
+
+        for (int i = 0; i < top_n; i++) {
+          int idx = indices[i];
+          std::cout << "  " << (i + 1) << ". Class " << idx << ": "
+                    << std::fixed << std::setprecision(6) << tmp_output[idx];
+
+          if (class_names.find(idx) != class_names.end()) {
+            std::cout << " (" << class_names[idx] << ")";
+          }
+          std::cout << std::endl;
+        }
+
+        // Вывод итогового результата
+        std::cout << "Image: " << fs::path(image_path).filename().string()
+                  << " -> Predicted class: " << max_class;
+        if (class_names.find(max_class) != class_names.end()) {
+          std::cout << " (" << class_names[max_class] << ")";
+        }
+        std::cout << " (probability: " << max_prob << ")" << std::endl;
+        std::cout << "----------------------------------------" << std::endl;
+      }
     }
-  }
+      catch (const std::exception& e) {
+        std::cerr << "Error processing image " << image_path << ": " << e.what()
+                  << std::endl;
+      }
+    }
   return 0;
 }

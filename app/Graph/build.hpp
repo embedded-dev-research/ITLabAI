@@ -2,6 +2,7 @@
 #include <functional>
 #include <opencv2/opencv.hpp>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <stdexcept>

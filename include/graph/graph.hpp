@@ -80,8 +80,8 @@ class Graph {
     in_edges_.resize(1);
   }
   void makeConnection(const Layer& layPrev, Layer& layNext) {
-    std::cout << "BEFORE CONNECTION - Prev ID: " << layPrev.getID()
-              << ", Next ID: " << layNext.getID() << std::endl;
+    /*std::cout << "BEFORE CONNECTION - Prev ID: " << layPrev.getID()
+              << ", Next ID: " << layNext.getID() << std::endl;*/
     bool layer_exists = false;
     for (const auto* layer : layers_) {
       if (layer == &layNext) {
@@ -117,8 +117,8 @@ class Graph {
     }
 
     in_edges_[layNext.getID()].push_back(layPrev.getID());
-    std::cout << "AFTER CONNECTION - Prev ID: " << layPrev.getID()
-              << ", Next ID: " << layNext.getID() << std::endl;
+    /*std::cout << "AFTER CONNECTION - Prev ID: " << layPrev.getID()
+              << ", Next ID: " << layNext.getID() << std::endl;*/
   }
   bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
     for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];
@@ -138,7 +138,7 @@ class Graph {
       int current_layer = traversal[i];
 
       // Простой вывод
-      std::string layer_name = getLayerName(current_layer);
+      /*std::string layer_name = getLayerName(current_layer);
       std::cout << "Processing layer #" << current_layer << " (" << layer_name
                 << ")" << std::endl;
       if (!inten_.empty()) {
@@ -156,14 +156,13 @@ class Graph {
       for (int input_id : in_edges_[current_layer]) {
         std::cout << "  - From layer #" << input_id << " ("
                   << getLayerName(input_id) << ")" << std::endl;
-      }
+      }*/
 #ifdef ENABLE_STATISTIC_TIME
       auto start = std::chrono::high_resolution_clock::now();
 #endif
       if (i != 0) {
         inten_.clear();
 
-        // Подготовка входных тензоров
         for (size_t k = 0; k < in_edges_[current_layer].size(); ++k) {
           auto target_value = in_edges_[current_layer][k];
           auto it = std::find_if(branch_list_.rbegin(), branch_list_.rend(),
@@ -199,17 +198,16 @@ class Graph {
       weights_.push_back(layers_[i]->get_weights());
 #endif
 
-      if (!outten_.empty()) {
+      /*if (!outten_.empty()) {
         std::cout << "Output shape: ";
         for (size_t d = 0; d < outten_[0].get_shape().dims(); ++d) {
           std::cout << outten_[0].get_shape()[d] << " ";
         }
         std::cout << std::endl << std::endl;
-      }
+      }*/
 
       inten_ = outten_;
 
-      // Обработка пост-операций
       if (layers_[current_layer]->postops.count > 0) {
         for (unsigned int j = 0; j < layers_[current_layer]->postops.count;
              j++) {
@@ -218,7 +216,6 @@ class Graph {
         inten_ = outten_;
       }
 
-      // Создание нового состояния ветвления
       BranchState new_branch;
       new_branch.give_for_all = inten_;
       new_branch.count_used_ten = countinout[current_layer].second;
@@ -238,12 +235,12 @@ class Graph {
               split_distribution_[count_used_split_distribution_];
           count_used_split_distribution_++;
         }
-        std::cout << "  Split distribution: ";
+        /*std::cout << "  Split distribution: ";
         for (const auto& dist : new_branch.distribution) {
           std::cout << "(To Layer #" << dist.first << ", Output " << dist.second
                     << ") ";
         }
-        std::cout << std::endl;
+        std::cout << std::endl;*/
       } else {
         std::vector<std::pair<int, int>> dis(countinout[current_layer].second);
         for (size_t m = 0; m < dis.size(); ++m) {
@@ -264,7 +261,6 @@ class Graph {
           }
           std::cout << "]" << std::endl;
 
-          // Проверяем распределение
           std::cout << "  Distribution for this output: ";
           for (const auto& dist : new_branch.distribution) {
             if (dist.second == static_cast<int>(out_idx)) {
@@ -301,12 +297,29 @@ class Graph {
 #ifdef ENABLE_STATISTIC_TIME
   std::vector<std::string> getTimeInfo() {
     std::vector<std::string> res;
-    std::vector<std::string> labels = {
-        "Input",       "Pooling", "Normalization", "Dropout", "Element-wise",
-        "Convolution", "Dense",   "Flatten",       "Output"};
+
+    std::unordered_map<LayerType, std::string> label_map = {
+        {kInput, "Input"},
+        {kPooling, "Pooling"},
+        {kElementWise, "Element-wise"},
+        {kConvolution, "Convolution"},
+        {kFullyConnected, "Dense"},
+        {kFlatten, "Flatten"},
+        {kConcat, "Concat"},
+        {kDropout, "Dropout"},
+        {kSplit, "Split"},
+        {kBinaryOp, "BinaryOp"},
+        {kTranspose, "Transpose"},
+        {kMatmul, "MatMul"},
+        {kReshape, "Reshape"},
+        {kSoftmax, "Softmax"},
+        {kReduce, "Reduce"},
+        {kBatchNormalization, "Normalization"}};
+
     for (size_t i = 0; i < time_.size(); i++) {
-      res.push_back(labels[static_cast<size_t>(time_layer_[i])] + ':' +
-                    std::to_string(time_[i]));
+      auto it = label_map.find(time_layer_[i]);
+      std::string layer_name = (it != label_map.end()) ? it->second : "Unknown";
+      res.push_back(layer_name + ':' + std::to_string(time_[i]));
     }
     return res;
   }
@@ -416,7 +429,6 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
 std::string getLayerName(int layer_index) {
     if (layer_index >= 0 && layer_index < static_cast<int>(layers_.size())) {
       it_lab_ai::LayerType type = layers_[layer_index]->getName();
-      // Используем вашу существующую функцию преобразования
       return layerTypeToString(type);
     }
     return "Unknown_Layer";

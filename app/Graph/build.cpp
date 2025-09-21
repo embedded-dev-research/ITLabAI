@@ -309,7 +309,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
 
-  if (comments) std::cout << "Loaded model data from JSON." << std::endl;
+  /*if (comments) std::cout << "Loaded model data from JSON." << std::endl;*/
 
   auto input_layer = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                              it_lab_ai::kNchw);
@@ -332,10 +332,10 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       if (layer_type == "InputLayer") continue;
       std::string layer_name = layer_data["name"];
       int layer_index = layer_data["index"];
-      if (comments) {
+      /*if (comments) {
         std::cout << "Processing layer " << layer_index << ": " << layer_name
                   << " (" << layer_type << ")" << std::endl;
-      }
+      }*/
 
       std::shared_ptr<it_lab_ai::Layer> layer;
 
@@ -408,9 +408,9 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         ew_layer->setName(it_lab_ai::kElementWise);
         layer = ew_layer;
 
-        if (comments) {
+        /*if (comments) {
           std::cout << "Sigmoid layer added" << std::endl;
-        }
+        }*/
       } else if (layer_type.find("Dense") != std::string::npos ||
                  layer_type.find("FullyConnected") != std::string::npos) {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
@@ -448,11 +448,11 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         pool_layer->setName(it_lab_ai::kPooling);
         layer = pool_layer;
 
-        if (comments) {
+        /*if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
                        "dimensions as kernel)"
                     << std::endl;
-        }
+        }*/
       } else if (layer_type.find("Pool") != std::string::npos ||
                  layer_type.find("AveragePool") != std::string::npos) {
         std::string pooltype =
@@ -545,9 +545,9 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
 
-        if (comments) {
+        /*if (comments) {
           std::cout << "Flatten layer with axis: " << axis << std::endl;
-        }
+        }*/
 
         auto flatten_layer = std::make_shared<it_lab_ai::FlattenLayer>(axis);
         flatten_layer->setName(it_lab_ai::kFlatten);
@@ -682,12 +682,12 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
           tmp_tensor = transposed_tensor;
 
-          if (comments) {
+          /*if (comments) {
             std::cout << "Weights transposed from [" << tensor.get_shape()[0]
                       << ", " << tensor.get_shape()[1] << "] to ["
                       << transposed_shape[0] << ", " << transposed_shape[1]
                       << "]" << std::endl;
-          }
+          }*/
         }
 
         // Применяем alpha к весам
@@ -730,14 +730,14 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         transpose_layer->setName(it_lab_ai::kTranspose);
         layer = transpose_layer;
 
-        if (comments) {
+        /*if (comments) {
           std::cout << "TransposeLayer added with perm: [";
           for (size_t i = 0; i < perm.size(); ++i) {
             std::cout << perm[i];
             if (i < perm.size() - 1) std::cout << ", ";
           }
           std::cout << "]" << std::endl;
-        }
+        }*/
       } else if (layer_type == "Reshape") {
         bool allowzero = false;
         std::vector<int64_t> shape;
@@ -776,7 +776,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         reshape_layer->setName(it_lab_ai::kReshape);
         layer = reshape_layer;
 
-        if (comments) {
+        /*if (comments) {
           std::cout << "ReshapeLayer added with allowzero: " << allowzero;
           if (!shape.empty()) {
             std::cout << ", shape: [";
@@ -787,11 +787,11 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             std::cout << "]";
           }
           std::cout << std::endl;
-        }
+        }*/
       } else if (layer_type == "ReduceMean") {
-        if (comments) {
+        /*if (comments) {
           std::cout << "ReduceMean layer: " << layer_name << std::endl;
-        }
+        }*/
 
         std::vector<int64_t> axes;
         int64_t keepdims = 1;
@@ -813,9 +813,9 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         reduce_layer->setName(it_lab_ai::kReduce);
         layer = reduce_layer;
       } else if (layer_type == "ReduceSum") {
-        if (comments) {
+        /*if (comments) {
           std::cout << "ReduceSum layer: " << layer_name << std::endl;
-        }
+        }*/
         int64_t keepdims = 0;
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
@@ -844,9 +844,9 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         reduce_layer->setName(it_lab_ai::kReduce);
         layer = reduce_layer;
       } else if (layer_type == "Constant") {
-        if (comments) {
+        /*if (comments) {
           std::cout << "Constant layer: " << layer_name << std::endl;
-        }
+        }*/
 
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
@@ -868,9 +868,9 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         matmul_layer->setName(it_lab_ai::kMatmul);
         layer = matmul_layer;
 
-        if (comments) {
+        /*if (comments) {
           std::cout << "MatMul layer added" << std::endl;
-        }
+        }*/
       } else if (layer_type == "Softmax") {
         int axis = -1;
 
@@ -885,13 +885,13 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         softmax_layer->setName(it_lab_ai::kSoftmax);
         layer = softmax_layer;
 
-        if (comments) {
+        /*if (comments) {
           std::cout << "Softmax layer added with axis: " << axis << std::endl;
-        }
+        }*/
       } else if (layer_type == "BatchNormalization") {
-        if (comments) {
+        /*if (comments) {
           std::cout << "BatchNormalization layer: " << layer_name << std::endl;
-        }
+        }*/
 
         float epsilon = 1e-5f;
         float momentum = 0.9f;
@@ -959,10 +959,10 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         bn_layer->setName(it_lab_ai::kBatchNormalization);
         layer = bn_layer;
       } else {
-        if (comments) {
+        /*if (comments) {
           std::cout << "Warning: Unknown layer type: " << layer_type
                     << std::endl;
-        }
+        }*/
         continue;
       }
       if (layer) {
@@ -1025,7 +1025,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                   connections[split_layer_name].push_back(layer_name);
                 }
 
-                if (comments) {
+                /*if (comments) {
                   std::cout << "Split connection: " << split_layer_name
                             << " output " << output_index << " -> "
                             << layer_name << " (split index: " << split_index
@@ -1037,7 +1037,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                     std::cout << " [ALREADY EXISTS IN CONNECTIONS]";
                   }
                   std::cout << std::endl;
-                }
+                }*/
 
                 continue;  // Пропускаем дальнейшую обработку этого входа
               }
@@ -1047,10 +1047,10 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             if (input_tensor.find("Constant") != std::string::npos ||
                 input_tensor.find("onnx::") != std::string::npos ||
                 input_tensor.find("_Constant") != std::string::npos) {
-              if (comments) {
+              /*if (comments) {
                 std::cout << "Skipping connection from: " << input_tensor
                           << std::endl;
-              }
+              }*/
               continue;
             }
             connections[input_tensor].push_back(layer_name);
@@ -1064,7 +1064,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     }
   }
 
-  if (comments) {
+  /*if (comments) {
     std::cout << "\n=== name_to_layer CONTENTS ===" << std::endl;
     std::cout << "Total layers in name_to_layer: " << name_to_layer.size()
               << std::endl;
@@ -1083,11 +1083,11 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       }
       std::cout << std::endl;
     }
-  }
+  }*/
 
   // После заполнения split_distribution, перед созданием графа добавим
   // отладочный вывод
-  if (comments) {
+  /*if (comments) {
     std::cout << "\n=== SPLIT DISTRIBUTION ===" << std::endl;
     std::cout << "Total splits: " << split_distribution.size() << std::endl;
 
@@ -1102,28 +1102,28 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       }
       std::cout << std::endl;
     }
-  }
+  }*/
 
   it_lab_ai::Graph graph(static_cast<int>(layers.size()));
 
   graph.setInput(*input_layer, input);
 
-  if (comments) {
+  /*if (comments) {
     std::cout << "\n=== CREATING GRAPH CONNECTIONS ===" << std::endl;
-  }
+  }*/
   for (const auto& [source_tensor, target_layers] : connections) {
     std::string source_layer_name = get_base_layer_name(source_tensor);
 
     for (const auto& target_layer_name : target_layers) {
       connection_list.emplace_back(source_layer_name, target_layer_name);
-      if (comments) {
+      /*if (comments) {
         std::cout << "Planned connection: " << source_layer_name << " -> "
                   << target_layer_name << std::endl;
-      }
+      }*/
     }
   }
 
-  if (comments) {
+  /*if (comments) {
     std::cout << "\n=== BEFORE SORTING CONNECTIONS ===" << std::endl;
     for (const auto& conn : connection_list) {
       std::cout << "Connection: " << conn.first << " -> " << conn.second;
@@ -1139,7 +1139,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       }
       std::cout << std::endl;
     }
-  }
+  }*/
 
   try {
     std::sort(
@@ -1152,49 +1152,49 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                  name_to_layer[b.first]->getID();
         });
 
-    if (comments) {
+    /*if (comments) {
       std::cout << "Sorting completed successfully" << std::endl;
-    }
+    }*/
   } catch (const std::exception& e) {
     std::cerr << "ERROR during sorting: " << e.what() << std::endl;
   }
 
-  if (comments) {
+  /*if (comments) {
     std::cout << "\n=== ESTABLISHING CONNECTIONS ===" << std::endl;
-  }
+  }*/
 
   for (const auto& [source_name, target_name] : connection_list) {
     // Убираем проверку на сплит-выходы - они тоже должны быть подключены
 
     if (name_to_layer.count(source_name) && name_to_layer.count(target_name)) {
       try {
-        if (comments) {
-          std::cout << "Connecting: " << source_name << " -> " << target_name;
-          std::cout << " (ID: " << name_to_layer[source_name]->getID()
-                    << " -> ID: " << name_to_layer[target_name]->getID() << ")"
-                    << std::endl;
+        //if (comments) {
+        //  std::cout << "Connecting: " << source_name << " -> " << target_name;
+        //  std::cout << " (ID: " << name_to_layer[source_name]->getID()
+        //            << " -> ID: " << name_to_layer[target_name]->getID() << ")"
+        //            << std::endl;
 
-          // Дополнительная информация для сплит-соединений
-          std::regex split_output_pattern("(.+)_output_(\\d+)$");
-          std::smatch matches;
-          if (std::regex_search(source_name, matches, split_output_pattern)) {
-            std::string split_layer_name = matches[1].str();
-            int output_index = std::stoi(matches[2].str());
-            std::cout << "  [SPLIT] Output index: " << output_index
-                      << std::endl;
-          }
-        }
+        //  // Дополнительная информация для сплит-соединений
+        //  std::regex split_output_pattern("(.+)_output_(\\d+)$");
+        //  std::smatch matches;
+        //  if (std::regex_search(source_name, matches, split_output_pattern)) {
+        //    std::string split_layer_name = matches[1].str();
+        //    int output_index = std::stoi(matches[2].str());
+        //    std::cout << "  [SPLIT] Output index: " << output_index
+        //              << std::endl;
+        //  }
+        //}
         graph.makeConnection(*name_to_layer[source_name],
                              *name_to_layer[target_name]);
-        if (comments) {
+        /*if (comments) {
           std::cout << "  Success" << std::endl;
-        }
+        }*/
       } catch (const std::exception& e) {
         std::cerr << "Failed: " << source_name << " -> " << target_name << " : "
                   << e.what() << std::endl;
       }
     } else {
-      if (comments) {
+      /*if (comments) {
         std::cerr << "Warning: Missing layer for connection " << source_name
                   << " -> " << target_name << std::endl;
         if (!name_to_layer.count(source_name)) {
@@ -1205,7 +1205,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           std::cerr << "  Target layer '" << target_name << "' not found"
                     << std::endl;
         }
-      }
+      }*/
     }
   }
   for (auto& split_dist : split_distribution) {
@@ -1234,39 +1234,40 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       std::cerr << "ERROR during inference: " << e.what() << std::endl;
     }
 
-//#ifdef ENABLE_STATISTIC_TIME
-//    std::vector<std::string> times = graph.getTimeInfo();
-//    std::cout << "!INFERENCE TIME INFO START!" << std::endl;
-//    for (size_t i = 0; i < times.size(); i++) {
-//      std::cout << times[i] << std::endl;
-//    }
-//    std::vector<int> elps_time = graph.getTime();
-//    int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-//    std::cout << "Elapsed inference time:" << sum << std::endl;
-//    std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-//#endif
-//
-    if (comments) {
-      try {
-        std::cout << "Output tensor size: " << output.get_shape().count()
-                  << std::endl;
-        std::vector<float> tmp_output =
-            it_lab_ai::softmax<float>(*output.as<float>());
-        std::cout << "Softmax completed, showing top 5 classes:" << std::endl;
-
-        // Выводите только топ-5 классов вместо всех 1000
-        std::vector<size_t> indices(tmp_output.size());
-        std::iota(indices.begin(), indices.end(), 0);
-        std::partial_sort(
-            indices.begin(), indices.begin() + 5, indices.end(),
-            [&](size_t a, size_t b) { return tmp_output[a] > tmp_output[b]; });
-
-        for (int i = 0; i < 5; i++) {
-          size_t idx = indices[i];
-          std::cout << "Class " << idx << ": " << tmp_output[idx] << std::endl;
-        }
-      } catch (const std::exception& e) {
-        std::cerr << "Error in output processing: " << e.what() << std::endl;
-      }
+#ifdef ENABLE_STATISTIC_TIME
+    std::vector<std::string> times = graph.getTimeInfo();
+    std::cout << "!INFERENCE TIME INFO START!" << std::endl;
+    for (size_t i = 0; i < times.size(); i++) {
+      std::cout << times[i] << std::endl;
     }
+    std::vector<int> elps_time = graph.getTime();
+    int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
+    std::cout << "Elapsed inference time:" << sum << std::endl;
+    std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+#endif
+//
+    //if (comments) {
+    //  try {
+    //    std::cout << "Output tensor size: " << output.get_shape().count()
+    //              << std::endl;
+    //    std::vector<float> tmp_output =
+    //        it_lab_ai::softmax<float>(*output.as<float>());
+    //    std::cout << "Softmax completed, showing top 5 classes:" << std::endl;
+
+    //    // Выводите только топ-5 классов вместо всех 1000
+    //    std::vector<size_t> indices(tmp_output.size());
+    //    std::iota(indices.begin(), indices.end(), 0);
+    //    std::partial_sort(
+    //        indices.begin(), indices.begin() + 5, indices.end(),
+    //        [&](size_t a, size_t b) { return tmp_output[a] > tmp_output[b]; });
+
+    //    for (int i = 0; i < 5; i++) {
+    //      size_t idx = indices[i];
+    //      std::cout << "Class " << idx << ": " << tmp_output[idx] << std::endl;
+    //    }
+    //  } catch (const std::exception& e) {
+    //    std::cerr << "Error in output processing: " << e.what() << std::endl;
+    //  }
+    //}
 }
+
