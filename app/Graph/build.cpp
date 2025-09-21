@@ -289,6 +289,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   it_lab_ai::ImplType impl2 = parallel ? it_lab_ai::kSTL : it_lab_ai::kDefault;
 
   std::unordered_map<std::string, std::vector<int64_t>> layer_parameters;
+  std::unordered_map<std::string, float> float_parameters;
   std::string last_constant_name;
   std::vector<int64_t> last_constant_value;
 
@@ -453,8 +454,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                        "dimensions as kernel)"
                     << std::endl;
         }*/
-      } else if (layer_type.find("Pool") != std::string::npos ||
-                 layer_type.find("AveragePool") != std::string::npos) {
+      } else if ((layer_type == "MaxPool" || layer_type == "AveragePool")) {
         std::string pooltype =
             (layer_type.find("Max") != std::string::npos) ? "max" : "average";
 
@@ -589,19 +589,53 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         split_distribution.emplace_back();
       } else if (layer_type == "Add" || layer_type == "Mul" ||
                  layer_type == "Sub" || layer_type == "Div") {
-        if (layer_data.contains("value")) {
-          float value = 0.0f;
+        // Проверяем, есть ли среди входов СКАЛЯРНЫЕ константы
+        bool has_scalar_constant = false;
+        float scalar_value = 0.0f;
+
+        if (layer_data.contains("inputs") && layer_data["inputs"].is_array()) {
+          auto inputs = layer_data["inputs"];
+          for (const auto& input_name : inputs) {
+            std::string input_tensor = input_name.get<std::string>();
+            std::string base_name = get_base_layer_name(input_tensor);
+
+            // Ищем скалярные константы (они сохраняются в
+            // layer_parameters/float_parameters)
+            if (float_parameters.find(base_name) != float_parameters.end()) {
+              scalar_value = float_parameters[base_name];
+              has_scalar_constant = true;
+              break;
+            } else if (layer_parameters.find(base_name) !=
+                           layer_parameters.end() &&
+                       !layer_parameters[base_name].empty()) {
+              scalar_value = static_cast<float>(layer_parameters[base_name][0]);
+              has_scalar_constant = true;
+              break;
+            }
+          }
+        }
+
+        // Проверяем прямое значение value
+        bool has_direct_value = layer_data.contains("value");
+        float direct_value = 0.0f;
+
+        if (has_direct_value) {
           if (layer_data["value"].is_string()) {
             try {
-              value = std::stof(layer_data["value"].get<std::string>());
+              direct_value = std::stof(layer_data["value"].get<std::string>());
             } catch (...) {
-              value = 0.0f;
+              direct_value = 0.0f;
             }
           } else if (layer_data["value"].is_number()) {
-            value = layer_data["value"].get<float>();
+            direct_value = layer_data["value"].get<float>();
           }
+        }
 
+        // Унарная операция ТОЛЬКО если есть скалярное значение
+        if (has_direct_value || has_scalar_constant) {
+          float value = has_direct_value ? direct_value : scalar_value;
           std::string ew_operation;
+
           if (layer_type == "Mul") {
             ew_operation = "linear";
             auto ew_layer =
@@ -628,6 +662,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             continue;
           }
         } else {
+          // Бинарная операция (два тензора) - ЭТО ВАШ СЛУЧАЙ!
           it_lab_ai::BinaryOpLayer::Operation op;
           if (layer_type == "Add")
             op = it_lab_ai::BinaryOpLayer::Operation::kAdd;
@@ -641,6 +676,11 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           auto bin_layer = std::make_shared<it_lab_ai::BinaryOpLayer>(op);
           bin_layer->setName(it_lab_ai::kBinaryOp);
           layer = bin_layer;
+
+          if (comments) {
+            std::cout << "Created binary " << layer_type
+                      << " operation with tensor inputs" << std::endl;
+          }
         }
       } else if (layer_type == "Gemm") {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
@@ -859,6 +899,10 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             layer_parameters[layer_name] = data;
             last_constant_name = layer_name;
             last_constant_value = data;
+          }
+          if (attributes.contains("value") && attributes["value"].is_number()) {
+            float value = attributes["value"].get<float>();
+            float_parameters[layer_name] = value;
           }
         }
 
@@ -1234,17 +1278,17 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       std::cerr << "ERROR during inference: " << e.what() << std::endl;
     }
 
-#ifdef ENABLE_STATISTIC_TIME
-    std::vector<std::string> times = graph.getTimeInfo();
-    std::cout << "!INFERENCE TIME INFO START!" << std::endl;
-    for (size_t i = 0; i < times.size(); i++) {
-      std::cout << times[i] << std::endl;
-    }
-    std::vector<int> elps_time = graph.getTime();
-    int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-    std::cout << "Elapsed inference time:" << sum << std::endl;
-    std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-#endif
+//#ifdef ENABLE_STATISTIC_TIME
+//    std::vector<std::string> times = graph.getTimeInfo();
+//    std::cout << "!INFERENCE TIME INFO START!" << std::endl;
+//    for (size_t i = 0; i < times.size(); i++) {
+//      std::cout << times[i] << std::endl;
+//    }
+//    std::vector<int> elps_time = graph.getTime();
+//    int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
+//    std::cout << "Elapsed inference time:" << sum << std::endl;
+//    std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+//#endif
 //
     //if (comments) {
     //  try {
