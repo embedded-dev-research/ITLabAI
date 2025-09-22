@@ -10,7 +10,7 @@ namespace it_lab_ai {
 
 class SplitLayer : public Layer {
  public:
-  SplitLayer(int axis, std::vector<int> splits)
+  SplitLayer(int axis, std::vector<int64_t> splits)
       : axis_(axis), splits_(std::move(splits)) {}
 
   SplitLayer(int axis, int num_outputs)
@@ -26,7 +26,7 @@ class SplitLayer : public Layer {
 
  private:
   int axis_;
-  std::optional<std::vector<int>> splits_;
+  std::optional<std::vector<int64_t>> splits_;
   std::optional<int> num_outputs_;
 
   void validate(const Tensor& input) const;

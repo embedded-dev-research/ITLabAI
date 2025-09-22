@@ -11,7 +11,7 @@ def convert_pt_to_onnx(pt_model_path, onnx_model_path=None):
         onnx_model_path = pt_model_path.replace('.pt', '.onnx')
 
     model = YOLO(pt_model_path)
-    model.export(format="onnx", dynamic=False, simplify=True)
+    model.export(format="onnx", dynamic=False, simplify=False)
 
     return onnx_model_path
 
@@ -156,7 +156,7 @@ def onnx_to_json(model_path, output_json_path):
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'densenet121_Opset16.onnx')
-MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'densenet121_Opset16_onnx_model.json')
+MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'yolo11x-cls.pt')
+MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'yolo11x-cls_onnx_model.json')
 
 onnx_to_json(MODEL_PATH, MODEL_DATA_PATH)

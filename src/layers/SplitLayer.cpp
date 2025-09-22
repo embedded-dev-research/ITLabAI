@@ -32,7 +32,7 @@ void SplitLayer::split_impl(const Tensor& input,
   const Shape& shape = input.get_shape();
   const int axis = get_normalized_axis(static_cast<int>(shape.dims()));
 
-  std::vector<int> part_sizes;
+  std::vector<int64_t> part_sizes;
   if (splits_) {
     part_sizes = *splits_;
   } else {
@@ -41,7 +41,7 @@ void SplitLayer::split_impl(const Tensor& input,
     const int remainder = total_size % *num_outputs_;
 
     part_sizes.reserve(*num_outputs_);
-    for (int i = 0; i < *num_outputs_; ++i) {
+    for (int64_t i = 0; i < *num_outputs_; ++i) {
       part_sizes.push_back(i < remainder ? base_size + 1 : base_size);
     }
   }
@@ -99,8 +99,8 @@ void SplitLayer::validate(const Tensor& input) const {
   const int axis_size = static_cast<int>(input.get_shape()[axis]);
 
   if (splits_) {
-    int sum = 0;
-    for (int s : *splits_) {
+    int64_t sum = 0;
+    for (int64_t s : *splits_) {
       if (s <= 0) throw std::runtime_error("Split size must be positive");
       sum += s;
     }

@@ -3,6 +3,7 @@
 #include <regex>
 #include <set>
 #include <unordered_map>
+#include <unordered_set>
 
 void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                         const std::string& json_path, bool comments,
@@ -288,6 +289,10 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   it_lab_ai::ImplType impl1 = parallel ? it_lab_ai::kTBB : it_lab_ai::kDefault;
   it_lab_ai::ImplType impl2 = parallel ? it_lab_ai::kSTL : it_lab_ai::kDefault;
 
+  std::unordered_map<std::string, std::vector<std::string>> concat_connections;
+  std::unordered_map<std::string, std::vector<int>> concat_orders;
+  std::unordered_map<std::string, std::unordered_set<std::string>> concat_connected_inputs;
+
   std::unordered_map<std::string, std::vector<int64_t>> layer_parameters;
   std::unordered_map<std::string, float> float_parameters;
   std::string last_constant_name;
@@ -557,16 +562,38 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         if (layer_data["attributes"].contains("axis")) {
           axis = layer_data["attributes"]["axis"];
         }
+        if (layer_data.contains("inputs")) {
+          for (const auto& input_name : layer_data["inputs"]) {
+            std::string input_tensor = input_name.get<std::string>();
+            std::string base_input_name = get_base_layer_name(input_tensor);
+            concat_connections[layer_name].push_back(base_input_name);
+          }
+        }
         auto concat_layer = std::make_shared<it_lab_ai::ConcatLayer>(axis);
         concat_layer->setName(it_lab_ai::kConcat);
         layer = concat_layer;
+        concat_connected_inputs[layer_name] = std::unordered_set<std::string>();
       } else if (layer_type == "Split") {
         int axis = 0;
-        std::vector<int> splits;
+        std::vector<int64_t> splits;
         size_t num_outputs = 2;
 
         if (layer_data["attributes"].contains("axis")) {
           axis = layer_data["attributes"]["axis"];
+        }
+        if (layer_data.contains("inputs") && layer_data["inputs"].is_array()) {
+          auto inputs = layer_data["inputs"];
+          if (inputs.size() >= 2) {
+            std::string constant_name = inputs[1].get<std::string>();
+            constant_name = get_base_layer_name(constant_name);
+
+            if (layer_parameters.count(constant_name)) {
+              splits = layer_parameters[constant_name];
+            } else if (constant_name.find("onnx::") != constant_name.npos) {
+              splits = last_constant_value;
+              layer_parameters[constant_name] = last_constant_value;
+            }
+          }
         }
         if (layer_data.contains("weights") &&
             layer_data["weights"].is_array()) {
@@ -642,6 +669,10 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                 std::make_shared<it_lab_ai::EWLayer>(ew_operation, value, 0.0f);
             ew_layer->setName(it_lab_ai::kElementWise);
             layer = ew_layer;
+            /*if (comments) {
+              std::cout << "Created binary " << layer_type << " operation with "
+                        << value <<"scalar" << std::endl;
+            }*/
           } else if (layer_type == "Add") {
             ew_operation = "linear";
             auto ew_layer =
@@ -676,11 +707,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           auto bin_layer = std::make_shared<it_lab_ai::BinaryOpLayer>(op);
           bin_layer->setName(it_lab_ai::kBinaryOp);
           layer = bin_layer;
-
-          if (comments) {
-            std::cout << "Created binary " << layer_type
-                      << " operation with tensor inputs" << std::endl;
-          }
+          
         }
       } else if (layer_type == "Gemm") {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
@@ -1019,6 +1046,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           for (const auto& input_name : layer_data["inputs"]) {
             std::string input_tensor = input_name.get<std::string>();
 
+            
+
             // Проверяем, является ли вход выходом сплит-слоя
             std::regex split_output_pattern("(.+)_output_(\\d+)$");
             std::smatch matches;
@@ -1206,50 +1235,78 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   /*if (comments) {
     std::cout << "\n=== ESTABLISHING CONNECTIONS ===" << std::endl;
   }*/
+  std::vector<int> order = {};
 
   for (const auto& [source_name, target_name] : connection_list) {
-    // Убираем проверку на сплит-выходы - они тоже должны быть подключены
-
     if (name_to_layer.count(source_name) && name_to_layer.count(target_name)) {
-      try {
-        //if (comments) {
-        //  std::cout << "Connecting: " << source_name << " -> " << target_name;
-        //  std::cout << " (ID: " << name_to_layer[source_name]->getID()
-        //            << " -> ID: " << name_to_layer[target_name]->getID() << ")"
-        //            << std::endl;
+      // Обработка Concat слоев
+      if (target_name.find("Concat") != std::string::npos ||
+          name_to_layer[target_name]->getName() == it_lab_ai::kConcat) {
+        // Проверяем, есть ли этот concat в нашем списке
+        if (concat_connections.find(target_name) != concat_connections.end()) {
+          // Находим индекс этого источника в ожидаемых входах concat
+          const auto& expected_inputs = concat_connections[target_name];
+          auto it = std::find(expected_inputs.begin(), expected_inputs.end(),
+                              source_name);
 
-        //  // Дополнительная информация для сплит-соединений
-        //  std::regex split_output_pattern("(.+)_output_(\\d+)$");
-        //  std::smatch matches;
-        //  if (std::regex_search(source_name, matches, split_output_pattern)) {
-        //    std::string split_layer_name = matches[1].str();
-        //    int output_index = std::stoi(matches[2].str());
-        //    std::cout << "  [SPLIT] Output index: " << output_index
-        //              << std::endl;
-        //  }
-        //}
+          if (it != expected_inputs.end()) {
+            int input_index = static_cast<int>(std::distance(expected_inputs.begin(), it));
+
+            // Добавляем индекс в порядок для этого concat
+            concat_orders[target_name].push_back(input_index);
+
+            // Отмечаем, что этот вход подключен
+            concat_connected_inputs[target_name].insert(source_name);
+
+            if (comments) {
+              std::cout << "Concat connection: " << source_name << " -> "
+                        << target_name << " (index: " << input_index << ")"
+                        << std::endl;
+            }
+
+            // Проверяем, все ли входы подключены
+            if (concat_connected_inputs[target_name].size() ==
+                concat_connections[target_name].size()) {
+              // Все входы подключены - устанавливаем порядок
+              auto concat_layer =
+                  std::dynamic_pointer_cast<it_lab_ai::ConcatLayer>(
+                      name_to_layer[target_name]);
+              if (concat_layer) {
+                concat_layer->setInputOrder(concat_orders[target_name]);
+
+                if (comments) {
+                  std::cout
+                      << "=== ALL INPUTS CONNECTED TO CONCAT: " << target_name
+                      << " ===" << std::endl;
+                  std::cout << "Expected inputs: ";
+                  for (const auto& inp : concat_connections[target_name]) {
+                    std::cout << inp << " ";
+                  }
+                  std::cout << std::endl;
+
+                  std::cout << "Actual order: ";
+                  for (size_t i = 0; i < concat_orders[target_name].size();
+                       ++i) {
+                    std::cout << concat_orders[target_name][i];
+                    if (i < concat_orders[target_name].size() - 1)
+                      std::cout << ", ";
+                  }
+                  std::cout << std::endl;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      try {
         graph.makeConnection(*name_to_layer[source_name],
                              *name_to_layer[target_name]);
-        /*if (comments) {
-          std::cout << "  Success" << std::endl;
-        }*/
+
       } catch (const std::exception& e) {
         std::cerr << "Failed: " << source_name << " -> " << target_name << " : "
                   << e.what() << std::endl;
       }
-    } else {
-      /*if (comments) {
-        std::cerr << "Warning: Missing layer for connection " << source_name
-                  << " -> " << target_name << std::endl;
-        if (!name_to_layer.count(source_name)) {
-          std::cerr << "  Source layer '" << source_name << "' not found"
-                    << std::endl;
-        }
-        if (!name_to_layer.count(target_name)) {
-          std::cerr << "  Target layer '" << target_name << "' not found"
-                    << std::endl;
-        }
-      }*/
     }
   }
   for (auto& split_dist : split_distribution) {
