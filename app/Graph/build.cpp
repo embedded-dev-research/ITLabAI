@@ -1258,11 +1258,11 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             // Отмечаем, что этот вход подключен
             concat_connected_inputs[target_name].insert(source_name);
 
-            if (comments) {
+            /*if (comments) {
               std::cout << "Concat connection: " << source_name << " -> "
                         << target_name << " (index: " << input_index << ")"
                         << std::endl;
-            }
+            }*/
 
             // Проверяем, все ли входы подключены
             if (concat_connected_inputs[target_name].size() ==
@@ -1274,7 +1274,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
               if (concat_layer) {
                 concat_layer->setInputOrder(concat_orders[target_name]);
 
-                if (comments) {
+                /*if (comments) {
                   std::cout
                       << "=== ALL INPUTS CONNECTED TO CONCAT: " << target_name
                       << " ===" << std::endl;
@@ -1292,7 +1292,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                       std::cout << ", ";
                   }
                   std::cout << std::endl;
-                }
+                }*/
               }
             }
           }

@@ -76,8 +76,7 @@ file(DOWNLOAD
 )
 
 add_definitions(-DIMAGE28_PATH="${CMAKE_SOURCE_DIR}/docs/input/28/")
-add_definitions(-DIMAGE224_PATH="${CMAKE_SOURCE_DIR}/docs/input/224/")
-add_definitions(-DIMAGE256_PATH="${CMAKE_SOURCE_DIR}/docs/input/256/")
+add_definitions(-DIMAGENET_PATH="${CMAKE_SOURCE_DIR}/docs/input/Imagenet_test/")
 add_definitions(-DMODEL_PATH_H5="${CMAKE_SOURCE_DIR}/docs/jsons/model_data_alexnet_1.json")
 add_definitions(-DMODEL_PATH_GOOGLENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/googlenet_onnx_model.json")
 add_definitions(-DMODEL_PATH_DENSENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/densenet121_Opset16_onnx_model.json")

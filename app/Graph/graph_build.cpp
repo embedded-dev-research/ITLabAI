@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <numeric>
 #include <unordered_map>
 
 #include "build.cpp"
@@ -17,13 +19,9 @@ std::unordered_map<int, std::string> load_class_names(
   }
 
   while (std::getline(file, line)) {
-    // Убираем пробелы в начале и конце
     line = std::regex_replace(line, std::regex("^\\s+|\\s+$"), "");
-
-    // Пропускаем пустые строки
     if (line.empty()) continue;
 
-    // Ищем формат: число: 'название'
     std::regex pattern("(\\d+):\\s*'([^']+)'");
     std::smatch matches;
 
@@ -68,8 +66,32 @@ std::vector<int> get_input_shape_from_json(const std::string& json_path) {
   throw std::runtime_error("Could not determine input shape from JSON");
 }
 
+std::vector<float> process_model_output(const std::vector<float>& output,
+                                        const std::string& model_name) {
+  bool is_yolo = (model_name.find("yolo") != std::string::npos);
+
+  if (!is_yolo) {
+    // Для не-YOLO моделей используем стандартный softmax
+    return softmax<float>(output);
+  }
+
+  // Для YOLO моделей анализируем выходные данные
+  float sum_val = std::accumulate(output.begin(), output.end(), 0.0f);
+
+  // Если сумма близка к 1, вероятности уже нормализованы
+  if (std::abs(sum_val - 1.0f) < 0.01f) {
+    std::cout << "YOLO output already normalized, using as-is" << std::endl;
+    return output;
+  }
+
+  // Иначе применяем softmax
+  std::cout << "Applying softmax to YOLO output" << std::endl;
+  return softmax<float>(output);
+}
+
 it_lab_ai::Tensor prepare_image(const cv::Mat& image,
-                                const std::vector<int>& input_shape) {
+                                const std::vector<int>& input_shape,
+                                const std::string& model_name = "") {
   if (input_shape.size() != 4) {
     throw std::runtime_error("Input shape must have 4 dimensions");
   }
@@ -79,55 +101,70 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
   int height = input_shape[2];
   int width = input_shape[3];
 
-  if (height == 28 && width == 28 && channels == 1) {
-    cv::Mat processed_image;
+  cv::Mat processed_image;
+  cv::Size target_size(width, height);
 
-    if (image.channels() == 3) {
-      cv::cvtColor(image, processed_image, cv::COLOR_BGR2GRAY);
+  bool is_yolo_model =
+      (model_name.find("yolo") != std::string::npos || model_name.find("Google"));
+
+  if (image.rows == height && image.cols == width) {
+    processed_image = image.clone();
+    std::cout << "Image already at target size - no resize needed" << std::endl;
+  } else {
+    if (is_yolo_model) {
+      // Для YOLO: ресайз с сохранением соотношения сторон
+      double scale = std::min(static_cast<double>(width) / image.cols,
+                              static_cast<double>(height) / image.rows);
+      int new_width = static_cast<int>(image.cols * scale);
+      int new_height = static_cast<int>(image.rows * scale);
+
+      cv::Mat resized_image;
+      cv::resize(image, resized_image, cv::Size(new_width, new_height), 0, 0,
+                 cv::INTER_LINEAR);
+
+      processed_image = cv::Mat::zeros(height, width, image.type());
+      int x_offset = (width - new_width) / 2;
+      int y_offset = (height - new_height) / 2;
+      resized_image.copyTo(
+          processed_image(cv::Rect(x_offset, y_offset, new_width, new_height)));
+
+      std::cout << "YOLO resize with padding applied" << std::endl;
     } else {
-      processed_image = image.clone();
-    }
-
-    cv::resize(processed_image, processed_image, cv::Size(28, 28));
-
-    cv::Mat float_image;
-    processed_image.convertTo(float_image, CV_32FC1);
-    float_image /= 255.0;
-
-    std::vector<float> data;
-    data.reserve(batch_size * channels * height * width);
-
-    for (int i = 0; i < 28; ++i) {
-      for (int j = 0; j < 28; ++j) {
-        data.push_back(float_image.at<float>(j, i));
+      int interpolation = cv::INTER_LINEAR;
+      if (image.rows < height || image.cols < width) {
+        interpolation = cv::INTER_CUBIC;
+      } else if (image.rows > height * 2 || image.cols > width * 2) {
+        interpolation = cv::INTER_AREA;
       }
+      cv::resize(image, processed_image, target_size, 0, 0, interpolation);
+      std::cout << "Standard resize applied" << std::endl;
     }
-
-    it_lab_ai::Shape shape(
-        {static_cast<size_t>(batch_size), static_cast<size_t>(channels),
-         static_cast<size_t>(height), static_cast<size_t>(width)});
-
-    return it_lab_ai::make_tensor(data, shape);
   }
 
-  cv::Mat resized;
-  cv::resize(image, resized, cv::Size(width, height));
-
   cv::Mat float_image;
-  resized.convertTo(float_image, CV_32FC3);
-  float_image /= 255.0;
+  processed_image.convertTo(float_image, CV_32FC3);
 
-  if (channels == 3) {
-    std::vector<cv::Mat> image_channels;
-    cv::split(float_image, image_channels);
+  if (is_yolo_model) {
+    // Для YOLO: простая нормализация 0-1
+    float_image /= 255.0;
+    std::cout << "YOLO normalization: 0-1 range" << std::endl;
+  } else {
+    // ImageNet нормализация для других моделей
+    float_image /= 255.0;
 
-    image_channels[0] = (image_channels[0] - 0.485) / 0.229;
-    image_channels[1] = (image_channels[1] - 0.456) / 0.224;
-    image_channels[2] = (image_channels[2] - 0.406) / 0.225;
+    if (channels == 3) {
+      std::vector<cv::Mat> image_channels;
+      cv::split(float_image, image_channels);
 
-    cv::merge(image_channels, float_image);
-  } else if (channels == 1) {
-    cv::cvtColor(float_image, float_image, cv::COLOR_BGR2GRAY);
+      image_channels[0] = (image_channels[0] - 0.485) / 0.229;
+      image_channels[1] = (image_channels[1] - 0.456) / 0.224;
+      image_channels[2] = (image_channels[2] - 0.406) / 0.225;
+
+      cv::merge(image_channels, float_image);
+      std::cout << "ImageNet normalization applied" << std::endl;
+    } else if (channels == 1) {
+      cv::cvtColor(float_image, float_image, cv::COLOR_BGR2GRAY);
+    }
   }
 
   std::vector<float> data;
@@ -135,6 +172,10 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
 
   std::vector<cv::Mat> processed_channels;
   cv::split(float_image, processed_channels);
+
+  if (!is_yolo_model && channels == 3) {
+    std::swap(processed_channels[0], processed_channels[2]);
+  }
 
   for (int c = 0; c < channels; ++c) {
     for (int h = 0; h < height; ++h) {
@@ -168,7 +209,7 @@ int main(int argc, char* argv[]) {
   std::vector<int> input_shape;
   try {
     input_shape = get_input_shape_from_json(json_path);
-    std::cout << "Input shape from JSON: [";
+    std::cout << "Input shape: [";
     for (size_t i = 0; i < input_shape.size(); ++i) {
       std::cout << input_shape[i];
       if (i < input_shape.size() - 1) std::cout << ", ";
@@ -179,26 +220,14 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  std::string image_folder;
-  if (input_shape[1] == 1 && input_shape[2] == 28 && input_shape[3] == 28) {
-    image_folder = IMAGE28_PATH;
-    std::cout << "Using MNIST image folder: " << image_folder << std::endl;
-  } else if (input_shape[2] == 224 && input_shape[3] == 224) {
-    image_folder = IMAGE224_PATH;
-    std::cout << "Using 224x224 image folder: " << image_folder << std::endl;
-  } else if (input_shape[2] == 256 && input_shape[3] == 256) {
-    image_folder = IMAGE256_PATH;
-    std::cout << "Using 256x256 image folder: " << image_folder << std::endl;
-  } else {
-    image_folder = IMAGE28_PATH;
-    std::cout << "Using default image folder: " << image_folder << std::endl;
-  }
+  std::string image_folder = IMAGENET_PATH;
+  std::cout << "Using image folder: " << image_folder << std::endl;
 
   std::vector<std::string> image_paths;
-
   for (const auto& entry : fs::directory_iterator(image_folder)) {
     if (entry.path().extension() == ".png" ||
-        entry.path().extension() == ".jpg") {
+        entry.path().extension() == ".jpg" ||
+        entry.path().extension() == ".jpeg") {
       image_paths.push_back(entry.path().string());
     }
   }
@@ -211,7 +240,6 @@ int main(int argc, char* argv[]) {
     class_names = load_class_names(IMAGENET_LABELS);
   } catch (const std::exception& e) {
     std::cerr << "Warning: " << e.what() << std::endl;
-    // Создаем пустой словарь - будут выводиться только номера
   }
 
   for (const auto& image_path : image_paths) {
@@ -222,8 +250,11 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-      std::cout << "Processing image: " << image_path << std::endl;
-      it_lab_ai::Tensor input = prepare_image(image, input_shape);
+      std::cout << "\nProcessing image: " << image_path << std::endl;
+      std::cout << "Original size: " << image.cols << "x" << image.rows
+                << ", channels: " << image.channels() << std::endl;
+
+      it_lab_ai::Tensor input = prepare_image(image, input_shape, model_name);
 
       if (model_name == "alexnet_mnist") {
         it_lab_ai::Shape sh1({1, 5, 5, 3});
@@ -245,28 +276,19 @@ int main(int argc, char* argv[]) {
 
         build_graph(input, output, json_path, true, parallel);
 
-        std::vector<float> tmp_output = softmax<float>(*output.as<float>());
+        // Используем улучшенную обработку выходов
+        std::vector<float> tmp_output =
+            process_model_output(*output.as<float>(), model_name);
 
-        // Находим топ-1 класс
-        int max_class = 0;
-        float max_prob = tmp_output[0];
-        for (int i = 1; i < tmp_output.size(); i++) {
-          if (tmp_output[i] > max_prob) {
-            max_prob = tmp_output[i];
-            max_class = i;
-          }
-        }
-
-        // Вывод топ-5 классов с названиями
-        std::cout << "Top 5 predictions:" << std::endl;
+        // Находим топ-5 классов
         int top_n = std::min(5, static_cast<int>(tmp_output.size()));
-
         std::vector<int> indices(tmp_output.size());
         std::iota(indices.begin(), indices.end(), 0);
         std::partial_sort(
             indices.begin(), indices.begin() + top_n, indices.end(),
             [&](int a, int b) { return tmp_output[a] > tmp_output[b]; });
 
+        std::cout << "Top " << top_n << " predictions:" << std::endl;
         for (int i = 0; i < top_n; i++) {
           int idx = indices[i];
           std::cout << "  " << (i + 1) << ". Class " << idx << ": "
@@ -278,20 +300,22 @@ int main(int argc, char* argv[]) {
           std::cout << std::endl;
         }
 
-        // Вывод итогового результата
+        // Итоговый результат
+        int max_class = indices[0];
+        float max_prob = tmp_output[max_class];
         std::cout << "Image: " << fs::path(image_path).filename().string()
                   << " -> Predicted class: " << max_class;
         if (class_names.find(max_class) != class_names.end()) {
           std::cout << " (" << class_names[max_class] << ")";
         }
-        std::cout << " (probability: " << max_prob << ")" << std::endl;
-        std::cout << "----------------------------------------" << std::endl;
+        std::cout << " (probability: " << std::fixed << std::setprecision(6)
+                  << max_prob << ")" << std::endl;
       }
+      std::cout << "----------------------------------------" << std::endl;
+    } catch (const std::exception& e) {
+      std::cerr << "Error processing image " << image_path << ": " << e.what()
+                << std::endl;
     }
-      catch (const std::exception& e) {
-        std::cerr << "Error processing image " << image_path << ": " << e.what()
-                  << std::endl;
-      }
-    }
+  }
   return 0;
 }
