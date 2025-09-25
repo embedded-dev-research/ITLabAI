@@ -30,18 +30,18 @@ template <typename ValueType>
 std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
                                    const Shape& mat_shape,
                                    const std::vector<ValueType>& vec) {
-  std::cout << "    mat_vec_mul DEBUG:" << std::endl;
+  /*std::cout << "    mat_vec_mul DEBUG:" << std::endl;
   std::cout << "      Matrix size: " << mat.size() << std::endl;
   std::cout << "      Matrix shape: [" << mat_shape[0] << ", " << mat_shape[1]
             << "]" << std::endl;
-  std::cout << "      Vector size: " << vec.size() << std::endl;
+  std::cout << "      Vector size: " << vec.size() << std::endl;*/
 
   if (mat_shape.dims() != 2) {
     throw std::invalid_argument("Not a matrix in argument");
   }
 
   size_t batch_size = vec.size() / mat_shape[0];
-  std::cout << "      Batch size: " << batch_size << std::endl;
+  //std::cout << "      Batch size: " << batch_size << std::endl;
 
   if (vec.size() % mat_shape[0] != 0) {
     throw std::invalid_argument("Vector size not divisible by matrix rows");
@@ -50,7 +50,7 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
   Shape res_shape(1);
   res_shape[0] = mat_shape[1] * batch_size;
   std::vector<ValueType> res(res_shape[0]);
-  std::cout << "      Result size: " << res.size() << std::endl;
+  //std::cout << "      Result size: " << res.size() << std::endl;
 
   ValueType elem;
   for (size_t batch = 0; batch < batch_size; batch++) {

@@ -17,9 +17,29 @@ void FCLayer::run(const std::vector<Tensor>& input,
   // Получаем batch_size и output_size
   size_t batch_size = input[0].get_shape()[0];
   size_t output_size = bias_.get_shape()[0];
+  if (input[0].get_shape().dims() == 1) {
+    // 1D input: определяем batch_size по weights
+    size_t total_elements = input[0].get_shape()[0];
+    size_t expected_input_size = weights_.get_shape()[0];  // 324
 
+    if (total_elements % expected_input_size == 0) {
+      batch_size = total_elements / expected_input_size;
+      std::cout << "1D input: batch_size = " << batch_size
+                << " (total=" << total_elements
+                << ", input_size=" << expected_input_size << ")" << std::endl;
+    } else {
+      batch_size = 1;
+      std::cout << "1D input: using default batch_size=1" << std::endl;
+    }
+  } else {
+    // Многомерный input
+    batch_size = input[0].get_shape()[0];
+  }
+
+  std::cout << "Final batch_size: " << batch_size << std::endl;
+  std::cout << "Output_size: " << output_size << std::endl;
   // Добавляем отладочные выводы
-  std::cout << "FCLayer DEBUG:" << std::endl;
+  /*std::cout << "FCLayer DEBUG:" << std::endl;
   std::cout << "  Input shape: ";
   for (size_t d = 0; d < input[0].get_shape().dims(); ++d) {
     std::cout << input[0].get_shape()[d] << " ";
@@ -39,7 +59,7 @@ void FCLayer::run(const std::vector<Tensor>& input,
   std::cout << std::endl;
 
   std::cout << "  Batch size: " << batch_size << std::endl;
-  std::cout << "  Output size: " << output_size << std::endl;
+  std::cout << "  Output size: " << output_size << std::endl;*/
 
   switch (input[0].get_type()) {
     case Type::kInt: {
@@ -47,16 +67,16 @@ void FCLayer::run(const std::vector<Tensor>& input,
                                  *bias_.as<int>());
 
       // Добавляем отладочный вывод перед вызовом run
-      std::cout << "  Running INT implementation" << std::endl;
+      //std::cout << "  Running INT implementation" << std::endl;
 
       auto result = used_impl.run(*input[0].as<int>());
 
       // Добавляем отладочный вывод после вычислений
-      std::cout << "  Result vector size: " << result.size() << std::endl;
+      /*std::cout << "  Result vector size: " << result.size() << std::endl;
       std::cout << "  Expected output shape: [" << batch_size << ", "
                 << output_size << "]" << std::endl;
       std::cout << "  Expected total elements: " << batch_size * output_size
-                << std::endl;
+                << std::endl;*/
 
       // Проверяем размер результата
       if (result.size() != batch_size * output_size) {
@@ -73,16 +93,16 @@ void FCLayer::run(const std::vector<Tensor>& input,
                                    *bias_.as<float>());
 
       // Добавляем отладочный вывод перед вызовом run
-      std::cout << "  Running FLOAT implementation" << std::endl;
+      //std::cout << "  Running FLOAT implementation" << std::endl;
 
       auto result = used_impl.run(*input[0].as<float>());
 
       // Добавляем отладочный вывод после вычислений
-      std::cout << "  Result vector size: " << result.size() << std::endl;
+      /*std::cout << "  Result vector size: " << result.size() << std::endl;
       std::cout << "  Expected output shape: [" << batch_size << ", "
                 << output_size << "]" << std::endl;
       std::cout << "  Expected total elements: " << batch_size * output_size
-                << std::endl;
+                << std::endl;*/
 
       // Проверяем размер результата
       if (result.size() != batch_size * output_size) {
@@ -99,7 +119,7 @@ void FCLayer::run(const std::vector<Tensor>& input,
     }
   }
 
-  std::cout << "  FCLayer completed successfully" << std::endl;
+  /*std::cout << "  FCLayer completed successfully" << std::endl;*/
 }
 
 }  // namespace it_lab_ai

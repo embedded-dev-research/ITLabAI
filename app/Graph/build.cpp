@@ -5,8 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                        const std::string& json_path, bool comments,
+void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output, bool comments,
                         bool parallel) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
@@ -32,7 +31,7 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
   std::vector<bool> layerpostop;
 
-  std::string json_file = json_path;
+  std::string json_file = MODEL_PATH_H5;
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
 
   if (comments) std::cout << "Loaded model data from JSON." << std::endl;
@@ -78,7 +77,7 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       it_lab_ai::Tensor tmp_values = tensor;
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
       auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-          1, pads, 1, tmp_values, tmp_bias, impl2, 1);
+          1, pads, 1, tmp_values, tmp_bias, impl2, 1, true);
       conv_layer->setName(it_lab_ai::kConvolution);
       layers.push_back(conv_layer);
       layerpostop.push_back(false);
@@ -94,18 +93,6 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     }
     if (layer_type.find("Dense") != std::string::npos) {
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
-      it_lab_ai::Tensor tmp_tensor = it_lab_ai::Tensor(
-          it_lab_ai::Shape({tensor.get_shape()[1], tensor.get_shape()[0]}),
-          it_lab_ai::Type::kFloat);
-      // kernel is always transposed ?
-      for (size_t h = 0; h < tensor.get_shape()[0]; h++) {
-        for (size_t w = 0; w < tensor.get_shape()[1]; w++) {
-          tmp_tensor.set<float>(std::vector<size_t>({w, h}),
-                                tensor.get<float>({h, w}));
-        }
-      }
-      //
-      tensor = tmp_tensor;
       auto fc_layer = std::make_shared<it_lab_ai::FCLayer>(tensor, tmp_bias);
       fc_layer->setName(it_lab_ai::kFullyConnected);
       layers.push_back(fc_layer);

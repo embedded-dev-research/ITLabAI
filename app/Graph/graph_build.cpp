@@ -1,4 +1,4 @@
-#include <algorithm>
+п»ї#include <algorithm>
 #include <numeric>
 #include <unordered_map>
 
@@ -62,8 +62,7 @@ std::vector<int> get_input_shape_from_json(const std::string& json_path) {
       }
     }
   }
-
-  throw std::runtime_error("Could not determine input shape from JSON");
+  return {28};
 }
 
 std::vector<float> process_model_output(const std::vector<float>& output,
@@ -71,20 +70,20 @@ std::vector<float> process_model_output(const std::vector<float>& output,
   bool is_yolo = (model_name.find("yolo") != std::string::npos);
 
   if (!is_yolo) {
-    // Для не-YOLO моделей используем стандартный softmax
+    // Р”Р»СЏ РЅРµ-YOLO РјРѕРґРµР»РµР№ РёСЃРїРѕР»СЊР·СѓРµРј СЃС‚Р°РЅРґР°СЂС‚РЅС‹Р№ softmax
     return softmax<float>(output);
   }
 
-  // Для YOLO моделей анализируем выходные данные
+  // Р”Р»СЏ YOLO РјРѕРґРµР»РµР№ Р°РЅР°Р»РёР·РёСЂСѓРµРј РІС‹С…РѕРґРЅС‹Рµ РґР°РЅРЅС‹Рµ
   float sum_val = std::accumulate(output.begin(), output.end(), 0.0f);
 
-  // Если сумма близка к 1, вероятности уже нормализованы
+  // Р•СЃР»Рё СЃСѓРјРјР° Р±Р»РёР·РєР° Рє 1, РІРµСЂРѕСЏС‚РЅРѕСЃС‚Рё СѓР¶Рµ РЅРѕСЂРјР°Р»РёР·РѕРІР°РЅС‹
   if (std::abs(sum_val - 1.0f) < 0.01f) {
     std::cout << "YOLO output already normalized, using as-is" << std::endl;
     return output;
   }
 
-  // Иначе применяем softmax
+  // РРЅР°С‡Рµ РїСЂРёРјРµРЅСЏРµРј softmax
   std::cout << "Applying softmax to YOLO output" << std::endl;
   return softmax<float>(output);
 }
@@ -104,15 +103,15 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
   cv::Mat processed_image;
   cv::Size target_size(width, height);
 
-  bool is_yolo_model =
-      (model_name.find("yolo") != std::string::npos || model_name.find("Google"));
+  bool is_yolo_model = (model_name.find("yolo") != std::string::npos ||
+                        model_name.find("Google"));
 
   if (image.rows == height && image.cols == width) {
     processed_image = image.clone();
     std::cout << "Image already at target size - no resize needed" << std::endl;
   } else {
     if (is_yolo_model) {
-      // Для YOLO: ресайз с сохранением соотношения сторон
+      // Р”Р»СЏ YOLO: СЂРµСЃР°Р№Р· СЃ СЃРѕС…СЂР°РЅРµРЅРёРµРј СЃРѕРѕС‚РЅРѕС€РµРЅРёСЏ СЃС‚РѕСЂРѕРЅ
       double scale = std::min(static_cast<double>(width) / image.cols,
                               static_cast<double>(height) / image.rows);
       int new_width = static_cast<int>(image.cols * scale);
@@ -145,11 +144,11 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
   processed_image.convertTo(float_image, CV_32FC3);
 
   if (is_yolo_model) {
-    // Для YOLO: простая нормализация 0-1
+    // Р”Р»СЏ YOLO: РїСЂРѕСЃС‚Р°СЏ РЅРѕСЂРјР°Р»РёР·Р°С†РёСЏ 0-1
     float_image /= 255.0;
     std::cout << "YOLO normalization: 0-1 range" << std::endl;
   } else {
-    // ImageNet нормализация для других моделей
+    // ImageNet РЅРѕСЂРјР°Р»РёР·Р°С†РёСЏ РґР»СЏ РґСЂСѓРіРёС… РјРѕРґРµР»РµР№
     float_image /= 255.0;
 
     if (channels == 3) {
@@ -192,6 +191,23 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
   return it_lab_ai::make_tensor(data, shape);
 }
 
+it_lab_ai::Tensor prepare_mnist_image(const cv::Mat& image) {
+  cv::Mat gray_image;
+  cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
+  std::vector<cv::Mat> channels;
+  cv::split(image, channels);
+
+  std::vector<float> res(28 * 28);
+  for (int i = 0; i < 28; ++i) {
+    for (int j = 0; j < 28; ++j) {
+      res[i * 28 + j] = channels[0].at<uchar>(j, i);
+    }
+  }
+
+  Shape sh({1, 1, 28, 28});
+  return it_lab_ai::make_tensor(res, sh);
+}
+
 int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
   bool parallel = false;
@@ -207,20 +223,15 @@ int main(int argc, char* argv[]) {
   std::string json_path = model_paths[model_name];
 
   std::vector<int> input_shape;
-  try {
-    input_shape = get_input_shape_from_json(json_path);
-    std::cout << "Input shape: [";
-    for (size_t i = 0; i < input_shape.size(); ++i) {
-      std::cout << input_shape[i];
-      if (i < input_shape.size() - 1) std::cout << ", ";
-    }
-    std::cout << "]" << std::endl;
-  } catch (const std::exception& e) {
-    std::cerr << "Error reading input shape: " << e.what() << std::endl;
-    return 1;
-  }
+  input_shape = get_input_shape_from_json(json_path);
 
-  std::string image_folder = IMAGENET_PATH;
+  std::string image_folder;
+  if (model_name == "alexnet_mnist") {
+    image_folder = IMAGE28_PATH;
+  }
+  else {
+    image_folder = IMAGENET_PATH;
+  }
   std::cout << "Using image folder: " << image_folder << std::endl;
 
   std::vector<std::string> image_paths;
@@ -254,33 +265,59 @@ int main(int argc, char* argv[]) {
       std::cout << "Original size: " << image.cols << "x" << image.rows
                 << ", channels: " << image.channels() << std::endl;
 
-      it_lab_ai::Tensor input = prepare_image(image, input_shape, model_name);
-
       if (model_name == "alexnet_mnist") {
+        // РЎРїРµС†РёР°Р»СЊРЅР°СЏ РѕР±СЂР°Р±РѕС‚РєР° РґР»СЏ MNIST
+        it_lab_ai::Tensor input = prepare_mnist_image(image);
+
+        // РЎРѕР·РґР°РµРј РІС‹С…РѕРґРЅРѕР№ С‚РµРЅР·РѕСЂ (Р·Р°РіР»СѓС€РєР° - С„РѕСЂРјР° РЅРµ РІР°Р¶РЅР° РґР»СЏ
+        // build_graph_linear)
         it_lab_ai::Shape sh1({1, 5, 5, 3});
         std::vector<float> vec(75, 3);
         it_lab_ai::Tensor output = it_lab_ai::make_tensor(vec, sh1);
 
-        build_graph_linear(input, output, json_path, true, parallel);
+        build_graph_linear(input, output, true, parallel);
 
+        // РџРѕР»СѓС‡Р°РµРј СЂРµР°Р»СЊРЅС‹Рµ РІС‹С…РѕРґС‹ (10 РєР»Р°СЃСЃРѕРІ РґР»СЏ MNIST)
         std::vector<float> tmp_output = softmax<float>(*output.as<float>());
-        for (size_t i = 0; i < tmp_output.size(); i++) {
-          if (tmp_output[i] >= 1e-6) {
-            std::cout << "Image: " << image_path << " -> Class: " << i
-                      << std::endl;
-          }
+
+        // Р’С‹РІРѕРґРёРј С‚РѕРї-3 РїСЂРµРґСЃРєР°Р·Р°РЅРёСЏ РґР»СЏ MNIST
+        int top_n = std::min(3, static_cast<int>(tmp_output.size()));
+        std::vector<int> indices(tmp_output.size());
+        std::iota(indices.begin(), indices.end(), 0);
+        std::partial_sort(
+            indices.begin(), indices.begin() + top_n, indices.end(),
+            [&](int a, int b) { return tmp_output[a] > tmp_output[b]; });
+
+        std::cout << "Top " << top_n << " predictions for MNIST:" << std::endl;
+        for (int i = 0; i < top_n; i++) {
+          int idx = indices[i];
+          std::cout << "  " << (i + 1) << ". Class " << idx << ": "
+                    << std::fixed << std::setprecision(6)
+                    << tmp_output[idx] * 100 << "%" << std::endl;
         }
+
+        // РС‚РѕРіРѕРІС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚
+        int max_class = indices[0];
+        float max_prob = tmp_output[max_class];
+        std::cout << "Image: " << fs::path(image_path).filename().string()
+                  << " -> Predicted digit: " << max_class
+                  << " (probability: " << std::fixed << std::setprecision(6)
+                  << max_prob * 100 << "%)" << std::endl;
+
       } else {
+        // РћР±С‹С‡РЅР°СЏ РѕР±СЂР°Р±РѕС‚РєР° РґР»СЏ РґСЂСѓРіРёС… РјРѕРґРµР»РµР№
+        it_lab_ai::Tensor input = prepare_image(image, input_shape, model_name);
+
         size_t output_classes = 1000;
         it_lab_ai::Tensor output({1, output_classes}, it_lab_ai::Type::kFloat);
 
         build_graph(input, output, json_path, true, parallel);
 
-        // Используем улучшенную обработку выходов
+        // РСЃРїРѕР»СЊР·СѓРµРј СѓР»СѓС‡С€РµРЅРЅСѓСЋ РѕР±СЂР°Р±РѕС‚РєСѓ РІС‹С…РѕРґРѕРІ
         std::vector<float> tmp_output =
             process_model_output(*output.as<float>(), model_name);
 
-        // Находим топ-5 классов
+        // РќР°С…РѕРґРёРј С‚РѕРї-5 РєР»Р°СЃСЃРѕРІ
         int top_n = std::min(5, static_cast<int>(tmp_output.size()));
         std::vector<int> indices(tmp_output.size());
         std::iota(indices.begin(), indices.end(), 0);
@@ -300,7 +337,7 @@ int main(int argc, char* argv[]) {
           std::cout << std::endl;
         }
 
-        // Итоговый результат
+        // РС‚РѕРіРѕРІС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚
         int max_class = indices[0];
         float max_prob = tmp_output[max_class];
         std::cout << "Image: " << fs::path(image_path).filename().string()

@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
   Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
   Tensor t = make_tensor<float>(res, sh);
   input = t;
-  build_graph(input, output, false, parallel);
+  build_graph_linear(input, output, false, parallel);
   std::vector<std::vector<float>> tmp_output =
       softmax<float>(*output.as<float>(), 10);
   std::vector<size_t> indices;

@@ -48,8 +48,6 @@ std::vector<size_t> reorder(std::vector<size_t> order_vec,
 
 void FlattenLayer::run(const std::vector<Tensor>& input,
                        std::vector<Tensor>& output) {
-  std::cout << "FlattenLayer started" << std::endl;
-
   if (input.size() != 1) {
     throw std::runtime_error("FlattenLayer: Input tensors not 1");
   }
@@ -57,48 +55,50 @@ void FlattenLayer::run(const std::vector<Tensor>& input,
   const auto& input_tensor = input[0];
   const auto& input_shape = input_tensor.get_shape();
 
-  std::cout << "Input shape: ";
+  std::cout << "FlattenLayer input shape: ";
   for (size_t i = 0; i < input_shape.dims(); ++i) {
     std::cout << input_shape[i] << " ";
   }
-  std::cout << ", axis: " << axis_ << std::endl;
+  std::cout << std::endl;
 
-  // Безопасная проверка axis
-  size_t axis = static_cast<size_t>(axis_);
-  if (axis_ < 0) {
-    axis = 0;  // защита от отрицательного axis
+  Shape output_shape;
+
+  // Если задан order_ (старый стиль)
+  if (!order_.empty() && order_.size() == 4) {
+    // Используем существующую логику с перестановкой
+    switch (input_tensor.get_type()) {
+      case Type::kFloat:
+        Flatten4D<float>(input_tensor, output[0], order_);
+        break;
+      case Type::kInt:
+        Flatten4D<int>(input_tensor, output[0], order_);
+        break;
+      default:
+        throw std::runtime_error("Unsupported tensor type");
+    }
+  } else {
+    // Новый стиль: простой flatten в 1D
+    size_t total_size = input_shape.count();
+    output_shape = Shape({total_size});
+
+    std::cout << "Simple flatten to 1D: " << total_size << std::endl;
+
+    switch (input_tensor.get_type()) {
+      case Type::kInt:
+        output[0] = make_tensor(*input_tensor.as<int>(), output_shape);
+        break;
+      case Type::kFloat:
+        output[0] = make_tensor(*input_tensor.as<float>(), output_shape);
+        break;
+      default:
+        throw std::runtime_error("Unsupported tensor type");
+    }
   }
-  if (axis >= input_shape.dims()) {
-    axis = input_shape.dims() - 1;  // защита от выхода за границы
+
+  std::cout << "FlattenLayer output shape: ";
+  for (size_t i = 0; i < output[0].get_shape().dims(); ++i) {
+    std::cout << output[0].get_shape()[i] << " ";
   }
-
-  // Расчет выходной формы
-  size_t first_dim = 1;
-  for (size_t i = 0; i < axis; ++i) {
-    first_dim *= input_shape[i];
-  }
-
-  size_t second_dim = 1;
-  for (size_t i = axis; i < input_shape.dims(); ++i) {
-    second_dim *= input_shape[i];
-  }
-
-  Shape output_shape({first_dim, second_dim});
-
-  // Простое копирование данных (flatten не меняет данные)
-  switch (input_tensor.get_type()) {
-    case Type::kInt:
-      output[0] = make_tensor(*input_tensor.as<int>(), output_shape);
-      break;
-    case Type::kFloat:
-      output[0] = make_tensor(*input_tensor.as<float>(), output_shape);
-      break;
-    default:
-      throw std::runtime_error("Unsupported tensor type");
-  }
-
-  std::cout << "Output shape: " << first_dim << " " << second_dim << std::endl;
-  std::cout << "FlattenLayer completed" << std::endl;
+  std::cout << std::endl;
 }
-
 }  // namespace it_lab_ai

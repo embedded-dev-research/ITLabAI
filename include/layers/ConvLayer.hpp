@@ -17,12 +17,14 @@ class ConvolutionalLayer : public Layer {
   Tensor bias_;
   size_t group_;
   ImplType implType_;
+  bool useLegacyImpl_;
 
  public:
   ConvolutionalLayer() = default;
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
                      const Tensor& kernel, const Tensor& bias = Tensor(),
-                     ImplType implType = kDefault, size_t group = 1) {
+                     ImplType implType = kDefault, size_t group = 1,
+                     bool useLegacyImpl = false) {
     stride_ = step;
     pads_ = pads;
     group_ = group;
@@ -30,6 +32,7 @@ class ConvolutionalLayer : public Layer {
     kernel_ = kernel;
     bias_ = bias;
     implType_ = implType;
+    useLegacyImpl_ = useLegacyImpl;
   }
 
   void run(const std::vector<Tensor>& input,
@@ -500,5 +503,117 @@ void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
   }
 
   output = output_tensor;
+}
+
+// NCHW -> NCHW only
+template <typename ValueType>
+void Conv4D_Legacy(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
+                Tensor& output, size_t stride_, size_t pads_,
+                size_t dilations_) {
+  size_t batch_size = input.get_shape()[0];
+  size_t in_height = input.get_shape()[2];
+  size_t in_width = input.get_shape()[3];
+  size_t in_channels = input.get_shape()[1];
+
+  size_t kernel_height = kernel_.get_shape()[0];
+  size_t kernel_width = kernel_.get_shape()[1];
+  size_t kernel_in_channels = kernel_.get_shape()[2];
+  size_t kernel_out_channels = kernel_.get_shape()[3];
+
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> padded_input =
+      std::vector<std::vector<std::vector<std::vector<ValueType>>>>(
+          batch_size, std::vector<std::vector<std::vector<ValueType>>>(
+                          in_height + 2 * pads_,
+                          std::vector<std::vector<ValueType>>(
+                              in_width + 2 * pads_,
+                              std::vector<ValueType>(in_channels, 0))));
+  for (size_t b = 0; b < batch_size; ++b) {
+    for (size_t h = 0; h < in_height; ++h) {
+      for (size_t w = 0; w < in_width; ++w) {
+        for (size_t c = 0; c < in_channels; ++c) {
+          padded_input[b][h + pads_][w + pads_][c] =
+              input.get<ValueType>({b, c, h, w});
+        }
+      }
+    }
+  }
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> dil_kernel =
+      std::vector<std::vector<std::vector<std::vector<ValueType>>>>(
+          kernel_height * dilations_ + 1 - dilations_,
+          std::vector<std::vector<std::vector<ValueType>>>(
+              kernel_width * dilations_ + 1 - dilations_,
+              std::vector<std::vector<ValueType>>(
+                  kernel_in_channels,
+                  std::vector<ValueType>(kernel_out_channels, 0))));
+  for (size_t b = 0; b < kernel_out_channels; ++b) {
+    for (size_t h = 0; h < kernel_height; ++h) {
+      for (size_t w = 0; w < kernel_width; ++w) {
+        for (size_t c = 0; c < kernel_in_channels; ++c) {
+          dil_kernel[h * dilations_][w * dilations_][c][b] =
+              kernel_.get<ValueType>({h, w, c, b});
+        }
+      }
+    }
+  }
+
+  size_t crat = 0;
+  if ((in_height + 2 * pads_ - dilations_ * (kernel_height - 1)) % stride_ != 0)
+    crat = 1;
+
+  size_t out_height =
+      (in_height + 2 * pads_ - dilations_ * (kernel_height - 1)) / stride_ +
+      crat;
+
+  crat = 0;
+  if ((in_width + 2 * pads_ - dilations_ * (kernel_width - 1)) % stride_ != 0)
+    crat = 1;
+
+  size_t out_width =
+      (in_width + 2 * pads_ - dilations_ * (kernel_width - 1)) / stride_ + crat;
+
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> output_tensor(
+      batch_size, std::vector<std::vector<std::vector<ValueType>>>(
+                      kernel_out_channels,
+                      std::vector<std::vector<ValueType>>(
+                          out_height, std::vector<ValueType>(out_width, 0))));
+  for (size_t b = 0; b < batch_size; ++b) {
+    for (size_t c = 0; c < kernel_out_channels; ++c) {
+      for (size_t i = 0; i < out_height; i += stride_) {
+        for (size_t j = 0; j < out_width; j += stride_) {
+          ValueType value = 0;
+          for (size_t ic = 0; ic < in_channels; ++ic) {
+            for (size_t h = 0; h < kernel_height * dilations_ + 1 - dilations_;
+                 ++h) {
+              for (size_t w = 0; w < kernel_width * dilations_ + 1 - dilations_;
+                   ++w) {
+                value +=
+                    padded_input[b][i + h][j + w][ic] * dil_kernel[h][w][ic][c];
+              }
+            }
+          }
+          if (!bias_.empty()) {
+            output_tensor[b][c][i][j] = value + (*bias_.as<ValueType>())[c];
+          } else {
+            output_tensor[b][c][i][j] = value;
+          }
+        }
+      }
+    }
+  }
+
+  Shape sh({batch_size, kernel_out_channels, out_height, out_width});
+  std::vector<ValueType> one_d_vector(batch_size * out_height * out_width *
+                                      kernel_out_channels);
+  size_t index_1d = 0;
+  for (size_t i = 0; i < batch_size; ++i) {
+    for (size_t l = 0; l < kernel_out_channels; ++l) {
+      for (size_t j = 0; j < out_height; ++j) {
+        for (size_t k = 0; k < out_width; ++k) {
+          one_d_vector[index_1d++] = output_tensor[i][l][j][k];
+        }
+      }
+    }
+  }
+  output = make_tensor<ValueType>(one_d_vector, sh);
 }
 }  // namespace it_lab_ai

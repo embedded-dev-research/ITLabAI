@@ -137,26 +137,27 @@ class Graph {
     for (size_t i = 0; i < traversal.size(); ++i) {
       int current_layer = traversal[i];
 
-      // Простой вывод
-      /*std::string layer_name = getLayerName(current_layer);
-      std::cout << "Processing layer #" << current_layer << " (" << layer_name
-                << ")" << std::endl;
-      if (!inten_.empty()) {
-        std::cout << "Input shape: ";
-        for (size_t d = 0; d < inten_[0].get_shape().dims(); ++d) {
-          std::cout << inten_[0].get_shape()[d] << " ";
-        }
-        std::cout << std::endl;
-      }
-      std::cout << "Layer #" << current_layer << " ("
-                << getLayerName(current_layer) << ") has "
-                << in_edges_[current_layer].size() << " input connections"
-                << std::endl;
+      //// Простой вывод
+      //std::string layer_name = getLayerName(current_layer);
+      //std::cout << "Processing layer #" << current_layer << " (" << layer_name
+      //          << ")" << std::endl;
+      //if (!inten_.empty()) {
+      //  std::cout << "Input shape: ";
+      //  for (size_t d = 0; d < inten_[0].get_shape().dims(); ++d) {
+      //    std::cout << inten_[0].get_shape()[d] << " ";
+      //  }
+      //  std::cout << std::endl;
+      //}
 
-      for (int input_id : in_edges_[current_layer]) {
-        std::cout << "  - From layer #" << input_id << " ("
-                  << getLayerName(input_id) << ")" << std::endl;
-      }*/
+      //std::cout << "Layer #" << current_layer << " ("
+      //          << getLayerName(current_layer) << ") has "
+      //          << in_edges_[current_layer].size() << " input connections"
+      //          << std::endl;
+
+      //for (int input_id : in_edges_[current_layer]) {
+      //  std::cout << "  - From layer #" << input_id << " ("
+      //            << getLayerName(input_id) << ")" << std::endl;
+      //}
 #ifdef ENABLE_STATISTIC_TIME
       auto start = std::chrono::high_resolution_clock::now();
 #endif

@@ -60,16 +60,8 @@ file(DOWNLOAD
 )
 
 file(DOWNLOAD
-    "https://storage.googleapis.com/kagglesdsdata/datasets/1513816/2500032/test_224/10008.jpg?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=databundle-worker-v2%40kaggle-161607.iam.gserviceaccount.com%2F20250916%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20250916T192850Z&X-Goog-Expires=345600&X-Goog-SignedHeaders=host&X-Goog-Signature=90e54a1e36e1b1be1cda07bcd00eb4cdcf504358bf9ce4eccdf0dc6af6adb19ab9fa82689878a3b26cea4e4295501fdba76e8e5dff3ee0aefe8220abd67ced9667d6f4538a7617bbe4e762a6f97907cab112949353f50276d1911c71dab11ce56370694756a2db16f08c8f819c2dbc8e6c11b131f08481962abfad3347a3ff94469310eb22db163b9036b81ce5efc720b2e175e9bb84beb87e849c2158830697328daa344f03f852ab7dad15c3bc13743f8f185dcfffc9898b7ee449800a188b1809d62f9caeb7343a94c24e7b0cae50abb93cd99a2ee679706eccd5cc093c5f4a9d0f096dcbe76be2c891f75541e11d28f47931cb8bef2dc2fea40ce1ffb391"
-    "${CMAKE_SOURCE_DIR}/docs/input/224/test1.png"
-    SHOW_PROGRESS
-    STATUS status_code
-    LOG log_file
-)
-
-file(DOWNLOAD
-    "https://cs13.pikabu.ru/avatars/3329/x3329282-693120225.png"
-    "${CMAKE_SOURCE_DIR}/docs/input/256/test1.png"
+    "blob:https://ru.pinterest.com/63b88674-b4a6-4ef3-85b2-ab57ef7bb8e7"
+    "${CMAKE_SOURCE_DIR}/docs/input/Imagenet_test/tench.png"
     SHOW_PROGRESS
     STATUS status_code
     LOG log_file

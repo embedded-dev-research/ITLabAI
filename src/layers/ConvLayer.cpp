@@ -4,18 +4,6 @@ namespace it_lab_ai {
 
 void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                              std::vector<Tensor>& output) {
-    // Отладочная информация ДО проверок
-    std::cout << "=== CONVOLUTION LAYER DEBUG ===" << std::endl;
-    std::cout << "Number of inputs: " << input.size() << std::endl;
-    
-    for (size_t i = 0; i < input.size(); ++i) {
-        std::cout << "Input " << i << " shape: [";
-        for (size_t d = 0; d < input[i].get_shape().dims(); ++d) {
-            std::cout << input[i].get_shape()[d];
-            if (d < input[i].get_shape().dims() - 1) std::cout << ", ";
-        }
-        std::cout << "]" << std::endl;
-    }
   if (input.size() != 1) {
     throw std::runtime_error("ConvolutionalLayer: Input tensors not 1");
   }
@@ -23,30 +11,30 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
     throw std::out_of_range("input must be 4-dimensional");
   }
   if (group_ > 1) {
-    std::cout << "Group convolution: group=" << group_ << std::endl;
+    /*std::cout << "Group convolution: group=" << group_ << std::endl;
     std::cout << "Kernel shape: [";
     for (size_t i = 0; i < kernel_.get_shape().dims(); ++i) {
             std::cout << kernel_.get_shape()[i];
             if (i < kernel_.get_shape().dims() - 1) std::cout << ", ";
     }
-    std::cout << "]" << std::endl;
+    std::cout << "]" << std::endl;*/
 
     if (group_ == input[0].get_shape()[1] && group_ == kernel_.get_shape()[0]) {
-            std::cout << "Depthwise convolution detected" << std::endl;
-            switch (input[0].get_type()) {
-              case Type::kFloat:
-                DepthwiseConv4D<float>(input[0], kernel_, bias_, output[0],
-                                       stride_, pads_, dilations_);
-                break;
-              case Type::kInt:
-                DepthwiseConv4D<int>(input[0], kernel_, bias_, output[0],
-                                     stride_, pads_, dilations_);
-                break;
-              default:
-                throw std::runtime_error(
-                    "Unsupported type for depthwise convolution");
-            }
-            return;
+      // std::cout << "Depthwise convolution detected" << std::endl;
+      switch (input[0].get_type()) {
+        case Type::kFloat:
+          DepthwiseConv4D<float>(input[0], kernel_, bias_, output[0], stride_,
+                                 pads_, dilations_);
+          break;
+        case Type::kInt:
+          DepthwiseConv4D<int>(input[0], kernel_, bias_, output[0], stride_,
+                               pads_, dilations_);
+          break;
+        default:
+          throw std::runtime_error(
+              "Unsupported type for depthwise convolution");
+      }
+      return;
     }
   }
   switch (input[0].get_type()) {
@@ -163,23 +151,28 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                     2)),
             sh);
       } else {
-        switch (implType_) {
-          case kSTL: {
-            Conv4DSTL<float>(input[0], kernel_, bias_, output[0], stride_,
-                             pads_, dilations_);
-            break;
-          }
-          default: {
-            Conv4D<float>(input[0], kernel_, bias_, output[0], stride_, pads_,
-                          group_, dilations_);
-            break;
+        if (useLegacyImpl_) {
+          Conv4D_Legacy<float>(input[0], kernel_, bias_, output[0], stride_,
+                               pads_, dilations_);
+        } else {
+          switch (implType_) {
+            case kSTL: {
+              Conv4DSTL<float>(input[0], kernel_, bias_, output[0], stride_,
+                               pads_, dilations_);
+              break;
+            }
+            default: {
+              Conv4D<float>(input[0], kernel_, bias_, output[0], stride_, pads_,
+                            group_, dilations_);
+              break;
+            }
           }
         }
+        break;
       }
-      break;
-    }
-    default: {
-      throw std::runtime_error("Unsupported tensor type");
+      default: {
+        throw std::runtime_error("Unsupported tensor type");
+      }
     }
   }
 }
