@@ -169,7 +169,7 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
     size_t stride = strides[i];
     size_t pad =
         pads[i] +
-        pads[pooling_shape.dims() + i];  // top + bottom или left + right
+        pads[pooling_shape.dims() + i];
     size_t dilation = dilations[i];
 
     size_t effective_kernel_size = (kernel_size - 1) * dilation + 1;
@@ -311,7 +311,6 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
   int batch_dim = this->inputShape_.dims() > spatial_dims ? 0 : -1;
   int channel_dim = this->inputShape_.dims() > spatial_dims + 1 ? 1 : -1;
 
-  // Use nested TBB loops
   oneapi::tbb::parallel_for(
       oneapi::tbb::blocked_range<size_t>(
           0, batch_dim >= 0 ? this->outputShape_[batch_dim] : 1),

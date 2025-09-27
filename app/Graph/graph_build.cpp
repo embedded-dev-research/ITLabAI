@@ -215,8 +215,7 @@ int main(int argc, char* argv[]) {
   std::string image_folder;
   if (model_name == "alexnet_mnist") {
     image_folder = IMAGE28_PATH;
-  }
-  else {
+  } else {
     image_folder = IMAGENET_PATH;
   }
   std::cout << "Using image folder: " << image_folder << std::endl;

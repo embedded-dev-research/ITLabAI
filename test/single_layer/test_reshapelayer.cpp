@@ -134,8 +134,7 @@ TEST(ReshapeLayerTest, ZeroDimensionIndexOutOfRange) {
   std::vector<float> data(6, 1.0f);
   Tensor input = make_tensor(data, {2, 3});
   Tensor output;
-  ReshapeLayer layer(true,
-                     {2, 0, 3});
+  ReshapeLayer layer(true, {2, 0, 3});
 
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
