@@ -349,7 +349,7 @@ class Graph {
     return traversal;
   }
 
-std::string layerTypeToString(it_lab_ai::LayerType type) {
+  std::string layerTypeToString(it_lab_ai::LayerType type) {
     switch (type) {
       case it_lab_ai::kInput:
         return "Input";
@@ -387,12 +387,12 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
         return "Unknown";
     }
   }
-std::string getLayerName(int layer_index) {
+  std::string getLayerName(int layer_index) {
     if (layer_index >= 0 && layer_index < static_cast<int>(layers_.size())) {
       it_lab_ai::LayerType type = layers_[layer_index]->getName();
       return layerTypeToString(type);
     }
     return "Unknown_Layer";
-}
+  }
 };
 }  // namespace it_lab_ai

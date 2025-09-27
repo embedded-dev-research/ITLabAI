@@ -167,9 +167,7 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
         input_shape[input_shape.dims() - pooling_shape.dims() + i];
     size_t kernel_size = pooling_shape[i];
     size_t stride = strides[i];
-    size_t pad =
-        pads[i] +
-        pads[pooling_shape.dims() + i];
+    size_t pad = pads[i] + pads[pooling_shape.dims() + i];
     size_t dilation = dilations[i];
 
     size_t effective_kernel_size = (kernel_size - 1) * dilation + 1;
