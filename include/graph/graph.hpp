@@ -210,27 +210,11 @@ class Graph {
         new_branch.distribution = dis;
       }
       if (layers_[current_layer]->getName() == kSplit) {
-        std::cout << "=== SPLIT LAYER DEBUG INFO ===" << std::endl;
-        std::cout << "Split layer #" << current_layer
-                  << " outputs: " << outten_.size() << std::endl;
-
         for (size_t out_idx = 0; out_idx < outten_.size(); ++out_idx) {
-          std::cout << "  Output " << out_idx << ": shape [";
           for (size_t d = 0; d < outten_[out_idx].get_shape().dims(); ++d) {
-            std::cout << outten_[out_idx].get_shape()[d];
-            if (d < outten_[out_idx].get_shape().dims() - 1) std::cout << ", ";
+            if (d < outten_[out_idx].get_shape().dims() - 1) std::cout << "";
           }
-          std::cout << "]" << std::endl;
-
-          std::cout << "  Distribution for this output: ";
-          for (const auto& dist : new_branch.distribution) {
-            if (dist.second == static_cast<int>(out_idx)) {
-              std::cout << "-> Layer #" << dist.first << " ";
-            }
-          }
-          std::cout << std::endl;
         }
-        std::cout << "=============================" << std::endl;
       }
       branch_list_.push_back(new_branch);
 
