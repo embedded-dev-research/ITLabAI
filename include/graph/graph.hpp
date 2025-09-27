@@ -80,8 +80,6 @@ class Graph {
     in_edges_.resize(1);
   }
   void makeConnection(const Layer& layPrev, Layer& layNext) {
-    /*std::cout << "BEFORE CONNECTION - Prev ID: " << layPrev.getID()
-              << ", Next ID: " << layNext.getID() << std::endl;*/
     bool layer_exists = false;
     for (const auto* layer : layers_) {
       if (layer == &layNext) {
@@ -117,8 +115,6 @@ class Graph {
     }
 
     in_edges_[layNext.getID()].push_back(layPrev.getID());
-    /*std::cout << "AFTER CONNECTION - Prev ID: " << layPrev.getID()
-              << ", Next ID: " << layNext.getID() << std::endl;*/
   }
   bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
     for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];
@@ -136,28 +132,6 @@ class Graph {
 
     for (size_t i = 0; i < traversal.size(); ++i) {
       int current_layer = traversal[i];
-
-      //// Простой вывод
-      //std::string layer_name = getLayerName(current_layer);
-      //std::cout << "Processing layer #" << current_layer << " (" << layer_name
-      //          << ")" << std::endl;
-      //if (!inten_.empty()) {
-      //  std::cout << "Input shape: ";
-      //  for (size_t d = 0; d < inten_[0].get_shape().dims(); ++d) {
-      //    std::cout << inten_[0].get_shape()[d] << " ";
-      //  }
-      //  std::cout << std::endl;
-      //}
-
-      //std::cout << "Layer #" << current_layer << " ("
-      //          << getLayerName(current_layer) << ") has "
-      //          << in_edges_[current_layer].size() << " input connections"
-      //          << std::endl;
-
-      //for (int input_id : in_edges_[current_layer]) {
-      //  std::cout << "  - From layer #" << input_id << " ("
-      //            << getLayerName(input_id) << ")" << std::endl;
-      //}
 #ifdef ENABLE_STATISTIC_TIME
       auto start = std::chrono::high_resolution_clock::now();
 #endif
@@ -199,14 +173,6 @@ class Graph {
       weights_.push_back(layers_[i]->get_weights());
 #endif
 
-      /*if (!outten_.empty()) {
-        std::cout << "Output shape: ";
-        for (size_t d = 0; d < outten_[0].get_shape().dims(); ++d) {
-          std::cout << outten_[0].get_shape()[d] << " ";
-        }
-        std::cout << std::endl << std::endl;
-      }*/
-
       inten_ = outten_;
 
       if (layers_[current_layer]->postops.count > 0) {
@@ -236,12 +202,6 @@ class Graph {
               split_distribution_[count_used_split_distribution_];
           count_used_split_distribution_++;
         }
-        /*std::cout << "  Split distribution: ";
-        for (const auto& dist : new_branch.distribution) {
-          std::cout << "(To Layer #" << dist.first << ", Output " << dist.second
-                    << ") ";
-        }
-        std::cout << std::endl;*/
       } else {
         std::vector<std::pair<int, int>> dis(countinout[current_layer].second);
         for (size_t m = 0; m < dis.size(); ++m) {
