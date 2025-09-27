@@ -149,7 +149,6 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   size_t kernel_height = kernel_.get_shape()[2];
   size_t kernel_width = kernel_.get_shape()[3];
 
-  // Проверка для grouped convolution
   if (group_ > 1) {
     if (in_channels % group_ != 0 || out_channels % group_ != 0) {
       throw std::runtime_error("Channels must be divisible by group");
@@ -167,7 +166,6 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
       (in_width + 2 * pads_ - dilations_ * (kernel_width - 1) - 1) / stride_ +
       1;
 
-  // Pad input
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> padded_input(
       batch_size,
       std::vector<std::vector<std::vector<ValueType>>>(
@@ -186,22 +184,18 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
     }
   }
 
-  // Dilate kernel
   size_t dilated_kernel_height = (kernel_height - 1) * dilations_ + 1;
   size_t dilated_kernel_width = (kernel_width - 1) * dilations_ + 1;
 
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> dil_kernel(
-      out_channels,
-      std::vector<std::vector<std::vector<ValueType>>>(
-          kernel_in_channels,  // используем kernel_in_channels вместо
-                               // in_channels
-          std::vector<std::vector<ValueType>>(
-              dilated_kernel_height,
-              std::vector<ValueType>(dilated_kernel_width, 0))));
+      out_channels, std::vector<std::vector<std::vector<ValueType>>>(
+                        kernel_in_channels,
+                        std::vector<std::vector<ValueType>>(
+                            dilated_kernel_height,
+                            std::vector<ValueType>(dilated_kernel_width, 0))));
 
   for (size_t oc = 0; oc < out_channels; ++oc) {
-    for (size_t ic = 0; ic < kernel_in_channels;
-         ++ic) {  // только kernel_in_channels
+    for (size_t ic = 0; ic < kernel_in_channels; ++ic) {
       for (size_t kh = 0; kh < kernel_height; ++kh) {
         for (size_t kw = 0; kw < kernel_width; ++kw) {
           dil_kernel[oc][ic][kh * dilations_][kw * dilations_] =
@@ -211,7 +205,6 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
     }
   }
 
-  // Выполнение свертки
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> output_tensor(
       batch_size,
       std::vector<std::vector<std::vector<ValueType>>>(
@@ -226,14 +219,12 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
           size_t h_start = oh * stride_;
           size_t w_start = ow * stride_;
 
-          // Для grouped convolution: определяем группу и смещения
           size_t group = (group_ > 1) ? oc / (out_channels / group_) : 0;
           size_t group_start_channel = group * (in_channels / group_);
           size_t group_end_channel = (group + 1) * (in_channels / group_);
 
           for (size_t ic = group_start_channel; ic < group_end_channel; ++ic) {
-            size_t kernel_ic =
-                ic - group_start_channel;  // относительный индекс в группе
+            size_t kernel_ic = ic - group_start_channel;
 
             for (size_t kh = 0; kh < dilated_kernel_height; ++kh) {
               for (size_t kw = 0; kw < dilated_kernel_width; ++kw) {
@@ -249,7 +240,6 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
             }
           }
 
-          // Добавляем bias
           if (!bias_.empty() && oc < bias_.get_shape()[0]) {
             value += bias_.get<ValueType>({oc});
           }
@@ -260,7 +250,6 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
     }
   }
 
-  // Преобразование в 1D tensor
   Shape output_shape({batch_size, out_channels, out_height, out_width});
   std::vector<ValueType> flat_output(batch_size * out_channels * out_height *
                                      out_width);
@@ -447,16 +436,15 @@ void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
                      const Tensor& bias_, Tensor& output, size_t stride_,
                      size_t pads_, size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
-  size_t channels = input.get_shape()[1];   // 384
-  size_t in_height = input.get_shape()[2];  // 7
-  size_t in_width = input.get_shape()[3];   // 7
+  size_t channels = input.get_shape()[1];
+  size_t in_height = input.get_shape()[2];
+  size_t in_width = input.get_shape()[3];
 
-  size_t kernel_out_channels = kernel_.get_shape()[0];  // 384
-  size_t kernel_in_channels = kernel_.get_shape()[1];   // 1
-  size_t kernel_height = kernel_.get_shape()[2];        // 3
-  size_t kernel_width = kernel_.get_shape()[3];         // 3
+  size_t kernel_out_channels = kernel_.get_shape()[0];
+  size_t kernel_in_channels = kernel_.get_shape()[1];
+  size_t kernel_height = kernel_.get_shape()[2];
+  size_t kernel_width = kernel_.get_shape()[3];
 
-  // Проверка совместимости
   if (kernel_out_channels != channels || kernel_in_channels != 1) {
     throw std::runtime_error("Invalid kernel shape for depthwise convolution");
   }
@@ -507,9 +495,9 @@ void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
 
 // NCHW -> NCHW only
 template <typename ValueType>
-void Conv4D_Legacy(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
-                Tensor& output, size_t stride_, size_t pads_,
-                size_t dilations_) {
+void Conv4D_Legacy(const Tensor& input, const Tensor& kernel_,
+                   const Tensor& bias_, Tensor& output, size_t stride_,
+                   size_t pads_, size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
   size_t in_height = input.get_shape()[2];
   size_t in_width = input.get_shape()[3];

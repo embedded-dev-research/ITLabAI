@@ -70,20 +70,13 @@ std::vector<float> process_model_output(const std::vector<float>& output,
   bool is_yolo = (model_name.find("yolo") != std::string::npos);
 
   if (!is_yolo) {
-    // Для не-YOLO моделей используем стандартный softmax
     return softmax<float>(output);
   }
-
-  // Для YOLO моделей анализируем выходные данные
   float sum_val = std::accumulate(output.begin(), output.end(), 0.0f);
-
-  // Если сумма близка к 1, вероятности уже нормализованы
   if (std::abs(sum_val - 1.0f) < 0.01f) {
     std::cout << "YOLO output already normalized, using as-is" << std::endl;
     return output;
   }
-
-  // Иначе применяем softmax
   std::cout << "Applying softmax to YOLO output" << std::endl;
   return softmax<float>(output);
 }
@@ -111,7 +104,6 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
     std::cout << "Image already at target size - no resize needed" << std::endl;
   } else {
     if (is_yolo_model) {
-      // Для YOLO: ресайз с сохранением соотношения сторон
       double scale = std::min(static_cast<double>(width) / image.cols,
                               static_cast<double>(height) / image.rows);
       int new_width = static_cast<int>(image.cols * scale);
@@ -144,13 +136,10 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
   processed_image.convertTo(float_image, CV_32FC3);
 
   if (is_yolo_model) {
-    // Для YOLO: простая нормализация 0-1
     float_image /= 255.0;
     std::cout << "YOLO normalization: 0-1 range" << std::endl;
   } else {
-    // ImageNet нормализация для других моделей
     float_image /= 255.0;
-
     if (channels == 3) {
       std::vector<cv::Mat> image_channels;
       cv::split(float_image, image_channels);
@@ -168,10 +157,8 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
 
   std::vector<float> data;
   data.reserve(batch_size * channels * height * width);
-
   std::vector<cv::Mat> processed_channels;
   cv::split(float_image, processed_channels);
-
   if (!is_yolo_model && channels == 3) {
     std::swap(processed_channels[0], processed_channels[2]);
   }
@@ -266,21 +253,13 @@ int main(int argc, char* argv[]) {
                 << ", channels: " << image.channels() << std::endl;
 
       if (model_name == "alexnet_mnist") {
-        // Специальная обработка для MNIST
         it_lab_ai::Tensor input = prepare_mnist_image(image);
-
-        // Создаем выходной тензор (заглушка - форма не важна для
-        // build_graph_linear)
         it_lab_ai::Shape sh1({1, 5, 5, 3});
         std::vector<float> vec(75, 3);
         it_lab_ai::Tensor output = it_lab_ai::make_tensor(vec, sh1);
 
         build_graph_linear(input, output, true, parallel);
-
-        // Получаем реальные выходы (10 классов для MNIST)
         std::vector<float> tmp_output = softmax<float>(*output.as<float>());
-
-        // Выводим топ-3 предсказания для MNIST
         int top_n = std::min(3, static_cast<int>(tmp_output.size()));
         std::vector<int> indices(tmp_output.size());
         std::iota(indices.begin(), indices.end(), 0);
@@ -296,7 +275,6 @@ int main(int argc, char* argv[]) {
                     << tmp_output[idx] * 100 << "%" << std::endl;
         }
 
-        // Итоговый результат
         int max_class = indices[0];
         float max_prob = tmp_output[max_class];
         std::cout << "Image: " << fs::path(image_path).filename().string()
@@ -305,19 +283,15 @@ int main(int argc, char* argv[]) {
                   << max_prob * 100 << "%)" << std::endl;
 
       } else {
-        // Обычная обработка для других моделей
         it_lab_ai::Tensor input = prepare_image(image, input_shape, model_name);
 
         size_t output_classes = 1000;
         it_lab_ai::Tensor output({1, output_classes}, it_lab_ai::Type::kFloat);
 
-        build_graph(input, output, json_path, true, parallel);
-
-        // Используем улучшенную обработку выходов
+        build_graph(input, output, json_path, false, parallel);
         std::vector<float> tmp_output =
             process_model_output(*output.as<float>(), model_name);
 
-        // Находим топ-5 классов
         int top_n = std::min(5, static_cast<int>(tmp_output.size()));
         std::vector<int> indices(tmp_output.size());
         std::iota(indices.begin(), indices.end(), 0);
@@ -337,7 +311,6 @@ int main(int argc, char* argv[]) {
           std::cout << std::endl;
         }
 
-        // Итоговый результат
         int max_class = indices[0];
         float max_prob = tmp_output[max_class];
         std::cout << "Image: " << fs::path(image_path).filename().string()

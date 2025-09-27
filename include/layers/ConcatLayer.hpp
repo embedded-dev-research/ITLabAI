@@ -24,14 +24,13 @@ class ConcatLayer : public Layer {
 
  private:
   int64_t axis_;
-  std::vector<int> input_order_; 
+  std::vector<int> input_order_;
   void validate_inputs(const std::vector<Tensor>& inputs) const;
   int64_t normalize_axis(size_t rank) const;
   Shape calculate_output_shape(const std::vector<Tensor>& inputs) const;
   std::vector<Tensor> reorderInputs(const std::vector<Tensor>& inputs) const;
   template <typename T>
-  void concatenate(const std::vector<Tensor>& inputs,
-                                Tensor& output) const {
+  void concatenate(const std::vector<Tensor>& inputs, Tensor& output) const {
     std::vector<Tensor> ordered_inputs = reorderInputs(inputs);
     Shape output_shape = calculate_output_shape(inputs);
     std::vector<T> output_data(output_shape.count(), 0);

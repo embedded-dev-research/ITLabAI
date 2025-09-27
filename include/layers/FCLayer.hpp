@@ -30,18 +30,11 @@ template <typename ValueType>
 std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
                                    const Shape& mat_shape,
                                    const std::vector<ValueType>& vec) {
-  /*std::cout << "    mat_vec_mul DEBUG:" << std::endl;
-  std::cout << "      Matrix size: " << mat.size() << std::endl;
-  std::cout << "      Matrix shape: [" << mat_shape[0] << ", " << mat_shape[1]
-            << "]" << std::endl;
-  std::cout << "      Vector size: " << vec.size() << std::endl;*/
-
   if (mat_shape.dims() != 2) {
     throw std::invalid_argument("Not a matrix in argument");
   }
 
   size_t batch_size = vec.size() / mat_shape[0];
-  //std::cout << "      Batch size: " << batch_size << std::endl;
 
   if (vec.size() % mat_shape[0] != 0) {
     throw std::invalid_argument("Vector size not divisible by matrix rows");
@@ -50,7 +43,6 @@ std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
   Shape res_shape(1);
   res_shape[0] = mat_shape[1] * batch_size;
   std::vector<ValueType> res(res_shape[0]);
-  //std::cout << "      Result size: " << res.size() << std::endl;
 
   ValueType elem;
   for (size_t batch = 0; batch < batch_size; batch++) {
@@ -109,7 +101,6 @@ class FCLayerImpl : public LayerImpl<ValueType> {
 
 // weights * inputValues + bias = outputValues
 
-// constructor for FCLayer
 template <typename ValueType>
 FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
                                     const Shape& input_weights_shape,
@@ -119,15 +110,13 @@ FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
     throw std::invalid_argument("Empty weights for FCLayer");
   }
 
-  // Для транспонированной матрицы [input_size, output_size] = [2048, 1000]
-  this->inputShape_[0] = input_weights_shape[0];   // input size = 2048
-  this->outputShape_[0] = input_weights_shape[1];  // output size = 1000
+  this->inputShape_[0] = input_weights_shape[0];
+  this->outputShape_[0] = input_weights_shape[1];
 
   if (this->inputShape_[0] == 0 || this->outputShape_[0] == 0) {
     throw std::invalid_argument("Invalid weights/bias size for FCLayer");
   }
 
-  // Проверяем соответствие bias и output size
   if (input_bias.size() != this->outputShape_[0]) {
     throw std::invalid_argument("Bias size doesn't match output size");
   }
@@ -138,13 +127,11 @@ FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
 template <typename ValueType>
 std::vector<ValueType> FCLayerImpl<ValueType>::run(
     const std::vector<ValueType>& input) const {
-  // Для транспонированной матрицы: [input_size, output_size] = [2048, 1000]
   Shape cur_w_shape({this->inputShape_[0], this->outputShape_[0]});
 
   std::vector<ValueType> output_values =
       mat_vec_mul(weights_, cur_w_shape, input);
 
-  // Добавляем bias к каждому элементу выходного вектора
   size_t batch_size = output_values.size() / this->outputShape_[0];
   for (size_t batch = 0; batch < batch_size; ++batch) {
     for (size_t i = 0; i < bias_.size(); ++i) {

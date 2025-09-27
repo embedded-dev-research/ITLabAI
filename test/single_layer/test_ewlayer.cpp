@@ -87,6 +87,32 @@ TEST(ewlayer, new_ewlayer_can_relu_float) {
   }
 }
 
+TEST(ewlayer, new_ewlayer_can_mul_float) {
+  EWLayer layer("linear", 2.0f, 0.0f);
+  Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -5.0F});
+  Tensor output;
+  std::vector<float> converted_input = {2.0F, -2.0F, 4.0F, -10.0F};
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  for (size_t i = 0; i < 4; i++) {
+    EXPECT_NEAR((*out[0].as<float>())[i], converted_input[i], 1e-5);
+  }
+}
+
+TEST(ewlayer, new_ewlayer_can_sub_float) {
+  EWLayer layer("linear", 1.0f, -1.0f);
+  Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -5.0F});
+  Tensor output;
+  std::vector<float> converted_input = {0.0F, -2.0F, 1.0F, -6.0F};
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  for (size_t i = 0; i < 4; i++) {
+    EXPECT_NEAR((*out[0].as<float>())[i], converted_input[i], 1e-5);
+  }
+}
+
 TEST(ewlayer, new_ewlayer_can_relu_int) {
   EWLayer layer("relu");
   Tensor input = make_tensor<int>({1, -1, 2, -2});

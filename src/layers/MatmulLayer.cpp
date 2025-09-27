@@ -11,21 +11,8 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
   if (input.size() != 2) {
     throw std::runtime_error("MatMulLayer: Exactly 2 input tensors required");
   }
-
   const auto& a = input[0];
   const auto& b = input[1];
-
-  std::cout << "MatMul input shapes: ";
-  std::cout << "[";
-  for (size_t i = 0; i < a.get_shape().dims(); ++i) {
-    std::cout << a.get_shape()[i] << (i < a.get_shape().dims() - 1 ? ", " : "");
-  }
-  std::cout << "] * [";
-  for (size_t i = 0; i < b.get_shape().dims(); ++i) {
-    std::cout << b.get_shape()[i] << (i < b.get_shape().dims() - 1 ? ", " : "");
-  }
-  std::cout << "]" << std::endl;
-
   try {
     bool should_swap = false;
 
@@ -40,12 +27,8 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
 
       if (b_rows > a_rows) {
         should_swap = true;
-        std::cout << "Swapping: second tensor has more rows (" << b_rows
-                  << " > " << a_rows << ")" << std::endl;
       } else if (b_rows == a_rows && b_cols > a_cols) {
         should_swap = true;
-        std::cout << "Swapping: second tensor has more columns (" << b_cols
-                  << " > " << a_cols << ")" << std::endl;
       } else if (b_rows == a_rows && b_cols == a_cols) {
         size_t a_batch = 1, b_batch = 1;
         for (size_t i = 0; i < a_shape.dims() - 2; ++i) a_batch *= a_shape[i];
@@ -53,8 +36,6 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
 
         if (b_batch > a_batch) {
           should_swap = true;
-          std::cout << "Swapping: second tensor has larger batch (" << b_batch
-                    << " > " << a_batch << ")" << std::endl;
         }
       }
     }
@@ -77,7 +58,6 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
       default:
         throw std::runtime_error("Unsupported tensor data type for MatMul");
     }
-    std::cout << "MatMul completed successfully" << std::endl;
   } catch (const std::exception& e) {
     std::cerr << "ERROR in MatMul: " << e.what() << std::endl;
     throw;
@@ -90,16 +70,12 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
 template <typename T>
 void MatmulLayer::matmul_impl(const Tensor& a, const Tensor& b,
                               Tensor& output) const {
-  std::cout << "Entering matmul_impl" << std::endl;
   const auto* a_data = a.as<T>();
   const auto* b_data = b.as<T>();
 
   if (!a_data || !b_data) {
-    std::cerr << "Invalid tensor data pointers" << std::endl;
     throw std::runtime_error("MatMul: Invalid input data");
   }
-
-  std::cout << "Data pointers valid" << std::endl;
 
   const auto& a_shape = a.get_shape();
   const auto& b_shape = b.get_shape();

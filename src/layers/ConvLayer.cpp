@@ -11,16 +11,7 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
     throw std::out_of_range("input must be 4-dimensional");
   }
   if (group_ > 1) {
-    /*std::cout << "Group convolution: group=" << group_ << std::endl;
-    std::cout << "Kernel shape: [";
-    for (size_t i = 0; i < kernel_.get_shape().dims(); ++i) {
-            std::cout << kernel_.get_shape()[i];
-            if (i < kernel_.get_shape().dims() - 1) std::cout << ", ";
-    }
-    std::cout << "]" << std::endl;*/
-
     if (group_ == input[0].get_shape()[1] && group_ == kernel_.get_shape()[0]) {
-      // std::cout << "Depthwise convolution detected" << std::endl;
       switch (input[0].get_type()) {
         case Type::kFloat:
           DepthwiseConv4D<float>(input[0], kernel_, bias_, output[0], stride_,

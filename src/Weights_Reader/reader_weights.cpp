@@ -72,12 +72,6 @@ Tensor create_tensor_from_json(const json& layer_data, Type type) {
     parse_json_shape(layer_data["weights"], shape);
   }
 
-  std::cout << "Extracted weights size: " << weights.size() << std::endl;
-  std::cout << "Shape: ";
-  for (auto dim : shape) std::cout << dim << " ";
-  std::cout << std::endl;
-  std::cout << "Extracted bias size: " << bias.size() << std::endl;
-
   return make_tensor<float>(weights, Shape(shape), bias);
 }
 

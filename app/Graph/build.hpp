@@ -33,6 +33,5 @@
 void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                  const std::string& json_path, bool comments,
                  bool parallel = false);
-void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                 const std::string& json_path, bool comments,
+void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output, bool comments,
                  bool parallel = false);
