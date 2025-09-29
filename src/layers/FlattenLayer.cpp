@@ -39,12 +39,12 @@ void FlattenLayer::run(const std::vector<Tensor>& input,
         throw std::runtime_error("Unsupported tensor type");
     }
   } else if (axis_ != 0) {
-    size_t start_dim = axis_;
+    int start_dim = axis_;
     if (start_dim < 0) {
-      start_dim += input_shape.dims();
+      start_dim += static_cast<int>(input_shape.dims());
     }
 
-    if (start_dim < 0 || start_dim >= static_cast<int>(input_shape.dims())) {
+    if (start_dim < 0 || static_cast<size_t>(start_dim) >= input_shape.dims()) {
       throw std::runtime_error("FlattenLayer: Invalid axis value");
     }
     size_t flattened_size = 1;

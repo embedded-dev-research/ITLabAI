@@ -14,9 +14,9 @@ class FlattenLayer : public Layer {
   int axis_;
 
  public:
-  FlattenLayer() : order_({0, 1, 2, 3}) {}
-  FlattenLayer(int axis) : axis_(axis), order_({}) {}
-  FlattenLayer(const std::vector<size_t>& order) : order_(order) {}
+  FlattenLayer() : order_({0, 1, 2, 3}), axis_(0) {}
+  FlattenLayer(int axis) : order_({}), axis_(axis) {}
+  FlattenLayer(const std::vector<size_t>& order) : order_(order), axis_(0) {}
   static std::string get_name() { return "Flatten layer"; }
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
