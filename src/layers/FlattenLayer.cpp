@@ -48,13 +48,13 @@ void FlattenLayer::run(const std::vector<Tensor>& input,
       throw std::runtime_error("FlattenLayer: Invalid axis value");
     }
     size_t flattened_size = 1;
-    for (size_t i = start_dim; i < static_cast<int>(input_shape.dims()); ++i) {
+    size_t start_dim_size = static_cast<size_t>(start_dim);
+    for (size_t i = start_dim_size; i < input_shape.dims(); ++i) {
       flattened_size *= input_shape[i];
     }
-
     if (start_dim > 0) {
       std::vector<size_t> dims;
-      for (int i = 0; i < start_dim; ++i) {
+      for (size_t i = 0; i < start_dim_size; ++i) {
         dims.push_back(input_shape[i]);
       }
       dims.push_back(flattened_size);
