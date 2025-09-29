@@ -1134,17 +1134,17 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     std::cerr << "ERROR during inference: " << e.what() << std::endl;
   }
 
-//#ifdef ENABLE_STATISTIC_TIME
-//  std::vector<std::string> times = graph.getTimeInfo();
-//  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
-//  for (size_t i = 0; i < times.size(); i++) {
-//    std::cout << times[i] << std::endl;
-//  }
-//  std::vector<int> elps_time = graph.getTime();
-//  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-//  std::cout << "Elapsed inference time:" << sum << std::endl;
-//  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-//#endif
+#ifdef ENABLE_STATISTIC_TIME
+  std::vector<std::string> times = graph.getTimeInfo();
+  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
+  for (size_t i = 0; i < times.size(); i++) {
+    std::cout << times[i] << std::endl;
+  }
+  std::vector<int> elps_time = graph.getTime();
+  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
+  std::cout << "Elapsed inference time:" << sum << std::endl;
+  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+#endif
 }
 
 std::unordered_map<int, std::string> load_class_names(
