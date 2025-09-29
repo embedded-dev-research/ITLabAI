@@ -46,11 +46,12 @@ void BatchNormalizationLayer::run(const std::vector<Tensor>& input,
 
 void BatchNormalizationLayer::validate_parameters(size_t num_channels) const {
   auto check_parameter = [num_channels](const Tensor& param, const char* name) {
-    if (param.get_shape().dims() != 1 || param.get_shape()[0] != num_channels) {
+    auto param_shape = param.get_shape();
+    if (param_shape.dims() != 1 || param_shape[0] != num_channels) {
       throw std::runtime_error(
           std::string("BatchNormalizationLayer: Invalid ") + name +
           " parameter shape. Expected [" + std::to_string(num_channels) +
-          "], got " + std::to_string(param.get_shape()[0]));
+          "], got " + std::to_string(param_shape[0]));
     }
   };
 

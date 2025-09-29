@@ -117,7 +117,6 @@ template <typename T>
 void MatmulLayer::matmul_1d_2d(const Tensor& a, const Tensor& b,
                                Tensor& output) const {
   const auto* a_data = a.as<T>();
-  const auto* b_data = b.as<T>();
 
   const auto& b_shape = b.get_shape();
   size_t b_dims = b_shape.dims();
@@ -146,7 +145,6 @@ void MatmulLayer::matmul_1d_2d(const Tensor& a, const Tensor& b,
 template <typename T>
 void MatmulLayer::matmul_2d_1d(const Tensor& a, const Tensor& b,
                                Tensor& output) const {
-  const auto* a_data = a.as<T>();
   const auto* b_data = b.as<T>();
 
   const auto& a_shape = a.get_shape();
@@ -234,9 +232,6 @@ void MatmulLayer::matmul_nd_nd(const Tensor& a, const Tensor& b,
     batch_shape_b[i] = b_shape[i];
   }
   for (size_t i = 0; i < max_batch_dims; ++i) {
-    size_t a_idx = (i < batch_dims_a) ? i : 0;
-    size_t b_idx = (i < batch_dims_b) ? i : 0;
-
     size_t a_dim = (i < batch_dims_a) ? batch_shape_a[i] : 1;
     size_t b_dim = (i < batch_dims_b) ? batch_shape_b[i] : 1;
 
