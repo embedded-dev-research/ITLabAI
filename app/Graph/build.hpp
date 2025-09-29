@@ -34,3 +34,18 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                  bool parallel = false);
 void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                         bool comments, bool parallel = false);
+std::unordered_map<int, std::string> load_class_names(
+    const std::string& filename);
+std::unordered_map<std::string, std::string> model_paths = {
+    {"alexnet_mnist", MODEL_PATH_H5},
+    {"googlenet", MODEL_PATH_GOOGLENET_ONNX},
+    {"resnet", MODEL_PATH_RESNET_ONNX},
+    {"densenet", MODEL_PATH_DENSENET_ONNX},
+    {"yolo", MODEL_PATH_YOLO11NET_ONNX}};
+std::vector<int> get_input_shape_from_json(const std::string& json_path);
+std::vector<float> process_model_output(const std::vector<float>& output,
+                                        const std::string& model_name);
+it_lab_ai::Tensor prepare_image(const cv::Mat& image,
+                                const std::vector<int>& input_shape,
+                                const std::string& model_name = "");
+it_lab_ai::Tensor prepare_mnist_image(const cv::Mat& image);

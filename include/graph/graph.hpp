@@ -132,6 +132,7 @@ class Graph {
 
     for (size_t i = 0; i < traversal.size(); ++i) {
       int current_layer = traversal[i];
+      std::cout << "Processing layer #" << current_layer << std::endl;
 #ifdef ENABLE_STATISTIC_TIME
       auto start = std::chrono::high_resolution_clock::now();
 #endif

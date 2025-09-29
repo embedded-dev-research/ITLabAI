@@ -18,8 +18,8 @@ target_include_directories(BuildGraph PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/Json/i
 add_executable(Graph_Build graph_build.cpp)
 target_link_libraries(Graph_Build BuildGraph)
 
-add_executable(ACC_MNIST acc_check_mnist.cpp)
-target_link_libraries(ACC_MNIST BuildGraph)
+add_executable(ACC acc_check.cpp)
+target_link_libraries(ACC BuildGraph)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
@@ -45,7 +45,7 @@ if (WIN32)
     if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
 	    set(CMAKE_BUILD_TYPE "Release")
 	endif()
-    add_custom_command(TARGET ACC_MNIST POST_BUILD
+    add_custom_command(TARGET ACC POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BUILD_DIR}/bin/${CMAKE_BUILD_TYPE}/."
             "${CMAKE_BINARY_DIR}/bin/")
@@ -68,6 +68,7 @@ file(DOWNLOAD
 )
 
 add_definitions(-DIMAGE28_PATH="${CMAKE_SOURCE_DIR}/docs/input/28/")
+add_definitions(-DIMAGENET_ACC="${CMAKE_SOURCE_DIR}/docs/ImageNet/test/")
 add_definitions(-DIMAGENET_PATH="${CMAKE_SOURCE_DIR}/docs/input/Imagenet_test/")
 add_definitions(-DMODEL_PATH_H5="${CMAKE_SOURCE_DIR}/docs/jsons/model_data_alexnet_1.json")
 add_definitions(-DMODEL_PATH_GOOGLENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/googlenet_onnx_model.json")
