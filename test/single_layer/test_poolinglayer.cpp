@@ -366,7 +366,8 @@ TEST(poolinglayer, maxpool_onnx_example) {
 
   std::vector<float> input(input_shape.count());
   for (size_t i = 0; i < input.size(); i++) {
-    input[i] = static_cast<float>(rand()) / RAND_MAX * 10.0f;
+    input[i] =
+        static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 10.0f;
   }
 
   std::vector<float> output = impl.run(input);
@@ -377,8 +378,6 @@ TEST(poolinglayer, maxpool_onnx_example) {
     EXPECT_GE(val, 0.0f);
     EXPECT_LE(val, 10.0f);
   }
-
-  int input_h_index = 2;
 
   float first_window_max = 0.0f;
   for (size_t k = 0; k < 3; k++) {
