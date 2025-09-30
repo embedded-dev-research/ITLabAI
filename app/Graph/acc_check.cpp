@@ -151,7 +151,6 @@ int main(int argc, char* argv[]) {
       return 1;
     }
 
-    int batch_size = input_shape[0];
     int channels = input_shape[1];
     int height = input_shape[2];
     int width = input_shape[3];

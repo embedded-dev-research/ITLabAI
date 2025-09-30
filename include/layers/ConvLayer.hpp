@@ -271,17 +271,17 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
 // NCHW -> NCHW only
 template <typename ValueType>
 void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
-               Tensor& output, size_t stride_, size_t pads_,
+               Tensor& output, size_t stride_, size_t pads_, size_t group_,
                size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
+  size_t in_channels = input.get_shape()[1];
   size_t in_height = input.get_shape()[2];
   size_t in_width = input.get_shape()[3];
-  size_t in_channels = input.get_shape()[1];
 
-  size_t kernel_height = kernel_.get_shape()[0];
-  size_t kernel_width = kernel_.get_shape()[1];
-  size_t kernel_in_channels = kernel_.get_shape()[2];
-  size_t kernel_out_channels = kernel_.get_shape()[3];
+  size_t kernel_out_channels = kernel_.get_shape()[0];
+  size_t kernel_in_channels = kernel_.get_shape()[1];
+  size_t kernel_height = kernel_.get_shape()[2];
+  size_t kernel_width = kernel_.get_shape()[3];
 
   unsigned num_threads = std::thread::hardware_concurrency();
   std::vector<std::thread> threads;
@@ -323,13 +323,13 @@ void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
                   kernel_in_channels,
                   std::vector<ValueType>(kernel_out_channels, 0))));
 
-  auto dilate_kernel = [&](size_t start_b, size_t end_b) {
-    for (size_t b = start_b; b < end_b; ++b) {
+  auto dilate_kernel = [&](size_t start_oc, size_t end_oc) {
+    for (size_t oc = start_oc; oc < end_oc; ++oc) {
       for (size_t h = 0; h < kernel_height; ++h) {
         for (size_t w = 0; w < kernel_width; ++w) {
-          for (size_t c = 0; c < kernel_in_channels; ++c) {
-            dil_kernel[h * dilations_][w * dilations_][c][b] =
-                kernel_.get<ValueType>({h, w, c, b});
+          for (size_t ic = 0; ic < kernel_in_channels; ++ic) {
+            dil_kernel[h * dilations_][w * dilations_][ic][oc] =
+                kernel_.get<ValueType>({oc, ic, h, w});
           }
         }
       }
@@ -367,26 +367,44 @@ void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
                       std::vector<std::vector<ValueType>>(
                           out_height, std::vector<ValueType>(out_width, 0))));
 
-  auto compute_conv = [&](size_t start_b, size_t end_b) {
-    for (size_t b = start_b; b < end_b; ++b) {
-      for (size_t c = 0; c < kernel_out_channels; ++c) {
-        for (size_t i = 0; i < out_height; i += stride_) {
-          for (size_t j = 0; j < out_width; j += stride_) {
+  auto compute_conv = [&](size_t start_oc, size_t end_oc) {
+    size_t dilated_kernel_height = kernel_height * dilations_ + 1 - dilations_;
+    size_t dilated_kernel_width = kernel_width * dilations_ + 1 - dilations_;
+
+    for (size_t b = 0; b < batch_size; ++b) {
+      for (size_t oc = start_oc; oc < end_oc; ++oc) {
+        for (size_t oh = 0; oh < out_height; oh++) {
+          for (size_t ow = 0; ow < out_width; ow++) {
             ValueType value = 0;
-            for (size_t ic = 0; ic < in_channels; ++ic) {
-              for (size_t h = 0;
-                   h < kernel_height * dilations_ + 1 - dilations_; ++h) {
-                for (size_t w = 0;
-                     w < kernel_width * dilations_ + 1 - dilations_; ++w) {
-                  value += padded_input[b][i + h][j + w][ic] *
-                           dil_kernel[h][w][ic][c];
+
+            size_t group =
+                (group_ > 1) ? oc / (kernel_out_channels / group_) : 0;
+            size_t group_start_channel = group * (in_channels / group_);
+            size_t group_end_channel = (group + 1) * (in_channels / group_);
+
+            for (size_t ic = group_start_channel; ic < group_end_channel;
+                 ++ic) {
+              size_t kernel_ic = ic - group_start_channel;
+
+              for (size_t kh = 0; kh < dilated_kernel_height; ++kh) {
+                for (size_t kw = 0; kw < dilated_kernel_width; ++kw) {
+                  size_t h_index = oh * stride_ + kh;
+                  size_t w_index = ow * stride_ + kw;
+
+                  if (h_index < padded_input[b].size() &&
+                      w_index < padded_input[b][h_index].size()) {
+                    value += padded_input[b][h_index][w_index][ic] *
+                             dil_kernel[kh][kw][kernel_ic][oc];
+                  }
                 }
               }
             }
+
             if (!bias_.empty()) {
-              output_tensor[b][c][i][j] = value + (*bias_.as<ValueType>())[c];
+              output_tensor[b][oc][oh][ow] =
+                  value + (*bias_.as<ValueType>())[oc];
             } else {
-              output_tensor[b][c][i][j] = value;
+              output_tensor[b][oc][oh][ow] = value;
             }
           }
         }
@@ -394,10 +412,11 @@ void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
     }
   };
 
-  chunk_size = batch_size / num_threads;
+  chunk_size = kernel_out_channels / num_threads;
   for (unsigned i = 0; i < num_threads; ++i) {
     size_t start = i * chunk_size;
-    size_t end = (i == num_threads - 1) ? batch_size : start + chunk_size;
+    size_t end =
+        (i == num_threads - 1) ? kernel_out_channels : start + chunk_size;
     threads.emplace_back(compute_conv, start, end);
   }
   for (auto& t : threads) t.join();

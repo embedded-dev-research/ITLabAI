@@ -353,39 +353,26 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
                                                   kw * this->dilations_[1])
                                   : 0;
 
-                          bool within_h_bounds =
-                              pos_h >= 0 &&
+                          if (pos_h >= 0 &&
                               pos_h < static_cast<int>(
                                           this->inputShape_[this->inputShape_
                                                                 .dims() -
-                                                            spatial_dims]);
-
-                          bool within_w_bounds = true;
-                          if (spatial_dims > 1) {
-                            within_w_bounds =
-                                pos_w >= 0 &&
-                                pos_w <
-                                    static_cast<int>(
-                                        this->inputShape_[this->inputShape_
-                                                              .dims() -
-                                                          spatial_dims + 1]);
-                          }
-
-                          if (within_h_bounds && within_w_bounds) {
+                                                            spatial_dims]) &&
+                              (spatial_dims <= 1 ||
+                               (pos_w >= 0 &&
+                                pos_w < static_cast<int>(
+                                            this->inputShape_
+                                                [this->inputShape_.dims() -
+                                                 spatial_dims + 1])))) {
                             std::vector<size_t> input_coords(
                                 this->inputShape_.dims(), 0);
                             if (batch_dim >= 0) input_coords[batch_dim] = n;
                             if (channel_dim >= 0) input_coords[channel_dim] = c;
-
-                            if (spatial_dims == 1) {
-                              input_coords[this->inputShape_.dims() - 1] =
-                                  pos_h;
-                            } else {
-                              input_coords[this->inputShape_.dims() - 2] =
-                                  pos_h;
-                              input_coords[this->inputShape_.dims() - 1] =
-                                  pos_w;
-                            }
+                            input_coords[this->inputShape_.dims() -
+                                         spatial_dims] = pos_h;
+                            if (spatial_dims > 1)
+                              input_coords[this->inputShape_.dims() -
+                                           spatial_dims + 1] = pos_w;
 
                             size_t input_index =
                                 this->inputShape_.get_index(input_coords);
@@ -398,13 +385,11 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
                           this->outputShape_.dims(), 0);
                       if (batch_dim >= 0) output_coords[batch_dim] = n;
                       if (channel_dim >= 0) output_coords[channel_dim] = c;
-
-                      if (spatial_dims == 1) {
-                        output_coords[this->outputShape_.dims() - 1] = h;
-                      } else {
-                        output_coords[this->outputShape_.dims() - 2] = h;
-                        output_coords[this->outputShape_.dims() - 1] = w;
-                      }
+                      output_coords[this->outputShape_.dims() - spatial_dims] =
+                          h;
+                      if (spatial_dims > 1)
+                        output_coords[this->outputShape_.dims() - spatial_dims +
+                                      1] = w;
 
                       size_t output_index =
                           this->outputShape_.get_index(output_coords);

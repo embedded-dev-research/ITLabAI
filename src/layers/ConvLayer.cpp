@@ -81,7 +81,7 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
         switch (implType_) {
           case kSTL: {
             Conv4DSTL<int>(input[0], kernel_, bias_, output[0], stride_, pads_,
-                           dilations_);
+                           group_, dilations_);
             break;
           }
           default: {
@@ -149,7 +149,7 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
           switch (implType_) {
             case kSTL: {
               Conv4DSTL<float>(input[0], kernel_, bias_, output[0], stride_,
-                               pads_, dilations_);
+                               pads_, group_, dilations_);
               break;
             }
             default: {

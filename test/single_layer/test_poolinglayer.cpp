@@ -404,7 +404,8 @@ TEST(poolinglayer, maxpool_onnx_with_pooling_layer) {
 
   std::vector<float> input(input_shape.count());
   for (size_t i = 0; i < input.size(); i++) {
-    input[i] = static_cast<float>(rand()) / RAND_MAX * 10.0f;
+    input[i] =
+        static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 10.0f;
   }
 
   Tensor input_tensor = make_tensor(input, input_shape);
