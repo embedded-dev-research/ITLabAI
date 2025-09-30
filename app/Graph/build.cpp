@@ -195,18 +195,6 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   }
 }
 
-std::string get_layer_name_by_id(
-    const std::unordered_map<std::string, std::shared_ptr<it_lab_ai::Layer>>&
-        name_to_layer,
-    size_t layer_id) {
-  for (const auto& [name, layer] : name_to_layer) {
-    if (layer->getID() == layer_id) {
-      return name;
-    }
-  }
-  return "unknown_layer_" + std::to_string(layer_id);
-}
-
 std::string get_base_layer_name(const std::string& tensor_name) {
   std::regex pattern("(_output|_out|:)[_\\d]*$");
   return std::regex_replace(tensor_name, pattern, "");
@@ -553,7 +541,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       } else if (layer_type == "Split") {
         int axis = 0;
         std::vector<int64_t> splits;
-        size_t num_outputs = 2;
 
         if (layer_data["attributes"].contains("axis")) {
           axis = layer_data["attributes"]["axis"];
@@ -577,7 +564,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           for (const auto& s : layer_data["weights"]) {
             splits.push_back(s.get<int>());
           }
-          num_outputs = splits.size();
         }
 
         auto split_layer = std::make_shared<it_lab_ai::SplitLayer>(
@@ -974,7 +960,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
               int output_index = std::stoi(matches[2].str());
 
               if (split_layers.find(split_layer_name) != split_layers.end()) {
-                int split_layer_id = split_layers[split_layer_name]->getID();
                 int target_layer_id = layer->getID();
 
                 int split_index = split_name_to_index[split_layer_name];
