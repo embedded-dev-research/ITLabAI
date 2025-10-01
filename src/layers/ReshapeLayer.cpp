@@ -8,7 +8,7 @@ namespace it_lab_ai {
 
 void ReshapeLayer::run(const std::vector<Tensor>& input,
                        std::vector<Tensor>& output) {
-  if (input.size() < 1) {
+  if (input.empty()) {
     throw std::runtime_error("ReshapeLayer: At least 1 input tensor required");
   }
 
@@ -39,7 +39,7 @@ void ReshapeLayer::run(const std::vector<Tensor>& input,
 
 std::vector<int64_t> ReshapeLayer::calculate_output_shape(
     const Shape& input_shape,
-    const std::vector<int64_t>& requested_shape) const {
+    const std::vector<int64_t>& requested_shape){
   size_t total_elements = 1;
   for (size_t i = 0; i < input_shape.dims(); ++i) {
     total_elements *= input_shape[i];
@@ -64,7 +64,7 @@ std::vector<int64_t> ReshapeLayer::calculate_output_shape(
       if (i >= input_shape.dims()) {
         throw std::runtime_error("Reshape: Dimension 0 index out of range");
       }
-      int64_t dim_value = static_cast<int64_t>(input_shape[i]);
+      auto dim_value = static_cast<int64_t>(input_shape[i]);
       output_shape.push_back(dim_value);
       if (dim_value != 0) {
         inferred_size /= static_cast<size_t>(dim_value);

@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
           for (int j = 0; j < 28; ++j) {
             size_t a = ind;
             for (size_t n = 0; n < name; n++) a += counts[n] + 1;
-            res[(a) * 28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
+            res[(a)*28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
           }
         }
       }
@@ -111,167 +111,165 @@ int main(int argc, char* argv[]) {
     std::cout << "Stat: " << std::fixed << std::setprecision(2) << percentage
               << "%" << std::endl;
     return 0;
+  }
+  std::vector<size_t> counts;
+  std::vector<std::string> image_paths;
+  std::vector<int> true_labels;
+  std::vector<float> all_image_data;
+  size_t total_images = 0;
 
-  } else {
-    std::vector<size_t> counts;
-    std::vector<std::string> image_paths;
-    std::vector<int> true_labels;
-    std::vector<float> all_image_data;
-    size_t total_images = 0;
+  counts.resize(1000, 0);
 
-    counts.resize(1000, 0);
+  std::cout << "Counting images..." << std::endl;
+  for (int class_id = 0; class_id < 1000; ++class_id) {
+    std::ostringstream folder_oss;
+    folder_oss << std::setw(5) << std::setfill('0') << class_id;
+    std::string class_folder_path = dataset_path + "/" + folder_oss.str();
 
-    std::cout << "Counting images..." << std::endl;
-    for (int class_id = 0; class_id < 1000; ++class_id) {
-      std::ostringstream folder_oss;
-      folder_oss << std::setw(5) << std::setfill('0') << class_id;
-      std::string class_folder_path = dataset_path + "/" + folder_oss.str();
-
-      if (fs::exists(class_folder_path)) {
-        for (const auto& entry : fs::directory_iterator(class_folder_path)) {
-          if (entry.path().extension() == ".png" ||
-              entry.path().extension() == ".jpg" ||
-              entry.path().extension() == ".jpeg") {
-            counts[class_id]++;
-            total_images++;
-          }
-        }
-      }
-      if (counts[class_id] > 0) {
-        std::cout << "Class " << folder_oss.str() << " (ID: " << class_id
-                  << "): " << counts[class_id] << " images" << std::endl;
-      }
-    }
-
-    std::cout << "Total images: " << total_images << std::endl;
-
-    if (total_images == 0) {
-      std::cerr << "No images found in dataset path: " << dataset_path
-                << std::endl;
-      return 1;
-    }
-
-    int channels = input_shape[1];
-    int height = input_shape[2];
-    int width = input_shape[3];
-    size_t image_size = channels * height * width;
-
-    all_image_data.resize(total_images * image_size);
-
-    std::cout << "Loading and processing images..." << std::endl;
-
-    size_t current_index = 0;
-    for (int class_id = 0; class_id < 1000; ++class_id) {
-      std::ostringstream folder_oss;
-      folder_oss << std::setw(5) << std::setfill('0') << class_id;
-      std::string class_folder_path = dataset_path + "/" + folder_oss.str();
-
-      if (!fs::exists(class_folder_path)) continue;
-
+    if (fs::exists(class_folder_path)) {
       for (const auto& entry : fs::directory_iterator(class_folder_path)) {
         if (entry.path().extension() == ".png" ||
             entry.path().extension() == ".jpg" ||
             entry.path().extension() == ".jpeg") {
-          if (current_index % 100 == 0) {
-            std::cout << "Processed " << current_index << "/" << total_images
-                      << " images" << std::endl;
-          }
-
-          cv::Mat image = cv::imread(entry.path().string());
-          if (image.empty()) {
-            std::cerr << "Failed to load image: " << entry.path().string()
-                      << std::endl;
-            continue;
-          }
-
-          it_lab_ai::Tensor prepared_tensor =
-              prepare_image(image, input_shape, model_name);
-          const std::vector<float>& image_data = *prepared_tensor.as<float>();
-
-          std::copy(image_data.begin(), image_data.end(),
-                    all_image_data.begin() + current_index * image_size);
-
-          image_paths.push_back(entry.path().string());
-          true_labels.push_back(class_id);
-          current_index++;
+          counts[class_id]++;
+          total_images++;
         }
       }
     }
-
-    std::cout << "All images processed, building graph..." << std::endl;
-
-    it_lab_ai::Shape input_shape_imagenet(
-        {total_images, static_cast<size_t>(channels),
-         static_cast<size_t>(height), static_cast<size_t>(width)});
-    it_lab_ai::Tensor input =
-        it_lab_ai::make_tensor(all_image_data, input_shape_imagenet);
-
-    size_t output_classes = 1000;
-    it_lab_ai::Shape output_shape({total_images, output_classes});
-    it_lab_ai::Tensor output =
-        it_lab_ai::Tensor(output_shape, it_lab_ai::Type::kFloat);
-
-    build_graph(input, output, json_path, false, parallel);
-    std::vector<std::vector<float>> processed_outputs;
-    const std::vector<float>& raw_output = *output.as<float>();
-
-    for (size_t i = 0; i < total_images; ++i) {
-      std::vector<float> single_output(
-          raw_output.begin() + i * output_classes,
-          raw_output.begin() + (i + 1) * output_classes);
-      std::vector<float> processed_output =
-          process_model_output(single_output, model_name);
-      processed_outputs.push_back(processed_output);
+    if (counts[class_id] > 0) {
+      std::cout << "Class " << folder_oss.str() << " (ID: " << class_id
+                << "): " << counts[class_id] << " images" << std::endl;
     }
-
-    int correct_predictions_top1 = 0;
-    int correct_predictions_top5 = 0;
-    for (size_t i = 0; i < processed_outputs.size(); ++i) {
-      int true_label = true_labels[i];
-      const std::vector<float>& probabilities = processed_outputs[i];
-
-      std::vector<size_t> indices(probabilities.size());
-      std::iota(indices.begin(), indices.end(), 0);
-      std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
-        return probabilities[a] > probabilities[b];
-      });
-
-      size_t predicted_class_top1 = indices[0];
-      if (predicted_class_top1 == static_cast<size_t>(true_label)) {
-        correct_predictions_top1++;
-      }
-
-      bool found_in_top5 = false;
-      for (int top_k = 0; top_k < std::min(5, static_cast<int>(indices.size()));
-           ++top_k) {
-        if (indices[top_k] == static_cast<size_t>(true_label)) {
-          found_in_top5 = true;
-          break;
-        }
-      }
-      if (found_in_top5) {
-        correct_predictions_top5++;
-      }
-    }
-
-    double final_accuracy_top1 =
-        (static_cast<double>(correct_predictions_top1) / total_images) * 100;
-    double final_accuracy_top5 =
-        (static_cast<double>(correct_predictions_top5) / total_images) * 100;
-
-    std::cout << "\nFinal Results:" << std::endl;
-    std::cout << "Model: " << model_name << std::endl;
-    std::cout << "Dataset: " << dataset_path << std::endl;
-    std::cout << "Total images: " << total_images << std::endl;
-    std::cout << "Correct predictions (Top-1): " << correct_predictions_top1
-              << std::endl;
-    std::cout << "Correct predictions (Top-5): " << correct_predictions_top5
-              << std::endl;
-    std::cout << "Top-1 Accuracy: " << std::fixed << std::setprecision(2)
-              << final_accuracy_top1 << "%" << std::endl;
-    std::cout << "Top-5 Accuracy: " << std::fixed << std::setprecision(2)
-              << final_accuracy_top5 << "%" << std::endl;
   }
+
+  std::cout << "Total images: " << total_images << std::endl;
+
+  if (total_images == 0) {
+    std::cerr << "No images found in dataset path: " << dataset_path
+              << std::endl;
+    return 1;
+  }
+
+  int channels = input_shape[1];
+  int height = input_shape[2];
+  int width = input_shape[3];
+  size_t image_size = channels * height * width;
+
+  all_image_data.resize(total_images * image_size);
+
+  std::cout << "Loading and processing images..." << std::endl;
+
+  size_t current_index = 0;
+  for (int class_id = 0; class_id < 1000; ++class_id) {
+    std::ostringstream folder_oss;
+    folder_oss << std::setw(5) << std::setfill('0') << class_id;
+    std::string class_folder_path = dataset_path + "/" + folder_oss.str();
+
+    if (!fs::exists(class_folder_path)) continue;
+
+    for (const auto& entry : fs::directory_iterator(class_folder_path)) {
+      if (entry.path().extension() == ".png" ||
+          entry.path().extension() == ".jpg" ||
+          entry.path().extension() == ".jpeg") {
+        if (current_index % 100 == 0) {
+          std::cout << "Processed " << current_index << "/" << total_images
+                    << " images" << std::endl;
+        }
+
+        cv::Mat image = cv::imread(entry.path().string());
+        if (image.empty()) {
+          std::cerr << "Failed to load image: " << entry.path().string()
+                    << std::endl;
+          continue;
+        }
+
+        it_lab_ai::Tensor prepared_tensor =
+            prepare_image(image, input_shape, model_name);
+        const std::vector<float>& image_data = *prepared_tensor.as<float>();
+
+        std::copy(image_data.begin(), image_data.end(),
+                  all_image_data.begin() + current_index * image_size);
+
+        image_paths.push_back(entry.path().string());
+        true_labels.push_back(class_id);
+        current_index++;
+      }
+    }
+  }
+
+  std::cout << "All images processed, building graph..." << std::endl;
+
+  it_lab_ai::Shape input_shape_imagenet(
+      {total_images, static_cast<size_t>(channels), static_cast<size_t>(height),
+       static_cast<size_t>(width)});
+  it_lab_ai::Tensor input =
+      it_lab_ai::make_tensor(all_image_data, input_shape_imagenet);
+
+  size_t output_classes = 1000;
+  it_lab_ai::Shape output_shape({total_images, output_classes});
+  it_lab_ai::Tensor output =
+      it_lab_ai::Tensor(output_shape, it_lab_ai::Type::kFloat);
+
+  build_graph(input, output, json_path, false, parallel);
+  std::vector<std::vector<float>> processed_outputs;
+  const std::vector<float>& raw_output = *output.as<float>();
+
+  for (size_t i = 0; i < total_images; ++i) {
+    std::vector<float> single_output(
+        raw_output.begin() + i * output_classes,
+        raw_output.begin() + (i + 1) * output_classes);
+    std::vector<float> processed_output =
+        process_model_output(single_output, model_name);
+    processed_outputs.push_back(processed_output);
+  }
+
+  int correct_predictions_top1 = 0;
+  int correct_predictions_top5 = 0;
+  for (size_t i = 0; i < processed_outputs.size(); ++i) {
+    int true_label = true_labels[i];
+    const std::vector<float>& probabilities = processed_outputs[i];
+
+    std::vector<size_t> indices(probabilities.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+      return probabilities[a] > probabilities[b];
+    });
+
+    size_t predicted_class_top1 = indices[0];
+    if (predicted_class_top1 == static_cast<size_t>(true_label)) {
+      correct_predictions_top1++;
+    }
+
+    bool found_in_top5 = false;
+    for (int top_k = 0; top_k < std::min(5, static_cast<int>(indices.size()));
+         ++top_k) {
+      if (indices[top_k] == static_cast<size_t>(true_label)) {
+        found_in_top5 = true;
+        break;
+      }
+    }
+    if (found_in_top5) {
+      correct_predictions_top5++;
+    }
+  }
+
+  double final_accuracy_top1 =
+      (static_cast<double>(correct_predictions_top1) / total_images) * 100;
+  double final_accuracy_top5 =
+      (static_cast<double>(correct_predictions_top5) / total_images) * 100;
+
+  std::cout << "\nFinal Results:" << std::endl;
+  std::cout << "Model: " << model_name << std::endl;
+  std::cout << "Dataset: " << dataset_path << std::endl;
+  std::cout << "Total images: " << total_images << std::endl;
+  std::cout << "Correct predictions (Top-1): " << correct_predictions_top1
+            << std::endl;
+  std::cout << "Correct predictions (Top-5): " << correct_predictions_top5
+            << std::endl;
+  std::cout << "Top-1 Accuracy: " << std::fixed << std::setprecision(2)
+            << final_accuracy_top1 << "%" << std::endl;
+  std::cout << "Top-5 Accuracy: " << std::fixed << std::setprecision(2)
+            << final_accuracy_top5 << "%" << std::endl;
 
   return 0;
 }

@@ -111,7 +111,7 @@ void SoftmaxLayer::softmax_int_impl(const Tensor& input, Tensor& output) const {
         }
       }
 
-      float sum = 0.0f;
+      float sum = 0.0F;
       for (size_t axis = 0; axis < axis_size; ++axis) {
         size_t index =
             outer * axis_size * inner_size + axis * inner_size + inner;
@@ -137,7 +137,7 @@ void SoftmaxLayer::softmax_int_impl(const Tensor& input, Tensor& output) const {
   output = make_tensor(int_output_data, shape);
 }
 
-size_t SoftmaxLayer::normalize_axis(const Shape& shape, int axis) const {
+size_t SoftmaxLayer::normalize_axis(const Shape& shape, int axis) {
   size_t rank = shape.dims();
   if (axis < 0) {
     axis = static_cast<int>(rank) + axis;

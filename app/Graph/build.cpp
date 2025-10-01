@@ -287,7 +287,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   std::unordered_map<std::string, std::vector<std::string>> connections;
 
   std::vector<std::pair<std::string, std::string>> connection_list;
-  std::string json_file = json_path;
+  const std::string& json_file = json_path;
 
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
 
@@ -553,7 +553,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
             if (layer_parameters.count(constant_name)) {
               splits = layer_parameters[constant_name];
-            } else if (constant_name.find("onnx::") != constant_name.npos) {
+            } else if (constant_name.find("onnx::") != std::string::npos) {
               splits = last_constant_value;
               layer_parameters[constant_name] = last_constant_value;
             }
@@ -566,8 +566,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
 
-        auto split_layer = std::make_shared<it_lab_ai::SplitLayer>(
-            static_cast<int>(axis), splits);
+        auto split_layer = std::make_shared<it_lab_ai::SplitLayer>(axis, splits);
         split_layer->setName(it_lab_ai::kSplit);
         layer = split_layer;
 
@@ -578,7 +577,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       } else if (layer_type == "Add" || layer_type == "Mul" ||
                  layer_type == "Sub" || layer_type == "Div") {
         bool has_scalar_constant = false;
-        float scalar_value = 0.0f;
+        float scalar_value = 0.0F;
 
         if (layer_data.contains("inputs") && layer_data["inputs"].is_array()) {
           auto inputs = layer_data["inputs"];
@@ -590,7 +589,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
               scalar_value = float_parameters[base_name];
               has_scalar_constant = true;
               break;
-            } else if (layer_parameters.find(base_name) !=
+            } 
+            if (layer_parameters.find(base_name) !=
                            layer_parameters.end() &&
                        !layer_parameters[base_name].empty()) {
               scalar_value = static_cast<float>(layer_parameters[base_name][0]);
@@ -601,14 +601,14 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         }
 
         bool has_direct_value = layer_data.contains("value");
-        float direct_value = 0.0f;
+        float direct_value = 0.0F;
 
         if (has_direct_value) {
           if (layer_data["value"].is_string()) {
             try {
               direct_value = std::stof(layer_data["value"].get<std::string>());
             } catch (...) {
-              direct_value = 0.0f;
+              direct_value = 0.0F;
             }
           } else if (layer_data["value"].is_number()) {
             direct_value = layer_data["value"].get<float>();
@@ -622,7 +622,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           if (layer_type == "Mul") {
             ew_operation = "linear";
             auto ew_layer =
-                std::make_shared<it_lab_ai::EWLayer>(ew_operation, value, 0.0f);
+                std::make_shared<it_lab_ai::EWLayer>(ew_operation, value, 0.0F);
             ew_layer->setName(it_lab_ai::kElementWise);
             layer = ew_layer;
             if (comments) {
@@ -632,13 +632,13 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           } else if (layer_type == "Add") {
             ew_operation = "linear";
             auto ew_layer =
-                std::make_shared<it_lab_ai::EWLayer>(ew_operation, 1.0f, value);
+                std::make_shared<it_lab_ai::EWLayer>(ew_operation, 1.0F, value);
             ew_layer->setName(it_lab_ai::kElementWise);
             layer = ew_layer;
           } else if (layer_type == "Sub") {
             ew_operation = "linear";
             auto ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,
-                                                                 1.0f, -value);
+                                                                 1.0F, -value);
             ew_layer->setName(it_lab_ai::kElementWise);
             layer = ew_layer;
           } else {
@@ -663,9 +663,9 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
             layer_data, it_lab_ai::Type::kFloat);
 
-        float alpha = 1.0f;
-        float beta = 1.0f;
-        bool transB = true;
+        float alpha = 1.0F;
+        float beta = 1.0F;
+        bool trans_b = true;
 
         if (layer_data.contains("alpha")) {
           alpha = layer_data["alpha"].get<float>();
@@ -674,12 +674,12 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           beta = layer_data["beta"].get<float>();
         }
         if (layer_data.contains("transB")) {
-          transB = layer_data["transB"].get<int>() != 0;
+          trans_b = layer_data["transB"].get<int>() != 0;
         }
 
         it_lab_ai::Tensor tmp_tensor = tensor;
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
-        if (transB) {
+        if (trans_b) {
           it_lab_ai::Shape transposed_shape(
               {tensor.get_shape()[1], tensor.get_shape()[0]});
           it_lab_ai::Tensor transposed_tensor(transposed_shape,
@@ -687,7 +687,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
           for (size_t i = 0; i < tensor.get_shape()[0]; ++i) {
             for (size_t j = 0; j < tensor.get_shape()[1]; ++j) {
-              float value = tensor.get<float>({i, j});
+              auto value = tensor.get<float>({i, j});
               transposed_tensor.set<float>({j, i}, value);
             }
           }
@@ -702,7 +702,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
 
-        if (alpha != 1.0f) {
+        if (alpha != 1.0F) {
           auto weights_data = *tmp_tensor.as<float>();
           for (auto& val : weights_data) {
             val *= alpha;
@@ -710,7 +710,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           tmp_tensor = make_tensor(weights_data, tmp_tensor.get_shape());
         }
 
-        if (beta != 1.0f) {
+        if (beta != 1.0F) {
           auto bias_data = *tmp_bias.as<float>();
           for (auto& val : bias_data) {
             val *= beta;
@@ -824,7 +824,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
             if (layer_parameters.count(constant_name)) {
               axes = layer_parameters[constant_name];
-            } else if (constant_name.find("onnx::") != constant_name.npos) {
+            } else if (constant_name.find("onnx::") != std::string::npos) {
               axes = last_constant_value;
               layer_parameters[constant_name] = last_constant_value;
             }
@@ -873,8 +873,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         layer = softmax_layer;
 
       } else if (layer_type == "BatchNormalization") {
-        float epsilon = 1e-5f;
-        float momentum = 0.9f;
+        float epsilon = 1e-5F;
+        float momentum = 0.9F;
         bool training_mode = false;
 
         if (layer_data.contains("attributes")) {
@@ -1189,8 +1189,8 @@ std::vector<float> process_model_output(const std::vector<float>& output,
   if (!is_yolo) {
     return softmax<float>(output);
   }
-  float sum_val = std::accumulate(output.begin(), output.end(), 0.0f);
-  if (std::abs(sum_val - 1.0f) < 0.01f) {
+  float sum_val = std::accumulate(output.begin(), output.end(), 0.0F);
+  if (std::abs(sum_val - 1.0F) < 0.01F) {
     return output;
   }
   return softmax<float>(output);
@@ -1212,7 +1212,7 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
   cv::Size target_size(width, height);
 
   bool is_yolo_model = (model_name.find("yolo") != std::string::npos ||
-                        model_name.find("Google"));
+                        model_name.find("google") != std::string::npos);
 
   if (image.rows == height && image.cols == width) {
     processed_image = image.clone();

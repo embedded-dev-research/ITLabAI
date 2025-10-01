@@ -490,9 +490,8 @@ void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
               size_t iw = ow * stride_ + kw * dilations_ - pads_;
 
               if (ih < in_height && iw < in_width) {
-                ValueType input_val = input.get<ValueType>({b, c, ih, iw});
-
-                ValueType kernel_val = kernel_.get<ValueType>({c, 0, kh, kw});
+                auto input_val = input.get<ValueType>({b, c, ih, iw});
+                auto kernel_val = kernel_.get<ValueType>({c, 0, kh, kw});
 
                 sum += input_val * kernel_val;
               }

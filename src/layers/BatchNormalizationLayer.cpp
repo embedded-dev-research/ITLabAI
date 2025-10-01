@@ -13,8 +13,8 @@ void BatchNormalizationLayer::run(const std::vector<Tensor>& input,
         "BatchNormalizationLayer: Expected 1 input tensor (X)");
   }
 
-  const auto& X = input[0];
-  const auto& input_shape = X.get_shape();
+  const auto& x = input[0];
+  const auto& input_shape = x.get_shape();
 
   if (input_shape.dims() < 2) {
     throw std::runtime_error(
@@ -24,19 +24,19 @@ void BatchNormalizationLayer::run(const std::vector<Tensor>& input,
   size_t num_channels = input_shape[1];
   validate_parameters(num_channels);
 
-  Type expected_type = X.get_type();
+  Type expected_type = x.get_type();
   if (scale_.get_type() != expected_type || bias_.get_type() != expected_type ||
       mean_.get_type() != expected_type || var_.get_type() != expected_type) {
     throw std::runtime_error(
         "BatchNormalizationLayer: Parameter type mismatch");
   }
 
-  switch (X.get_type()) {
+  switch (x.get_type()) {
     case Type::kFloat:
-      batchnorm_impl<float>(X, output[0]);
+      batchnorm_impl<float>(x, output[0]);
       break;
     case Type::kInt:
-      batchnorm_impl<int>(X, output[0]);
+      batchnorm_impl<int>(x, output[0]);
       break;
     default:
       throw std::runtime_error(

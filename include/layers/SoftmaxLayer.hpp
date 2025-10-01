@@ -33,7 +33,7 @@ class SoftmaxLayer : public Layer {
 
   void softmax_int_impl(const Tensor& input, Tensor& output) const;
 
-  size_t normalize_axis(const Shape& shape, int axis) const;
+  static size_t normalize_axis(const Shape& shape, int axis);
 };
 
 }  // namespace it_lab_ai
