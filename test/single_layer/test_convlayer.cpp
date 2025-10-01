@@ -727,3 +727,112 @@ TEST(ConvolutionalLayerTest, Conv4DLegacyFloatEdgeCase) {
   ASSERT_NEAR(result[2], 3.0f * 0.5f + 1.0f, 1e-5f);
   ASSERT_NEAR(result[3], 4.0f * 0.5f + 1.0f, 1e-5f);
 }
+
+TEST(ConvolutionalLayerTest, DepthwiseConv4DIntPathCoverage) {
+  std::vector<int> image = {1, 2,  3,  4,  5,  6,  7,  8,
+                            9, 10, 11, 12, 13, 14, 15, 16};
+  Shape input_shape({1, 2, 2, 4});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<int> kernelvec = {1, 1, 1, 1, 2, 2, 2, 2};
+  Shape kernel_shape({2, 1, 2, 2});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<int> biasvec = {10, 20};
+  Tensor bias = make_tensor(biasvec, Shape({2}));
+
+  size_t out_height = (2 + 2 * 0 - 1 * (2 - 1) - 1) / 1 + 1;
+  size_t out_width = (4 + 2 * 0 - 1 * (2 - 1) - 1) / 1 + 1;
+  Shape output_shape({1, 2, out_height, out_width});
+  std::vector<int> output_vec(6, 0);
+  Tensor output = make_tensor(output_vec, output_shape);
+
+  ConvolutionalLayer layer(1, 0, 1, kernel, bias, kDefault, 2);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  std::vector<int> result = *out[0].as<int>();
+  EXPECT_FALSE(result.empty());
+}
+
+TEST(ConvolutionalLayerTest, DepthwiseConv4DFloatPathCoverage) {
+  std::vector<float> image = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+  Shape input_shape({1, 2, 2, 2});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<float> kernelvec = {1.0f, 1.0f, 1.0f, 1.0f,
+                                  0.5f, 0.5f, 0.5f, 0.5f};
+  Shape kernel_shape({2, 1, 2, 2});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<float> biasvec = {0.1f, 0.2f};
+  Tensor bias = make_tensor(biasvec, Shape({2}));
+
+  size_t out_height = (2 + 2 * 0 - 1 * (2 - 1) - 1) / 1 + 1;
+  size_t out_width = (2 + 2 * 0 - 1 * (2 - 1) - 1) / 1 + 1;
+  Shape output_shape({1, 2, out_height, out_width});
+  std::vector<float> output_vec(2, 0.0f);
+  Tensor output = make_tensor(output_vec, output_shape);
+
+  ConvolutionalLayer layer(1, 0, 1, kernel, bias, kDefault, 2);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  std::vector<float> result = *out[0].as<float>();
+  EXPECT_FALSE(result.empty());
+}
+
+TEST(ConvolutionalLayerTest, DepthwiseConv4DNoBiasIntPathCoverage) {
+  std::vector<int> image = {1, 2, 3, 4, 5, 6, 7, 8};
+  Shape input_shape({1, 2, 2, 2});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<int> kernelvec = {1, 1, 1, 1, 2, 2, 2, 2};
+  Shape kernel_shape({2, 1, 2, 2});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  size_t out_height = (2 + 2 * 0 - 1 * (2 - 1) - 1) / 1 + 1;
+  size_t out_width = (2 + 2 * 0 - 1 * (2 - 1) - 1) / 1 + 1;
+  Shape output_shape({1, 2, out_height, out_width});
+  std::vector<int> output_vec(2, 0);
+  Tensor output = make_tensor(output_vec, output_shape);
+
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kDefault, 2);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  std::vector<int> result = *out[0].as<int>();
+  EXPECT_FALSE(result.empty());
+}
+
+TEST(ConvolutionalLayerTest, DepthwiseConv4DNoBiasFloatPathCoverage) {
+  std::vector<float> image = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+  Shape input_shape({1, 2, 2, 2});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<float> kernelvec = {1.0f, 1.0f, 1.0f, 1.0f,
+                                  0.5f, 0.5f, 0.5f, 0.5f};
+  Shape kernel_shape({2, 1, 2, 2});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  size_t out_height = (2 + 2 * 0 - 1 * (2 - 1) - 1) / 1 + 1;
+  size_t out_width = (2 + 2 * 0 - 1 * (2 - 1) - 1) / 1 + 1;
+  Shape output_shape({1, 2, out_height, out_width});
+  std::vector<float> output_vec(2, 0.0f);
+  Tensor output = make_tensor(output_vec, output_shape);
+
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kDefault, 2);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  std::vector<float> result = *out[0].as<float>();
+  EXPECT_FALSE(result.empty());
+}
