@@ -183,3 +183,89 @@ TEST(flattenlayer, new_flattenlayer_can_flatten_int_reorder) {
 TEST(flattenlayer, get_layer_name) {
   EXPECT_EQ(FlattenLayer::get_name(), "Flatten layer");
 }
+
+TEST(flattenlayer, MultipleInputTensorsThrowsError) {
+  FlattenLayer layer;
+  Shape sh({2, 3});
+  Tensor input1 =
+      make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F, 3.0F, -3.0F}, sh);
+  Tensor input2 =
+      make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F, 3.0F, -3.0F}, sh);
+  Tensor output;
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::runtime_error);
+}
+
+TEST(flattenlayer, InvalidAxisValueThrowsError) {
+  FlattenLayer layer(5);
+  Shape sh({2, 3});
+  Tensor input =
+      make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F, 3.0F, -3.0F}, sh);
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::runtime_error);
+}
+
+TEST(flattenlayer, NegativeAxisOutOfRangeThrowsError) {
+  FlattenLayer layer(-5);
+  Shape sh({2, 3});
+  Tensor input =
+      make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F, 3.0F, -3.0F}, sh);
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::runtime_error);
+}
+
+TEST(flattenlayer, AxisEqualToShapeDimsThrowsError) {
+  FlattenLayer layer(2);
+  Shape sh({2, 3});
+  Tensor input =
+      make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F, 3.0F, -3.0F}, sh);
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::runtime_error);
+}
+
+TEST(flattenlayer, ValidAxisWithSupportedTypes) {
+  std::vector<int> axis_values = {0, 1, -1, -2};
+
+  for (int axis : axis_values) {
+    FlattenLayer layer(axis);
+    Shape sh({2, 3, 4});
+    size_t total_size = sh.count();
+
+    std::vector<float> float_data(total_size);
+    std::vector<int> int_data(total_size);
+    for (size_t i = 0; i < total_size; i++) {
+      float_data[i] = static_cast<float>(i);
+      int_data[i] = static_cast<int>(i);
+    }
+
+    Tensor float_input = make_tensor<float>(float_data, sh);
+    Tensor int_input = make_tensor<int>(int_data, sh);
+    Tensor output;
+
+    std::vector<Tensor> float_in{float_input};
+    std::vector<Tensor> int_in{int_input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(float_in, out));
+    EXPECT_NO_THROW(layer.run(int_in, out));
+  }
+}
+
+TEST(flattenlayer, EmptyInputThrowsError) {
+  FlattenLayer layer;
+  std::vector<Tensor> in;
+  std::vector<Tensor> out(1);
+
+  EXPECT_THROW(layer.run(in, out), std::runtime_error);
+}
