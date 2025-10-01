@@ -261,7 +261,7 @@ jobs:
 
     - name: Prepare environment
       run: |
-        chmod +x build/bin/ACC_MNIST*
+        chmod +x build/bin/ACC*
         
         export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
         echo "Final LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
