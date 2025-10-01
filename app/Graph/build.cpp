@@ -566,7 +566,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
 
-        auto split_layer = std::make_shared<it_lab_ai::SplitLayer>(axis, splits);
+        auto split_layer =
+            std::make_shared<it_lab_ai::SplitLayer>(axis, splits);
         split_layer->setName(it_lab_ai::kSplit);
         layer = split_layer;
 
@@ -589,10 +590,9 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
               scalar_value = float_parameters[base_name];
               has_scalar_constant = true;
               break;
-            } 
-            if (layer_parameters.find(base_name) !=
-                           layer_parameters.end() &&
-                       !layer_parameters[base_name].empty()) {
+            }
+            if (layer_parameters.find(base_name) != layer_parameters.end() &&
+                !layer_parameters[base_name].empty()) {
               scalar_value = static_cast<float>(layer_parameters[base_name][0]);
               has_scalar_constant = true;
               break;

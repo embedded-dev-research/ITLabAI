@@ -38,8 +38,7 @@ void ReshapeLayer::run(const std::vector<Tensor>& input,
 }
 
 std::vector<int64_t> ReshapeLayer::calculate_output_shape(
-    const Shape& input_shape,
-    const std::vector<int64_t>& requested_shape){
+    const Shape& input_shape, const std::vector<int64_t>& requested_shape) {
   size_t total_elements = 1;
   for (size_t i = 0; i < input_shape.dims(); ++i) {
     total_elements *= input_shape[i];

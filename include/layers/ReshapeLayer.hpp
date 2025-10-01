@@ -33,8 +33,7 @@ class ReshapeLayer : public Layer {
                     const std::vector<int64_t>& target_shape) const;
 
   static std::vector<int64_t> calculate_output_shape(
-      const Shape& input_shape,
-      const std::vector<int64_t>& requested_shape);
+      const Shape& input_shape, const std::vector<int64_t>& requested_shape);
 };
 
 }  // namespace it_lab_ai
