@@ -5,11 +5,12 @@ if (NOT WIN32)
     target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
 endif()
 target_link_libraries(run_test PUBLIC perf_lib layers_lib)
-target_link_libraries(run_test PUBLIC gtest_main)
+target_link_libraries(run_test PUBLIC gtest)
 target_link_libraries(run_test PUBLIC ReadLib)
 target_link_libraries(run_test PUBLIC reader_lib)
 
 
+target_include_directories(run_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -17,15 +18,9 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (WIN32)
-	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
-	    set(CMAKE_BUILD_TYPE "Debug")
-	endif()
-    if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
-	    set(CMAKE_BUILD_TYPE "Release")
-	endif()
     add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${OPENCV_BUILD_DIR}/bin/${CMAKE_BUILD_TYPE}/."
+            "${OPENCV_BUILD_DIR}/bin/."
             "${CMAKE_BINARY_DIR}/bin/")
 endif()
 

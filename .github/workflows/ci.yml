@@ -106,7 +106,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-macos:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@v4
       with:
@@ -132,21 +132,27 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
-    runs-on: windows-2022
+    runs-on: windows-2025
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Setup ccache
-      uses: hendrikmuhs/ccache-action@v1.2
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v2
       with:
-        key: ccache-${{ github.job }}
-        max-size: 2G
-        variant: sccache
+        vs-version: 'latest'
+    - name: Setup ccache
+      uses: Chocobo1/setup-ccache-action@v1
+      with:
+        windows_compile_environment: msvc
+    - name: Setup ninja
+      uses: seanmiddleditch/gha-setup-ninja@v6
+    - name: Setup MSVC for Ninja again
+      uses: ilammy/msvc-dev-cmd@v1
     - name: Build
       run: |
-        cmake -S . -B build -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-        cmake --build build --parallel
+        cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --parallel --config Release
     - name: Test
       run: |
         cd build
@@ -159,9 +165,16 @@ jobs:
         submodules: true
     - name: Install prerequisites
       run: sudo apt-get update && sudo apt-get install -y libomp-dev build-essential cmake
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ccache-${{ github.job }}
     - name: Build and Test
       run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        cmake -S . -B build \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_BUILD_TYPE=Release
         cmake --build build --parallel
         cmake --build build -t test
       env:
@@ -269,7 +282,7 @@ jobs:
     - name: Verify library integrity
       run: |
        echo "### Library verification ###"
-       file build/bin/opencv_libs/libopencv_imgcodecs.so.4.9.0 | grep "shared object"
+       file build/bin/opencv_libs/libopencv_imgcodecs.so.4.12.0 | grep "shared object"
 
     - name: Run evaluation
       run: |

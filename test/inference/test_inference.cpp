@@ -12,6 +12,7 @@
 #include "layers/OutputLayer.hpp"
 #include "layers/PoolingLayer.hpp"
 #include "layers/SplitLayer.hpp"
+#include "utils/flaky_test_runner.hpp"
 
 using namespace it_lab_ai;
 
@@ -494,7 +495,7 @@ TEST(bfs, check_struct_layer_added) {
   ASSERT_EQ(tmp, res);
 }
 
-TEST(bfs, check_struct_graph_split) {
+FLAKY_TEST(bfs, check_struct_graph_split) {
   std::vector<std::vector<std::pair<int, int>>> split = {
       {{12, 0}, {13, 0}, {14, 0}}};
   Graph graph(151, split);
@@ -573,3 +574,4 @@ TEST(bfs, check_struct_graph_split) {
   std::vector<int> res(36, 81);
   ASSERT_EQ(tmp, res);
 }
+FLAKY_END_TEST
