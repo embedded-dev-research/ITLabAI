@@ -993,3 +993,44 @@ TEST(ConvolutionalLayerTest, ConvImplInt2DKernelComplexPattern) {
     ASSERT_GT(result[i], 0);
   }
 }
+
+TEST(ConvolutionalLayerTest, Float2DKernelPathCoverage) {
+  std::vector<float> image = {1.0f, 2.0f, 3.0f, 4.0f};
+  Shape input_shape({1, 1, 2, 2});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<float> kernelvec = {1.0f, 0.0f, 1.0f, 0.0f};
+  Shape kernel_shape({2, 2});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<float> output_vec(1, 0.0f);
+  Tensor output = make_tensor(output_vec, Shape({1, 1, 1, 1}));
+
+  ConvolutionalLayer layer(1, 0, 0, kernel);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::exception);
+}
+
+TEST(ConvolutionalLayerTest, Float4DKernelWorking) {
+  std::vector<float> image = {1.0f, 2.0f, 3.0f, 4.0f};
+  Shape input_shape({1, 1, 2, 2});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<float> kernelvec = {1.0f, 0.0f, 1.0f, 0.0f};
+  Shape kernel_shape({1, 1, 2, 2});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<float> output_vec(1, 0.0f);
+  Tensor output = make_tensor(output_vec, Shape({1, 1, 1, 1}));
+
+  ConvolutionalLayer layer(1, 0, 0, kernel);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  std::vector<float> result = *out[0].as<float>();
+  ASSERT_EQ(result.size(), 4);
+}

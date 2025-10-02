@@ -249,3 +249,86 @@ TEST(fclayer, new_fc_bias_and_weights_not_same) {
   std::vector<Tensor> out{output};
   EXPECT_THROW(layer.run(in, out), std::invalid_argument);
 }
+TEST(fclayer, VectorSizeNotDivisibleByMatrixRows) {
+  std::vector<float> weightsvec = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+  Shape weights_shape({3, 2});
+  Tensor weights = make_tensor(weightsvec, weights_shape);
+
+  std::vector<float> biasvec = {0.1f, 0.2f};
+  Tensor bias = make_tensor(biasvec, Shape({2}));
+
+  std::vector<float> input_vec = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+  Tensor input = make_tensor(input_vec, Shape({5}));
+
+  std::vector<float> output_vec(4, 0.0f);
+  Tensor output = make_tensor(output_vec, Shape({2, 2}));
+
+  FCLayer layer(weights, bias);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
+}
+
+TEST(fclayer, VectorSizeNotDivisibleByMatrixRowsInt) {
+  std::vector<int> weightsvec = {1, 2, 3, 4, 5, 6, 7, 8};
+  Shape weights_shape({4, 2});
+  Tensor weights = make_tensor(weightsvec, weights_shape);
+
+  std::vector<int> biasvec = {1, 2};
+  Tensor bias = make_tensor(biasvec, Shape({2}));
+
+  std::vector<int> input_vec = {1, 2, 3, 4, 5, 6, 7};
+  Tensor input = make_tensor(input_vec, Shape({7}));
+
+  std::vector<int> output_vec(4, 0);
+  Tensor output = make_tensor(output_vec, Shape({2, 2}));
+
+  FCLayer layer(weights, bias);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
+}
+
+TEST(fclayer, VectorSizeDivisibleByMatrixRows) {
+  std::vector<float> weightsvec = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+  Shape weights_shape({3, 2});
+  Tensor weights = make_tensor(weightsvec, weights_shape);
+
+  std::vector<float> biasvec = {0.1f, 0.2f};
+  Tensor bias = make_tensor(biasvec, Shape({2}));
+
+  std::vector<float> input_vec = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+  Tensor input = make_tensor(input_vec, Shape({6}));
+
+  std::vector<float> output_vec(4, 0.0f);
+  Tensor output = make_tensor(output_vec, Shape({2, 2}));
+
+  FCLayer layer(weights, bias);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+}
+
+TEST(fclayer, ZeroOutputNeuronsWithNonZeroInput) {
+  std::vector<float> weightsvec = {};
+  Shape weights_shape({5, 0});
+  Tensor weights = make_tensor(weightsvec, weights_shape);
+
+  std::vector<float> biasvec = {};
+  Tensor bias = make_tensor(biasvec, Shape({0}));
+
+  std::vector<float> input_vec = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+  Tensor input = make_tensor(input_vec, Shape({5}));
+
+  std::vector<float> output_vec = {};
+  Tensor output = make_tensor(output_vec, Shape({0}));
+
+  FCLayer layer(weights, bias);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
+}
