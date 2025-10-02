@@ -59,7 +59,7 @@ jobs:
       with:
        name: mnist-${{ matrix.build_type }}${{ matrix.stats && '-stats' || '' }}
        path: |
-        build/bin/ACC_MNIST*
+        build/bin/ACC*
         build/bin/opencv_libs/*
         build/setenv.sh
     - name: Test
