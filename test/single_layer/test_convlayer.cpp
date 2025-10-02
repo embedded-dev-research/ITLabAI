@@ -836,3 +836,160 @@ TEST(ConvolutionalLayerTest, DepthwiseConv4DNoBiasFloatPathCoverage) {
   std::vector<float> result = *out[0].as<float>();
   EXPECT_FALSE(result.empty());
 }
+
+TEST(ConvolutionalLayerTest, ConvImplInt2DKernel) {
+  std::vector<int> image(75, 1);
+  Shape input_shape({1, 3, 5, 5});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<int> kernelvec = {1, 0, 1, 0, 1, 0, 1, 0, 1};
+  Shape kernel_shape({3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<int> output_vec(27, 0);
+  Tensor output = make_tensor(output_vec, Shape({1, 3, 3, 3}));
+
+  ConvolutionalLayer layer(1, 0, 1, kernel);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+  std::vector<int> result = *out[0].as<int>();
+  ASSERT_EQ(result.size(), 27);
+  for (size_t i = 0; i < result.size(); ++i) {
+    ASSERT_EQ(result[i], 5);
+  }
+}
+TEST(ConvolutionalLayerTest, ConvImplInt2DKernelBasic) {
+  std::vector<int> image(75, 1);
+  Shape input_shape({1, 3, 5, 5});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<int> kernelvec = {1, 0, 1, 0, 1, 0, 1, 0, 1};
+  Shape kernel_shape({3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<int> output_vec(27, 0);
+  Tensor output = make_tensor(output_vec, Shape({1, 3, 3, 3}));
+
+  ConvolutionalLayer layer(1, 0, 1, kernel);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  layer.run(in, out);
+
+  std::vector<int> result = *out[0].as<int>();
+
+  ASSERT_EQ(result.size(), 27);
+  for (size_t i = 0; i < result.size(); ++i) {
+    ASSERT_EQ(result[i], 5);
+  }
+}
+
+TEST(ConvolutionalLayerTest, ConvImplInt2DKernelWithStride) {
+  std::vector<int> image(75, 1);
+  Shape input_shape({1, 3, 5, 5});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<int> kernelvec = {1, 0, 1, 0, 1, 0, 1, 0, 1};
+  Shape kernel_shape({3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<int> output_vec(12, 0);
+  Tensor output = make_tensor(output_vec, Shape({1, 3, 2, 2}));
+
+  ConvolutionalLayer layer(2, 0, 1, kernel);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  layer.run(in, out);
+
+  std::vector<int> result = *out[0].as<int>();
+
+  ASSERT_EQ(result.size(), 12);
+  for (size_t i = 0; i < result.size(); ++i) {
+    ASSERT_EQ(result[i], 5);
+  }
+}
+
+TEST(ConvolutionalLayerTest, ConvImplInt2DKernelWithBias) {
+  std::vector<int> image(75, 1);
+  Shape input_shape({1, 3, 5, 5});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<int> kernelvec = {1, 0, 1, 0, 1, 0, 1, 0, 1};
+  Shape kernel_shape({3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<int> biasvec = {1, 1, 1};
+  Tensor bias = make_tensor(biasvec, Shape({3}));
+  std::vector<int> output_vec(27, 0);
+  Tensor output = make_tensor(output_vec, Shape({1, 3, 3, 3}));
+
+  ConvolutionalLayer layer(1, 0, 1, kernel, bias);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  layer.run(in, out);
+
+  std::vector<int> result = *out[0].as<int>();
+
+  ASSERT_EQ(result.size(), 27);
+  for (size_t i = 0; i < result.size(); ++i) {
+    ASSERT_EQ(result[i], 6);
+  }
+}
+
+TEST(ConvolutionalLayerTest, ConvImplInt2DKernelSmallInput) {
+  std::vector<int> image(27, 2);
+  Shape input_shape({1, 3, 3, 3});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+  Shape kernel_shape({3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+  std::vector<int> output_vec(3, 0);
+  Tensor output = make_tensor(output_vec, Shape({1, 3, 1, 1}));
+
+  ConvolutionalLayer layer(1, 0, 1, kernel);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  layer.run(in, out);
+
+  std::vector<int> result = *out[0].as<int>();
+
+  ASSERT_EQ(result.size(), 3);
+  for (size_t i = 0; i < result.size(); ++i) {
+    ASSERT_EQ(result[i], 18);
+  }
+}
+
+TEST(ConvolutionalLayerTest, ConvImplInt2DKernelComplexPattern) {
+  std::vector<int> image = {1, 2, 1, 2, 3, 4, 3, 4, 1, 2, 1, 2, 3, 4, 3, 4,
+
+                            2, 3, 2, 3, 4, 5, 4, 5, 2, 3, 2, 3, 4, 5, 4, 5,
+
+                            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+  Shape input_shape({1, 3, 4, 4});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+  Shape kernel_shape({3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<int> output_vec(12, 0);
+  Tensor output = make_tensor(output_vec, Shape({1, 3, 2, 2}));
+
+  ConvolutionalLayer layer(1, 0, 1, kernel);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  layer.run(in, out);
+
+  std::vector<int> result = *out[0].as<int>();
+
+  ASSERT_EQ(result.size(), 12);
+  for (size_t i = 0; i < result.size(); ++i) {
+    ASSERT_GT(result[i], 0);
+  }
+}

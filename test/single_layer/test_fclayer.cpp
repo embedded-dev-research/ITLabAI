@@ -216,3 +216,36 @@ TEST(fclayer, new_fc_layer_throws_with_incorrect_input_type) {
 TEST(fclayer, get_layer_name) {
   EXPECT_EQ(FCLayer::get_name(), "Fully-connected layer");
 }
+
+TEST(fclayer, InvalidWeightsSizeZeroOutput) {
+  std::vector<float> weightsvec = {};
+  Shape weights_shape({10, 0});
+  Tensor weights = make_tensor(weightsvec, weights_shape);
+
+  std::vector<float> biasvec = {};
+  Tensor bias = make_tensor(biasvec, Shape({0}));
+
+  std::vector<float> input_vec(10, 1.0f);
+  Tensor input = make_tensor(input_vec, Shape({10}));
+
+  std::vector<float> output_vec(0, 0.0f);
+  Tensor output = make_tensor(output_vec, Shape({0}));
+
+  FCLayer layer(weights, bias);
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
+}
+
+TEST(fclayer, new_fc_bias_and_weights_not_same) {
+  const std::vector<int> a1 = {2, 1, 0, 2, 0, 5};
+  const std::vector<int> a2 = {10, 2, 16};
+  Tensor weights = make_tensor<int>(a1, {2, 3});
+  Tensor bias = make_tensor<float>({0, 0, 1});
+  Tensor output;
+  FCLayer layer(weights, bias);
+  std::vector<Tensor> in{make_tensor<int>({2, 3})};
+  std::vector<Tensor> out{output};
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
+}

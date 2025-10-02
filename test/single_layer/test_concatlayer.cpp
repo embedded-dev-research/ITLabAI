@@ -44,6 +44,14 @@ TEST(ConcatLayerTests, ConcatInput1) {
   EXPECT_EQ(output[0].get<int>({1, 1}), 4);
 }
 
+TEST(ConcatLayerTests, ConcatSetOrder) {
+  ConcatLayer layer(1);
+  Tensor input1 = make_tensor<int>({1, 2, 3, 4}, {2, 2});
+  std::vector<int> order = {0, 1, 2};
+
+  EXPECT_NO_THROW(layer.setInputOrder(order));
+}
+
 TEST(ConcatLayerTests, ConcatSingleElementTensors) {
   ConcatLayer layer(0);
 
