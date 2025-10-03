@@ -113,10 +113,6 @@ FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
   this->inputShape_[0] = input_weights_shape[0];
   this->outputShape_[0] = input_weights_shape[1];
 
-  if (this->inputShape_[0] == 0 || this->outputShape_[0] == 0) {
-    throw std::invalid_argument("Invalid weights/bias size for FCLayer");
-  }
-
   if (input_bias.size() != this->outputShape_[0]) {
     throw std::invalid_argument("Bias size doesn't match output size");
   }

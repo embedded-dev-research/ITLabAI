@@ -249,6 +249,7 @@ TEST(fclayer, new_fc_bias_and_weights_not_same) {
   std::vector<Tensor> out{output};
   EXPECT_THROW(layer.run(in, out), std::invalid_argument);
 }
+
 TEST(fclayer, VectorSizeNotDivisibleByMatrixRows) {
   std::vector<float> weightsvec = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
   Shape weights_shape({3, 2});

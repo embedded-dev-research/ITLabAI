@@ -231,3 +231,43 @@ TEST(ConcatLayerTests, ConcatResNetStyle) {
   EXPECT_FLOAT_EQ(output[0].get<float>({0, 3, 1, 0}), 15.0f);
   EXPECT_FLOAT_EQ(output[0].get<float>({0, 3, 1, 1}), 16.0f);
 }
+
+TEST(ConcatLayerTests, ConcatSetOrderMultipleCalls) {
+  ConcatLayer layer(1);
+  std::vector<int> order1 = {0, 1, 2};
+  std::vector<int> order2 = {2, 1, 0};
+  std::vector<int> order3;
+
+  EXPECT_NO_THROW(layer.setInputOrder(order1));
+  EXPECT_NO_THROW(layer.setInputOrder(order2));
+  EXPECT_NO_THROW(layer.setInputOrder(order3));
+}
+
+TEST(ConcatLayerTests, ConcatSetOrderAfterRun) {
+  ConcatLayer layer(0);
+  Tensor input1 = make_tensor<int>({1, 2, 3, 4}, {2, 2});
+  Tensor input2 = make_tensor<int>({5, 6, 7, 8}, {2, 2});
+  Tensor output;
+  std::vector<Tensor> inputs{input1, input2};
+  std::vector<Tensor> outputs{output};
+  EXPECT_NO_THROW(layer.run(inputs, outputs));
+  std::vector<int> order = {1, 0};
+  EXPECT_NO_THROW(layer.setInputOrder(order));
+  EXPECT_NO_THROW(layer.run(inputs, outputs));
+}
+
+TEST(ConcatLayerTests, ReorderInputsWithInvalidOrderSize) {
+  ConcatLayer layer(0);
+  Tensor input1 = make_tensor<int>({1, 2}, {2});
+  Tensor input2 = make_tensor<int>({3, 4}, {2});
+  std::vector<int> order = {0};
+  EXPECT_NO_THROW(layer.setInputOrder(order));
+}
+
+TEST(ConcatLayerTests, ReorderInputsWithInvalidIndex) {
+  ConcatLayer layer(0);
+  Tensor input1 = make_tensor<int>({1, 2}, {2});
+  Tensor input2 = make_tensor<int>({3, 4}, {2});
+  std::vector<int> order = {0, 5};
+  EXPECT_NO_THROW(layer.setInputOrder(order););
+}
