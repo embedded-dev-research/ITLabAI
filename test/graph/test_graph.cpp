@@ -118,6 +118,90 @@ TEST(graph, check_connection_when_not_connection2) {
   ASSERT_EQ(graph.areLayerNext(fcLayer2, fcLayer4), 0);
 }
 
+TEST(graph, vertex_out_of_range) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  FCLayer fcLayer2(weights, bias);
+  FCLayer fcLayer3(weights, bias);
+  FCLayer fcLayer4(weights, bias);
+
+  graph.setInput(fcLayer, input);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.makeConnection(fcLayer2, fcLayer3);
+  graph.makeConnection(fcLayer, fcLayer4);
+  graph.setOutput(fcLayer4, output);
+  ASSERT_ANY_THROW(graph.getVertexValue(5));
+}
+
+TEST(graph, edges_out_of_range) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  FCLayer fcLayer2(weights, bias);
+  FCLayer fcLayer3(weights, bias);
+  FCLayer fcLayer4(weights, bias);
+
+  graph.setInput(fcLayer, input);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.makeConnection(fcLayer2, fcLayer3);
+  graph.makeConnection(fcLayer, fcLayer4);
+  graph.setOutput(fcLayer4, output);
+  ASSERT_ANY_THROW(graph.getEdgeValue(999));
+}
+
+TEST(graph, inputs_out_of_range) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  FCLayer fcLayer2(weights, bias);
+  FCLayer fcLayer3(weights, bias);
+  FCLayer fcLayer4(weights, bias);
+
+  graph.setInput(fcLayer, input);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.makeConnection(fcLayer2, fcLayer3);
+  graph.makeConnection(fcLayer, fcLayer4);
+  graph.setOutput(fcLayer4, output);
+  ASSERT_ANY_THROW(graph.getInputsSize(999));
+}
+
+TEST(graph, get_layer_out_of_range) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  FCLayer fcLayer2(weights, bias);
+  FCLayer fcLayer3(weights, bias);
+  FCLayer fcLayer4(weights, bias);
+
+  graph.setInput(fcLayer, input);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.makeConnection(fcLayer2, fcLayer3);
+  graph.makeConnection(fcLayer, fcLayer4);
+  graph.setOutput(fcLayer4, output);
+  ASSERT_ANY_THROW(graph.getLayerFromID(999));
+}
+
 TEST(graph_transformations, check_subgraphs_search) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});

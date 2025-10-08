@@ -55,16 +55,16 @@ bool check_child(const Graph& graph, const Graph& subgraph, int i, int iter,
     std::vector<id_name> order_a;
     std::vector<id_name> order_b;
     for (int j = 0; j < amount_connected1; j++) {
-      order_a.emplace_back(id_name(
+      order_a.emplace_back(
           graph.getEdgeValue(graph.getVertexValue(i) + j),
           graph.getLayerFromID(graph.getEdgeValue(graph.getVertexValue(i) + j))
-              .getName()));
-      order_b.emplace_back(id_name(
+              .getName());
+      order_b.emplace_back(
           subgraph.getEdgeValue(subgraph.getVertexValue(iter) + j),
           subgraph
               .getLayerFromID(
                   subgraph.getEdgeValue(subgraph.getVertexValue(iter) + j))
-              .getName()));
+              .getName());
     }
     std::sort(order_a.begin(), order_a.end(),
               [&](id_name a1, id_name a2) { return a1.second < a2.second; });
