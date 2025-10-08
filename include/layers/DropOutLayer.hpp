@@ -10,7 +10,9 @@ class DropOutLayer : public Layer {
   double drop_rate_;
 
  public:
-  DropOutLayer(double drop_rate = 0.0) : Layer(kDropout) { drop_rate_ = drop_rate; }
+  DropOutLayer(double drop_rate = 0.0) : Layer(kDropout) {
+    drop_rate_ = drop_rate;
+  }
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS

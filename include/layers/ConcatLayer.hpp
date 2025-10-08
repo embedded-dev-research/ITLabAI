@@ -11,7 +11,7 @@ namespace it_lab_ai {
 
 class ConcatLayer : public Layer {
  public:
-  explicit ConcatLayer(int64_t axis = 0) : axis_(axis), Layer(kConcat) {}
+  explicit ConcatLayer(int64_t axis = 0) : Layer(kConcat), axis_(axis) {}
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;

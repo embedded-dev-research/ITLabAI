@@ -12,7 +12,8 @@ namespace it_lab_ai {
 class OutputLayer : public Layer {
  public:
   OutputLayer() : Layer(kOutput) {}
-  OutputLayer(const std::vector<std::string>& labels) : Layer(kOutput), labels_(labels) {}
+  OutputLayer(const std::vector<std::string>& labels)
+      : Layer(kOutput), labels_(labels) {}
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override {
     output = input;

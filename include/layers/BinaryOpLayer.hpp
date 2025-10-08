@@ -15,7 +15,7 @@ class BinaryOpLayer : public Layer {
   enum class Operation : uint8_t { kMul, kAdd, kSub, kDiv };
 
   BinaryOpLayer() : Layer(kBinaryOp), op_(Operation::kMul) {}
-  explicit BinaryOpLayer(Operation op) : op_(op), Layer(kBinaryOp) {}
+  explicit BinaryOpLayer(Operation op) : Layer(kBinaryOp), op_(op) {}
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
