@@ -23,10 +23,10 @@ struct BranchState {
 
 class Graph {
   int BiggestSize_;
-  int V_; // amount of ids
-  std::vector<Layer*> layers_; // layers vector with some ids
-  std::vector<int> arrayV_; // vertices (id -> vertex number)
-  std::vector<int> arrayE_; // edges (vertex number -> id)
+  int V_;                       // amount of ids
+  std::vector<Layer*> layers_;  // layers vector with some ids
+  std::vector<int> arrayV_;     // vertices (id -> vertex number)
+  std::vector<int> arrayE_;     // edges (vertex number -> id)
   std::vector<Tensor> inten_;
   std::vector<Tensor> outten_;
   Tensor* outtenres_;
