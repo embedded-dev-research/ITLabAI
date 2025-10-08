@@ -43,8 +43,8 @@ bool check_child(const Graph& graph, const Graph& subgraph, int i, int iter,
     std::cerr << "Depth " << recursionDepth << " false by outputs\n";
     return false;
   }
-  if (!layer_conditions(*graph.getLayerFromID(i),
-                        *subgraph.getLayerFromID(iter))) {
+  if (!layer_conditions(graph.getLayerFromID(i),
+                        subgraph.getLayerFromID(iter))) {
     std::cerr << "Depth " << recursionDepth << " false by layertypes\n";
     return false;
   }
@@ -56,13 +56,13 @@ bool check_child(const Graph& graph, const Graph& subgraph, int i, int iter,
       order_a.emplace_back(id_name(
           graph.getEdgeValue(graph.getVertexValue(i) + j),
           graph.getLayerFromID(graph.getEdgeValue(graph.getVertexValue(i) + j))
-              ->getName()));
+              .getName()));
       order_b.emplace_back(id_name(
           subgraph.getEdgeValue(subgraph.getVertexValue(iter) + j),
           subgraph
               .getLayerFromID(
                   subgraph.getEdgeValue(subgraph.getVertexValue(iter) + j))
-              ->getName()));
+              .getName()));
     }
     std::sort(order_a.begin(), order_a.end(),
               [&](id_name a1, id_name a2) { return a1.second < a2.second; });

@@ -33,7 +33,7 @@ class Graph {
   int start_;
   int end_;
   std::list<BranchState> branch_list_;
-  std::vector<std::vector<int>> in_edges_; // next -> prev
+  std::vector<std::vector<int>> in_edges_;  // next -> prev
   std::vector<std::vector<std::pair<int, int>>> split_distribution_;
   int count_used_split_distribution_;
 #ifdef ENABLE_STATISTIC_TENSORS
@@ -89,11 +89,11 @@ class Graph {
   }
 
   int getLayersCount() const { return V_; }
-  const Layer* getLayerFromID(size_t layerID) const {
+  const Layer& getLayerFromID(size_t layerID) const {
     if (layerID >= layers_.size()) {
       throw std::invalid_argument("Layers do not contain this ID.");
     }
-    return layers_[layerID];
+    return *layers_[layerID];
   }
 
   void setInput(Layer& lay, Tensor& vec) {
