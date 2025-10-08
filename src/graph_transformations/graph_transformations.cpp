@@ -18,6 +18,8 @@ std::vector<int> find_subgraphs(const Graph& graph, const Graph& subgraph) {
 }
 
 bool layer_conditions(const Layer& layer, const Layer& layer_sub) {
+  std::cerr << "Comparing type " << static_cast<int>(layer.getName()) << " and "
+            << static_cast<int>(layer_sub.getName()) << std::endl;
   return layer.getName() == layer_sub.getName();
 }
 
