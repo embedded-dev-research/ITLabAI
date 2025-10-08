@@ -18,10 +18,16 @@ class ConvolutionalLayer : public Layer {
   ImplType implType_;
 
  public:
-  ConvolutionalLayer() = default;
+  ConvolutionalLayer() : Layer(kConvolution) {
+    stride_ = 0;
+    pads_ = 0;
+    dilations_ = 0;
+    implType_ = kDefault;
+  }
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
                      const Tensor& kernel, const Tensor& bias = Tensor(),
-                     ImplType implType = kDefault) {
+                     ImplType implType = kDefault)
+      : Layer(kConvolution) {
     stride_ = step;
     pads_ = pads;
     dilations_ = dilations;

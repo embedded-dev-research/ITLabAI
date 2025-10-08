@@ -40,12 +40,12 @@ struct PostOperations {
 class Layer {
  public:
   Layer() = default;
+  Layer(LayerType type) : type_(type) {}
   virtual ~Layer() = default;
   PostOperations postops;
   int getID() const { return id_; }
   void setID(int id) { id_ = id; }
   LayerType getName() const { return type_; }
-  void setName(LayerType type) { type_ = type; }
   virtual void run(const std::vector<Tensor>& input,
                    std::vector<Tensor>& output) = 0;
 #ifdef ENABLE_STATISTIC_WEIGHTS

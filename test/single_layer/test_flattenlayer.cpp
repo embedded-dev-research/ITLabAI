@@ -83,7 +83,3 @@ TEST(flattenlayer, new_flattenlayer_can_flatten_int_reorder) {
   layer3.run(in, out);
   EXPECT_EQ(*out[0].as<int>(), expected_3);
 }
-
-TEST(flattenlayer, get_layer_name) {
-  EXPECT_EQ(FlattenLayer::get_name(), "Flatten layer");
-}

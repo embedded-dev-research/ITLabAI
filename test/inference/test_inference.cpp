@@ -27,7 +27,6 @@ TEST(bfs, check_struct_graph) {
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
   InputLayer a1(kNhwc, kNchw, 1, 2);
-  a1.setName(kInput);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
@@ -47,7 +46,6 @@ TEST(bfs, check_struct_graph) {
   ConcatLayer a7(0);
   // EWLayer a8("relu");
   SplitLayer a8(1, 3);
-  a8.setName(kSplit);
 
   EWLayer a9_1("relu");
   EWLayer a9_2("relu");
@@ -57,11 +55,6 @@ TEST(bfs, check_struct_graph) {
   EWLayer a11_1("relu");
 
   ConcatLayer a12(0);
-
-  a2.setName(kConvolution);
-  a3_1.setName(kConvolution);
-  a3_2.setName(kConvolution);
-  a4.setName(kConcat);
 
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
@@ -125,11 +118,6 @@ TEST(bfs, check_struct_graph_not_used_yolo) {
 
   ConcatLayer a4(0);
 
-  a2.setName(kSplit);
-  a3_1.setName(kConvolution);
-  a3_2.setName(kConvolution);
-  a4.setName(kConcat);
-
   graph.setInput(a2, input);
   graph.makeConnection(a2, a3_1);
   graph.makeConnection(a2, a3_2);
@@ -177,8 +165,6 @@ TEST(bfs, check_struct_graph_resnet1) {
   BinaryOpLayer a3(BinaryOpLayer::Operation::kAdd);
   EWLayer a4("relu");
 
-  a2.setName(kSplit);
-
   graph.setInput(a2, input);
   graph.makeConnection(a2, a2_1);
   graph.makeConnection(a2, a2_2);
@@ -221,8 +207,6 @@ TEST(bfs, check_struct_graph_resnet2) {
   EWLayer a2_1_3("relu");
   BinaryOpLayer a3(BinaryOpLayer::Operation::kAdd);
   EWLayer a4("relu");
-
-  a2.setName(kSplit);
 
   graph.setInput(a2, input);
   graph.makeConnection(a2, a2_1);
@@ -298,15 +282,11 @@ TEST(bfs, check_result_vec) {
   Tensor output = make_tensor(vec, sh1);
   InputLayer a1(kNhwc, kNchw, 1, 2);
   InputLayer a3(kNhwc, kNhwc, 1, 1);
-  a1.setName(kInput);
-  a3.setName(kInput);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
   ConvolutionalLayer a2(1, 0, 1, kernel);
   ConvolutionalLayer a4(1, 0, 1, kernel);
-  a2.setName(kConvolution);
-  a4.setName(kConvolution);
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a4);
@@ -432,7 +412,6 @@ TEST(bfs, check_struct_layer) {
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
   InputLayer a1(kNhwc, kNchw, 1, 2);
-  a1.setName(kInput);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
@@ -442,9 +421,6 @@ TEST(bfs, check_struct_layer) {
   // EWLayer a4("linear", 2.0F, 3.0F);
   // a2.ewops.layers.push_back(&a4);
   // a2.ewops.countlayers++;
-
-  a2.setName(kConvolution);
-  a3.setName(kConvolution);
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -465,7 +441,6 @@ TEST(bfs, check_struct_layer_added) {
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
   InputLayer a1(kNhwc, kNchw, 1, 2);
-  a1.setName(kInput);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
@@ -476,8 +451,6 @@ TEST(bfs, check_struct_layer_added) {
   a2.postops.layers.push_back(&a4);
   a2.postops.count++;
 
-  a2.setName(kConvolution);
-  a3.setName(kConvolution);
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -501,7 +474,6 @@ FLAKY_TEST(bfs, check_struct_graph_split) {
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
   InputLayer a1(kNhwc, kNchw, 1, 2);
-  a1.setName(kInput);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
@@ -521,7 +493,6 @@ FLAKY_TEST(bfs, check_struct_graph_split) {
   ConcatLayer a7(0);
   // EWLayer a8("relu");
   SplitLayer a8(1, 3);
-  a8.setName(kSplit);
 
   EWLayer a9_1("relu");
   EWLayer a9_2("relu");
@@ -531,11 +502,6 @@ FLAKY_TEST(bfs, check_struct_graph_split) {
   EWLayer a11_1("relu");
 
   ConcatLayer a12(0);
-
-  a2.setName(kConvolution);
-  a3_1.setName(kConvolution);
-  a3_2.setName(kConvolution);
-  a4.setName(kConcat);
 
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);

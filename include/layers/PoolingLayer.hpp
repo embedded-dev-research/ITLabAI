@@ -12,13 +12,13 @@ enum PoolingType : uint8_t { kAverage, kMax };
 
 class PoolingLayer : public Layer {
  public:
-  PoolingLayer() = default;
+  PoolingLayer() : Layer(kPooling), implType_(kDefault) {}
   PoolingLayer(const Shape& pooling_shape, std::string pooling_type = "average",
                ImplType implType = kDefault)
-      : poolingShape_(pooling_shape),
+      : Layer(kPooling),
+        poolingShape_(pooling_shape),
         poolingType_(std::move(pooling_type)),
         implType_(implType) {}
-  static std::string get_name() { return "Pooling layer"; }
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS

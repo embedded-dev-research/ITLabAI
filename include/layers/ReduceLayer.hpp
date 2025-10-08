@@ -19,8 +19,6 @@ class ReduceLayer : public Layer {
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 
-  static std::string get_name() { return "ReduceLayer"; }
-
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return Tensor(); }
 #endif

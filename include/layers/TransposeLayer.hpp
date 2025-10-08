@@ -9,7 +9,7 @@ namespace it_lab_ai {
 class TransposeLayer : public Layer {
  public:
   explicit TransposeLayer(std::vector<int64_t> perm = {})
-      : perm_(std::move(perm)) {}
+      : Layer(kTranspose), perm_(std::move(perm)) {}
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
@@ -17,8 +17,6 @@ class TransposeLayer : public Layer {
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return Tensor(); }
 #endif
-
-  static std::string get_name() { return "TransposeLayer"; }
 
  private:
   std::vector<int64_t> perm_;

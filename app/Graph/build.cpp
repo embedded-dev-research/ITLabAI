@@ -73,14 +73,12 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
       auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
           1, pads, 1, tmp_values, tmp_bias, impl2);
-      conv_layer->setName(it_lab_ai::kConvolution);
       layers.push_back(conv_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "ConvLayer added to layers." << std::endl;
     }
     if (layer_type.find("relu") != std::string::npos) {
       auto ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
-      ew_layer->setName(it_lab_ai::kElementWise);
       layers.push_back(ew_layer);
       layerpostop.push_back(true);
       if (comments)
@@ -101,7 +99,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       //
       tensor = tmp_tensor;
       auto fc_layer = std::make_shared<it_lab_ai::FCLayer>(tensor, tmp_bias);
-      fc_layer->setName(it_lab_ai::kFullyConnected);
       layers.push_back(fc_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "DenseLayer added to layers." << std::endl;
@@ -120,7 +117,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                   << std::endl;
       auto pool_layer =
           std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, impl1);
-      pool_layer->setName(it_lab_ai::kPooling);
       layers.push_back(pool_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
@@ -129,7 +125,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     if (layer_type.find("Flatten") != std::string::npos) {
       auto flatten_layer = std::make_shared<it_lab_ai::FlattenLayer>(
           std::vector<size_t>({0, 3, 2, 1}));
-      flatten_layer->setName(it_lab_ai::kFlatten);
       layers.push_back(flatten_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "FlattenLayer added to layers." << std::endl;
@@ -137,7 +132,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
     if (layer_type.find("Dropout") != std::string::npos) {
       auto dropout_layer = std::make_shared<it_lab_ai::DropOutLayer>(0.0);
-      dropout_layer->setName(it_lab_ai::kDropout);
       layers.push_back(dropout_layer);
       layerpostop.push_back(false);
       if (comments)
@@ -151,7 +145,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     std::cout << "number of layers - " << layers.size() + 1 << std::endl;
   it_lab_ai::Graph graph(static_cast<int>(layers.size()));
   it_lab_ai::InputLayer a1(it_lab_ai::kNchw, it_lab_ai::kNchw);
-  a1.setName(it_lab_ai::kInput);
 
   if (comments) std::cout << "InputLayer created." << std::endl;
 

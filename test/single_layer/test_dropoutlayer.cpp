@@ -84,7 +84,3 @@ TEST(DropOutLayer, dropoutlayer_float_70proc) {
   std::vector<float> vec = *out[0].as<float>();
   EXPECT_NEAR(std::accumulate(vec.begin(), vec.end(), 0.0F), 0.3, 0.2);
 }
-
-TEST(DropOutLayer, get_layer_name) {
-  EXPECT_EQ(DropOutLayer::get_name(), "DropOut layer");
-}

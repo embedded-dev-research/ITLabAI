@@ -19,11 +19,13 @@ T relu(const T& value) {
 
 class EWLayer : public Layer {
  public:
-  EWLayer() = default;
+  EWLayer() : Layer(kElementWise), func_("none"), alpha_(0.0F), beta_(0.0F) {}
   EWLayer(std::string function, float alpha = 0.0F, float beta = 0.0F)
-      : func_(std::move(function)), alpha_(alpha), beta_(beta) {}
+      : Layer(kElementWise),
+        func_(std::move(function)),
+        alpha_(alpha),
+        beta_(beta) {}
 
-  static std::string get_name() { return "Element-wise layer"; }
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS

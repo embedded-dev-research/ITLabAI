@@ -133,10 +133,6 @@ TEST(ewlayer, new_ewlayer_throws_with_invalid_function) {
   ASSERT_ANY_THROW(layer.run(in, out));
 }
 
-TEST(ewlayer, get_layer_name) {
-  EXPECT_EQ(EWLayer::get_name(), "Element-wise layer");
-}
-
 TEST(ewlayer, new_ewlayer_can_sigmoid_float) {
   EWLayer layer("sigmoid");
   Tensor input = make_tensor<float>({0.0F, -1.0F, 1.0F, 2.0F});

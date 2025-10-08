@@ -7,7 +7,7 @@
 namespace it_lab_ai {
 
 ReduceLayer::ReduceLayer(Operation op, int64_t keepdims, const Tensor& axes)
-    : op_(op), keepdims_(keepdims), axes_(axes) {}
+    : Layer(kReduce), op_(op), keepdims_(keepdims), axes_(axes) {}
 
 void ReduceLayer::normalize_axes(const Shape& input_shape,
                                  std::vector<int64_t>& axes) {

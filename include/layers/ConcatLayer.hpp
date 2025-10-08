@@ -11,12 +11,10 @@ namespace it_lab_ai {
 
 class ConcatLayer : public Layer {
  public:
-  explicit ConcatLayer(int64_t axis = 0) : axis_(axis) {}
+  explicit ConcatLayer(int64_t axis = 0) : axis_(axis), Layer(kConcat) {}
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
-
-  static std::string get_name() { return "ConcatLayer"; }
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return Tensor(); }

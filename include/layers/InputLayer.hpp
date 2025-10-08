@@ -19,9 +19,14 @@ class InputLayer : public Layer {
   int std_;
 
  public:
-  InputLayer() = default;
-  InputLayer(LayInOut layin, LayInOut layout, int mean = 0, int std = 1) {
-    type_ = LayerType::kInput;
+  InputLayer() : Layer(kInput) {
+    layin_ = kNchw;
+    layout_ = kNchw;
+    mean_ = 0;
+    std_ = 1;
+  }
+  InputLayer(LayInOut layin, LayInOut layout, int mean = 0, int std = 1)
+      : Layer(kInput) {
     layin_ = layin;
     layout_ = layout;
     mean_ = mean;

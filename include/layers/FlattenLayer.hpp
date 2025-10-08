@@ -13,9 +13,9 @@ class FlattenLayer : public Layer {
   std::vector<size_t> order_;
 
  public:
-  FlattenLayer() : order_({0, 1, 2, 3}) {}
-  FlattenLayer(const std::vector<size_t>& order) : order_(order) {}
-  static std::string get_name() { return "Flatten layer"; }
+  FlattenLayer() : Layer(kFlatten), order_({0, 1, 2, 3}) {}
+  FlattenLayer(const std::vector<size_t>& order)
+      : Layer(kFlatten), order_(order) {}
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
