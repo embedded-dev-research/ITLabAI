@@ -404,8 +404,8 @@ TEST(graph_transformations, check_subgraphs_big_random) {
     int rFirst = rand() % (num_vertices - 1);
     int rSecond = 1 + rand() % (num_vertices - 1);
     if ((rFirst == rSecond) ||
-        ((*layers[rFirst]).getID() == (*layers[rSecond]).getID()) &&
-            ((*layers[rFirst]).getID() != 0)) {
+        (((*layers[rFirst]).getID() == (*layers[rSecond]).getID()) &&
+         ((*layers[rFirst]).getID() != 0))) {
       continue;
     }
     if (((*layers[rFirst]).getID() >= graph.getLayersCount()) ||
