@@ -105,6 +105,29 @@ class Graph {
     V_++;
     in_edges_.resize(1);
   }
+
+  void addSingleLayer(Layer& lay) {
+    bool layer_exists = false;
+    for (const auto* layer : layers_) {
+      if (layer == &lay) {
+        layer_exists = true;
+        break;
+      }
+    }
+
+    if (!layer_exists) {
+      lay.setID(V_);
+      layers_.push_back(&lay);
+      arrayV_.push_back(static_cast<int>(arrayE_.size()));
+
+      if (V_ >= static_cast<int>(in_edges_.size())) {
+        in_edges_.resize(V_ + 1);
+      }
+
+      V_++;
+    }
+  }
+
   void makeConnection(const Layer& layPrev, Layer& layNext) {
     bool layer_exists = false;
     for (const auto* layer : layers_) {
