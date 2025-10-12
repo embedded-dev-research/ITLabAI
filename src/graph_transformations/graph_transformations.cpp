@@ -41,11 +41,12 @@ bool run_search(const Graph& graph, const Graph& subgraph,
                 std::vector<std::vector<int>>& results) {
   size_t cur_size = assignments.size();
   for (int prev_id = 0; prev_id < subgraph.getLayersCount(); prev_id++) {
-    size_t amount_connected_s =
+    int amount_connected_s =
         subgraph.getVertexValue(prev_id + 1) - subgraph.getVertexValue(prev_id);
     for (int j = 0; j < amount_connected_s; j++) {
       int next_id = subgraph.getEdgeValue(subgraph.getVertexValue(prev_id) + j);
-      if (prev_id < cur_size && next_id < cur_size) {
+      if (prev_id < static_cast<int>(cur_size) &&
+          next_id < static_cast<int>(cur_size)) {
         if (!has_edge(graph, assignments[prev_id], assignments[next_id])) {
           return false;
         }
@@ -63,9 +64,9 @@ bool run_search(const Graph& graph, const Graph& subgraph,
           }
           // input & output node shouldn't be checked for it's outputs
           if (!is_leaf(subgraph, ids[k]) && !is_root(subgraph, ids[k])) {
-            size_t amount_connected_s1 = subgraph.getVertexValue(ids[k] + 1) -
-                                         subgraph.getVertexValue(ids[k]);
-            size_t amount_connected_1 =
+            int amount_connected_s1 = subgraph.getVertexValue(ids[k] + 1) -
+                                      subgraph.getVertexValue(ids[k]);
+            int amount_connected_1 =
                 graph.getVertexValue(assignments[ids[k]] + 1) -
                 graph.getVertexValue(assignments[ids[k]]);
             if (amount_connected_1 != amount_connected_s1) {
@@ -78,7 +79,7 @@ bool run_search(const Graph& graph, const Graph& subgraph,
   }
 
   // assumption is good -> return true
-  if (cur_size == subgraph.getLayersCount()) {
+  if (static_cast<int>(cur_size) == subgraph.getLayersCount()) {
     return true;
   }
 
