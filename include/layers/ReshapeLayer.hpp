@@ -30,8 +30,11 @@ class ReshapeLayer : public Layer {
 
   template <typename T>
   void reshape_impl(const Tensor& input, Tensor& output,
-                    const std::vector<int64_t>& target_shape) const;
-
+                    const std::vector<int64_t>& target_shape,
+                    const std::vector<int64_t>& final_shape) const;
+  template <typename T>
+  void apply_per_batch_reshape(const Tensor& input, Tensor& output,
+                               const std::vector<int64_t>& target_shape) const;
   static std::vector<int64_t> calculate_output_shape(
       const Shape& input_shape, const std::vector<int64_t>& requested_shape);
 };

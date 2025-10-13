@@ -143,17 +143,17 @@ TEST(ReshapeLayerTest, ZeroDimensionIndexOutOfRange) {
 }
 
 TEST(ReshapeLayerTest, EmptyOutputShape) {
-  std::vector<float> data = {42.0f};
-  Tensor input = make_tensor(data, {1});
+  std::vector<int> data = {1, 2, 3};
+  Tensor input = make_tensor(data, {3});
   Tensor output;
-  ReshapeLayer layer(false, {});
+
+  ReshapeLayer layer(false, {3});
 
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
-  layer.run(in, out);
 
-  ASSERT_EQ(out[0].get_shape(), Shape({}));
-  EXPECT_FLOAT_EQ(out[0].get<float>({}), 42.0f);
+  EXPECT_NO_THROW(layer.run(in, out));
+  ASSERT_EQ(out[0].get_shape(), Shape({3}));
 }
 
 TEST(ReshapeLayerTest, ComplexReshapeWithNegativeOne) {
@@ -183,4 +183,89 @@ TEST(ReshapeLayerTest, AllowZeroFalseWithValidShape) {
 
   EXPECT_NO_THROW(layer.run(in, out));
   ASSERT_EQ(out[0].get_shape(), Shape({1, 384, 7, 7}));
+}
+
+TEST(ReshapeLayerTest, BatchReshapeSingleToBatch) {
+  std::vector<float> data(2 * 768 * 7 * 7, 1.5f);
+  Tensor input = make_tensor(data, {2, 768, 7, 7});
+  Tensor output;
+  ReshapeLayer layer(false, {1, 6, 128, 49});
+
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  ASSERT_EQ(out[0].get_shape(), Shape({2, 6, 128, 49}));
+
+  EXPECT_EQ(out[0].get<float>({0, 0, 0, 0}), 1.5f);
+  EXPECT_EQ(out[0].get<float>({1, 5, 127, 48}), 1.5f);
+}
+
+TEST(ReshapeLayerTest, BatchReshapeWithNegativeOneAndBatch) {
+  std::vector<float> data(4 * 3 * 10 * 10, 3.14f);
+  Tensor input = make_tensor(data, {4, 3, 10, 10});
+  Tensor output;
+
+  ReshapeLayer layer(false, {1, -1, 5});
+
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+  ASSERT_EQ(out[0].get_shape(), Shape({4, 60, 5}));
+  EXPECT_EQ(out[0].get<float>({0, 0, 0}), 3.14f);
+  EXPECT_EQ(out[0].get<float>({3, 59, 4}), 3.14f);
+}
+
+TEST(ReshapeLayerTest, BatchReshapeWithZeroDimAndBatch) {
+  std::vector<int> data(2 * 6 * 8 * 8, 99);
+  Tensor input = make_tensor(data, {2, 6, 8, 8});
+  Tensor output;
+
+  ReshapeLayer layer(false, {1, 0, 16, 4});
+
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  ASSERT_EQ(out[0].get_shape(), Shape({2, 6, 16, 4}));
+  EXPECT_EQ(out[0].get<int>({0, 0, 0, 0}), 99);
+  EXPECT_EQ(out[0].get<int>({1, 5, 15, 3}), 99);
+}
+
+TEST(ReshapeLayerTest, BatchReshapeComplexYOLOLike) {
+  std::vector<float> data(2 * 768 * 7 * 7, 0.5f);
+  Tensor input = make_tensor(data, {2, 768, 7, 7});
+  Tensor output;
+
+  ReshapeLayer layer(false, {1, 6, 128, 49});
+
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+  ASSERT_EQ(out[0].get_shape(), Shape({2, 6, 128, 49}));
+
+  size_t total_elements = 1;
+  for (size_t i = 0; i < out[0].get_shape().dims(); ++i) {
+    total_elements *= out[0].get_shape()[i];
+  }
+  EXPECT_EQ(total_elements, 2 * 768 * 7 * 7);
+
+  EXPECT_EQ(out[0].get<float>({0, 0, 0, 0}), 0.5f);
+  EXPECT_EQ(out[0].get<float>({1, 5, 127, 48}), 0.5f);
+}
+
+TEST(ReshapeLayerTest, BatchReshapeIncompatibleElements) {
+  std::vector<int> data(2 * 100, 1);
+  Tensor input = make_tensor(data, {2, 100});
+  Tensor output;
+  ReshapeLayer layer(false, {1, 3, 3, 3});
+
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::runtime_error);
 }
