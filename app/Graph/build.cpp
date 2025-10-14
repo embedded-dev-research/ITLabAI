@@ -290,6 +290,16 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   const std::string& json_file = json_path;
 
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
+  std::string input_layer_name = "images";
+  for (const auto& layer_data : model_data) {
+    std::string layer_type = layer_data["type"];
+    if (layer_type == "InputLayer") {
+      if (layer_data.contains("name")) {
+        input_layer_name = layer_data["name"];
+      }
+      break;
+    }
+  }
 
   if (comments) std::cout << "Loaded model data from JSON." << std::endl;
 
@@ -297,14 +307,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                                                              it_lab_ai::kNchw);
   input_layer->setName(it_lab_ai::kInput);
   layers.push_back(input_layer);
-  if (json_path == MODEL_PATH_RESNET_ONNX ||
-      json_path == MODEL_PATH_DENSENET_ONNX) {
-    name_to_layer["x"] = input_layer;
-  } else if (json_path == MODEL_PATH_GOOGLENET_ONNX) {
-    name_to_layer["image_tensor"] = input_layer;
-  } else {
-    name_to_layer["images"] = input_layer;
-  }
+  name_to_layer[input_layer_name] = input_layer;
   int current_id = 0;
   input_layer->setID(current_id++);
   for (const auto& layer_data : model_data) {
@@ -1060,25 +1063,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                       name_to_layer[target_name]);
               if (concat_layer) {
                 concat_layer->setInputOrder(concat_orders[target_name]);
-                /*if (comments) {
-                  std::cout
-                      << "=== ALL INPUTS CONNECTED TO CONCAT: " << target_name
-                      << " ===" << std::endl;
-                  std::cout << "Expected inputs: ";
-                  for (const auto& inp : concat_connections[target_name]) {
-                    std::cout << inp << " ";
-                  }
-                  std::cout << std::endl;
-
-                  std::cout << "Actual order: ";
-                  for (size_t i = 0; i < concat_orders[target_name].size();
-                       ++i) {
-                    std::cout << concat_orders[target_name][i];
-                    if (i < concat_orders[target_name].size() - 1)
-                      std::cout << ", ";
-                  }
-                  std::cout << std::endl;
-                }*/
               }
             }
           }
@@ -1136,26 +1120,16 @@ std::unordered_map<int, std::string> load_class_names(
     const std::string& filename) {
   std::unordered_map<int, std::string> class_names;
   std::ifstream file(filename);
-  std::string line;
-
   if (!file.is_open()) {
     throw std::runtime_error("Cannot open class names file: " + filename);
   }
+  json json_data = json::parse(file);
 
-  while (std::getline(file, line)) {
-    line = std::regex_replace(line, std::regex("^\\s+|\\s+$"), "");
-    if (line.empty()) continue;
-
-    std::regex pattern("(\\d+):\\s*'([^']+)'");
-    std::smatch matches;
-
-    if (std::regex_search(line, matches, pattern)) {
-      int class_id = std::stoi(matches[1]);
-      std::string class_name = matches[2];
-      class_names[class_id] = class_name;
-    }
+  for (auto& [key, value] : json_data.items()) {
+    int class_id = std::stoi(key);
+    std::string class_name = value.get<std::string>();
+    class_names[class_id] = class_name;
   }
-
   return class_names;
 }
 
