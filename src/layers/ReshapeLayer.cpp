@@ -92,11 +92,6 @@ std::vector<int64_t> ReshapeLayer::calculate_output_shape(
     output_shape[negative_dim] = static_cast<int64_t>(inferred_size);
   }
 
-  size_t new_total = 1;
-  for (int64_t dim : output_shape) {
-    new_total *= static_cast<size_t>(dim);
-  }
-
   return output_shape;
 }
 

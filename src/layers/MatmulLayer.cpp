@@ -13,6 +13,7 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
   }
   const auto& a = input[0];
   const auto& b = input[1];
+
   try {
     bool should_swap = false;
 
@@ -232,14 +233,19 @@ void MatmulLayer::matmul_nd_nd(const Tensor& a, const Tensor& b,
   for (size_t i = 0; i < batch_dims_b; ++i) {
     batch_shape_b[i] = b_shape[i];
   }
-  for (size_t i = 0; i < max_batch_dims; ++i) {
-    size_t a_dim = (i < batch_dims_a) ? batch_shape_a[i] : 1;
-    size_t b_dim = (i < batch_dims_b) ? batch_shape_b[i] : 1;
 
-    if (a_dim != b_dim && a_dim != 1 && b_dim != 1) {
-      throw std::runtime_error(
-          "MatMul: Incompatible batch dimensions for broadcasting");
-    }
+  size_t a_matrix_size = a_shape[a_dims - 2] * a_shape[a_dims - 1];
+  size_t b_matrix_size = b_shape[b_dims - 2] * b_shape[b_dims - 1];
+  size_t out_matrix_size = a_shape[a_dims - 2] * b_shape[b_dims - 1];
+
+  std::vector<size_t> a_batch_strides(max_batch_dims, a_matrix_size);
+  std::vector<size_t> b_batch_strides(max_batch_dims, b_matrix_size);
+  std::vector<size_t> out_batch_strides(max_batch_dims, out_matrix_size);
+
+  for (int i = static_cast<int>(max_batch_dims) - 2; i >= 0; --i) {
+    size_t idx = static_cast<size_t>(i);
+    a_batch_strides[idx] = a_batch_strides[idx + 1] * batch_shape_a[idx + 1];
+    b_batch_strides[idx] = b_batch_strides[idx + 1] * batch_shape_b[idx + 1];
   }
 
   std::vector<size_t> output_batch_shape(max_batch_dims);
@@ -250,6 +256,12 @@ void MatmulLayer::matmul_nd_nd(const Tensor& a, const Tensor& b,
           "MatMul: Incompatible batch dimensions for broadcasting");
     }
     output_batch_shape[i] = std::max(batch_shape_a[i], batch_shape_b[i]);
+  }
+
+  for (int i = static_cast<int>(max_batch_dims) - 2; i >= 0; --i) {
+    size_t idx = static_cast<size_t>(i);
+    out_batch_strides[idx] =
+        out_batch_strides[idx + 1] * output_batch_shape[idx + 1];
   }
 
   std::vector<size_t> output_shape = output_batch_shape;
@@ -270,30 +282,27 @@ void MatmulLayer::matmul_nd_nd(const Tensor& a, const Tensor& b,
   for (size_t batch = 0; batch < total_batch; ++batch) {
     size_t a_batch_idx = 0;
     size_t b_batch_idx = 0;
+    size_t out_batch_idx = 0;
     size_t temp_batch = batch;
 
-    for (size_t dim_index = 0; dim_index < max_batch_dims; ++dim_index) {
-      size_t i = max_batch_dims - dim_index - 1;
-      size_t dim_size = output_batch_shape[i];
-      size_t idx = temp_batch % dim_size;
+    for (int i = static_cast<int>(max_batch_dims) - 1; i >= 0; --i) {
+      size_t idx = static_cast<size_t>(i);
+      size_t dim_size = output_batch_shape[idx];
+      size_t batch_idx = temp_batch % dim_size;
       temp_batch /= dim_size;
 
-      if (batch_shape_a[i] > 1) {
-        a_batch_idx = a_batch_idx * batch_shape_a[i] + (idx % batch_shape_a[i]);
-      } else {
-        a_batch_idx = a_batch_idx * batch_shape_a[i];
+      if (batch_shape_a[idx] > 1) {
+        a_batch_idx += batch_idx * a_batch_strides[idx];
       }
-
-      if (batch_shape_b[i] > 1) {
-        b_batch_idx = b_batch_idx * batch_shape_b[i] + (idx % batch_shape_b[i]);
-      } else {
-        b_batch_idx = b_batch_idx * batch_shape_b[i];
+      if (batch_shape_b[idx] > 1) {
+        b_batch_idx += batch_idx * b_batch_strides[idx];
       }
+      out_batch_idx += batch_idx * out_batch_strides[idx];
     }
 
-    size_t a_offset = a_batch_idx * m * k;
-    size_t b_offset = b_batch_idx * k * n;
-    size_t out_offset = batch * m * n;
+    size_t a_offset = a_batch_idx;
+    size_t b_offset = b_batch_idx;
+    size_t out_offset = out_batch_idx;
 
     for (size_t i = 0; i < m; ++i) {
       for (size_t j = 0; j < n; ++j) {

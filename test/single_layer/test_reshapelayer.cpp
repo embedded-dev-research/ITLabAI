@@ -91,7 +91,7 @@ TEST(ReshapeLayerTest, TotalElementsMismatchError) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  EXPECT_THROW(layer.run(in, out), std::runtime_error);
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
 }
 
 TEST(ReshapeLayerTest, MultipleNegativeOnesError) {
@@ -127,7 +127,7 @@ TEST(ReshapeLayerTest, NegativeDimensionIndexError) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  EXPECT_THROW(layer.run(in, out), std::runtime_error);
+  EXPECT_THROW(layer.run(in, out), std::length_error);
 }
 
 TEST(ReshapeLayerTest, ZeroDimensionIndexOutOfRange) {
@@ -139,7 +139,7 @@ TEST(ReshapeLayerTest, ZeroDimensionIndexOutOfRange) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  EXPECT_THROW(layer.run(in, out), std::runtime_error);
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
 }
 
 TEST(ReshapeLayerTest, EmptyOutputShape) {
