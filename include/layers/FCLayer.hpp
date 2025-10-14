@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <algorithm>
 #include <mutex>
 #include <stdexcept>
@@ -30,11 +30,23 @@ template <typename ValueType>
 std::vector<ValueType> mat_vec_mul(const std::vector<ValueType>& mat,
                                    const Shape& mat_shape,
                                    const std::vector<ValueType>& vec) {
+  // Matrix layout: [input_size, output_size] with row-major ordering
+  // Access pattern: mat[i * output_size + j] where:
+  // - i ∈ [0, input_size-1] (input dimension)
+  // - j ∈ [0, output_size-1] (output dimension)
+  // This corresponds to weights[i][j] in mathematical notation
   if (mat_shape.dims() != 2) {
     throw std::invalid_argument("Not a matrix in argument");
   }
 
-  size_t batch_size = vec.size() / mat_shape[0];
+  size_t input_size = mat_shape[0];
+  size_t output_size = mat_shape[1];
+
+  size_t batch_size = vec.size() / input_size;
+
+  if (mat.size() != input_size * output_size) {
+    throw std::invalid_argument("Matrix size doesn't match shape");
+  }
 
   if (vec.size() % mat_shape[0] != 0) {
     throw std::invalid_argument("Vector size not divisible by matrix rows");

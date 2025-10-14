@@ -196,8 +196,8 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 }
 
 std::string get_base_layer_name(const std::string& tensor_name) {
-  static const auto kpattern = std::regex("(_output|_out|:)[_\\d]*$");
-  return std::regex_replace(tensor_name, kpattern, "");
+  static const auto kPattern = std::regex("(_output|_out|:)[_\\d]*$");
+  return std::regex_replace(tensor_name, kPattern, "");
 }
 
 std::string layerTypeToString(it_lab_ai::LayerType type) {

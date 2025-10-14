@@ -272,6 +272,8 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
               case kMax:
                 res[output_index] = max_pooling(pooling_buf);
                 break;
+              default:
+                throw std::runtime_error("Unknown pooling type");
             }
           }
         }
@@ -402,6 +404,8 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
                           case kMax:
                             res[output_index] = max_pooling(pooling_buf);
                             break;
+                          default:
+                            throw std::runtime_error("Unknown pooling type");
                         }
                       }
                     }

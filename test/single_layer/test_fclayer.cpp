@@ -333,3 +333,65 @@ TEST(fclayer, ZeroOutputNeuronsWithNonZeroInput) {
 
   EXPECT_THROW(layer.run(in, out), std::invalid_argument);
 }
+
+TEST(fclayer, matvecmul_batch_processing) {
+  std::vector<int> mat = {1, 2, 3, 4, 5, 6};
+  Shape mat_shape({2, 3});
+  std::vector<int> vec = {1, 2, 3, 4};
+  std::vector<int> expected = {9, 12, 15, 19, 26, 33};
+
+  std::vector<int> result = mat_vec_mul(mat, mat_shape, vec);
+  EXPECT_EQ(result, expected);
+}
+
+TEST(fclayer, matvecmul_batch_size_3) {
+  std::vector<float> mat = {1.0f, 2.0f, 3.0f, 4.0f};
+  Shape mat_shape({2, 2});
+  std::vector<float> vec = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+  std::vector<float> expected = {
+      1.0f * 1.0f + 2.0f * 3.0f, 1.0f * 2.0f + 2.0f * 4.0f,
+      3.0f * 1.0f + 4.0f * 3.0f, 3.0f * 2.0f + 4.0f * 4.0f,
+      5.0f * 1.0f + 6.0f * 3.0f, 5.0f * 2.0f + 6.0f * 4.0f};
+  std::vector<float> result = mat_vec_mul(mat, mat_shape, vec);
+  for (size_t i = 0; i < expected.size(); ++i) {
+    EXPECT_FLOAT_EQ(result[i], expected[i]);
+  }
+}
+
+TEST(fclayer, matvecmul_layout_verification) {
+  std::vector<int> mat = {1, 10, 2, 20, 3, 30};
+  Shape mat_shape({3, 2});
+  std::vector<int> vec = {1, 1, 1};
+  std::vector<int> expected = {6, 60};
+  std::vector<int> result = mat_vec_mul(mat, mat_shape, vec);
+  EXPECT_EQ(result, expected);
+}
+
+TEST(fclayer, BatchProcessingWithBias) {
+  std::vector<float> weights = {1.0f, 2.0f, 3.0f, 4.0f};
+  Shape weights_shape({2, 2});
+  std::vector<float> bias = {0.1f, 0.2f};
+
+  FCLayerImpl<float> layer(weights, weights_shape, bias);
+
+  std::vector<float> input = {1.0f, 2.0f, 3.0f, 4.0f};
+  std::vector<float> output = layer.run(input);
+  std::vector<float> expected = {7.1f, 10.2f, 15.1f, 22.2f};
+
+  for (size_t i = 0; i < expected.size(); ++i) {
+    EXPECT_NEAR(output[i], expected[i], 1e-5f);
+  }
+}
+
+TEST(fclayer, BatchSize3WithBiasVerification) {
+  std::vector<int> weights = {1, 2, 3, 4};
+  Shape weights_shape({2, 2});
+  std::vector<int> bias = {10, 20};
+
+  FCLayerImpl<int> layer(weights, weights_shape, bias);
+  std::vector<int> input = {1, 1, 2, 2, 3, 3};
+  std::vector<int> output = layer.run(input);
+  std::vector<int> expected = {14, 26, 18, 32, 22, 38};
+
+  EXPECT_EQ(output, expected);
+}
