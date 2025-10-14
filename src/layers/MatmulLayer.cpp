@@ -243,7 +243,7 @@ void MatmulLayer::matmul_nd_nd(const Tensor& a, const Tensor& b,
   std::vector<size_t> out_batch_strides(max_batch_dims, out_matrix_size);
 
   for (int i = static_cast<int>(max_batch_dims) - 2; i >= 0; --i) {
-    size_t idx = static_cast<size_t>(i);
+    auto idx = static_cast<size_t>(i);
     a_batch_strides[idx] = a_batch_strides[idx + 1] * batch_shape_a[idx + 1];
     b_batch_strides[idx] = b_batch_strides[idx + 1] * batch_shape_b[idx + 1];
   }
@@ -259,7 +259,7 @@ void MatmulLayer::matmul_nd_nd(const Tensor& a, const Tensor& b,
   }
 
   for (int i = static_cast<int>(max_batch_dims) - 2; i >= 0; --i) {
-    size_t idx = static_cast<size_t>(i);
+    auto idx = static_cast<size_t>(i);
     out_batch_strides[idx] =
         out_batch_strides[idx + 1] * output_batch_shape[idx + 1];
   }
@@ -286,7 +286,7 @@ void MatmulLayer::matmul_nd_nd(const Tensor& a, const Tensor& b,
     size_t temp_batch = batch;
 
     for (int i = static_cast<int>(max_batch_dims) - 1; i >= 0; --i) {
-      size_t idx = static_cast<size_t>(i);
+      auto idx = static_cast<size_t>(i);
       size_t dim_size = output_batch_shape[idx];
       size_t batch_idx = temp_batch % dim_size;
       temp_batch /= dim_size;

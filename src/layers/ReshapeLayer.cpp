@@ -22,18 +22,15 @@ void ReshapeLayer::run(const std::vector<Tensor>& input,
     }
   }
 
-  std::vector<int64_t> original_requested_shape = target_shape;
   auto final_shape =
       calculate_output_shape(data_tensor.get_shape(), target_shape);
 
   switch (data_tensor.get_type()) {
     case Type::kFloat:
-      reshape_impl<float>(data_tensor, output[0], original_requested_shape,
-                          final_shape);
+      reshape_impl<float>(data_tensor, output[0], target_shape, final_shape);
       break;
     case Type::kInt:
-      reshape_impl<int>(data_tensor, output[0], original_requested_shape,
-                        final_shape);
+      reshape_impl<int>(data_tensor, output[0], target_shape, final_shape);
       break;
     default:
       throw std::runtime_error("Unsupported tensor data type for Reshape");
@@ -96,17 +93,17 @@ std::vector<int64_t> ReshapeLayer::calculate_output_shape(
 }
 
 template <typename T>
-void ReshapeLayer::reshape_impl(
-    const Tensor& input, Tensor& output,
-    const std::vector<int64_t>& original_requested_shape,
-    const std::vector<int64_t>& final_shape) const {
+void ReshapeLayer::reshape_impl(const Tensor& input, Tensor& output,
+                                const std::vector<int64_t>& target_shape,
+                                const std::vector<int64_t>& final_shape) const {
   const auto* input_data = input.as<T>();
   const Shape& input_shape = input.get_shape();
 
-  if (input_shape[0] > 1 && original_requested_shape[0] == 1) {
-    apply_per_batch_reshape<T>(input, output, original_requested_shape);
+  if (input_shape[0] > 1 && target_shape[0] == 1) {
+    apply_per_batch_reshape<T>(input, output, target_shape);
   } else {
     std::vector<size_t> shape_size_t;
+    shape_size_t.reserve(final_shape.size());
     for (int64_t dim : final_shape) {
       shape_size_t.push_back(static_cast<size_t>(dim));
     }
@@ -117,12 +114,12 @@ void ReshapeLayer::reshape_impl(
 template <typename T>
 void ReshapeLayer::apply_per_batch_reshape(
     const Tensor& input, Tensor& output,
-    const std::vector<int64_t>& original_requested_shape) const {
+    const std::vector<int64_t>& target_shape) const {
   const auto* input_data = input.as<T>();
   const Shape& input_shape = input.get_shape();
   size_t batch_size = input_shape[0];
   size_t elements_per_batch = input_shape.count() / batch_size;
-  std::vector<int64_t> per_batch_target = original_requested_shape;
+  std::vector<int64_t> per_batch_target = target_shape;
   per_batch_target[0] = 1;
 
   Shape single_batch_input_shape = input_shape;
@@ -132,6 +129,7 @@ void ReshapeLayer::apply_per_batch_reshape(
       calculate_output_shape(single_batch_input_shape, per_batch_target);
 
   std::vector<size_t> final_output_shape_size_t;
+  final_output_shape_size_t.reserve(single_batch_output_shape.size());
   final_output_shape_size_t.push_back(batch_size);
   for (size_t i = 1; i < single_batch_output_shape.size(); ++i) {
     final_output_shape_size_t.push_back(
