@@ -29,6 +29,10 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+    - name: Set binary paths
+      id: set_binaries
+      run: |
+        echo "ACC_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -59,7 +63,7 @@ jobs:
       with:
        name: mnist-${{ matrix.build_type }}${{ matrix.stats && '-stats' || '' }}
        path: |
-        build/bin/ACC*
+        ${{ steps.set_binaries.outputs.ACC_BINARY }}
         build/bin/opencv_libs/*
         build/setenv.sh
     - name: Test
@@ -227,7 +231,10 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-
+    - name: Set binary path
+      id: set_eval_binary
+      run: |
+        echo "EVAL_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
     - name: Install system dependencies
       run: |
         sudo apt-get update
@@ -274,7 +281,7 @@ jobs:
 
     - name: Prepare environment
       run: |
-        chmod +x build/bin/ACC*
+        chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
         
         export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
         echo "Final LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
@@ -290,12 +297,12 @@ jobs:
        export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
     
-       LD_DEBUG=files ./build/bin/ACC* --model alexnet_mnist 2> ld_debug.log
+       LD_DEBUG=files "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --model alexnet_mnist 2> ld_debug.log
        echo "### Library loading debug ###"
        grep -i "opencv_imgcodecs" ld_debug.log
 
-       ./build/bin/ACC* > accuracy.txt
-       echo "Accuracy: $(cat accuracy.txt)"
+       "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" > accuracy.txt
+        echo "Accuracy: $(cat accuracy.txt)"
 
     - name: Update README (master only)
       if: github.ref == 'refs/heads/master'
