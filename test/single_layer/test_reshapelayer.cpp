@@ -269,3 +269,49 @@ TEST(ReshapeLayerTest, BatchReshapeIncompatibleElements) {
 
   EXPECT_THROW(layer.run(in, out), std::runtime_error);
 }
+
+TEST(ReshapeLayerTest, AllowZeroTrueCopiesInputDims) {
+  std::vector<float> data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  Tensor input = make_tensor(data, {3, 4});
+  Tensor output;
+  ReshapeLayer layer(true, {3, 0, 1});
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+
+  ASSERT_EQ(out[0].get_shape(), Shape({3, 4, 1}));
+}
+
+TEST(ReshapeLayerTest, ProductValidationWithNegativeOne) {
+  std::vector<int> data(24, 1);
+  Tensor input = make_tensor(data, {2, 3, 4});
+  Tensor output;
+
+  ReshapeLayer layer(false, {2, -1, 2});
+
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+
+  size_t input_product = input.get_shape().count();
+  size_t output_product = out[0].get_shape().count();
+  EXPECT_EQ(input_product, output_product);
+  ASSERT_EQ(out[0].get_shape(), Shape({2, 6, 2}));
+}
+
+TEST(ReshapeLayerTest, AllowZeroWithNegativeOne) {
+  std::vector<float> data(60, 1.0f);
+  Tensor input = make_tensor(data, {3, 4, 5});
+  Tensor output;
+
+  ReshapeLayer layer(true, {3, 0, -1});
+
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+
+  size_t input_product = input.get_shape().count();
+  size_t output_product = out[0].get_shape().count();
+  EXPECT_EQ(input_product, output_product);
+  EXPECT_EQ(out[0].get_shape(), Shape({3, 4, 5}));
+}
