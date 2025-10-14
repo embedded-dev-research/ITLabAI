@@ -196,7 +196,7 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 }
 
 std::string get_base_layer_name(const std::string& tensor_name) {
-  std::regex pattern("(_output|_out|:)[_\\d]*$");
+  static const auto pattern = std::regex("(_output|_out|:)[_\\d]*$");
   return std::regex_replace(tensor_name, pattern, "");
 }
 
@@ -1125,7 +1125,7 @@ std::unordered_map<int, std::string> load_class_names(
   }
   json json_data = json::parse(file);
 
-  for (auto& [key, value] : json_data.items()) {
+  for (const auto& [key, value] : json_data.items()) {
     int class_id = std::stoi(key);
     std::string class_name = value.get<std::string>();
     class_names[class_id] = class_name;

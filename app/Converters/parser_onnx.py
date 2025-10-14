@@ -39,9 +39,20 @@ def onnx_to_json(model_path, output_json_path):
         if input.name in initializers_dict:
             continue
 
+        shape = []
+        for dim in input.type.tensor_type.shape.dim:
+            if dim.HasField('dim_value'):
+                # 0 означает динамическую размерность в ONNX
+                shape.append(dim.dim_value if dim.dim_value != 0 else -1)
+            elif dim.HasField('dim_param'):
+                # Обрабатываем именованные параметры размерностей
+                shape.append(-1)  # или можно сохранить как строку: dim.dim_param
+            else:
+                shape.append(-1)  # неизвестная размерность
+
         input_info = {
             "name": input.name,
-            "shape": [dim.dim_value for dim in input.type.tensor_type.shape.dim],
+            "shape": shape,
             "data_type": input.type.tensor_type.elem_type
         }
         break
@@ -151,12 +162,11 @@ def onnx_to_json(model_path, output_json_path):
         json.dump(layer_info, f, indent=2, cls=CustomEncoder)
 
     print(f"Модель успешно сохранена в {output_json_path}")
-    print(f"Input shape: {input_info.get('shape', [])}")
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'yolo11x-cls.pt')
-MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'yolo11x-cls_onnx_model.json')
+MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'resnest101e_Opset16.onnx')
+MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'resnest101e_Opset16_onnx_model.json')
 
 onnx_to_json(MODEL_PATH, MODEL_DATA_PATH)

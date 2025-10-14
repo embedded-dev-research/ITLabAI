@@ -10,7 +10,7 @@
 
 namespace it_lab_ai {
 
-enum class Type : uint8_t { kUnknown, kInt, kFloat };
+enum class Type : uint8_t { kUnknown, kInt, kInt64, kFloat };
 
 template <typename T>
 std::vector<uint8_t>* to_byte(std::vector<T>& v) {
@@ -26,7 +26,7 @@ Type GetTypeEnum() {
   if constexpr (std::is_same_v<T, int>) {
     return Type::kInt;
   } else if constexpr (std::is_same_v<T, int64_t>) {
-    return Type::kInt;
+    return Type::kInt64;
   } else if constexpr (std::is_same_v<T, float>) {
     return Type::kFloat;
   } else {
