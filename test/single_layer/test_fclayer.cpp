@@ -213,10 +213,6 @@ TEST(fclayer, new_fc_layer_throws_with_incorrect_input_type) {
   ASSERT_ANY_THROW(layer.run(in, out));
 }
 
-TEST(fclayer, get_layer_name) {
-  EXPECT_EQ(FCLayer::get_name(), "Fully-connected layer");
-}
-
 TEST(fclayer, InvalidWeightsSizeZeroOutput) {
   std::vector<float> weightsvec = {};
   Shape weights_shape({10, 0});

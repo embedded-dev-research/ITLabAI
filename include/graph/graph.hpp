@@ -23,17 +23,17 @@ struct BranchState {
 
 class Graph {
   int BiggestSize_;
-  int V_;
-  std::vector<Layer*> layers_;
-  std::vector<int> arrayV_;
-  std::vector<int> arrayE_;
+  int V_;                       // amount of ids
+  std::vector<Layer*> layers_;  // layers vector with some ids
+  std::vector<int> arrayV_;     // vertices (id -> vertex number)
+  std::vector<int> arrayE_;     // edges (vertex number -> id)
   std::vector<Tensor> inten_;
   std::vector<Tensor> outten_;
   Tensor* outtenres_;
   int start_;
   int end_;
   std::list<BranchState> branch_list_;
-  std::vector<std::vector<int>> in_edges_;
+  std::vector<std::vector<int>> in_edges_;  // next -> prev
   std::vector<std::vector<std::pair<int, int>>> split_distribution_;
   int count_used_split_distribution_;
 #ifdef ENABLE_STATISTIC_TENSORS
@@ -66,10 +66,41 @@ class Graph {
     V_ = 0;
     in_edges_.clear();
   }
+  
   void setSplitDistribution(
       const std::vector<std::vector<std::pair<int, int>>>& split_dist) {
     split_distribution_ = split_dist;
   }
+  
+  int getVertexValue(size_t layerID) const {
+    if (layerID >= arrayV_.size()) {
+      throw std::invalid_argument("ArrayV does not contain this ID.");
+    }
+    return arrayV_[layerID];
+  }
+
+  int getEdgeValue(size_t pos) const {
+    if (pos >= arrayE_.size()) {
+      throw std::invalid_argument("ArrayE does not contain this.");
+    }
+    return arrayE_[pos];
+  }
+
+  size_t getInputsSize(size_t layerID) const {
+    if (layerID >= in_edges_.size()) {
+      throw std::invalid_argument("Input edges array do not contain this ID.");
+    }
+    return in_edges_[layerID].size();
+  }
+
+  int getLayersCount() const { return V_; }
+  const Layer& getLayerFromID(size_t layerID) const {
+    if (layerID >= layers_.size()) {
+      throw std::invalid_argument("Layers do not contain this ID.");
+    }
+    return *layers_[layerID];
+  }
+  
   void setInput(Layer& lay, Tensor& vec) {
     lay.setID(0);
     layers_.push_back(&lay);
@@ -79,6 +110,29 @@ class Graph {
     V_++;
     in_edges_.resize(1);
   }
+
+  void addSingleLayer(Layer& lay) {
+    bool layer_exists = false;
+    for (const auto* layer : layers_) {
+      if (layer == &lay) {
+        layer_exists = true;
+        break;
+      }
+    }
+
+    if (!layer_exists) {
+      lay.setID(V_);
+      layers_.push_back(&lay);
+      arrayV_.push_back(static_cast<int>(arrayE_.size()));
+
+      if (V_ >= static_cast<int>(in_edges_.size())) {
+        in_edges_.resize(V_ + 1);
+      }
+
+      V_++;
+    }
+  }
+
   void makeConnection(const Layer& layPrev, Layer& layNext) {
     bool layer_exists = false;
     for (const auto* layer : layers_) {

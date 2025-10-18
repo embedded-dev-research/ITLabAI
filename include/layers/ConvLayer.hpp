@@ -20,11 +20,16 @@ class ConvolutionalLayer : public Layer {
   bool useLegacyImpl_;
 
  public:
-  ConvolutionalLayer() = default;
+  ConvolutionalLayer() : Layer(kConvolution) {
+    stride_ = 0;
+    pads_ = 0;
+    dilations_ = 0;
+    implType_ = kDefault;
+  }
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
                      const Tensor& kernel, const Tensor& bias = Tensor(),
                      ImplType implType = kDefault, size_t group = 1,
-                     bool useLegacyImpl = false) {
+                     bool useLegacyImpl = false): Layer(kConvolution) {
     stride_ = step;
     pads_ = pads;
     group_ = group;

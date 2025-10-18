@@ -144,10 +144,6 @@ TEST(OutputLayer, topk_throws_when_too_big_k) {
   ASSERT_ANY_THROW(auto topk1 = layer.top_k(input_tensor, k));
 }
 
-TEST(OutputLayer, get_layer_name) {
-  EXPECT_EQ(OutputLayer::get_name(), "Output layer");
-}
-
 TEST(OutputLayer, softmax_works) {
   std::vector<double> input = {1.0, 2.5, 4.0, 5.5};
   std::vector<double> converted_input = {0.008657, 0.038774, 0.173774,

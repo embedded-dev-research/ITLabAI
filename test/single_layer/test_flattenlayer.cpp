@@ -180,10 +180,6 @@ TEST(flattenlayer, new_flattenlayer_can_flatten_int_reorder) {
   EXPECT_NO_THROW(layer3.run(in, out));
 }
 
-TEST(flattenlayer, get_layer_name) {
-  EXPECT_EQ(FlattenLayer::get_name(), "Flatten layer");
-}
-
 TEST(flattenlayer, MultipleInputTensorsThrowsError) {
   FlattenLayer layer;
   Shape sh({2, 3});

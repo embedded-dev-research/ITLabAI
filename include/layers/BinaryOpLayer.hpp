@@ -14,10 +14,9 @@ class BinaryOpLayer : public Layer {
  public:
   enum class Operation : uint8_t { kMul, kAdd, kSub, kDiv };
 
-  BinaryOpLayer() = default;
-  explicit BinaryOpLayer(Operation op) : op_(op) {}
+  BinaryOpLayer() : Layer(kBinaryOp), op_(Operation::kMul) {}
+  explicit BinaryOpLayer(Operation op) : Layer(kBinaryOp), op_(op) {}
 
-  static std::string get_name() { return "Binary Operation Layer"; }
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
   static bool is_scalar_tensor(const Tensor& t);
@@ -30,7 +29,7 @@ class BinaryOpLayer : public Layer {
 #endif
 
  private:
-  Operation op_ = Operation::kMul;
+  Operation op_;
 
   template <typename ValueType>
   void run_with_scalar_impl(const Tensor& input, ValueType scalar,

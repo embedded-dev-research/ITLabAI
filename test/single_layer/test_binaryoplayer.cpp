@@ -173,10 +173,6 @@ TEST_F(BinaryOpLayerTests, IncompatibleShapes) {
   EXPECT_THROW(layer.run(in, output), std::runtime_error);
 }
 
-TEST_F(BinaryOpLayerTests, LayerName) {
-  EXPECT_EQ(BinaryOpLayer::get_name(), "Binary Operation Layer");
-}
-
 TEST_F(BinaryOpLayerTests, EmptyTensors) {
   BinaryOpLayer layer(BinaryOpLayer::Operation::kMul);
   Tensor empty1({}, Type::kFloat);

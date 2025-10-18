@@ -15,10 +15,9 @@ class FCLayer : public Layer {
   Tensor bias_;
 
  public:
-  FCLayer() = default;
+  FCLayer() : Layer(kFullyConnected) {}
   FCLayer(Tensor weights, const Tensor& bias)
-      : weights_(std::move(weights)), bias_(bias) {}
-  static std::string get_name() { return "Fully-connected layer"; }
+      : Layer(kFullyConnected), weights_(std::move(weights)), bias_(bias) {}
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
