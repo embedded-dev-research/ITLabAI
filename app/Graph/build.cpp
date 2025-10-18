@@ -298,7 +298,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
   auto input_layer = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                              it_lab_ai::kNchw);
-  input_layer->setName(it_lab_ai::kInput);
   layers.push_back(input_layer);
   name_to_layer[input_layer_name] = input_layer;
   int current_id = 0;
@@ -374,16 +373,13 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
         auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
             stride, pads, dilations, tmp_tensor, tmp_bias, impl2, group);
-        conv_layer->setName(it_lab_ai::kConvolution);
         layer = conv_layer;
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
         auto ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
-        ew_layer->setName(it_lab_ai::kElementWise);
         layer = ew_layer;
       } else if (layer_type.find("Sigmoid") != std::string::npos) {
         auto ew_layer = std::make_shared<it_lab_ai::EWLayer>("sigmoid");
-        ew_layer->setName(it_lab_ai::kElementWise);
         layer = ew_layer;
 
       } else if (layer_type.find("Dense") != std::string::npos ||
@@ -404,11 +400,9 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
         auto fc_layer =
             std::make_shared<it_lab_ai::FCLayer>(tmp_tensor, tmp_bias);
-        fc_layer->setName(it_lab_ai::kFullyConnected);
         layer = fc_layer;
       } else if (layer_type.find("Dropout") != std::string::npos) {
         auto dropout_layer = std::make_shared<it_lab_ai::DropOutLayer>(0.0);
-        dropout_layer->setName(it_lab_ai::kDropout);
         layer = dropout_layer;
         if (comments)
           std::cout
@@ -418,7 +412,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       } else if (layer_type == "GlobalAveragePool") {
         auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
             it_lab_ai::Shape({0, 0}), "average", impl1);
-        pool_layer->setName(it_lab_ai::kPooling);
         layer = pool_layer;
         if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
@@ -503,8 +496,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                       << e.what() << std::endl;
           }
         }
-
-        pool_layer->setName(it_lab_ai::kPooling);
         layer = pool_layer;
       } else if (layer_type.find("Flatten") != std::string::npos) {
         int axis = 1;
@@ -516,7 +507,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
         auto flatten_layer = std::make_shared<it_lab_ai::FlattenLayer>(axis);
-        flatten_layer->setName(it_lab_ai::kFlatten);
         layer = flatten_layer;
       } else if (layer_type == "Concat") {
         int axis = 0;
@@ -531,7 +521,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
         auto concat_layer = std::make_shared<it_lab_ai::ConcatLayer>(axis);
-        concat_layer->setName(it_lab_ai::kConcat);
         layer = concat_layer;
         concat_connected_inputs[layer_name] = std::unordered_set<std::string>();
       } else if (layer_type == "Split") {
@@ -564,7 +553,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
         auto split_layer =
             std::make_shared<it_lab_ai::SplitLayer>(axis, splits);
-        split_layer->setName(it_lab_ai::kSplit);
         layer = split_layer;
 
         split_layers[layer_name] = split_layer;
@@ -619,7 +607,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             ew_operation = "linear";
             auto ew_layer =
                 std::make_shared<it_lab_ai::EWLayer>(ew_operation, value, 0.0F);
-            ew_layer->setName(it_lab_ai::kElementWise);
             layer = ew_layer;
             if (comments) {
               std::cout << "Created binary " << layer_type << " operation with "
@@ -629,13 +616,11 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             ew_operation = "linear";
             auto ew_layer =
                 std::make_shared<it_lab_ai::EWLayer>(ew_operation, 1.0F, value);
-            ew_layer->setName(it_lab_ai::kElementWise);
             layer = ew_layer;
           } else if (layer_type == "Sub") {
             ew_operation = "linear";
             auto ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,
                                                                  1.0F, -value);
-            ew_layer->setName(it_lab_ai::kElementWise);
             layer = ew_layer;
           } else {
             continue;
@@ -652,7 +637,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
             op = it_lab_ai::BinaryOpLayer::Operation::kDiv;
 
           auto bin_layer = std::make_shared<it_lab_ai::BinaryOpLayer>(op);
-          bin_layer->setName(it_lab_ai::kBinaryOp);
           layer = bin_layer;
         }
       } else if (layer_type == "Gemm") {
@@ -716,7 +700,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
         auto fc_layer =
             std::make_shared<it_lab_ai::FCLayer>(tmp_tensor, tmp_bias);
-        fc_layer->setName(it_lab_ai::kFullyConnected);
         layer = fc_layer;
       } else if (layer_type == "Transpose" ||
                  layer_type.find("transpose") != std::string::npos) {
@@ -733,7 +716,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
         auto transpose_layer =
             std::make_shared<it_lab_ai::TransposeLayer>(perm);
-        transpose_layer->setName(it_lab_ai::kTranspose);
         layer = transpose_layer;
 
         if (comments) {
@@ -779,7 +761,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
         auto reshape_layer =
             std::make_shared<it_lab_ai::ReshapeLayer>(allowzero, shape);
-        reshape_layer->setName(it_lab_ai::kReshape);
         layer = reshape_layer;
 
       } else if (layer_type == "ReduceMean") {
@@ -800,7 +781,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         }
         auto reduce_layer = std::make_shared<it_lab_ai::ReduceLayer>(
             it_lab_ai::ReduceLayer::Operation::kMean, keepdims, axes);
-        reduce_layer->setName(it_lab_ai::kReduce);
         layer = reduce_layer;
       } else if (layer_type == "ReduceSum") {
         int64_t keepdims = 0;
@@ -828,7 +808,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         }
         auto reduce_layer = std::make_shared<it_lab_ai::ReduceLayer>(
             it_lab_ai::ReduceLayer::Operation::kSum, keepdims, axes);
-        reduce_layer->setName(it_lab_ai::kReduce);
         layer = reduce_layer;
       } else if (layer_type == "Constant") {
         if (layer_data.contains("attributes")) {
@@ -852,7 +831,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         continue;
       } else if (layer_type == "MatMul") {
         auto matmul_layer = std::make_shared<it_lab_ai::MatmulLayer>();
-        matmul_layer->setName(it_lab_ai::kMatmul);
         layer = matmul_layer;
 
       } else if (layer_type == "Softmax") {
@@ -865,7 +843,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
           }
         }
         auto softmax_layer = std::make_shared<it_lab_ai::SoftmaxLayer>(axis);
-        softmax_layer->setName(it_lab_ai::kSoftmax);
         layer = softmax_layer;
 
       } else if (layer_type == "BatchNormalization") {
@@ -932,7 +909,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
         auto bn_layer = std::make_shared<it_lab_ai::BatchNormalizationLayer>(
             scale, bias, mean, var, epsilon, momentum, training_mode);
-        bn_layer->setName(it_lab_ai::kBatchNormalization);
         layer = bn_layer;
       } else {
         continue;

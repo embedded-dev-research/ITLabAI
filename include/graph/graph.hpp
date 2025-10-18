@@ -66,12 +66,12 @@ class Graph {
     V_ = 0;
     in_edges_.clear();
   }
-  
+
   void setSplitDistribution(
       const std::vector<std::vector<std::pair<int, int>>>& split_dist) {
     split_distribution_ = split_dist;
   }
-  
+
   int getVertexValue(size_t layerID) const {
     if (layerID >= arrayV_.size()) {
       throw std::invalid_argument("ArrayV does not contain this ID.");
@@ -100,7 +100,7 @@ class Graph {
     }
     return *layers_[layerID];
   }
-  
+
   void setInput(Layer& lay, Tensor& vec) {
     lay.setID(0);
     layers_.push_back(&lay);

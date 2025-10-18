@@ -12,7 +12,7 @@ class BatchNormalizationLayer : public Layer {
                           const Tensor& mean, const Tensor& var,
                           float epsilon = 1e-5F, float momentum = 0.9F,
                           bool training_mode = false)
-      : scale_(scale),
+      : Layer(kBatchNormalization), scale_(scale),
         bias_(bias),
         mean_(mean),
         var_(var),
@@ -26,8 +26,6 @@ class BatchNormalizationLayer : public Layer {
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return Tensor(); }
 #endif
-
-  static std::string get_name() { return "BatchNormalizationLayer"; }
 
   void set_epsilon(float epsilon) { epsilon_ = epsilon; }
   void set_momentum(float momentum) { momentum_ = momentum; }

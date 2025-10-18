@@ -29,7 +29,8 @@ class ConvolutionalLayer : public Layer {
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
                      const Tensor& kernel, const Tensor& bias = Tensor(),
                      ImplType implType = kDefault, size_t group = 1,
-                     bool useLegacyImpl = false): Layer(kConvolution) {
+                     bool useLegacyImpl = false)
+      : Layer(kConvolution) {
     stride_ = step;
     pads_ = pads;
     group_ = group;

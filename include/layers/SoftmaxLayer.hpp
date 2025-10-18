@@ -11,7 +11,7 @@ namespace it_lab_ai {
 
 class SoftmaxLayer : public Layer {
  public:
-  explicit SoftmaxLayer(int axis = -1) : axis_(axis) {}
+  explicit SoftmaxLayer(int axis = -1) : Layer(kSoftmax), axis_(axis) {}
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
@@ -19,8 +19,6 @@ class SoftmaxLayer : public Layer {
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return Tensor(); }
 #endif
-
-  static std::string get_name() { return "SoftmaxLayer"; }
 
   void set_axis(int axis) { axis_ = axis; }
   int get_axis() const { return axis_; }

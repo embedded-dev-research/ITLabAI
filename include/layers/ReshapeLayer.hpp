@@ -10,7 +10,7 @@ class ReshapeLayer : public Layer {
  public:
   explicit ReshapeLayer(bool allowzero = false,
                         const std::vector<int64_t>& shape = {})
-      : allowzero_(allowzero), shape_(shape) {}
+      : Layer(kReshape), allowzero_(allowzero), shape_(shape) {}
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
@@ -18,8 +18,6 @@ class ReshapeLayer : public Layer {
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return Tensor(); }
 #endif
-
-  static std::string get_name() { return "ReshapeLayer"; }
 
   void set_shape(const std::vector<int64_t>& shape) { shape_ = shape; }
   void set_allowzero(bool allowzero) { allowzero_ = allowzero; }

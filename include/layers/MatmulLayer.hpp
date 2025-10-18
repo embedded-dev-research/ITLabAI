@@ -8,7 +8,7 @@ namespace it_lab_ai {
 
 class MatmulLayer : public Layer {
  public:
-  MatmulLayer() = default;
+  MatmulLayer() : Layer(kMatmul) {}
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
@@ -16,8 +16,6 @@ class MatmulLayer : public Layer {
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return Tensor(); }
 #endif
-
-  static std::string get_name() { return "MatMulLayer"; }
 
  private:
   template <typename T>

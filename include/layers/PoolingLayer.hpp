@@ -23,7 +23,8 @@ class PoolingLayer : public Layer {
                const Shape& dilations = {1, 1}, bool ceil_mode = false,
                std::string pooling_type = "average",
                ImplType implType = kDefault)
-      : Layer(kPooling), poolingShape_(pooling_shape),
+      : Layer(kPooling),
+        poolingShape_(pooling_shape),
         strides_(strides),
         pads_(pads),
         dilations_(dilations),
@@ -32,7 +33,8 @@ class PoolingLayer : public Layer {
         implType_(implType) {}
   PoolingLayer(const Shape& pooling_shape, std::string pooling_type = "average",
                ImplType implType = kDefault)
-      : Layer(kPooling), poolingShape_(pooling_shape),
+      : Layer(kPooling),
+        poolingShape_(pooling_shape),
         strides_({2, 2}),
         pads_({0, 0, 0, 0}),
         dilations_({1, 1}),
