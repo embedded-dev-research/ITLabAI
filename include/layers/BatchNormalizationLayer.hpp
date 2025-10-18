@@ -12,7 +12,8 @@ class BatchNormalizationLayer : public Layer {
                           const Tensor& mean, const Tensor& var,
                           float epsilon = 1e-5F, float momentum = 0.9F,
                           bool training_mode = false)
-      : Layer(kBatchNormalization), scale_(scale),
+      : Layer(kBatchNormalization),
+        scale_(scale),
         bias_(bias),
         mean_(mean),
         var_(var),
