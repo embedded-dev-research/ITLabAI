@@ -1,4 +1,4 @@
-#include <algorithm>
+﻿#include <algorithm>
 #include <filesystem>
 #include <iomanip>
 #include <numeric>
@@ -18,30 +18,21 @@ int main(int argc, char* argv[]) {
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--parallel") {
       parallel = true;
-      std::cout << "Parallel mode" << std::endl;
     } else if (std::string(argv[i]) == "--model" && i + 1 < argc) {
       model_name = argv[++i];
     }
   }
 
-  std::cout << "Testing model: " << model_name << std::endl;
-
   std::string dataset_path;
   if (model_name == "alexnet_mnist") {
     dataset_path = MNIST_PATH;
-    std::cout << "Using MNIST dataset: " << dataset_path << std::endl;
   } else {
     dataset_path = IMAGENET_ACC;
-    std::cout << "Using ImageNet dataset: " << dataset_path << std::endl;
   }
 
   std::string json_path = model_paths[model_name];
   std::vector<int> input_shape = get_input_shape_from_json(json_path);
 
-  std::cout << "Input shape: ";
-  for (const auto& dim : input_shape) {
-    std::cout << dim << " ";
-  }
   std::cout << std::endl;
 
   if (model_name == "alexnet_mnist") {
@@ -79,7 +70,7 @@ int main(int argc, char* argv[]) {
           for (int j = 0; j < 28; ++j) {
             size_t a = ind;
             for (size_t n = 0; n < name; n++) a += counts[n] + 1;
-            res[(a) * 28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
+            res[(a)*28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
           }
         }
       }
@@ -120,7 +111,6 @@ int main(int argc, char* argv[]) {
 
   counts.resize(1000, 0);
 
-  std::cout << "Counting images..." << std::endl;
   for (int class_id = 0; class_id < 1000; ++class_id) {
     std::ostringstream folder_oss;
     folder_oss << std::setw(5) << std::setfill('0') << class_id;
@@ -136,13 +126,7 @@ int main(int argc, char* argv[]) {
         }
       }
     }
-    if (counts[class_id] > 0) {
-      std::cout << "Class " << folder_oss.str() << " (ID: " << class_id
-                << "): " << counts[class_id] << " images" << std::endl;
-    }
   }
-
-  std::cout << "Total images: " << total_images << std::endl;
 
   if (total_images == 0) {
     std::cerr << "No images found in dataset path: " << dataset_path
@@ -157,8 +141,6 @@ int main(int argc, char* argv[]) {
 
   all_image_data.resize(total_images * image_size);
 
-  std::cout << "Loading and processing images..." << std::endl;
-
   size_t current_index = 0;
   for (int class_id = 0; class_id < 1000; ++class_id) {
     std::ostringstream folder_oss;
@@ -171,11 +153,6 @@ int main(int argc, char* argv[]) {
       if (entry.path().extension() == ".png" ||
           entry.path().extension() == ".jpg" ||
           entry.path().extension() == ".jpeg") {
-        if (current_index % 100 == 0) {
-          std::cout << "Processed " << current_index << "/" << total_images
-                    << " images" << std::endl;
-        }
-
         cv::Mat image = cv::imread(entry.path().string());
         if (image.empty()) {
           std::cerr << "Failed to load image: " << entry.path().string()
@@ -196,8 +173,6 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-
-  std::cout << "All images processed, building graph..." << std::endl;
 
   it_lab_ai::Shape input_shape_imagenet(
       {total_images, static_cast<size_t>(channels), static_cast<size_t>(height),

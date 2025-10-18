@@ -31,7 +31,6 @@ int main(int argc, char* argv[]) {
   } else {
     image_folder = IMAGENET_PATH;
   }
-  std::cout << "Using image folder: " << image_folder << std::endl;
 
   std::vector<std::string> image_paths;
   for (const auto& entry : fs::directory_iterator(image_folder)) {
@@ -41,9 +40,6 @@ int main(int argc, char* argv[]) {
       image_paths.push_back(entry.path().string());
     }
   }
-
-  std::cout << "Found " << image_paths.size() << " images to process"
-            << std::endl;
 
   std::unordered_map<int, std::string> class_names;
   try {
@@ -60,10 +56,6 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-      std::cout << "\nProcessing image: " << image_path << std::endl;
-      std::cout << "Original size: " << image.cols << "x" << image.rows
-                << ", channels: " << image.channels() << std::endl;
-
       if (model_name == "alexnet_mnist") {
         it_lab_ai::Tensor input = prepare_mnist_image(image);
         it_lab_ai::Shape sh1({1, 5, 5, 3});
