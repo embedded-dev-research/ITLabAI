@@ -6,7 +6,7 @@
 
 <!--ACCURACY_PLACEHOLDER-->Accuracy: Stat: 98.01% (updated: 2025-04-28)<!--END_ACCURACY-->
 ## Short description
-A lightweight C++ library for performing high-performance inference on MNIST and ImageNet using a modified AlexNet, different ONNX and Yolo architectures. Designed for efficiency and educational purposes, this project demonstrates how classic CNNs can be optimized for small-scale tasks in native environments.
+A lightweight C++ library for performing high-performance inference on classification tasks. Designed for efficiency and educational purposes, this project demonstrates how classic CNNs can be optimized for small-scale tasks in native environments.
 ### Key Features:
 
 * C++17 implementation for bare-metal performance
@@ -17,7 +17,7 @@ A lightweight C++ library for performing high-performance inference on MNIST and
 
 * Parallel computing via Intel OneTBB (Threading Building Blocks)
 
-* Pre-trained model: AlexNet-model.h5, Googlenet included
+* Pre-trained model: AlexNet-model.h5, Googlenet.onnx included
 ## **Some files used to create the library**
 ### Neural network models
 You need to download [Alexnet-model.h5](https://github.com/moizahmed97/Convolutional-Neural-Net-Designer/blob/master/AlexNet-model.h5) to the folder *docs*
