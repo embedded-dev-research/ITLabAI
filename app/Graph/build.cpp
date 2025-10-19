@@ -259,8 +259,6 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   auto& concat_connections = parse_result.concat_connections;
   auto& concat_orders = parse_result.concat_orders;
   auto& concat_connected_inputs = parse_result.concat_connected_inputs;
-  auto& split_layers = parse_result.split_layers;
-  auto& split_name_to_index = parse_result.split_name_to_index;
   auto& split_distribution = parse_result.split_distribution;
   auto& original_ids = parse_result.original_ids;
 
@@ -380,7 +378,6 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
   auto& name_to_layer = result.name_to_layer;
   auto& connections = result.connections;
   auto& concat_connections = result.concat_connections;
-  auto& concat_orders = result.concat_orders;
   auto& concat_connected_inputs = result.concat_connected_inputs;
   auto& split_layers = result.split_layers;
   auto& split_name_to_index = result.split_name_to_index;
@@ -750,6 +747,9 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
             op = it_lab_ai::BinaryOpLayer::Operation::kMul;
           else if (layer_type == "Div")
             op = it_lab_ai::BinaryOpLayer::Operation::kDiv;
+          else {
+            op = it_lab_ai::BinaryOpLayer::Operation::kAdd;
+          }
 
           auto bin_layer = std::make_shared<it_lab_ai::BinaryOpLayer>(op);
           layer = bin_layer;
