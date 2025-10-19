@@ -145,15 +145,28 @@ TEST(flattenlayer, new_flattenlayer_can_flatten_float_reorder) {
     input_vec[i] = static_cast<float>(i);
   }
 
+  std::vector<float> expected_2 = {0.0f, 12.0f, 1.0f,  13.0f, 2.0f,  14.0f,
+                                   3.0f, 15.0f, 4.0f,  16.0f, 5.0f,  17.0f,
+                                   6.0f, 18.0f, 7.0f,  19.0f, 8.0f,  20.0f,
+                                   9.0f, 21.0f, 10.0f, 22.0f, 11.0f, 23.0f};
+  std::vector<float> expected_3 = {0.0f,  6.0f,  1.0f,  7.0f,  2.0f,  8.0f,
+                                   3.0f,  9.0f,  4.0f,  10.0f, 5.0f,  11.0f,
+                                   12.0f, 18.0f, 13.0f, 19.0f, 14.0f, 20.0f,
+                                   15.0f, 21.0f, 16.0f, 22.0f, 17.0f, 23.0f};
+
   Tensor input = make_tensor<float>(input_vec, sh);
   Tensor output;
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
   layer1.run(in, out);
+  EXPECT_EQ(*out[0].as<float>(), input_vec);
+  layer2.run(in, out);
+  EXPECT_EQ(*out[0].as<float>(), expected_2);
+  layer3.run(in, out);
+  EXPECT_EQ(*out[0].as<float>(), expected_3);
   EXPECT_EQ(out[0].get_shape().dims(), 1);
   EXPECT_EQ(out[0].get_shape()[0], sh.count());
-
   EXPECT_NO_THROW(layer2.run(in, out));
   EXPECT_NO_THROW(layer3.run(in, out));
 }

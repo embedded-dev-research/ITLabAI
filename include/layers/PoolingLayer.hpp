@@ -128,7 +128,8 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
       strides_(strides),
       pads_(pads),
       dilations_(dilations),
-      ceil_mode_(ceil_mode) {
+      ceil_mode_(ceil_mode),
+      poolingType_(kAverage) {
   if (pooling_shape[0] == 0 && pooling_shape[1] == 0) {
     poolingShape_ = Shape({input_shape[input_shape.dims() - 2],
                            input_shape[input_shape.dims() - 1]});
@@ -139,6 +140,7 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
     for (size_t i = 2; i < input_shape.dims(); ++i) {
       this->outputShape_[i] = 1;
     }
+    poolingType_ = kAverage;
     return;
   }
   if (input_shape.dims() > 4) {
@@ -153,11 +155,14 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
   if (pooling_shape.dims() == 0) {
     throw std::invalid_argument("Pooling shape has no dimensions");
   }
+
   if (pooling_type == "average") {
     poolingType_ = kAverage;
   } else if (pooling_type == "max") {
     poolingType_ = kMax;
   } else {
+    std::cerr << "ERROR: Unknown pooling type: '" << pooling_type << "'"
+              << std::endl;
     throw std::invalid_argument("Pooling type " + pooling_type +
                                 " is not supported");
   }

@@ -263,13 +263,6 @@ class Graph {
         }
         new_branch.distribution = dis;
       }
-      if (layers_[current_layer]->getName() == kSplit) {
-        for (const auto& tensor : outten_) {
-          for (size_t d = 0; d < tensor.get_shape().dims(); ++d) {
-            if (d < tensor.get_shape().dims() - 1) std::cout << "";
-          }
-        }
-      }
       branch_list_.push_back(new_branch);
 
 #ifdef ENABLE_STATISTIC_TIME

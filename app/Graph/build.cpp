@@ -1,9 +1,6 @@
 ﻿#include "build.hpp"
 
 #include <regex>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
 
 using namespace it_lab_ai;
 
@@ -254,34 +251,151 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     }
   }
 
+  auto parse_result = parse_json_model(json_path, comments, parallel);
+
+  auto& layers = parse_result.layers;
+  auto& name_to_layer = parse_result.name_to_layer;
+  auto& connections = parse_result.connections;
+  auto& concat_connections = parse_result.concat_connections;
+  auto& concat_orders = parse_result.concat_orders;
+  auto& concat_connected_inputs = parse_result.concat_connected_inputs;
+  auto& split_layers = parse_result.split_layers;
+  auto& split_name_to_index = parse_result.split_name_to_index;
+  auto& split_distribution = parse_result.split_distribution;
+  auto& original_ids = parse_result.original_ids;
+
+  it_lab_ai::Graph graph(static_cast<int>(layers.size()));
+
+  auto input_layer_it = std::find_if(
+      layers.begin(), layers.end(),
+      [](const auto& layer) { return layer->getName() == it_lab_ai::kInput; });
+
+  if (input_layer_it != layers.end()) {
+    graph.setInput(**input_layer_it, input);
+  }
+
+  std::vector<std::pair<std::string, std::string>> connection_list;
+
+  for (const auto& [source_tensor, target_layers] : connections) {
+    std::string source_layer_name = get_base_layer_name(source_tensor);
+
+    for (const auto& target_layer_name : target_layers) {
+      connection_list.emplace_back(source_layer_name, target_layer_name);
+    }
+  }
+
+  try {
+    std::sort(
+        connection_list.begin(), connection_list.end(),
+        [&](const auto& a, const auto& b) {
+          if (!name_to_layer.count(a.first) || !name_to_layer.count(b.first)) {
+            return false;
+          }
+          return name_to_layer[a.first]->getID() <
+                 name_to_layer[b.first]->getID();
+        });
+  } catch (const std::exception& e) {
+    std::cerr << "ERROR during sorting: " << e.what() << std::endl;
+  }
+
+  for (const auto& [source_name, target_name] : connection_list) {
+    if (name_to_layer.count(source_name) && name_to_layer.count(target_name)) {
+      if (target_name.find("Concat") != std::string::npos ||
+          name_to_layer[target_name]->getName() == it_lab_ai::kConcat) {
+        if (concat_connections.find(target_name) != concat_connections.end()) {
+          const auto& expected_inputs = concat_connections[target_name];
+          auto it = std::find(expected_inputs.begin(), expected_inputs.end(),
+                              source_name);
+
+          if (it != expected_inputs.end()) {
+            int input_index =
+                static_cast<int>(std::distance(expected_inputs.begin(), it));
+            concat_orders[target_name].push_back(input_index);
+            concat_connected_inputs[target_name].insert(source_name);
+
+            if (concat_connected_inputs[target_name].size() ==
+                concat_connections[target_name].size()) {
+              auto concat_layer =
+                  std::dynamic_pointer_cast<it_lab_ai::ConcatLayer>(
+                      name_to_layer[target_name]);
+              if (concat_layer) {
+                concat_layer->setInputOrder(concat_orders[target_name]);
+              }
+            }
+          }
+        }
+      }
+
+      try {
+        graph.makeConnection(*name_to_layer[source_name],
+                             *name_to_layer[target_name]);
+
+      } catch (const std::exception& e) {
+        std::cerr << "Failed: " << source_name << " -> " << target_name << " : "
+                  << e.what() << std::endl;
+      }
+    }
+  }
+
+  for (auto& split_dist : split_distribution) {
+    for (auto& connection : split_dist) {
+      for (const auto& [name, layer] : name_to_layer) {
+        if (original_ids[name] == connection.first) {
+          connection.first = layer->getID();
+          break;
+        }
+      }
+    }
+  }
+  graph.setSplitDistribution(split_distribution);
+  auto output_layer = layers.back();
+  graph.setOutput(*output_layer, output);
+
+  if (comments) std::cout << "Starting inference..." << std::endl;
+  try {
+    graph.inference();
+    if (comments) std::cout << "Inference completed successfully." << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "ERROR during inference: " << e.what() << std::endl;
+  }
+
+#ifdef ENABLE_STATISTIC_TIME
+  std::vector<std::string> times = graph.getTimeInfo();
+  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
+  for (size_t i = 0; i < times.size(); i++) {
+    std::cout << times[i] << std::endl;
+  }
+  std::vector<int> elps_time = graph.getTime();
+  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
+  std::cout << "Elapsed inference time:" << sum << std::endl;
+  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+#endif
+}
+
+ParseResult parse_json_model(const std::string& json_path, bool comments,
+                             bool parallel) {
+  ParseResult result;
+
+  auto& layers = result.layers;
+  auto& name_to_layer = result.name_to_layer;
+  auto& connections = result.connections;
+  auto& concat_connections = result.concat_connections;
+  auto& concat_orders = result.concat_orders;
+  auto& concat_connected_inputs = result.concat_connected_inputs;
+  auto& split_layers = result.split_layers;
+  auto& split_name_to_index = result.split_name_to_index;
+  auto& split_distribution = result.split_distribution;
+  auto& original_ids = result.original_ids;
+
   it_lab_ai::ImplType impl1 = parallel ? it_lab_ai::kTBB : it_lab_ai::kDefault;
   it_lab_ai::ImplType impl2 = parallel ? it_lab_ai::kSTL : it_lab_ai::kDefault;
-
-  std::unordered_map<std::string, std::vector<std::string>> concat_connections;
-  std::unordered_map<std::string, std::vector<int>> concat_orders;
-  std::unordered_map<std::string, std::unordered_set<std::string>>
-      concat_connected_inputs;
 
   std::unordered_map<std::string, std::vector<int64_t>> layer_parameters;
   std::unordered_map<std::string, float> float_parameters;
   std::string last_constant_name;
   std::vector<int64_t> last_constant_value;
 
-  std::unordered_map<std::string, std::shared_ptr<it_lab_ai::SplitLayer>>
-      split_layers;
-  std::unordered_map<std::string, int> split_output_mapping;
-  std::vector<std::vector<std::pair<int, int>>> split_distribution;
-  std::unordered_map<std::string, int> split_name_to_index;
-  std::unordered_map<std::string, int> original_ids;
-
-  std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
-  std::unordered_map<std::string, std::shared_ptr<it_lab_ai::Layer>>
-      name_to_layer;
-  std::unordered_map<std::string, std::vector<std::string>> connections;
-
-  std::vector<std::pair<std::string, std::string>> connection_list;
   const std::string& json_file = json_path;
-
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
   std::string input_layer_name = "images";
   for (const auto& layer_data : model_data) {
@@ -302,6 +416,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   name_to_layer[input_layer_name] = input_layer;
   int current_id = 0;
   input_layer->setID(current_id++);
+
   for (const auto& layer_data : model_data) {
     try {
       std::string layer_type = layer_data["type"];
@@ -982,107 +1097,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     }
   }
 
-  it_lab_ai::Graph graph(static_cast<int>(layers.size()));
-
-  graph.setInput(*input_layer, input);
-
-  for (const auto& [source_tensor, target_layers] : connections) {
-    std::string source_layer_name = get_base_layer_name(source_tensor);
-
-    for (const auto& target_layer_name : target_layers) {
-      connection_list.emplace_back(source_layer_name, target_layer_name);
-    }
-  }
-
-  try {
-    std::sort(
-        connection_list.begin(), connection_list.end(),
-        [&](const auto& a, const auto& b) {
-          if (!name_to_layer.count(a.first) || !name_to_layer.count(b.first)) {
-            return false;
-          }
-          return name_to_layer[a.first]->getID() <
-                 name_to_layer[b.first]->getID();
-        });
-  } catch (const std::exception& e) {
-    std::cerr << "ERROR during sorting: " << e.what() << std::endl;
-  }
-
-  std::vector<int> order = {};
-
-  for (const auto& [source_name, target_name] : connection_list) {
-    if (name_to_layer.count(source_name) && name_to_layer.count(target_name)) {
-      if (target_name.find("Concat") != std::string::npos ||
-          name_to_layer[target_name]->getName() == it_lab_ai::kConcat) {
-        if (concat_connections.find(target_name) != concat_connections.end()) {
-          const auto& expected_inputs = concat_connections[target_name];
-          auto it = std::find(expected_inputs.begin(), expected_inputs.end(),
-                              source_name);
-
-          if (it != expected_inputs.end()) {
-            int input_index =
-                static_cast<int>(std::distance(expected_inputs.begin(), it));
-            concat_orders[target_name].push_back(input_index);
-            concat_connected_inputs[target_name].insert(source_name);
-
-            if (concat_connected_inputs[target_name].size() ==
-                concat_connections[target_name].size()) {
-              auto concat_layer =
-                  std::dynamic_pointer_cast<it_lab_ai::ConcatLayer>(
-                      name_to_layer[target_name]);
-              if (concat_layer) {
-                concat_layer->setInputOrder(concat_orders[target_name]);
-              }
-            }
-          }
-        }
-      }
-
-      try {
-        graph.makeConnection(*name_to_layer[source_name],
-                             *name_to_layer[target_name]);
-
-      } catch (const std::exception& e) {
-        std::cerr << "Failed: " << source_name << " -> " << target_name << " : "
-                  << e.what() << std::endl;
-      }
-    }
-  }
-  for (auto& split_dist : split_distribution) {
-    for (auto& connection : split_dist) {
-      for (const auto& [name, layer] : name_to_layer) {
-        if (original_ids[name] == connection.first) {
-          connection.first = layer->getID();
-          break;
-        }
-      }
-    }
-  }
-  graph.setSplitDistribution(split_distribution);
-  auto output_layer = layers.back();
-  graph.setOutput(*output_layer, output);
-  auto in_out_degrees = graph.getInOutDegrees();
-  auto traversal_order = graph.getTraversalOrder();
-
-  if (comments) std::cout << "Starting inference..." << std::endl;
-  try {
-    graph.inference();
-    if (comments) std::cout << "Inference completed successfully." << std::endl;
-  } catch (const std::exception& e) {
-    std::cerr << "ERROR during inference: " << e.what() << std::endl;
-  }
-
-#ifdef ENABLE_STATISTIC_TIME
-  std::vector<std::string> times = graph.getTimeInfo();
-  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
-  for (size_t i = 0; i < times.size(); i++) {
-    std::cout << times[i] << std::endl;
-  }
-  std::vector<int> elps_time = graph.getTime();
-  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-  std::cout << "Elapsed inference time:" << sum << std::endl;
-  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-#endif
+  return result;
 }
 
 std::unordered_map<int, std::string> load_class_names(
