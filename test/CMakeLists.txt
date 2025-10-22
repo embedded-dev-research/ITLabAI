@@ -4,7 +4,7 @@ add_executable(run_test ${TEST_SRC_FILES})
 if (NOT WIN32)
     target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
 endif()
-target_link_libraries(run_test PUBLIC perf_lib layers_lib)
+target_link_libraries(run_test PUBLIC perf_lib layers_lib layers_oneDNN_lib)
 target_link_libraries(run_test PUBLIC gtest)
 target_link_libraries(run_test PUBLIC ReadLib)
 target_link_libraries(run_test PUBLIC reader_lib)
@@ -24,6 +24,14 @@ if (WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BUILD_DIR}/bin/."
             "${CMAKE_BINARY_DIR}/bin/")
+endif()
+
+if (WIN32)
+    add_custom_command(TARGET run_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            $<TARGET_FILE:dnnl>
+            $<TARGET_FILE_DIR:run_test>
+    )
 endif()
 
 add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/run_test)

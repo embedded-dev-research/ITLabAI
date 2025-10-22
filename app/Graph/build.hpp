@@ -66,7 +66,7 @@ std::unordered_map<int, std::string> load_class_names(
     const std::string& filename);
 
 ParseResult parse_json_model(const std::string& json_path, bool comments,
-                             bool parallel, bool use_onednn);
+                             bool parallel, bool onednn);
 
 std::vector<int> get_input_shape_from_json(const std::string& json_path);
 std::vector<float> process_model_output(const std::vector<float>& output,

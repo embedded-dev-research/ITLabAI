@@ -377,7 +377,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 }
 
 ParseResult parse_json_model(const std::string& json_path, bool comments,
-                             bool parallel, bool use_onednn) {
+                             bool parallel, bool onednn) {
   ParseResult result;
 
   auto& layers = result.layers;
@@ -495,7 +495,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
         std::shared_ptr<it_lab_ai::Layer> ew_layer;
-        if (use_onednn) {
+        if (onednn) {
           ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>("relu");
         } else {
           ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
@@ -503,7 +503,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
         layer = ew_layer;
       } else if (layer_type.find("Sigmoid") != std::string::npos) {
         std::shared_ptr<it_lab_ai::Layer> ew_layer;
-        if (use_onednn) {
+        if (onednn) {
           ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>("sigmoid");
         } else {
           ew_layer = std::make_shared<it_lab_ai::EWLayer>("sigmoid");
@@ -733,7 +733,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
           if (layer_type == "Mul") {
             ew_operation = "linear";
             std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            if (use_onednn) {
+            if (onednn) {
               ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>(
                   ew_operation, value, 0.0F);
             } else {
@@ -744,7 +744,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
           } else if (layer_type == "Add") {
             ew_operation = "linear";
             std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            if (use_onednn &&
+            if (onednn &&
                 it_lab_ai::EWLayer_oneDNN::is_function_supported("linear")) {
               ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>(
                   ew_operation, 1.0F, value);
@@ -756,7 +756,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
           } else if (layer_type == "Sub") {
             ew_operation = "linear";
             std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            if (use_onednn &&
+            if (onednn &&
                 it_lab_ai::EWLayer_oneDNN::is_function_supported("linear")) {
               ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>(
                   ew_operation, 1.0F, -value);
