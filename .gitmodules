@@ -12,4 +12,4 @@
 	url = https://github.com/nlohmann/json
 [submodule "3rdparty/oneDNN"]
 	path = 3rdparty/oneDNN
-	url = https://github.com/uxlfoundation/oneDNN.git
+	url = https://github.com/uxlfoundation/oneDNN
