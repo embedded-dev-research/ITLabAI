@@ -11,6 +11,7 @@ target_link_libraries(BuildGraph PUBLIC ${OpenCV_LIBS})
 target_link_libraries(BuildGraph PUBLIC reader_lib)
 target_link_libraries(BuildGraph PUBLIC TBB_unified)
 target_link_libraries(BuildGraph PUBLIC layers_lib)
+target_link_libraries(BuildGraph PUBLIC layers_oneDNN_lib)
 target_link_libraries(BuildGraph PUBLIC gtest_main)
 
 target_include_directories(BuildGraph PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/Json/include)
