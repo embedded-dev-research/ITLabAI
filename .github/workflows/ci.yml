@@ -45,6 +45,9 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DOPENCV_PATH=build/3rdparty/opencv_build \
+            -DDNNL_GRAPH_DISABLE=ON \  # ← отключаем Graph
+            -DDNNL_BUILD_EXAMPLES=OFF \
+            -DDNNL_BUILD_TESTS=OFF \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
