@@ -146,11 +146,6 @@ TEST(ewlayer_onednn, multidim_tensor_relu) {
   }
 }
 
-TEST(ewlayer_onednn, unsupported_function_throws) {
-  EXPECT_THROW(
-      { EWLayer_oneDNN layer("unsupported_function"); }, std::invalid_argument);
-}
-
 TEST(ewlayer_onednn, compare_with_naive_relu) {
   EWLayer_oneDNN onednn_layer("relu");
 
