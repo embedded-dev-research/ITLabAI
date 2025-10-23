@@ -73,8 +73,8 @@ void EWLayer_oneDNN::initialize_onednn(const Shape& shape) {
         format = dnnl::memory::format_tag::abcde;
         break;
       default:
-        format = dnnl::memory::format_tag::a;
-        break;
+        throw std::invalid_argument("Unsupported tensor dimensionality: " +
+                                    std::to_string(dims.size()));
     }
 
     memory_desc_ =
@@ -100,8 +100,6 @@ void EWLayer_oneDNN::initialize_onednn(const Shape& shape) {
 
     initialized_ = true;
 
-    std::cout << "oneDNN EWLayer initialized for function: " << func_
-              << " with shape: [";
     for (size_t i = 0; i < dims.size(); ++i) {
       std::cout << dims[i];
       if (i < dims.size() - 1) std::cout << ", ";

@@ -55,4 +55,3 @@ target_compile_definitions(run_test PRIVATE TEST_DATA_PATH="${CMAKE_SOURCE_DIR}/
 
 
 target_compile_definitions(run_test PUBLIC TESTS_BINARY_PATH="${CMAKE_CURRENT_BINARY_DIR}")
-
