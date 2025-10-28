@@ -1,4 +1,12 @@
 add_subdirectory(googletest)
+
+set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "Build examples")
+set(DNNL_BUILD_TESTS OFF CACHE BOOL "Build tests") 
+set(DNNL_CPU_RUNTIME "OMP" CACHE STRING "CPU runtime")
+set(DNNL_GRAPH_DISABLE ON CACHE BOOL "Disable dnnl graph")
+
+set(CMAKE_BUILD_PARALLEL_LEVEL 2 CACHE STRING "Parallel build level")
+
 add_subdirectory(oneDNN)
 
 # Unified TBB Configuration
