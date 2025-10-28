@@ -40,7 +40,7 @@ jobs:
         max-size: 2G
     - name: Build
       run: |
-            cmake -S . -B build \
+            cmake -S . -B build -G Ninja \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
@@ -94,7 +94,7 @@ jobs:
       run: |
         export CMAKE_BUILD_PARALLEL_LEVEL=2
         export MAKEFLAGS="-j2"
-        cmake -S . -B build \
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER=clang \
@@ -127,7 +127,7 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build
       run: |
-        cmake -S . -B build \
+        cmake -S . -B build -G Ninja  \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_FLAGS="-I$(brew --prefix libomp)/include" \
@@ -203,7 +203,7 @@ jobs:
         max-size: 2G
     - name: Build
       run: |
-        cmake -S . -B build \
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_FLAGS="--coverage" \
@@ -245,7 +245,8 @@ jobs:
           libtbb12 \
           libjpeg-dev \
           libpng-dev \
-          libtiff-dev
+          libtiff-dev \
+          libopenjp2-7
         sudo ldconfig
     - name: Generate model JSON
       run: |
