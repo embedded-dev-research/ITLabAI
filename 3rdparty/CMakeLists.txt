@@ -5,6 +5,12 @@ set(DNNL_BUILD_TESTS OFF CACHE BOOL "Build tests")
 set(DNNL_CPU_RUNTIME "OMP" CACHE STRING "CPU runtime")
 set(DNNL_GRAPH_DISABLE ON CACHE BOOL "Disable dnnl graph")
 set(CMAKE_BUILD_PARALLEL_LEVEL 2 CACHE STRING "Parallel build level")
+set(DNNL_GRAPH_BUILD_TESTS OFF)
+set(DNNL_GRAPH_BUILD_EXAMPLES OFF)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(DNNL_ARCH_OPT_FLAGS "-O2" CACHE STRING "Architecture optimization flags")
+endif()
 
 add_subdirectory(oneDNN)
 
