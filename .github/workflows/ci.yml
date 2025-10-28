@@ -177,8 +177,7 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build and Test
       run: |
-        export MAKEFLAGS="-j2"
-        cmake -S . -B build \
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_BUILD_TYPE=Release
@@ -186,7 +185,6 @@ jobs:
         cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-        CMAKE_BUILD_PARALLEL_LEVEL: 2
   codecov:
     runs-on: ubuntu-latest
     steps:
