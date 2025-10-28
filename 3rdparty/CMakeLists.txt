@@ -1,24 +1,34 @@
 add_subdirectory(googletest)
 
-set(DNNL_BUILD_EXAMPLES OFF)
-set(DNNL_BUILD_TESTS OFF) 
-set(DNNL_CPU_RUNTIME "OMP")
-set(DNNL_GRAPH_DISABLE ON)
-set(DNNL_GRAPH_BUILD_TESTS OFF)
-set(DNNL_GRAPH_BUILD_EXAMPLES OFF)
+include(ExternalProject)
 
-if(UNIX AND NOT APPLE)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -j2")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -j2")
-endif()
+set(ONEDNN_SOURCE_DIR ${CMAKE_SOURCE_DIR}/3rdparty/oneDNN)
+set(ONEDNN_BINARY_DIR ${CMAKE_BINARY_DIR}/oneDNN_build)
 
-add_subdirectory(oneDNN)
+ExternalProject_Add(oneDNN_external
+    SOURCE_DIR ${ONEDNN_SOURCE_DIR}
+    BINARY_DIR ${ONEDNN_BINARY_DIR}
+    CMAKE_ARGS 
+        -DDNNL_BUILD_EXAMPLES=OFF
+        -DDNNL_BUILD_TESTS=OFF
+        -DDNNL_CPU_RUNTIME=OMP
+        -DDNNL_GRAPH_DISABLE=ON
+        -DDNNL_GRAPH_BUILD_TESTS=OFF
+        -DDNNL_GRAPH_BUILD_EXAMPLES=OFF
+        -DCMAKE_BUILD_PARALLEL_LEVEL=2
+    INSTALL_COMMAND ""
+    BUILD_BYPRODUCTS 
+        ${ONEDNN_BINARY_DIR}/src/libdnnl.a
+        ${ONEDNN_BINARY_DIR}/src/libdnnl.so
+)
 
-if(UNIX AND NOT APPLE)
-    set(CMAKE_C_FLAGS "")
-    set(CMAKE_CXX_FLAGS "")
-endif()
+add_library(dnnl STATIC IMPORTED)
+set_target_properties(dnnl PROPERTIES
+    IMPORTED_LOCATION ${ONEDNN_BINARY_DIR}/src/libdnnl.a
+    INTERFACE_INCLUDE_DIRECTORIES ${ONEDNN_SOURCE_DIR}/include
+)
 
+add_dependencies(dnnl oneDNN_external)
 # Unified TBB Configuration
 option(TBB_TEST "Build TBB tests" OFF)
 option(TBB_EXAMPLES "Build TBB examples" OFF)
