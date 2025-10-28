@@ -4,28 +4,9 @@ set(DNNL_BUILD_EXAMPLES OFF CACHE BOOL "Build examples")
 set(DNNL_BUILD_TESTS OFF CACHE BOOL "Build tests") 
 set(DNNL_CPU_RUNTIME "OMP" CACHE STRING "CPU runtime")
 set(DNNL_GRAPH_DISABLE ON CACHE BOOL "Disable dnnl graph")
+set(CMAKE_BUILD_PARALLEL_LEVEL 2 CACHE STRING "Parallel build level")
 set(DNNL_GRAPH_BUILD_TESTS OFF)
 set(DNNL_GRAPH_BUILD_EXAMPLES OFF)
-set(DNNL_ENABLE_PRIMITIVE_CACHE ON CACHE BOOL "Enable primitive cache")
-
-set(DNNL_ENABLE_CONCURRENT_EXEC OFF CACHE BOOL "Disable concurrent execution")
-set(DNNL_ENABLE_ITT_TASKS OFF CACHE BOOL "Disable ITT tasks")
-set(DNNL_ENABLE_JIT_DUMP OFF CACHE BOOL "Disable JIT dump")
-set(DNNL_ENABLE_JIT_PROFILING OFF CACHE BOOL "Disable JIT profiling")
-set(DNNL_ENABLE_MEM_DEBUG OFF CACHE BOOL "Disable memory debug")
-set(DNNL_ENABLE_PRIMITIVE_LOG OFF CACHE BOOL "Disable primitive log")
-set(DNNL_VERBOSE OFF CACHE BOOL "Disable verbose output")
-
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
-    set(DNNL_TARGET_ARCH "AARCH64" CACHE STRING "Target architecture")
-    set(DNNL_AARCH64_USE_ACL OFF CACHE BOOL "Disable ARM Compute Library")
-    set(DNNL_AARCH64_USE_DNNL OFF CACHE BOOL "Use minimal DNNL for ARM")
-endif()
-
-# Для Clang
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(DNNL_ARCH_OPT_FLAGS "-O2" CACHE STRING "Architecture optimization flags")
-endif()
 
 add_subdirectory(oneDNN)
 
