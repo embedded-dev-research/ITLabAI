@@ -82,7 +82,7 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     if (layer_type.find("relu") != std::string::npos) {
       std::shared_ptr<it_lab_ai::Layer> ew_layer;
       if (onednn) {
-        ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>("relu");
+        ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>("relu");
       } else {
         ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
       }
@@ -496,7 +496,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
                  layer_type.find("relu") != std::string::npos) {
         std::shared_ptr<it_lab_ai::Layer> ew_layer;
         if (onednn) {
-          ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>("relu");
+          ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>("relu");
         } else {
           ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
         }
@@ -504,7 +504,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
       } else if (layer_type.find("Sigmoid") != std::string::npos) {
         std::shared_ptr<it_lab_ai::Layer> ew_layer;
         if (onednn) {
-          ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>("sigmoid");
+          ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>("sigmoid");
         } else {
           ew_layer = std::make_shared<it_lab_ai::EWLayer>("sigmoid");
         }
@@ -734,7 +734,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
             ew_operation = "linear";
             std::shared_ptr<it_lab_ai::Layer> ew_layer;
             if (onednn) {
-              ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>(
+              ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>(
                   ew_operation, value, 0.0F);
             } else {
               ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,
@@ -745,8 +745,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
             ew_operation = "linear";
             std::shared_ptr<it_lab_ai::Layer> ew_layer;
             if (onednn &&
-                it_lab_ai::EWLayer_oneDNN::is_function_supported("linear")) {
-              ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>(
+                it_lab_ai::EwLayerOneDnn::is_function_supported("linear")) {
+              ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>(
                   ew_operation, 1.0F, value);
             } else {
               ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,
@@ -757,8 +757,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
             ew_operation = "linear";
             std::shared_ptr<it_lab_ai::Layer> ew_layer;
             if (onednn &&
-                it_lab_ai::EWLayer_oneDNN::is_function_supported("linear")) {
-              ew_layer = std::make_shared<it_lab_ai::EWLayer_oneDNN>(
+                it_lab_ai::EwLayerOneDnn::is_function_supported("linear")) {
+              ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>(
                   ew_operation, 1.0F, -value);
             } else {
               ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,

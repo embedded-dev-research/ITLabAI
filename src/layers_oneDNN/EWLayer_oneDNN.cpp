@@ -1,34 +1,60 @@
-#include "layers_oneDNN/EWLayer_oneDNN.hpp"
+#include "layers_oneDNN/EwLayer_oneDnn.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
 namespace it_lab_ai {
 
-void EWLayer_oneDNN::run(const std::vector<Tensor>& input,
-                         std::vector<Tensor>& output) {
+void EwLayerOneDnn::run(const std::vector<Tensor>& input,
+                        std::vector<Tensor>& output) {
   validate_input(input);
 
   const Tensor& input_tensor = input[0];
+  Type data_type = input_tensor.get_type();
 
   if (!initialized_) {
-    initialize_onednn(input_tensor.get_shape());
-  }
-  if (input_tensor.get_type() != Type::kFloat) {
-    throw std::runtime_error("oneDNN EWLayer supports only float tensors");
+    initialize_onednn(input_tensor.get_shape(), data_type);
   }
 
   try {
-    const std::vector<float>& input_data = *input_tensor.as<float>();
-    std::vector<float> output_data(input_data.size());
-    dnnl::memory src_mem = dnnl::memory(memory_desc_, *engine_,
-                                        const_cast<float*>(input_data.data()));
-    dnnl::memory dst_mem =
-        dnnl::memory(memory_desc_, *engine_, output_data.data());
-    eltwise_prim_->execute(*stream_,
-                           {{DNNL_ARG_SRC, src_mem}, {DNNL_ARG_DST, dst_mem}});
-    stream_->wait();
-    output[0] = make_tensor(output_data, input_tensor.get_shape());
+    if (data_type == Type::kFloat) {
+      const std::vector<float>& input_data = *input_tensor.as<float>();
+      std::vector<float> output_data(input_data.size());
+      dnnl::memory src_mem = dnnl::memory(
+          memory_desc_, *engine_, const_cast<float*>(input_data.data()));
+      dnnl::memory dst_mem =
+          dnnl::memory(memory_desc_, *engine_, output_data.data());
+      eltwise_prim_->execute(
+          *stream_, {{DNNL_ARG_SRC, src_mem}, {DNNL_ARG_DST, dst_mem}});
+      stream_->wait();
+      output[0] = make_tensor(output_data, input_tensor.get_shape());
+    } else if (data_type == Type::kInt) {
+      const std::vector<int>& input_data = *input_tensor.as<int>();
+      std::vector<int> output_data(input_data.size());
+
+      std::vector<float> float_input;
+      float_input.reserve(input_data.size());
+      for (int val : input_data) {
+        float_input.push_back(static_cast<float>(val));
+      }
+
+      std::vector<float> float_output(input_data.size());
+
+      dnnl::memory src_mem =
+          dnnl::memory(memory_desc_, *engine_, float_input.data());
+      dnnl::memory dst_mem =
+          dnnl::memory(memory_desc_, *engine_, float_output.data());
+      eltwise_prim_->execute(
+          *stream_, {{DNNL_ARG_SRC, src_mem}, {DNNL_ARG_DST, dst_mem}});
+      stream_->wait();
+
+      for (size_t i = 0; i < float_output.size(); ++i) {
+        output_data[i] = static_cast<int>(std::round(float_output[i]));
+      }
+      output[0] = make_tensor(output_data, input_tensor.get_shape());
+    } else {
+      throw std::runtime_error("EwLayerOneDnn: Unsupported data type");
+    }
 
   } catch (const std::exception& e) {
     std::cerr << "oneDNN execution failed: " << e.what() << std::endl;
@@ -36,17 +62,23 @@ void EWLayer_oneDNN::run(const std::vector<Tensor>& input,
   }
 }
 
-void EWLayer_oneDNN::validate_input(const std::vector<Tensor>& input) const {
+void EwLayerOneDnn::validate_input(const std::vector<Tensor>& input) const {
   if (input.size() != 1) {
-    throw std::runtime_error("EWLayer_oneDNN: Expected exactly 1 input tensor");
+    throw std::runtime_error("EwLayerOneDnn: Expected exactly 1 input tensor");
   }
 
   if (!is_function_supported(func_)) {
     throw std::invalid_argument("Unsupported function for oneDNN: " + func_);
   }
+
+  Type data_type = input[0].get_type();
+  if (data_type != Type::kFloat && data_type != Type::kInt) {
+    throw std::runtime_error(
+        "EwLayerOneDnn supports only float and int tensors");
+  }
 }
 
-void EWLayer_oneDNN::initialize_onednn(const Shape& shape) {
+void EwLayerOneDnn::initialize_onednn(const Shape& shape, Type data_type) {
   try {
     engine_ = std::make_unique<dnnl::engine>(dnnl::engine::kind::cpu, 0);
     stream_ = std::make_unique<dnnl::stream>(*engine_);
@@ -55,6 +87,7 @@ void EWLayer_oneDNN::initialize_onednn(const Shape& shape) {
     for (size_t i = 0; i < shape.dims(); i++) {
       dims.push_back(static_cast<dnnl::memory::dim>(shape.at(i)));
     }
+
     dnnl::memory::format_tag format;
     switch (dims.size()) {
       case 1:
@@ -77,16 +110,22 @@ void EWLayer_oneDNN::initialize_onednn(const Shape& shape) {
                                     std::to_string(dims.size()));
     }
 
-    memory_desc_ =
-        dnnl::memory::desc(dims, dnnl::memory::data_type::f32, format);
+    dnnl::memory::data_type dnnl_data_type;
+    if (data_type == Type::kFloat) {
+      dnnl_data_type = dnnl::memory::data_type::f32;
+    } else {
+      dnnl_data_type = dnnl::memory::data_type::f32;
+    }
+
+    memory_desc_ = dnnl::memory::desc(dims, dnnl_data_type, format);
 
     dnnl::algorithm algo = get_algorithm();
 
-    float primitive_alpha = 0.0f;
-    float primitive_beta = 0.0f;
+    float primitive_alpha = 0.0F;
+    float primitive_beta = 0.0F;
 
     if (func_ == "relu") {
-      primitive_alpha = 0.0f;
+      primitive_alpha = 0.0F;
     } else if (func_ == "linear") {
       primitive_alpha = alpha_;
       primitive_beta = beta_;
@@ -100,12 +139,6 @@ void EWLayer_oneDNN::initialize_onednn(const Shape& shape) {
 
     initialized_ = true;
 
-    for (size_t i = 0; i < dims.size(); ++i) {
-      std::cout << dims[i];
-      if (i < dims.size() - 1) std::cout << ", ";
-    }
-    std::cout << "]" << std::endl;
-
   } catch (const std::exception& e) {
     std::cerr << "oneDNN initialization failed for function '" << func_
               << "': " << e.what() << std::endl;
@@ -113,21 +146,24 @@ void EWLayer_oneDNN::initialize_onednn(const Shape& shape) {
   }
 }
 
-dnnl::algorithm EWLayer_oneDNN::get_algorithm() const {
+dnnl::algorithm EwLayerOneDnn::get_algorithm() const {
   if (func_ == "relu") {
     return dnnl::algorithm::eltwise_relu;
-  } else if (func_ == "tanh") {
-    return dnnl::algorithm::eltwise_tanh;
-  } else if (func_ == "sigmoid") {
-    return dnnl::algorithm::eltwise_logistic;
-  } else if (func_ == "linear") {
-    return dnnl::algorithm::eltwise_linear;
-  } else {
-    throw std::invalid_argument("Unsupported function for oneDNN: " + func_);
   }
+  if (func_ == "tanh") {
+    return dnnl::algorithm::eltwise_tanh;
+  }
+  if (func_ == "sigmoid") {
+    return dnnl::algorithm::eltwise_logistic;
+  }
+  if (func_ == "linear") {
+    return dnnl::algorithm::eltwise_linear;
+  }
+
+  throw std::invalid_argument("Unsupported function for oneDNN: " + func_);
 }
 
-bool EWLayer_oneDNN::is_function_supported(const std::string& function) {
+bool EwLayerOneDnn::is_function_supported(const std::string& function) {
   return (function == "relu" || function == "tanh" || function == "sigmoid" ||
           function == "linear");
 }

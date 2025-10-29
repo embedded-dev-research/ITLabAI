@@ -9,12 +9,12 @@
 
 namespace it_lab_ai {
 
-class EWLayer_oneDNN : public Layer {
+class EwLayerOneDnn : public Layer {
  public:
-  EWLayer_oneDNN()
+  EwLayerOneDnn()
       : Layer(kElementWise), func_("none"), alpha_(0.0F), beta_(0.0F) {}
 
-  EWLayer_oneDNN(std::string function, float alpha = 0.0F, float beta = 0.0F)
+  EwLayerOneDnn(std::string function, float alpha = 0.0F, float beta = 0.0F)
       : Layer(kElementWise),
         func_(std::move(function)),
         alpha_(alpha),
@@ -33,7 +33,7 @@ class EWLayer_oneDNN : public Layer {
 #endif
 
  private:
-  void initialize_onednn(const Shape& shape);
+  void initialize_onednn(const Shape& shape, Type data_type);
   dnnl::algorithm get_algorithm() const;
   void validate_input(const std::vector<Tensor>& input) const;
 

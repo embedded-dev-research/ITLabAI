@@ -5,23 +5,23 @@
 
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
-#include "layers_oneDNN/EWLayer_oneDNN.hpp"
+#include "layers_oneDNN/EwLayer_oneDnn.hpp"
 
 using namespace it_lab_ai;
 
 TEST(ewlayer_onednn, supported_functions_check) {
-  EXPECT_TRUE(EWLayer_oneDNN::is_function_supported("relu"));
-  EXPECT_TRUE(EWLayer_oneDNN::is_function_supported("tanh"));
-  EXPECT_TRUE(EWLayer_oneDNN::is_function_supported("sigmoid"));
-  EXPECT_TRUE(EWLayer_oneDNN::is_function_supported("linear"));
+  EXPECT_TRUE(EwLayerOneDnn::is_function_supported("relu"));
+  EXPECT_TRUE(EwLayerOneDnn::is_function_supported("tanh"));
+  EXPECT_TRUE(EwLayerOneDnn::is_function_supported("sigmoid"));
+  EXPECT_TRUE(EwLayerOneDnn::is_function_supported("linear"));
 
-  EXPECT_FALSE(EWLayer_oneDNN::is_function_supported("sin"));
-  EXPECT_FALSE(EWLayer_oneDNN::is_function_supported("minus"));
-  EXPECT_FALSE(EWLayer_oneDNN::is_function_supported("nonexistent"));
+  EXPECT_FALSE(EwLayerOneDnn::is_function_supported("sin"));
+  EXPECT_FALSE(EwLayerOneDnn::is_function_supported("minus"));
+  EXPECT_FALSE(EwLayerOneDnn::is_function_supported("nonexistent"));
 }
 
 TEST(ewlayer_onednn, relu_float) {
-  EWLayer_oneDNN layer("relu");
+  EwLayerOneDnn layer("relu");
 
   Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -2.0F});
   Tensor output;
@@ -38,8 +38,26 @@ TEST(ewlayer_onednn, relu_float) {
   }
 }
 
+TEST(ewlayer_onednn, relu_int) {
+  EwLayerOneDnn layer("relu");
+
+  Tensor input = make_tensor<int>({1, -1, 2, -2, 0, -5});
+  Tensor output;
+  std::vector<int> expected = {1, 0, 2, 0, 0, 0};
+
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+
+  auto output_data = *out[0].as<int>();
+  ASSERT_EQ(output_data.size(), expected.size());
+  for (size_t i = 0; i < output_data.size(); i++) {
+    EXPECT_EQ(output_data[i], expected[i]);
+  }
+}
+
 TEST(ewlayer_onednn, linear_float) {
-  EWLayer_oneDNN layer("linear", 2.0f, 0.0f);
+  EwLayerOneDnn layer("linear", 2.0f, 0.0f);
 
   Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -5.0F});
   Tensor output;
@@ -56,8 +74,26 @@ TEST(ewlayer_onednn, linear_float) {
   }
 }
 
+TEST(ewlayer_onednn, linear_int) {
+  EwLayerOneDnn layer("linear", 2.0f, 1.0f);
+
+  Tensor input = make_tensor<int>({1, -1, 2, -5, 0});
+  Tensor output;
+  std::vector<int> expected = {3, -1, 5, -9, 1};
+
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+
+  auto output_data = *out[0].as<int>();
+  ASSERT_EQ(output_data.size(), expected.size());
+  for (size_t i = 0; i < output_data.size(); i++) {
+    EXPECT_EQ(output_data[i], expected[i]);
+  }
+}
+
 TEST(ewlayer_onednn, linear_with_bias_float) {
-  EWLayer_oneDNN layer("linear", 1.0f, -1.0f);
+  EwLayerOneDnn layer("linear", 1.0f, -1.0f);
 
   Tensor input = make_tensor<float>({1.0F, -1.0F, 2.0F, -5.0F});
   Tensor output;
@@ -75,7 +111,7 @@ TEST(ewlayer_onednn, linear_with_bias_float) {
 }
 
 TEST(ewlayer_onednn, tanh_float) {
-  EWLayer_oneDNN layer("tanh");
+  EwLayerOneDnn layer("tanh");
 
   Tensor input = make_tensor<float>({0.0F, 1.0F, -1.0F, 2.0F});
   Tensor output;
@@ -98,7 +134,7 @@ TEST(ewlayer_onednn, tanh_float) {
 }
 
 TEST(ewlayer_onednn, sigmoid_float) {
-  EWLayer_oneDNN layer("sigmoid");
+  EwLayerOneDnn layer("sigmoid");
 
   Tensor input = make_tensor<float>({0.0F, 1.0F, -1.0F, 2.0F});
   Tensor output;
@@ -123,7 +159,7 @@ TEST(ewlayer_onednn, sigmoid_float) {
 TEST(ewlayer_onednn, multidim_tensor_relu) {
   Shape shape({1, 3, 2, 2});
 
-  EWLayer_oneDNN layer("relu");
+  EwLayerOneDnn layer("relu");
 
   std::vector<float> input_data(1 * 3 * 2 * 2);
   for (size_t i = 0; i < input_data.size(); i++) {
@@ -146,8 +182,29 @@ TEST(ewlayer_onednn, multidim_tensor_relu) {
   }
 }
 
+TEST(ewlayer_onednn, multidim_tensor_relu_int) {
+  Shape shape({2, 2, 2});
+
+  EwLayerOneDnn layer("relu");
+
+  std::vector<int> input_data = {1, -1, 2, -2, 0, -3, 4, -4};
+  Tensor input = make_tensor(input_data, shape);
+  Tensor output;
+  std::vector<int> expected = {1, 0, 2, 0, 0, 0, 4, 0};
+
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out);
+
+  auto output_data = *out[0].as<int>();
+  ASSERT_EQ(output_data.size(), expected.size());
+  for (size_t i = 0; i < output_data.size(); i++) {
+    EXPECT_EQ(output_data[i], expected[i]);
+  }
+}
+
 TEST(ewlayer_onednn, compare_with_naive_relu) {
-  EWLayer_oneDNN onednn_layer("relu");
+  EwLayerOneDnn onednn_layer("relu");
 
   EWLayer naive_layer("relu");
 
