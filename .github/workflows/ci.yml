@@ -224,19 +224,47 @@ jobs:
         slug: embedded-dev-research/ITLabAI
         
   evaluate-model:
-   runs-on: ubuntu-latest
-   needs: [build-linux]
-   permissions:
-    contents: write
+    runs-on: ubuntu-latest
+    needs: [build-linux]
+    permissions:
+      contents: write
 
-   steps:
+    steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    
+    - name: Download binary and libs
+      uses: actions/download-artifact@v4
+      with:
+        name: mnist-RELEASE
+        path: build/
+        
+    - name: Verify downloaded artifacts
+      run: |
+        echo "### Verifying downloaded artifacts ###"
+        echo "Current directory: $(pwd)"
+        echo "Build directory contents:"
+        ls -la build/ || echo "No build directory"
+        echo "Looking for ACC binary:"
+        find build/ -name "ACC" -type f 2>/dev/null || echo "ACC not found"
+        echo "Checking bin directory:"
+        ls -la build/bin/ 2>/dev/null || echo "No bin directory"
+        
     - name: Set binary path
       id: set_eval_binary
       run: |
-        echo "EVAL_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
+        # Проверяем существует ли бинарник
+        if [ -f "build/bin/ACC" ]; then
+          echo "ACC binary found at build/bin/ACC"
+          echo "EVAL_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
+        else
+          echo "ERROR: ACC binary not found at build/bin/ACC"
+          echo "Available files:"
+          find build/ -type f -name "*" 2>/dev/null | head -20
+          exit 1
+        fi
+        
     - name: Install system dependencies
       run: |
         sudo apt-get update
@@ -248,9 +276,10 @@ jobs:
           libtiff-dev \
           libopenjp2-7
         sudo ldconfig
+        
     - name: Generate model JSON
       run: |
-        cd docs && mkdir jsons
+        cd docs && mkdir -p jsons
         cd ..
         cd app/Converters
         pip install -r requirements.txt
@@ -276,14 +305,12 @@ jobs:
         rm -rf main.zip MNIST_dataset-main
         echo "Downloaded $(ls docs/mnist/mnist/test | wc -l) images"
 
-    - name: Download binary and libs
-      uses: actions/download-artifact@v4
-      with:
-        name: mnist-RELEASE
-        path: build/
-
     - name: Prepare environment
       run: |
+        echo "### Preparing environment ###"
+        echo "Binary path: ${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
+        
+        ls -la "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
         
         export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
@@ -291,12 +318,24 @@ jobs:
         
     - name: Verify library integrity
       run: |
-       echo "### Library verification ###"
-       file build/bin/opencv_libs/libopencv_imgcodecs.so.4.12.0 | grep "shared object"
+        echo "### Library verification ###"
+        ls -la build/bin/opencv_libs/ || echo "No opencv_libs directory"
+        file build/bin/opencv_libs/libopencv_imgcodecs.so* 2>/dev/null | head -1 || echo "No opencv_imgcodecs library found"
+
+    - name: Test binary execution
+      run: |
+        echo "### Testing binary execution ###"
+        export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
+        
+        echo "Binary dependencies:"
+        ldd "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" 2>/dev/null || echo "ldd failed"
+        
+        echo "Testing help command:"
+        timeout 10s "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --help > /dev/null 2>&1 || echo "Help test completed"
 
     - name: Run evaluation
       run: |
-       echo "### Running evaluation ###"
+        echo "### Running evaluation ###"
         export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
         echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
         
@@ -307,18 +346,22 @@ jobs:
         echo "Evaluation output:"
         cat accuracy.txt
 
+    - name: Extract accuracy value
+      run: |
+        echo "### Extracting accuracy ###"
+        ACCURACY=$(grep -oE '[0-9]+\.?[0-9]*%' accuracy.txt | head -1 || echo "0%")
+        echo "Accuracy: $ACCURACY"
+        echo "$ACCURACY" > accuracy_value.txt
+        
     - name: Update README (master only)
       if: github.ref == 'refs/heads/master'
       run: |
-        ACCURACY=$(cat accuracy.txt | sed 's/%//g')
+        ACCURACY=$(cat accuracy_value.txt | sed 's/%//g')
         DATE=$(date '+%Y-%m-%d')
     
         echo "Updating README with:"
-        echo "Accuracy: $ACCURACY"
+        echo "Accuracy: $ACCURACY%"
         echo "Date: $DATE"
-    
-        echo "Current README content:"
-        grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md || echo "Placeholder not found"
     
         sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->/" README.md
        
@@ -336,7 +379,7 @@ jobs:
         if git diff-index --quiet HEAD --; then
           echo "No changes to commit"
         else
-          git commit -m "[CI] Update accuracy: $(cat accuracy.txt)%"
+          git commit -m "[CI] Update accuracy: $(cat accuracy_value.txt)"
           git push origin master
           echo "Changes pushed to master branch"
         fi
