@@ -1,4 +1,4 @@
-#include "layers_oneDNN/EwLayer_oneDnn.hpp"
+#include "layers_oneDNN/EWLayer_oneDNN.hpp"
 
 #include <iostream>
 #include <stdexcept>

@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
-#include "layers_oneDNN/EwLayer_oneDnn.hpp"
+#include "layers_oneDNN/EwLayer_oneDNN.hpp"
 
 using namespace it_lab_ai;
 
@@ -230,5 +230,82 @@ TEST(ewlayer_onednn, compare_with_naive_relu) {
   ASSERT_EQ(onednn_result.size(), naive_result.size());
   for (size_t i = 0; i < onednn_result.size(); i++) {
     EXPECT_NEAR(onednn_result[i], naive_result[i], 1e-5);
+  }
+}
+
+TEST(ewlayer_onednn, multiple_input_tensors) {
+  EwLayerOneDnn layer("relu");
+
+  Tensor input1 = make_tensor<float>({1.0F, 2.0F});
+  Tensor input2 = make_tensor<float>({3.0F, 4.0F});
+  Tensor output;
+
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW({ layer.run(in, out); }, std::runtime_error);
+}
+
+TEST(ewlayer_onednn, unsupported_function) {
+  EXPECT_THROW({ EwLayerOneDnn layer("unsupported_func"); },
+               std::invalid_argument);
+}
+
+TEST(ewlayer_onednn, unsupported_tensor_dimensionality) {
+  EwLayerOneDnn layer("relu");
+
+  Shape shape_6d({2, 3, 4, 5, 6, 7});
+  std::vector<float> data_6d(2 * 3 * 4 * 5 * 6 * 7, 1.0f);
+  Tensor input = make_tensor(data_6d, shape_6d);
+
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW({ layer.run(in, out); }, std::invalid_argument);
+}
+
+TEST(ewlayer_onednn, empty_input_tensor) {
+  EwLayerOneDnn layer("relu");
+
+  Tensor input = make_tensor<float>({});
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  EXPECT_NO_THROW({ layer.run(in, out); });
+}
+
+TEST(ewlayer_onednn, invalid_function_algorithm_mapping) {
+  EwLayerOneDnn layer("relu");
+  EXPECT_THROW(
+      {
+        EwLayerOneDnn invalid_layer("invalid_function_123");
+        Tensor input = make_tensor<float>({1.0F});
+        Tensor output;
+        std::vector<Tensor> in{input};
+        std::vector<Tensor> out{output};
+        invalid_layer.run(in, out);
+      },
+      std::invalid_argument);
+}
+
+TEST(ewlayer_onednn, initialization_failure_propagation) {
+  EwLayerOneDnn layer("relu");
+
+  Shape shape_7d({2, 2, 2, 2, 2, 2, 2});
+  std::vector<float> data_7d(128, 1.0f);
+  Tensor input = make_tensor(data_7d, shape_7d);
+
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  try {
+    layer.run(in, out);
+    FAIL() << "Expected std::invalid_argument exception";
+  } catch (const std::invalid_argument& e) {
+    EXPECT_NE(std::string(e.what()).find("dimensionality"), std::string::npos);
+  } catch (...) {
+    FAIL() << "Expected std::invalid_argument exception";
   }
 }
