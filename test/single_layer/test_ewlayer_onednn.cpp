@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
-#include "layers_oneDNN/EWLayer_oneDNN.hpp"
+#include "layers_oneDNN/EWLayer.hpp"
 
 using namespace it_lab_ai;
 

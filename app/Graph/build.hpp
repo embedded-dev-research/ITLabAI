@@ -31,7 +31,7 @@
 #include "layers/SplitLayer.hpp"
 #include "layers/Tensor.hpp"
 #include "layers/TransposeLayer.hpp"
-#include "layers_oneDNN/EWLayer_oneDNN.hpp"
+#include "layers_oneDNN/EWLayer.hpp"
 
 std::unordered_map<std::string, std::string> model_paths = {
     {"alexnet_mnist", MODEL_PATH_H5},
