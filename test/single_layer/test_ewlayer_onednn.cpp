@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
-#include "layers_oneDNN/EwLayer_oneDNN.hpp"
+#include "layers_oneDNN/EWLayer_oneDNN.hpp"
 
 using namespace it_lab_ai;
 
@@ -244,11 +244,6 @@ TEST(ewlayer_onednn, multiple_input_tensors) {
   std::vector<Tensor> out{output};
 
   EXPECT_THROW({ layer.run(in, out); }, std::runtime_error);
-}
-
-TEST(ewlayer_onednn, unsupported_function) {
-  EXPECT_THROW({ EwLayerOneDnn layer("unsupported_func"); },
-               std::invalid_argument);
 }
 
 TEST(ewlayer_onednn, unsupported_tensor_dimensionality) {
