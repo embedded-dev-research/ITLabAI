@@ -125,12 +125,23 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build
       run: |
-        cmake -S . -B build -G Ninja  \
+        OPENMP_PATH=$(brew --prefix libomp)
+        echo "OpenMP path: $OPENMP_PATH"
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_C_FLAGS="-I$(brew --prefix libomp)/include" \
-          -DCMAKE_CXX_FLAGS="-I$(brew --prefix libomp)/include"
+          -DCMAKE_PREFIX_PATH=$OPENMP_PATH \
+          -DCMAKE_INCLUDE_PATH=$OPENMP_PATH/include \
+          -DCMAKE_LIBRARY_PATH=$OPENMP_PATH/lib \
+          -DOpenMP_C_FLAGS="-Xclang -fopenmp -I$OPENMP_PATH/include" \
+          -DOpenMP_CXX_FLAGS="-Xclang -fopenmp -I$OPENMP_PATH/include" \
+          -DOpenMP_C_LIB_NAMES="omp" \
+          -DOpenMP_CXX_LIB_NAMES="omp" \
+          -DOpenMP_omp_LIBRARY="$OPENMP_PATH/lib/libomp.dylib"
         cmake --build build --parallel
+        env:
+        LDFLAGS: "-L$(brew --prefix libomp)/lib"
+        CPPFLAGS: "-I$(brew --prefix libomp)/include"
     - name: Test
       run: cmake --build build -t test
       env:
