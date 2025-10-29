@@ -117,7 +117,7 @@ jobs:
         submodules: true
     - name: Install prerequisites
       run: |
-        brew install libomp
+        brew install libomp ninja
         brew link libomp --overwrite --force
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
@@ -137,10 +137,12 @@ jobs:
           -DOpenMP_CXX_FLAGS="-Xclang -fopenmp -I$OPENMP_PATH/include" \
           -DOpenMP_C_LIB_NAMES="omp" \
           -DOpenMP_CXX_LIB_NAMES="omp" \
-          -DOpenMP_omp_LIBRARY="$OPENMP_PATH/lib/libomp.dylib"
+          -DOpenMP_omp_LIBRARY="$OPENMP_PATH/lib/libomp.dylib" \
+          -DCMAKE_EXE_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp" \
+          -DCMAKE_SHARED_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp"
         cmake --build build --parallel
-        env:
-        LDFLAGS: "-L$(brew --prefix libomp)/lib"
+      env:
+        LDFLAGS: "-L$(brew --prefix libomp)/lib -lomp"
         CPPFLAGS: "-I$(brew --prefix libomp)/include"
     - name: Test
       run: cmake --build build -t test
