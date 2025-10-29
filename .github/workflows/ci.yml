@@ -92,8 +92,6 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build
       run: |
-        export CMAKE_BUILD_PARALLEL_LEVEL=2
-        export MAKEFLAGS="-j2"
         cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -254,7 +252,6 @@ jobs:
     - name: Set binary path
       id: set_eval_binary
       run: |
-        # Проверяем существует ли бинарник
         if [ -f "build/bin/ACC" ]; then
           echo "ACC binary found at build/bin/ACC"
           echo "EVAL_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
