@@ -274,7 +274,8 @@ jobs:
           libjpeg-dev \
           libpng-dev \
           libtiff-dev \
-          libopenjp2-7
+          libopenjp2-7 \
+          libdnnl3
         sudo ldconfig
         
     - name: Generate model JSON
