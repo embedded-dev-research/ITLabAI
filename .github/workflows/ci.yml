@@ -340,12 +340,39 @@ jobs:
         export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
         echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
         
-        echo "Running ACC evaluation..."
-        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --model alexnet_mnist > accuracy.txt 2>&1 || \
-        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" > accuracy.txt 2>&1
+        echo "### Checking binary execution permissions ###"
+        ls -la "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
+        file "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
         
-        echo "Evaluation output:"
+        echo "### Testing direct execution ###"
+        set +e
+        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --version > version_output.txt 2>&1
+        VERSION_EXIT_CODE=$?
+        echo "Version command exit code: $VERSION_EXIT_CODE"
+        cat version_output.txt
+        
+        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --help > help_output.txt 2>&1
+        HELP_EXIT_CODE=$?
+        echo "Help command exit code: $HELP_EXIT_CODE"
+        cat help_output.txt
+        
+        echo "### Running MNIST evaluation ###"
+        mkdir -p docs/mnist/mnist/test
+        
+        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --model alexnet_mnist > accuracy.txt 2>&1
+        EVAL_EXIT_CODE=$?
+        echo "Evaluation exit code: $EVAL_EXIT_CODE"
+        
+        if [ $EVAL_EXIT_CODE -ne 0 ]; then
+          echo "Trying without --model parameter..."
+          "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" > accuracy.txt 2>&1
+          EVAL_EXIT_CODE=$?
+          echo "Fallback evaluation exit code: $EVAL_EXIT_CODE"
+        fi
+        
+        echo "### Evaluation output ###"
         cat accuracy.txt
+        set -e
 
     - name: Extract accuracy value
       run: |
