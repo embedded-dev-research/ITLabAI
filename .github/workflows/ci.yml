@@ -51,19 +51,18 @@ jobs:
             cmake --build build --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - name: Prepare OpenCV libs
+    - name: Prepare ALL libs
       run: |
-       mkdir -p build/bin/opencv_libs
-       cp -a build/3rdparty/opencv_build/lib/libopencv_* build/bin/opencv_libs/
-       echo "Library permissions after copy:"
-       stat -c "%A %n" build/bin/opencv_libs/libopencv_imgcodecs.so*
-
+       mkdir -p build/bin/all_libs
+       cp -a build/3rdparty/opencv_build/lib/* build/bin/all_libs/ 2>/dev/null || true
+       ldd build/bin/ACC | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} build/bin/all_libs/ 2>/dev/null || true
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
        name: mnist-${{ matrix.build_type }}${{ matrix.stats && '-stats' || '' }}
        path: |
         ${{ steps.set_binaries.outputs.ACC_BINARY }}
+        build/bin/all_libs/*
         build/bin/opencv_libs/*
         build/setenv.sh
     - name: Test
@@ -251,41 +250,15 @@ jobs:
         name: mnist-RELEASE
         path: build/
         
-    - name: Verify downloaded artifacts
-      run: |
-        echo "### Verifying downloaded artifacts ###"
-        echo "Current directory: $(pwd)"
-        echo "Build directory contents:"
-        ls -la build/ || echo "No build directory"
-        echo "Looking for ACC binary:"
-        find build/ -name "ACC" -type f 2>/dev/null || echo "ACC not found"
-        echo "Checking bin directory:"
-        ls -la build/bin/ 2>/dev/null || echo "No bin directory"
-        
     - name: Set binary path
       id: set_eval_binary
       run: |
-        if [ -f "build/bin/ACC" ]; then
-          echo "ACC binary found at build/bin/ACC"
-          echo "EVAL_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
-        else
-          echo "ERROR: ACC binary not found at build/bin/ACC"
-          echo "Available files:"
-          find build/ -type f -name "*" 2>/dev/null | head -20
-          exit 1
-        fi
+        echo "EVAL_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
         
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          libgtk-3-0 \
-          libtbb12 \
-          libjpeg-dev \
-          libpng-dev \
-          libtiff-dev \
-          libopenjp2-7 \
-          libdnnl3
+        sudo apt-get install -y libgtk-3-0 libtbb12 libjpeg-dev libpng-dev libtiff-dev libopenjp2-7 libdnnl3
         sudo ldconfig
         
     - name: Generate model JSON
@@ -307,88 +280,28 @@ jobs:
     - name: Download MNIST test dataset
       if: steps.cache-mnist.outputs.cache-hit != 'true'
       run: |
-        set -e
         mkdir -p docs/mnist/mnist/test
-        echo "Downloading test images..."
         wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip -O main.zip
         unzip -q main.zip
         cp MNIST_dataset-main/mnist/test/*.png docs/mnist/mnist/test/
         rm -rf main.zip MNIST_dataset-main
-        echo "Downloaded $(ls docs/mnist/mnist/test | wc -l) images"
 
     - name: Prepare environment
       run: |
-        echo "### Preparing environment ###"
-        echo "Binary path: ${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
-        
-        ls -la "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
+        export LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         
-        export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
-        echo "Final LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-        
-    - name: Verify library integrity
-      run: |
-        echo "### Library verification ###"
-        ls -la build/bin/opencv_libs/ || echo "No opencv_libs directory"
-        file build/bin/opencv_libs/libopencv_imgcodecs.so* 2>/dev/null | head -1 || echo "No opencv_imgcodecs library found"
-
-    - name: Test binary execution
-      run: |
-        echo "### Testing binary execution ###"
-        export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
-        
-        echo "Binary dependencies:"
-        ldd "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" 2>/dev/null || echo "ldd failed"
-        
-        echo "Testing help command:"
-        timeout 10s "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --help > /dev/null 2>&1 || echo "Help test completed"
-
     - name: Run evaluation
       run: |
-        echo "### Running evaluation ###"
-        export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
-        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-        
-        echo "### Checking binary execution permissions ###"
-        ls -la "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
-        file "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
-        
-        echo "### Testing direct execution ###"
-        set +e
-        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --version > version_output.txt 2>&1
-        VERSION_EXIT_CODE=$?
-        echo "Version command exit code: $VERSION_EXIT_CODE"
-        cat version_output.txt
-        
-        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --help > help_output.txt 2>&1
-        HELP_EXIT_CODE=$?
-        echo "Help command exit code: $HELP_EXIT_CODE"
-        cat help_output.txt
-        
-        echo "### Running MNIST evaluation ###"
-        mkdir -p docs/mnist/mnist/test
-        
+        export LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --model alexnet_mnist > accuracy.txt 2>&1
-        EVAL_EXIT_CODE=$?
-        echo "Evaluation exit code: $EVAL_EXIT_CODE"
-        
-        if [ $EVAL_EXIT_CODE -ne 0 ]; then
-          echo "Trying without --model parameter..."
-          "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" > accuracy.txt 2>&1
-          EVAL_EXIT_CODE=$?
-          echo "Fallback evaluation exit code: $EVAL_EXIT_CODE"
+        if [ $? -ne 0 ]; then
+          exit 1
         fi
-        
-        echo "### Evaluation output ###"
-        cat accuracy.txt
-        set -e
 
     - name: Extract accuracy value
       run: |
-        echo "### Extracting accuracy ###"
         ACCURACY=$(grep -oE '[0-9]+\.?[0-9]*%' accuracy.txt | head -1 || echo "0%")
-        echo "Accuracy: $ACCURACY"
         echo "$ACCURACY" > accuracy_value.txt
         
     - name: Update README (master only)
@@ -396,28 +309,17 @@ jobs:
       run: |
         ACCURACY=$(cat accuracy_value.txt | sed 's/%//g')
         DATE=$(date '+%Y-%m-%d')
-    
-        echo "Updating README with:"
-        echo "Accuracy: $ACCURACY%"
-        echo "Date: $DATE"
-    
         sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->/" README.md
-       
-        echo "Updated README content:"
-        grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md
 
     - name: Commit and push changes (master only)
       if: github.ref == 'refs/heads/master'
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-    
         git add README.md
-
         if git diff-index --quiet HEAD --; then
           echo "No changes to commit"
         else
           git commit -m "[CI] Update accuracy: $(cat accuracy_value.txt)"
           git push origin master
-          echo "Changes pushed to master branch"
         fi
