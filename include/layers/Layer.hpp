@@ -1,5 +1,11 @@
 #pragma once
+#include <omp.h>
+
+#include <algorithm>
+#include <execution>
+#include <functional>
 #include <initializer_list>
+#include <iostream>
 #include <numeric>
 #include <stdexcept>
 #include <string>
@@ -49,6 +55,7 @@ class Layer {
   PostOperations postops;
   int getID() const { return id_; }
   void setID(int id) { id_ = id; }
+  void setTypeParall(int type) { type_parall_ = type; }
   LayerType getName() const { return type_; }
   virtual void run(const std::vector<Tensor>& input,
                    std::vector<Tensor>& output) = 0;
@@ -59,6 +66,7 @@ class Layer {
  protected:
   int id_ = 0;
   LayerType type_;
+  int type_parall_;
 };
 
 template <typename ValueType>
@@ -82,5 +90,129 @@ class LayerImpl {
   Shape inputShape_;
   Shape outputShape_;
 };
+
+template <typename Func>
+inline void parallel_for(int count, Func func, int mode = 0) {
+  static bool stl_available = true;
+  static bool tbb_available = true;
+  static bool omp_available = true;
+  const int MIN_CHUNK_SIZE = 1000;
+  if (count < MIN_CHUNK_SIZE) {
+    mode = 0;
+  }
+
+  switch (mode) {
+    case 0:  // Sequential
+    {
+      for (int i = 0; i < count; ++i) {
+        func(i);
+      }
+      break;
+    }
+
+    case 1:  // STL
+    {
+      if (stl_available) {
+        try {
+          int num_threads =
+              static_cast<int>(std::thread::hardware_concurrency());
+          if (num_threads == 0) num_threads = 4;
+
+          int min_chunk_size = std::max(1000, count / (num_threads * 4));
+          if (count / num_threads < min_chunk_size) {
+            num_threads = std::max(1, count / min_chunk_size);
+          }
+
+          std::vector<std::thread> threads;
+          threads.reserve(num_threads);
+
+          int chunk_size = count / num_threads;
+          int remainder = count % num_threads;
+
+          int start = 0;
+          for (int t = 0; t < num_threads; ++t) {
+            int end = start + chunk_size + (t < remainder ? 1 : 0);
+            if (start >= end) break;
+
+            threads.emplace_back([start, end, &func]() {
+              for (int i = start; i < end; ++i) {
+                func(i);
+              }
+            });
+
+            start = end;
+          }
+
+          for (auto& thread : threads) {
+            thread.join();
+          }
+
+        } catch (const std::exception& e) {
+          std::cout << "Thread execution failed: " << e.what()
+                    << ". Falling back to sequential.\n";
+          stl_available = false;
+          for (int i = 0; i < count; ++i) func(i);
+        }
+      } else {
+        for (int i = 0; i < count; ++i) func(i);
+      }
+      break;
+    }
+
+    case 2:  // Intel TBB
+    {
+      if (tbb_available) {
+        try {
+          oneapi::tbb::parallel_for(
+              oneapi::tbb::blocked_range<int>(0, count),
+              [&](const oneapi::tbb::blocked_range<int>& range) {
+                for (int i = range.begin(); i < range.end(); ++i) {
+                  func(i);
+                }
+              },
+              oneapi::tbb::auto_partitioner());
+        } catch (const std::exception& e) {
+          std::cout << "TBB execution failed: " << e.what()
+                    << ". Falling back to sequential.\n";
+          tbb_available = false;
+          for (int i = 0; i < count; ++i) func(i);
+        }
+      } else {
+        for (int i = 0; i < count; ++i) func(i);
+      }
+      break;
+    }
+
+    case 3:  // OpenMP - УЛУЧШЕННАЯ ВЕРСИЯ
+    {
+      if (omp_available) {
+        try {
+          // Оптимальная настройка для OpenMP
+          int num_threads = omp_get_max_threads();
+
+          // Настройка размера чанка для минимизации накладных расходов
+          int chunk_size = std::max(1000, count / (num_threads * 8));
+
+// Устанавливаем оптимальное расписание
+#pragma omp parallel for schedule(static, chunk_size) num_threads(num_threads)
+          for (int i = 0; i < count; ++i) {
+            func(i);
+          }
+
+        } catch (...) {
+          std::cout << "OpenMP execution failed. Falling back to sequential.\n";
+          omp_available = false;
+          for (int i = 0; i < count; ++i) func(i);
+        }
+      } else {
+        for (int i = 0; i < count; ++i) func(i);
+      }
+      break;
+    }
+
+    default:
+      for (int i = 0; i < count; ++i) func(i);
+  }
+}
 
 }  // namespace it_lab_ai

@@ -46,7 +46,7 @@ class EWLayerImpl : public LayerImpl<ValueType> {
  public:
   EWLayerImpl() = delete;
   EWLayerImpl(const Shape& shape, std::string function, float alpha = 0.0F,
-              float beta = 0.0F);
+              float beta = 0.0F, int type_parall = 0);
   EWLayerImpl(const EWLayerImpl& c) = default;
   EWLayerImpl& operator=(const EWLayerImpl& c) = default;
   std::vector<ValueType> run(
@@ -56,57 +56,83 @@ class EWLayerImpl : public LayerImpl<ValueType> {
   std::string func_;
   float alpha_;
   float beta_;
+  int type_parall_;
 };
 
 template <typename ValueType>
 EWLayerImpl<ValueType>::EWLayerImpl(const Shape& shape, std::string function,
-                                    float alpha, float beta)
+                                    float alpha, float beta, int type_parall)
     : LayerImpl<ValueType>(shape, shape),
       func_(std::move(function)),
       alpha_(alpha),
-      beta_(beta) {}
+      beta_(beta),
+      type_parall_(type_parall) {}
 
 template <typename ValueType>
 std::vector<ValueType> EWLayerImpl<ValueType>::run(
     const std::vector<ValueType>& input) const {
   std::vector<ValueType> res(this->outputShape_.count());
+  int available_threads = -1;
+  if (type_parall_ == 0) available_threads = 1;
+  if (type_parall_ == 1)
+    available_threads = std::thread::hardware_concurrency();
+  if (type_parall_ == 2)
+    available_threads = oneapi::tbb::info::default_concurrency();
+  if (type_parall_ == 3) available_threads = omp_get_max_threads();
+
   if (func_ == "relu") {
-    std::transform(input.begin(), input.end(), res.begin(), relu<ValueType>);
+    parallel_for(
+        input.size(),
+        [&](int i) {
+          res[i] = input[i] > ValueType(0) ? input[i] : ValueType(0);
+        },
+        type_parall_);
   } else if (func_ == "tanh") {
-    auto tanh = [&](const ValueType& value) -> ValueType {
-      return static_cast<ValueType>(std::tanh(value));
-    };
-    std::transform(input.begin(), input.end(), res.begin(), tanh);
+    parallel_for(
+        input.size(),
+        [&](int i) { res[i] = static_cast<ValueType>(std::tanh(input[i])); },
+        type_parall_);
   } else if (func_ == "sin") {
-    auto sin = [&](const ValueType& value) -> ValueType {
-      return static_cast<ValueType>(std::sin(value));
-    };
-    std::transform(input.begin(), input.end(), res.begin(), sin);
+    parallel_for(
+        input.size(),
+        [&](int i) { res[i] = static_cast<ValueType>(std::sin(input[i])); },
+        type_parall_);
   } else if (func_ == "minus") {
-    auto minus = [&](const ValueType& value) -> ValueType { return -value; };
-    std::transform(input.begin(), input.end(), res.begin(), minus);
+    parallel_for(
+        input.size(), [&](int i) { res[i] = -input[i]; }, type_parall_);
   } else if (func_ == "linear") {
-    auto linear = [&](const ValueType& value) -> ValueType {
-      return value * static_cast<ValueType>(alpha_) +
-             static_cast<ValueType>(beta_);
-    };
-    std::transform(input.begin(), input.end(), res.begin(), linear);
+    parallel_for(
+        input.size(),
+        [&](int i) {
+          res[i] = input[i] * static_cast<ValueType>(alpha_) +
+                   static_cast<ValueType>(beta_);
+        },
+        type_parall_);
   } else if (func_ == "sigmoid") {
-    auto sigmoid = [](ValueType x) -> ValueType {
-      if constexpr (std::is_integral_v<ValueType>) {
-        auto x_float = static_cast<float>(x);
-        float result = 1.0F / (1.0F + std::exp(-x_float));
-        return static_cast<ValueType>(std::round(result));
-      } else {
-        if (x >= ValueType(0)) {
-          ValueType z = std::exp(-x);
-          return ValueType(1) / (ValueType(1) + z);
-        }
-        ValueType z = std::exp(x);
-        return z / (ValueType(1) + z);
-      }
-    };
-    std::transform(input.cbegin(), input.cend(), res.begin(), sigmoid);
+    if constexpr (std::is_integral_v<ValueType>) {
+      parallel_for(
+          input.size(),
+          [&](int i) {
+            auto x_float = static_cast<float>(input[i]);
+            float result = 1.0F / (1.0F + std::exp(-x_float));
+            res[i] = static_cast<ValueType>(std::round(result));
+          },
+          type_parall_);
+    } else {
+      parallel_for(
+          input.size(),
+          [&](int i) {
+            ValueType x = input[i];
+            if (x >= ValueType(0)) {
+              ValueType z = std::exp(-x);
+              res[i] = ValueType(1) / (ValueType(1) + z);
+            } else {
+              ValueType z = std::exp(x);
+              res[i] = z / (ValueType(1) + z);
+            }
+          },
+          type_parall_);
+    }
   } else {
     throw std::invalid_argument("No such function for EWLayer");
   }
