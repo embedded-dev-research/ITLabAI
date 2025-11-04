@@ -4,8 +4,9 @@
 
 using namespace it_lab_ai;
 
-void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                        bool comments, bool parallel, bool onednn) {
+it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
+                                    it_lab_ai::Tensor& output,
+                        bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -25,8 +26,7 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       std::cout << std::endl << std::endl;
     }
   }
-  it_lab_ai::ImplType impl1 = parallel ? it_lab_ai::kTBB : it_lab_ai::kDefault;
-  it_lab_ai::ImplType impl2 = parallel ? it_lab_ai::kSTL : it_lab_ai::kDefault;
+
   std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
   std::vector<bool> layerpostop;
 
@@ -74,18 +74,14 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       it_lab_ai::Tensor tmp_values = tensor;
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
       auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-          1, pads, 1, tmp_values, tmp_bias, impl2, 1, true);
+          1, pads, 1, tmp_values, tmp_bias, kDefault, 1, true);
       layers.push_back(conv_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "ConvLayer added to layers." << std::endl;
     }
     if (layer_type.find("relu") != std::string::npos) {
       std::shared_ptr<it_lab_ai::Layer> ew_layer;
-      if (onednn) {
-        ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>("relu");
-      } else {
-        ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
-      }
+      ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
       layers.push_back(ew_layer);
       layerpostop.push_back(true);
       if (comments)
@@ -111,7 +107,7 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
                   << std::endl;
       auto pool_layer =
-          std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, impl1);
+          std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
       layers.push_back(pool_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
@@ -162,8 +158,8 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
   graph.setOutput(*layers.back(), output);
   if (comments) std::cout << "Output set in graph." << std::endl;
-
-  if (comments) std::cout << "Starting inference..." << std::endl;
+  return graph;
+  /*if (comments) std::cout << "Starting inference..." << std::endl;
   graph.inference();
 #ifdef ENABLE_STATISTIC_TIME
   std::vector<std::string> times = graph.getTimeInfo();
@@ -187,7 +183,7 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         std::cout << i << ": " << tmp_output[i] << std::endl;
       }
     }
-  }
+  }*/
 }
 
 std::string get_base_layer_name(const std::string& tensor_name) {
@@ -234,9 +230,8 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
   }
 }
 
-void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                 const std::string& json_path, bool comments, bool parallel,
-                 bool onednn) {
+it_lab_ai::Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
+                 const std::string& json_path, bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -257,7 +252,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     }
   }
 
-  auto parse_result = parse_json_model(json_path, comments, parallel, onednn);
+  auto parse_result = parse_json_model(json_path, comments);
 
   auto& layers = parse_result.layers;
   auto& name_to_layer = parse_result.name_to_layer;
@@ -354,8 +349,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   graph.setSplitDistribution(split_distribution);
   auto output_layer = layers.back();
   graph.setOutput(*output_layer, output);
-
-  if (comments) std::cout << "Starting inference..." << std::endl;
+  return graph;
+  /*if (comments) std::cout << "Starting inference..." << std::endl;
   try {
     graph.inference();
     if (comments) std::cout << "Inference completed successfully." << std::endl;
@@ -373,11 +368,10 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
   std::cout << "Elapsed inference time:" << sum << std::endl;
   std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-#endif
+#endif*/
 }
 
-ParseResult parse_json_model(const std::string& json_path, bool comments,
-                             bool parallel, bool onednn) {
+ParseResult parse_json_model(const std::string& json_path, bool comments) {
   ParseResult result;
 
   auto& layers = result.layers;
@@ -389,9 +383,6 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
   auto& split_name_to_index = result.split_name_to_index;
   auto& split_distribution = result.split_distribution;
   auto& original_ids = result.original_ids;
-
-  it_lab_ai::ImplType impl1 = parallel ? it_lab_ai::kTBB : it_lab_ai::kDefault;
-  it_lab_ai::ImplType impl2 = parallel ? it_lab_ai::kSTL : it_lab_ai::kDefault;
 
   std::unordered_map<std::string, std::vector<int64_t>> layer_parameters;
   std::unordered_map<std::string, float> float_parameters;
@@ -490,24 +481,16 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
 
         auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-            stride, pads, dilations, tmp_tensor, tmp_bias, impl2, group);
+            stride, pads, dilations, tmp_tensor, tmp_bias, kDefault, group);
         layer = conv_layer;
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
         std::shared_ptr<it_lab_ai::Layer> ew_layer;
-        if (onednn) {
-          ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>("relu");
-        } else {
-          ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
-        }
+        ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
         layer = ew_layer;
       } else if (layer_type.find("Sigmoid") != std::string::npos) {
         std::shared_ptr<it_lab_ai::Layer> ew_layer;
-        if (onednn) {
-          ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>("sigmoid");
-        } else {
-          ew_layer = std::make_shared<it_lab_ai::EWLayer>("sigmoid");
-        }
+        ew_layer = std::make_shared<it_lab_ai::EWLayer>("sigmoid");
         layer = ew_layer;
       } else if (layer_type.find("Dense") != std::string::npos ||
                  layer_type.find("FullyConnected") != std::string::npos) {
@@ -538,7 +521,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
               << std::endl;
       } else if (layer_type == "GlobalAveragePool") {
         auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
-            it_lab_ai::Shape({0, 0}), "average", impl1);
+            it_lab_ai::Shape({0, 0}), "average", kDefault);
         layer = pool_layer;
         if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
@@ -599,8 +582,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
           }
         }
 
-        auto pool_layer =
-            std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, impl1);
+        auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
+            shape, pooltype, kDefault);
 
         try {
           if (strides[0] != 2 || strides[1] != 2) {
@@ -733,37 +716,20 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
           if (layer_type == "Mul") {
             ew_operation = "linear";
             std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            if (onednn) {
-              ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>(
-                  ew_operation, value, 0.0F);
-            } else {
-              ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,
-                                                              value, 0.0F);
-            }
+            ew_layer =
+                std::make_shared<it_lab_ai::EWLayer>(ew_operation, value, 0.0F);
             layer = ew_layer;
           } else if (layer_type == "Add") {
             ew_operation = "linear";
             std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            if (onednn &&
-                it_lab_ai::EwLayerOneDnn::is_function_supported("linear")) {
-              ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>(
-                  ew_operation, 1.0F, value);
-            } else {
-              ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,
-                                                              1.0F, value);
-            }
+            ew_layer =
+                std::make_shared<it_lab_ai::EWLayer>(ew_operation, 1.0F, value);
             layer = ew_layer;
           } else if (layer_type == "Sub") {
             ew_operation = "linear";
             std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            if (onednn &&
-                it_lab_ai::EwLayerOneDnn::is_function_supported("linear")) {
-              ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>(
-                  ew_operation, 1.0F, -value);
-            } else {
-              ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,
-                                                              1.0F, -value);
-            }
+            ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation, 1.0F,
+                                                            -value);
             layer = ew_layer;
           } else {
             continue;

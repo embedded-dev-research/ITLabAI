@@ -56,17 +56,15 @@ struct ParseResult {
   std::unordered_map<std::string, int> original_ids;
 };
 
-void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                 const std::string& json_path, bool comments,
-                 bool parallel = false, bool onednn = false);
-void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                        bool comments, bool parallel = false,
-                        bool onednn = false);
+it_lab_ai::Graph build_graph(it_lab_ai::Tensor& input,
+                             it_lab_ai::Tensor& output,
+                 const std::string& json_path, bool comments);
+it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
+                        bool comments);
 std::unordered_map<int, std::string> load_class_names(
     const std::string& filename);
 
-ParseResult parse_json_model(const std::string& json_path, bool comments,
-                             bool parallel, bool onednn);
+ParseResult parse_json_model(const std::string& json_path, bool comments);
 
 std::vector<int> get_input_shape_from_json(const std::string& json_path);
 std::vector<float> process_model_output(const std::vector<float>& output,
