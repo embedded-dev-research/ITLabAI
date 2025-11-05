@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
   bool parallel = false;
   bool onednn = false;
   for (int i = 1; i < argc; ++i) {
-    if (std::string(argv[i]) == "--parallel") {
+    if (std::string(argv[i]) == "--parallel") { // change by Andrey
       parallel = true;
     } else if (std::string(argv[i]) == "--model" && i + 1 < argc) {
       model_name = argv[++i];
@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  it_lab_ai::LayerFactory::configure(parallel, onednn);
+  it_lab_ai::LayerFactory::configure(onednn);
 
   std::string json_path = model_paths[model_name];
 

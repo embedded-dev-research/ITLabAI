@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
       onednn = true;
     }
   }
-  it_lab_ai::LayerFactory::configure(parallel, onednn);
+  it_lab_ai::LayerFactory::configure(onednn);
   std::string dataset_path;
   if (model_name == "alexnet_mnist") {
     dataset_path = MNIST_PATH;

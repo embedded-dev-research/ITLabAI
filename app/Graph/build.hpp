@@ -79,53 +79,11 @@ void print_time_stats(it_lab_ai::Graph& graph);
 namespace it_lab_ai {
 class LayerFactory {
  private:
-  static bool parallel_;
   static bool onednn_;
 
  public:
-  static void configure(bool parallel, bool onednn) {
-    parallel_ = parallel;
+  static void configure(bool onednn) {
     onednn_ = onednn;
-  }
-
-  static std::shared_ptr<Layer> createConvLayer(size_t stride, size_t pads,
-                                                size_t dilations,
-                                                const Tensor& weights,
-                                                const Tensor& bias,
-                                                size_t group = 1) {
-    ImplType impl = parallel_ ? kTBB : kDefault;
-    return std::make_shared<ConvolutionalLayer>(stride, pads, dilations,
-                                                weights, bias, impl, group);
-  }
-
-  static std::shared_ptr<Layer> createPoolingLayer(
-      const Shape& shape, const std::string& pooltype,
-      const Shape& strides = {2, 2}, const Shape& pads = {0, 0, 0, 0},
-      const Shape& dilations = {1, 1}, bool ceil_mode = false) {
-    ImplType impl = parallel_ ? kTBB : kDefault;
-    auto pool_layer = std::make_shared<PoolingLayer>(shape, pooltype, impl);
-
-    try {
-      if (strides[0] != 2 || strides[1] != 2) {
-        pool_layer->setStrides(strides[0], strides[1]);
-      }
-
-      if (pads[0] != 0 || pads[1] != 0 || pads[2] != 0 || pads[3] != 0) {
-        pool_layer->setPads(pads[0], pads[1], pads[2], pads[3]);
-      }
-
-      if (dilations[0] != 1 || dilations[1] != 1) {
-        pool_layer->setDilations(dilations[0], dilations[1]);
-      }
-
-      pool_layer->setCeilMode(ceil_mode);
-
-    } catch (const std::exception& e) {
-      std::cout << "Warning: Some pooling parameters not supported: "
-                << e.what() << std::endl;
-    }
-
-    return pool_layer;
   }
 
   static std::shared_ptr<Layer> createEwLayer(const std::string& function,
@@ -139,7 +97,6 @@ class LayerFactory {
   }
 };
 
-bool LayerFactory::parallel_ = false;
 bool LayerFactory::onednn_ = false;
 
 }  // namespace it_lab_ai

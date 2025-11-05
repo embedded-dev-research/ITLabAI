@@ -73,8 +73,8 @@ it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
 
       it_lab_ai::Tensor tmp_values = tensor;
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
-      auto conv_layer =
-          LayerFactory::createConvLayer(1, pads, 1, tmp_values, tmp_bias, 1);
+      auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
+          1, pads, 1, tmp_values, tmp_bias, kDefault, 1, true);
       layers.push_back(conv_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "ConvLayer added to layers." << std::endl;
@@ -105,7 +105,8 @@ it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
       if (comments)
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
                   << std::endl;
-      auto pool_layer = LayerFactory::createPoolingLayer(shape, pooltype);
+      auto pool_layer =
+          std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
       layers.push_back(pool_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
@@ -157,31 +158,6 @@ it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
   graph.setOutput(*layers.back(), output);
   if (comments) std::cout << "Output set in graph." << std::endl;
   return graph;
-  /*if (comments) std::cout << "Starting inference..." << std::endl;
-  graph.inference();
-#ifdef ENABLE_STATISTIC_TIME
-  std::vector<std::string> times = graph.getTimeInfo();
-  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
-  for (size_t i = 0; i < times.size(); i++) {
-    std::cout << times[i] << std::endl;
-  }
-  std::vector<int> elps_time = graph.getTime();
-  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-  std::cout << "Elapsed inference time:" << sum << std::endl;
-  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-#endif
-  if (comments) std::cout << "Inference completed." << std::endl;
-  if (comments) {
-    std::vector<float> tmp_output =
-        it_lab_ai::softmax<float>(*output.as<float>());
-    for (size_t i = 0; i < tmp_output.size(); i++) {
-      if (tmp_output[i] < 1e-6) {
-        std::cout << i << ": 0" << std::endl;
-      } else {
-        std::cout << i << ": " << tmp_output[i] << std::endl;
-      }
-    }
-  }*/
 }
 
 std::string get_base_layer_name(const std::string& tensor_name) {
@@ -459,8 +435,9 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
 
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
 
-        layer = LayerFactory::createConvLayer(stride, pads, dilations, tensor,
-                                              tmp_bias, group);
+        auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
+            stride, pads, dilations, tmp_tensor, tmp_bias, kDefault, group);
+        layer = conv_layer;
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
         layer = LayerFactory::createEwLayer("relu");
@@ -494,9 +471,9 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
                  "off for inference)."
               << std::endl;
       } else if (layer_type == "GlobalAveragePool") {
-        layer = LayerFactory::createPoolingLayer(
-            Shape({0, 0}), "average", Shape({1, 1}), Shape({0, 0, 0, 0}),
-            Shape({1, 1}), false);
+        auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
+            it_lab_ai::Shape({0, 0}), "average", kDefault);
+        layer = pool_layer;
         if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
                        "dimensions as kernel)"
@@ -556,8 +533,31 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
           }
         }
 
-        layer = LayerFactory::createPoolingLayer(shape, pooltype, strides, pads,
-                                                 dilations, ceil_mode);
+        auto pool_layer =
+            std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
+
+        try {
+          if (strides[0] != 2 || strides[1] != 2) {
+            pool_layer->setStrides(strides[0], strides[1]);
+          }
+
+          if (pads[0] != 0 || pads[1] != 0 || pads[2] != 0 || pads[3] != 0) {
+            pool_layer->setPads(pads[0], pads[1], pads[2], pads[3]);
+          }
+
+          if (dilations[0] != 1 || dilations[1] != 1) {
+            pool_layer->setDilations(dilations[0], dilations[1]);
+          }
+
+          pool_layer->setCeilMode(ceil_mode);
+
+        } catch (const std::exception& e) {
+          if (comments) {
+            std::cout << "Warning: Some pooling parameters not supported: "
+                      << e.what() << std::endl;
+          }
+        }
+        layer = pool_layer;
       } else if (layer_type.find("Flatten") != std::string::npos) {
         int axis = 1;
 
