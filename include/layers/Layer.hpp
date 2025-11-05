@@ -183,17 +183,14 @@ inline void parallel_for(int count, Func func, int mode = 0) {
       break;
     }
 
-    case 3:  // OpenMP - УЛУЧШЕННАЯ ВЕРСИЯ
+    case 3:  // OpenMP
     {
       if (omp_available) {
         try {
-          // Оптимальная настройка для OpenMP
           int num_threads = omp_get_max_threads();
 
-          // Настройка размера чанка для минимизации накладных расходов
           int chunk_size = std::max(1000, count / (num_threads * 8));
 
-// Устанавливаем оптимальное расписание
 #pragma omp parallel for schedule(static, chunk_size) num_threads(num_threads)
           for (int i = 0; i < count; ++i) {
             func(i);

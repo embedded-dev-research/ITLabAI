@@ -1,3 +1,6 @@
 file(GLOB_RECURSE layers_src *.cpp)
 add_library(layers_lib STATIC "${LAYERS_HEADERS}" "${layers_src}")
 target_link_libraries(layers_lib PUBLIC TBB_unified)
+if(OpenMP_FOUND)
+    target_link_libraries(layers_lib PUBLIC OpenMP::OpenMP_CXX)
+endif()
