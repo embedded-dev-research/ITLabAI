@@ -3,6 +3,7 @@
 
 #include "graph/graph.hpp"
 #include "layers/Layer.hpp"
+#include "layers/EWLayer.hpp"
 
 namespace it_lab_ai {
 std::vector<std::vector<int>> find_subgraphs(const Graph& graph,
@@ -13,4 +14,6 @@ bool is_leaf(const Graph& graph, int id);
 bool run_search(const Graph& graph, const Graph& subgraph,
                 std::vector<int>& assignments,
                 std::vector<std::vector<int>>& results);
+
+Graph change_subgraphs(const Graph& graph, const Graph& subgraph_from);
 }  // namespace it_lab_ai

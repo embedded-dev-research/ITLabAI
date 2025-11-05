@@ -93,6 +93,13 @@ class Graph {
     return in_edges_[layerID].size();
   }
 
+  std::vector<int> getInLayers(size_t layerID) const {
+    if (layerID >= in_edges_.size()) {
+      throw std::invalid_argument("Input edges array do not contain this ID.");
+    }
+    return in_edges_[layerID];
+  }
+
   int getLayersCount() const { return V_; }
   const Layer& getLayerFromID(size_t layerID) const {
     if (layerID >= layers_.size()) {
@@ -169,6 +176,88 @@ class Graph {
     }
 
     in_edges_[layNext.getID()].push_back(layPrev.getID());
+  }
+
+  void makeConnection(const Layer& layPrev, const Layer& layNext) {
+    bool layer_exists = false;
+    for (const auto* layer : layers_) {
+      if (layer == &layNext) {
+        layer_exists = true;
+        break;
+      }
+    }
+
+    if (!layer_exists) {
+      return;
+    }
+
+    if (layPrev.getID() == layNext.getID()) {
+      throw std::out_of_range("i=j cant add edge");
+    }
+
+    for (int i = layPrev.getID() + 1; i < V_; ++i) {
+      arrayV_[i]++;
+    }
+    arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.getID()], layNext.getID());
+    arrayV_[V_] = static_cast<int>(arrayE_.size());
+
+    if (layNext.getID() >= static_cast<int>(in_edges_.size())) {
+      in_edges_.resize(layNext.getID() + 1);
+    }
+
+    in_edges_[layNext.getID()].push_back(layPrev.getID());
+  }
+
+  void removeConnection(int idPrev, int idNext) {
+    if (idPrev >= V_ || idNext >= V_ || idPrev < 0 || idNext < 0) {
+      throw std::out_of_range("Layer ID out of range");
+    }
+    auto it =
+        std::find(in_edges_[idNext].begin(), in_edges_[idNext].end(), idPrev);
+    if (it == in_edges_[idNext].end()) {
+      throw std::invalid_argument(
+          (std::string("No such edge ") + std::to_string(idPrev)) + " " +
+          std::to_string(idNext));
+    }
+    in_edges_[idNext].erase(it);
+    auto arrayE_it = std::find(arrayE_.begin() + arrayV_[idPrev],
+                               arrayE_.begin() + arrayV_[idPrev + 1], idNext);
+    if (arrayE_it == arrayE_.begin() + arrayV_[idPrev + 1]) {
+      throw std::invalid_argument(
+          (std::string("No such edge ") + std::to_string(idPrev)) + " " +
+          std::to_string(idNext));
+    }
+    arrayE_.erase(arrayE_it);
+    for (int i = idPrev + 1; i < V_; ++i) {
+      arrayV_[i]--;
+    }
+  }
+  void removeSingleLayer(int id) {
+    if (id >= V_ || id < 0) {
+      throw std::out_of_range("Layer ID out of range");
+    }
+    // remove inputs
+    for (int i = 0; i < V_; i++) {
+      auto arrayE_it = std::find(arrayE_.begin() + arrayV_[i],
+                                 arrayE_.begin() + arrayV_[i + 1], id);
+      if (arrayE_it != arrayE_.begin() + arrayV_[i + 1]) {
+        removeConnection(i, id);
+      }
+    }
+    in_edges_.erase(in_edges_.begin() + id);
+    // remove outputs
+    arrayE_.erase(arrayE_.begin() + arrayV_[id],
+                  arrayE_.begin() + arrayV_[id + 1]);
+    int amount_connected = arrayV_[id + 1] - arrayV_[id];
+    // remove vertex
+    arrayV_.erase(arrayV_.begin() + id);
+    for (int i = id; i < arrayV_.size(); i++) {
+      arrayV_[i] -= amount_connected;
+    }
+    for (int i = id + 1; i < layers_.size(); i++) {
+      layers_[i]->setID(layers_[i]->getID() - 1);
+    }
+    layers_.erase(layers_.begin() + id);
   }
   bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
     for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];

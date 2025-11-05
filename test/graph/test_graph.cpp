@@ -425,3 +425,58 @@ TEST(graph_transformations, check_subgraphs_big_random) {
       elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph, subgraph);
   std::cerr << "Find subgraphs time in ms " << res1_time << std::endl;
 }
+
+class SubgraphTestsParameterized
+    : public ::testing::TestWithParam<std::vector<std::tuple<int, int>>> {};
+
+TEST_P(SubgraphTestsParameterized, check_subgraphs_big_random_lines) {
+  auto data = GetParam();
+  for (int m = 0; m < data.size(); m++) {
+    std::cerr << "(" << std::get<1>(data[m]) << ") ";
+    int num_vertices = std::get<0>(data[m]);
+    int num_vertices_sub = std::get<1>(data[m]);
+    const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+    Tensor weights = make_tensor<float>(vec1, {3, 2});
+    Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+    Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+    Tensor output;
+    Graph graph(num_vertices);
+    Graph subgraph(3);
+    std::vector<std::shared_ptr<Layer>> layers;
+    for (int i = 0; i < num_vertices; i++) {
+      layers.push_back(std::make_shared<FCLayer>(weights, bias));
+    }
+    graph.setInput(*layers[0], input);
+    for (int i = 0; i < num_vertices - 1; i++) {
+      graph.makeConnection(*layers[i], *layers[i + 1]);
+    }
+    graph.setOutput(*layers[num_vertices - 1], output);
+
+    Layer* temp_layer = new FCLayer(weights, bias);
+    subgraph.setInput(*temp_layer, input);
+    Layer* temp_layer2 = new FCLayer(weights, bias);
+    for (int i = 0; i < num_vertices_sub; i++) {
+      subgraph.makeConnection(*temp_layer, *temp_layer2);
+      temp_layer = temp_layer2;
+      temp_layer2 = new FCLayer(weights, bias);
+    }
+
+    //std::vector<std::vector<int>> res1 = find_subgraphs(graph, subgraph);
+    double res1_time = elapsed_time_avg<double, std::milli>(1, find_subgraphs,
+                                                            graph, subgraph);
+    std::cerr << "Find subgraphs time in ms "
+              << res1_time / (100 * num_vertices_sub * num_vertices_sub)
+              << std::endl;
+  }
+}
+
+std::vector<std::tuple<int, int>> genVector() {
+  std::vector<std::tuple<int, int>> results(10);
+  for (int i = 0; i < results.size(); i++) {
+    results[i] = std::tuple<int, int>(105, 2 + 2 * i);
+  }
+  return results;
+}
+
+INSTANTIATE_TEST_SUITE_P(graph_transformations, SubgraphTestsParameterized,
+                         ::testing::Values(genVector()));

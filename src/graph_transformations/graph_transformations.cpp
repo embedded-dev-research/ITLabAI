@@ -40,13 +40,12 @@ bool run_search(const Graph& graph, const Graph& subgraph,
                 std::vector<int>& assignments,
                 std::vector<std::vector<int>>& results) {
   size_t cur_size = assignments.size();
-  for (int prev_id = 0; prev_id < subgraph.getLayersCount(); prev_id++) {
+  for (int prev_id = 0; prev_id < static_cast<int>(cur_size); prev_id++) {
     int amount_connected_s =
         subgraph.getVertexValue(prev_id + 1) - subgraph.getVertexValue(prev_id);
     for (int j = 0; j < amount_connected_s; j++) {
       int next_id = subgraph.getEdgeValue(subgraph.getVertexValue(prev_id) + j);
-      if (prev_id < static_cast<int>(cur_size) &&
-          next_id < static_cast<int>(cur_size)) {
+      if (next_id < static_cast<int>(cur_size)) {
         if (!has_edge(graph, assignments[prev_id], assignments[next_id])) {
           return false;
         }
@@ -95,6 +94,74 @@ bool run_search(const Graph& graph, const Graph& subgraph,
     }
   }
   return false;
+}
+
+Graph change_subgraphs(const Graph& graph, const Graph& subgraph_from) {
+  Graph new_graph = graph;
+  std::vector<std::vector<int>> subs = find_subgraphs(graph, subgraph_from);
+  std::vector<int> roots;
+  std::vector<int> leafs;
+  std::vector<int> roots_final;
+  std::vector<int> leafs_final;
+  std::shared_ptr<Layer> layer = std::make_shared<EWLayer>("relu");
+  int amount_connected;
+  for (int v = 0; v < subgraph_from.getLayersCount(); v++) {
+    if (is_root(subgraph_from, v)) {
+      roots.push_back(v);
+    }
+    if (is_leaf(subgraph_from, v)) {
+      leafs.push_back(v);
+    }
+  }
+  for (int i = 0; i < subs.size(); i++) {
+    roots_final.clear();
+    leafs_final.clear();
+    for (int j = 0; j < roots.size(); j++) {
+      // recognize transformations we can apply with roots
+      amount_connected = graph.getVertexValue(subs[i][roots[j]] + 1) -
+                         graph.getVertexValue(subs[i][roots[j]]);
+      for (int k = 0; k < amount_connected; k++) {
+        int id = graph.getEdgeValue(graph.getVertexValue(subs[i][roots[j]]) + k);
+        auto it = std::find(subs[i].begin(), subs[i].end(), id);
+        if (it != subs[i].end()) {
+          // create copy of root
+        }
+      }
+      // subgraph -> single node
+      std::vector<int> root_inps = graph.getInLayers(subs[i][roots[j]]);
+
+      for (int k = 0; k < root_inps.size(); k++) {
+        auto it =
+            std::find(roots_final.begin(), roots_final.end(), root_inps[k]);
+        if (it == roots_final.end()) {
+          roots_final.push_back(root_inps[k]);
+        }
+      }
+    }
+    for (int j = 0; j < leafs.size(); j++) {
+      amount_connected = graph.getVertexValue(subs[i][leafs[j]] + 1) -
+                         graph.getVertexValue(subs[i][leafs[j]]);
+      for (int k = 0; k < amount_connected; k++) {
+        int id =
+            graph.getEdgeValue(graph.getVertexValue(subs[i][leafs[j]]) + k);
+        auto it = std::find(leafs_final.begin(), leafs_final.end(), id);
+        if (it == leafs_final.end()) {
+          leafs_final.push_back(id);
+        }
+      }
+    }
+    for (int j = 0; j < subs[i].size(); j++) {
+      new_graph.removeSingleLayer(subs[i][j]);
+    }
+    for (int j = 0; j < roots_final.size(); j++) {
+      new_graph.makeConnection(new_graph.getLayerFromID(roots_final[j]), *layer);
+    }
+    for (int j = 0; j < leafs_final.size(); j++) {
+      new_graph.makeConnection(*layer,
+                               new_graph.getLayerFromID(leafs_final[j]));
+    }
+  }
+  return new_graph;
 }
 
 }  // namespace it_lab_ai
