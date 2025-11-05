@@ -22,6 +22,8 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  it_lab_ai::LayerFactory::configure(parallel, onednn);
+
   std::string json_path = model_paths[model_name];
 
   std::vector<int> input_shape;
@@ -68,27 +70,8 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Starting inference..." << std::endl;
         graph.inference();
-#ifdef ENABLE_STATISTIC_TIME
-        std::vector<std::string> times = graph.getTimeInfo();
-        std::cout << "!INFERENCE TIME INFO START!" << std::endl;
-        for (size_t i = 0; i < times.size(); i++) {
-          std::cout << times[i] << std::endl;
-        }
-        std::vector<int> elps_time = graph.getTime();
-        int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-        std::cout << "Elapsed inference time:" << sum << std::endl;
-        std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-#endif
         std::cout << "Inference completed." << std::endl;
-          std::vector<float> tmp_output =
-              it_lab_ai::softmax<float>(*output.as<float>());
-          for (size_t i = 0; i < tmp_output.size(); i++) {
-            if (tmp_output[i] < 1e-6) {
-              std::cout << i << ": 0" << std::endl;
-            } else {
-              std::cout << i << ": " << tmp_output[i] << std::endl;
-            }
-          }
+        print_time_stats(graph);
         std::vector<float> tmp_output = softmax<float>(*output.as<float>());
         int top_n = std::min(3, static_cast<int>(tmp_output.size()));
         std::vector<int> indices(tmp_output.size());
@@ -127,18 +110,7 @@ int main(int argc, char* argv[]) {
         } catch (const std::exception& e) {
           std::cerr << "ERROR during inference: " << e.what() << std::endl;
         }
-
-#ifdef ENABLE_STATISTIC_TIME
-        std::vector<std::string> times = graph.getTimeInfo();
-        std::cout << "!INFERENCE TIME INFO START!" << std::endl;
-        for (size_t i = 0; i < times.size(); i++) {
-          std::cout << times[i] << std::endl;
-        }
-        std::vector<int> elps_time = graph.getTime();
-        int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-        std::cout << "Elapsed inference time:" << sum << std::endl;
-        std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-#endif*
+        print_time_stats(graph);
         std::vector<float> tmp_output =
             process_model_output(*output.as<float>(), model_name);
 

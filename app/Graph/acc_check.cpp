@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
       onednn = true;
     }
   }
-
+  it_lab_ai::LayerFactory::configure(parallel, onednn);
   std::string dataset_path;
   if (model_name == "alexnet_mnist") {
     dataset_path = MNIST_PATH;
@@ -80,7 +80,8 @@ int main(int argc, char* argv[]) {
     Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
     Tensor t = make_tensor<float>(res, sh);
     input = t;
-    build_graph_linear(input, output, false, parallel, onednn);
+    Graph graph = build_graph_linear(input, output, false);
+    print_time_stats(graph);
     std::vector<std::vector<float>> tmp_output =
         softmax<float>(*output.as<float>(), 10);
     std::vector<size_t> indices;
@@ -187,7 +188,8 @@ int main(int argc, char* argv[]) {
   it_lab_ai::Tensor output =
       it_lab_ai::Tensor(output_shape, it_lab_ai::Type::kFloat);
 
-  build_graph(input, output, json_path, false, parallel, onednn);
+  Graph graph = build_graph(input, output, json_path, false);
+  print_time_stats(graph);
   std::vector<std::vector<float>> processed_outputs;
   const std::vector<float>& raw_output = *output.as<float>();
 

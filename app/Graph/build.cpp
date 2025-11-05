@@ -73,15 +73,14 @@ it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
 
       it_lab_ai::Tensor tmp_values = tensor;
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
-      auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-          1, pads, 1, tmp_values, tmp_bias, kDefault, 1, true);
+      auto conv_layer =
+          LayerFactory::createConvLayer(1, pads, 1, tmp_values, tmp_bias, 1);
       layers.push_back(conv_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "ConvLayer added to layers." << std::endl;
     }
     if (layer_type.find("relu") != std::string::npos) {
-      std::shared_ptr<it_lab_ai::Layer> ew_layer;
-      ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
+      auto ew_layer = LayerFactory::createEwLayer("relu");
       layers.push_back(ew_layer);
       layerpostop.push_back(true);
       if (comments)
@@ -106,8 +105,7 @@ it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
       if (comments)
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
                   << std::endl;
-      auto pool_layer =
-          std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
+      auto pool_layer = LayerFactory::createPoolingLayer(shape, pooltype);
       layers.push_back(pool_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
@@ -350,25 +348,6 @@ it_lab_ai::Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output
   auto output_layer = layers.back();
   graph.setOutput(*output_layer, output);
   return graph;
-  /*if (comments) std::cout << "Starting inference..." << std::endl;
-  try {
-    graph.inference();
-    if (comments) std::cout << "Inference completed successfully." << std::endl;
-  } catch (const std::exception& e) {
-    std::cerr << "ERROR during inference: " << e.what() << std::endl;
-  }
-
-#ifdef ENABLE_STATISTIC_TIME
-  std::vector<std::string> times = graph.getTimeInfo();
-  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
-  for (size_t i = 0; i < times.size(); i++) {
-    std::cout << times[i] << std::endl;
-  }
-  std::vector<int> elps_time = graph.getTime();
-  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-  std::cout << "Elapsed inference time:" << sum << std::endl;
-  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-#endif*/
 }
 
 ParseResult parse_json_model(const std::string& json_path, bool comments) {
@@ -480,18 +459,13 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
 
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
 
-        auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-            stride, pads, dilations, tmp_tensor, tmp_bias, kDefault, group);
-        layer = conv_layer;
+        layer = LayerFactory::createConvLayer(stride, pads, dilations, tensor,
+                                              tmp_bias, group);
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
-        std::shared_ptr<it_lab_ai::Layer> ew_layer;
-        ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
-        layer = ew_layer;
+        layer = LayerFactory::createEwLayer("relu");
       } else if (layer_type.find("Sigmoid") != std::string::npos) {
-        std::shared_ptr<it_lab_ai::Layer> ew_layer;
-        ew_layer = std::make_shared<it_lab_ai::EWLayer>("sigmoid");
-        layer = ew_layer;
+        layer = LayerFactory::createEwLayer("sigmoid");
       } else if (layer_type.find("Dense") != std::string::npos ||
                  layer_type.find("FullyConnected") != std::string::npos) {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
@@ -520,9 +494,9 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
                  "off for inference)."
               << std::endl;
       } else if (layer_type == "GlobalAveragePool") {
-        auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
-            it_lab_ai::Shape({0, 0}), "average", kDefault);
-        layer = pool_layer;
+        layer = LayerFactory::createPoolingLayer(
+            Shape({0, 0}), "average", Shape({1, 1}), Shape({0, 0, 0, 0}),
+            Shape({1, 1}), false);
         if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
                        "dimensions as kernel)"
@@ -582,31 +556,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
           }
         }
 
-        auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
-            shape, pooltype, kDefault);
-
-        try {
-          if (strides[0] != 2 || strides[1] != 2) {
-            pool_layer->setStrides(strides[0], strides[1]);
-          }
-
-          if (pads[0] != 0 || pads[1] != 0 || pads[2] != 0 || pads[3] != 0) {
-            pool_layer->setPads(pads[0], pads[1], pads[2], pads[3]);
-          }
-
-          if (dilations[0] != 1 || dilations[1] != 1) {
-            pool_layer->setDilations(dilations[0], dilations[1]);
-          }
-
-          pool_layer->setCeilMode(ceil_mode);
-
-        } catch (const std::exception& e) {
-          if (comments) {
-            std::cout << "Warning: Some pooling parameters not supported: "
-                      << e.what() << std::endl;
-          }
-        }
-        layer = pool_layer;
+        layer = LayerFactory::createPoolingLayer(shape, pooltype, strides, pads,
+                                                 dilations, ceil_mode);
       } else if (layer_type.find("Flatten") != std::string::npos) {
         int axis = 1;
 
@@ -1258,4 +1209,18 @@ it_lab_ai::Tensor prepare_mnist_image(const cv::Mat& image) {
 
   Shape sh({1, 1, 28, 28});
   return it_lab_ai::make_tensor(res, sh);
+}
+
+void print_time_stats(Graph& graph) {
+#ifdef ENABLE_STATISTIC_TIME
+  std::vector<std::string> times = graph.getTimeInfo();
+  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
+  for (size_t i = 0; i < times.size(); i++) {
+    std::cout << times[i] << std::endl;
+  }
+  std::vector<int> elps_time = graph.getTime();
+  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
+  std::cout << "Elapsed inference time:" << sum << std::endl;
+  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+#endif
 }
