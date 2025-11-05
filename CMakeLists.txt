@@ -26,6 +26,8 @@ enable_testing()
 
 include_directories("include")
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 add_subdirectory(3rdparty)
 
 include(cmake/opencv_config.cmake)

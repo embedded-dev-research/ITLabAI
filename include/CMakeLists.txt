@@ -7,6 +7,9 @@ set(GRAPHT_HEADERS "${graphT_headers}" PARENT_SCOPE)
 file(GLOB_RECURSE layers_headers layers/*.h layers/*.hpp)
 set(LAYERS_HEADERS "${layers_headers}" PARENT_SCOPE)
 
+file(GLOB_RECURSE layers_oneDNN_headers layers_oneDNN/*.h layers_oneDNN/*.hpp)
+set(LAYERS_ONEDNN_HEADERS "${layers_oneDNN_headers}" PARENT_SCOPE)
+
 file(GLOB_RECURSE perf_headers perf/*.h perf/*.hpp)
 set(PERF_HEADERS "${perf_headers}" PARENT_SCOPE)
 

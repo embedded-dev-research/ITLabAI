@@ -40,7 +40,7 @@ jobs:
         max-size: 2G
     - name: Build
       run: |
-            cmake -S . -B build \
+            cmake -S . -B build -G Ninja \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
@@ -51,19 +51,18 @@ jobs:
             cmake --build build --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - name: Prepare OpenCV libs
+    - name: Prepare ALL libs
       run: |
-       mkdir -p build/bin/opencv_libs
-       cp -a build/3rdparty/opencv_build/lib/libopencv_* build/bin/opencv_libs/
-       echo "Library permissions after copy:"
-       stat -c "%A %n" build/bin/opencv_libs/libopencv_imgcodecs.so*
-
+       mkdir -p build/bin/all_libs
+       cp -a build/3rdparty/opencv_build/lib/* build/bin/all_libs/ 2>/dev/null || true
+       ldd build/bin/ACC | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} build/bin/all_libs/ 2>/dev/null || true
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
        name: mnist-${{ matrix.build_type }}${{ matrix.stats && '-stats' || '' }}
        path: |
         ${{ steps.set_binaries.outputs.ACC_BINARY }}
+        build/bin/all_libs/*
         build/bin/opencv_libs/*
         build/setenv.sh
     - name: Test
@@ -92,7 +91,7 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build
       run: |
-        cmake -S . -B build \
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER=clang \
@@ -117,7 +116,7 @@ jobs:
         submodules: true
     - name: Install prerequisites
       run: |
-        brew install libomp
+        brew install libomp ninja
         brew link libomp --overwrite --force
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
@@ -125,12 +124,25 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build
       run: |
-        cmake -S . -B build \
+        OPENMP_PATH=$(brew --prefix libomp)
+        echo "OpenMP path: $OPENMP_PATH"
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_C_FLAGS="-I$(brew --prefix libomp)/include" \
-          -DCMAKE_CXX_FLAGS="-I$(brew --prefix libomp)/include"
+          -DCMAKE_PREFIX_PATH=$OPENMP_PATH \
+          -DCMAKE_INCLUDE_PATH=$OPENMP_PATH/include \
+          -DCMAKE_LIBRARY_PATH=$OPENMP_PATH/lib \
+          -DOpenMP_C_FLAGS="-Xclang -fopenmp -I$OPENMP_PATH/include" \
+          -DOpenMP_CXX_FLAGS="-Xclang -fopenmp -I$OPENMP_PATH/include" \
+          -DOpenMP_C_LIB_NAMES="omp" \
+          -DOpenMP_CXX_LIB_NAMES="omp" \
+          -DOpenMP_omp_LIBRARY="$OPENMP_PATH/lib/libomp.dylib" \
+          -DCMAKE_EXE_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp" \
+          -DCMAKE_SHARED_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp"
         cmake --build build --parallel
+      env:
+        LDFLAGS: "-L$(brew --prefix libomp)/lib -lomp"
+        CPPFLAGS: "-I$(brew --prefix libomp)/include"
     - name: Test
       run: cmake --build build -t test
       env:
@@ -175,7 +187,7 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build and Test
       run: |
-        cmake -S . -B build \
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_BUILD_TYPE=Release
@@ -201,7 +213,7 @@ jobs:
         max-size: 2G
     - name: Build
       run: |
-        cmake -S . -B build \
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_FLAGS="--coverage" \
@@ -222,32 +234,36 @@ jobs:
         slug: embedded-dev-research/ITLabAI
         
   evaluate-model:
-   runs-on: ubuntu-latest
-   needs: [build-linux]
-   permissions:
-    contents: write
+    runs-on: ubuntu-latest
+    needs: [build-linux]
+    permissions:
+      contents: write
 
-   steps:
+    steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    
+    - name: Download binary and libs
+      uses: actions/download-artifact@v4
+      with:
+        name: mnist-RELEASE
+        path: build/
+        
     - name: Set binary path
       id: set_eval_binary
       run: |
         echo "EVAL_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
+        
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          libgtk-3-0 \
-          libtbb12 \
-          libjpeg-dev \
-          libpng-dev \
-          libtiff-dev
+        sudo apt-get install -y libgtk-3-0 libtbb12 libjpeg-dev libpng-dev libtiff-dev libopenjp2-7 libdnnl3
         sudo ldconfig
+        
     - name: Generate model JSON
       run: |
-        cd docs && mkdir jsons
+        cd docs && mkdir -p jsons
         cd ..
         cd app/Converters
         pip install -r requirements.txt
@@ -264,76 +280,46 @@ jobs:
     - name: Download MNIST test dataset
       if: steps.cache-mnist.outputs.cache-hit != 'true'
       run: |
-        set -e
         mkdir -p docs/mnist/mnist/test
-        echo "Downloading test images..."
         wget -q https://github.com/DeepTrackAI/MNIST_dataset/archive/main.zip -O main.zip
         unzip -q main.zip
         cp MNIST_dataset-main/mnist/test/*.png docs/mnist/mnist/test/
         rm -rf main.zip MNIST_dataset-main
-        echo "Downloaded $(ls docs/mnist/mnist/test | wc -l) images"
-
-    - name: Download binary and libs
-      uses: actions/download-artifact@v4
-      with:
-        name: mnist-RELEASE
-        path: build/
 
     - name: Prepare environment
       run: |
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
+        export LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         
-        export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
-        echo "Final LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-        
-    - name: Verify library integrity
-      run: |
-       echo "### Library verification ###"
-       file build/bin/opencv_libs/libopencv_imgcodecs.so.4.12.0 | grep "shared object"
-
     - name: Run evaluation
       run: |
-       echo "### Pre-run checks ###"
-       export LD_LIBRARY_PATH=$PWD/build/bin/opencv_libs:/usr/lib/x86_64-linux-gnu
-       echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-    
-       LD_DEBUG=files "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --model alexnet_mnist 2> ld_debug.log
-       echo "### Library loading debug ###"
-       grep -i "opencv_imgcodecs" ld_debug.log
+        export LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --model alexnet_mnist > accuracy.txt 2>&1
+        if [ $? -ne 0 ]; then
+          exit 1
+        fi
 
-       "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" > accuracy.txt
-        echo "Accuracy: $(cat accuracy.txt)"
-
+    - name: Extract accuracy value
+      run: |
+        ACCURACY=$(grep -oE '[0-9]+\.?[0-9]*%' accuracy.txt | head -1 || echo "0%")
+        echo "$ACCURACY" > accuracy_value.txt
+        
     - name: Update README (master only)
       if: github.ref == 'refs/heads/master'
       run: |
-        ACCURACY=$(cat accuracy.txt | sed 's/%//g')
+        ACCURACY=$(cat accuracy_value.txt | sed 's/%//g')
         DATE=$(date '+%Y-%m-%d')
-    
-        echo "Updating README with:"
-        echo "Accuracy: $ACCURACY"
-        echo "Date: $DATE"
-    
-        echo "Current README content:"
-        grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md || echo "Placeholder not found"
-    
         sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->/" README.md
-       
-        echo "Updated README content:"
-        grep -A 2 -B 2 "ACCURACY_PLACEHOLDER" README.md
 
     - name: Commit and push changes (master only)
       if: github.ref == 'refs/heads/master'
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-    
         git add README.md
-
         if git diff-index --quiet HEAD --; then
           echo "No changes to commit"
         else
-          git commit -m "[CI] Update accuracy: $(cat accuracy.txt)%"
+          git commit -m "[CI] Update accuracy: $(cat accuracy_value.txt)"
           git push origin master
-          echo "Changes pushed to master branch"
         fi

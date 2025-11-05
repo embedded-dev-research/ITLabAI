@@ -11,12 +11,14 @@ using namespace it_lab_ai;
 int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
   bool parallel = false;
-
+  bool onednn = false;
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--parallel") {
       parallel = true;
     } else if (std::string(argv[i]) == "--model" && i + 1 < argc) {
       model_name = argv[++i];
+    } else if (std::string(argv[i]) == "--onednn") {
+      onednn = true;
     }
   }
 
@@ -62,7 +64,7 @@ int main(int argc, char* argv[]) {
         std::vector<float> vec(75, 3);
         it_lab_ai::Tensor output = it_lab_ai::make_tensor(vec, sh1);
 
-        build_graph_linear(input, output, true, parallel);
+        build_graph_linear(input, output, true, parallel, onednn);
         std::vector<float> tmp_output = softmax<float>(*output.as<float>());
         int top_n = std::min(3, static_cast<int>(tmp_output.size()));
         std::vector<int> indices(tmp_output.size());
@@ -92,7 +94,7 @@ int main(int argc, char* argv[]) {
         size_t output_classes = 1000;
         it_lab_ai::Tensor output({1, output_classes}, it_lab_ai::Type::kFloat);
 
-        build_graph(input, output, json_path, false, parallel);
+        build_graph(input, output, json_path, false, parallel, onednn);
         std::vector<float> tmp_output =
             process_model_output(*output.as<float>(), model_name);
 

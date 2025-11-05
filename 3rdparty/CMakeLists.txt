@@ -1,5 +1,9 @@
 add_subdirectory(googletest)
 
+set(DNNL_CPU_RUNTIME "TBB" CACHE STRING "oneDNN CPU threading runtime")
+
+add_subdirectory(oneDNN)
+
 # Unified TBB Configuration
 option(TBB_TEST "Build TBB tests" OFF)
 option(TBB_EXAMPLES "Build TBB examples" OFF)
