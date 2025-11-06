@@ -4,8 +4,7 @@
 
 using namespace it_lab_ai;
 
-it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
-                                    it_lab_ai::Tensor& output,
+Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                         bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
@@ -26,7 +25,6 @@ it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
       std::cout << std::endl << std::endl;
     }
   }
-
   std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
   std::vector<bool> layerpostop;
 
@@ -156,7 +154,6 @@ it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
   }
 
   graph.setOutput(*layers.back(), output);
-  if (comments) std::cout << "Output set in graph." << std::endl;
   return graph;
 }
 
@@ -204,7 +201,7 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
   }
 }
 
-it_lab_ai::Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
+Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                  const std::string& json_path, bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
@@ -323,6 +320,7 @@ it_lab_ai::Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output
   graph.setSplitDistribution(split_distribution);
   auto output_layer = layers.back();
   graph.setOutput(*output_layer, output);
+
   return graph;
 }
 
@@ -533,8 +531,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
           }
         }
 
-        auto pool_layer =
-            std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
+        auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
+            shape, pooltype, kDefault);
 
         try {
           if (strides[0] != 2 || strides[1] != 2) {
@@ -666,22 +664,13 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
 
           if (layer_type == "Mul") {
             ew_operation = "linear";
-            std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            ew_layer =
-                std::make_shared<it_lab_ai::EWLayer>(ew_operation, value, 0.0F);
-            layer = ew_layer;
+            layer = LayerFactory::createEwLayer(ew_operation, value, 0.0F);
           } else if (layer_type == "Add") {
             ew_operation = "linear";
-            std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            ew_layer =
-                std::make_shared<it_lab_ai::EWLayer>(ew_operation, 1.0F, value);
-            layer = ew_layer;
+            layer = LayerFactory::createEwLayer(ew_operation, 1.0F, value);
           } else if (layer_type == "Sub") {
             ew_operation = "linear";
-            std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation, 1.0F,
-                                                            -value);
-            layer = ew_layer;
+            layer = LayerFactory::createEwLayer(ew_operation, 1.0F, -value);
           } else {
             continue;
           }
