@@ -132,14 +132,15 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   if (comments)
     std::cout << "number of layers - " << layers.size() + 1 << std::endl;
   it_lab_ai::Graph graph(static_cast<int>(layers.size()));
-  it_lab_ai::InputLayer a1(it_lab_ai::kNchw, it_lab_ai::kNchw);
+  auto a1 = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
+                                                    it_lab_ai::kNchw);
 
   if (comments) std::cout << "InputLayer created." << std::endl;
 
   graph.setInput(a1, input);
   if (comments) std::cout << "Input set in graph." << std::endl;
 
-  graph.makeConnection(a1, *layers[0]);
+  graph.makeConnection(a1, layers[0]);
   if (comments)
     std::cout << "Connection made between InputLayer and first layer."
               << std::endl;
@@ -148,12 +149,16 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     if (layerpostop[i]) {
       layers[i - 1]->postops.layers.push_back(layers[i].get());
       layers[i - 1]->postops.count++;
-      graph.makeConnection(*layers[i - 1], *layers[i + 1]);
+      graph.makeConnection(layers[i - 1], layers[i + 1]);
     } else if (!layerpostop[i + 1])
-      graph.makeConnection(*layers[i], *layers[i + 1]);
+      graph.makeConnection(layers[i], layers[i + 1]);
   }
 
-  graph.setOutput(*layers.back(), output);
+  graph.setOutput(layers.back(), output);
+
+  for (auto& layer : layers) {
+    graph.addOwnedLayer(layer);
+  }
   return graph;
 }
 
@@ -241,7 +246,7 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       [](const auto& layer) { return layer->getName() == it_lab_ai::kInput; });
 
   if (input_layer_it != layers.end()) {
-    graph.setInput(**input_layer_it, input);
+    graph.setInput(*input_layer_it, input);
   }
 
   std::vector<std::pair<std::string, std::string>> connection_list;
@@ -297,8 +302,8 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       }
 
       try {
-        graph.makeConnection(*name_to_layer[source_name],
-                             *name_to_layer[target_name]);
+        graph.makeConnection(name_to_layer[source_name],
+                             name_to_layer[target_name]);
 
       } catch (const std::exception& e) {
         std::cerr << "Failed: " << source_name << " -> " << target_name << " : "
@@ -319,7 +324,11 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   }
   graph.setSplitDistribution(split_distribution);
   auto output_layer = layers.back();
-  graph.setOutput(*output_layer, output);
+  graph.setOutput(output_layer, output);
+
+  for (auto& layer : layers) {
+    graph.addOwnedLayer(layer);
+  }
 
   return graph;
 }
