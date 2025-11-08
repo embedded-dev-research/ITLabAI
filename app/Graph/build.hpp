@@ -89,9 +89,8 @@ class LayerFactory {
                                               float beta = 0.0F) {
     if (onednn_ && EwLayerOneDnn::is_function_supported(function)) {
       return std::make_shared<EwLayerOneDnn>(function, alpha, beta);
-    } else {
-      return std::make_shared<EWLayer>(function, alpha, beta);
     }
+    return std::make_shared<EWLayer>(function, alpha, beta);
   }
 };
 

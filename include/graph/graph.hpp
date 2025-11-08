@@ -74,7 +74,7 @@ class Graph {
     split_distribution_ = split_dist;
   }
 
-  void addOwnedLayer(std::shared_ptr<Layer> layer) {
+  void addOwnedLayer(const std::shared_ptr<Layer>& layer) {
     if (!layer) return;
     for (const auto& existing_layer : owned_layers_) {
       if (existing_layer.get() == layer.get()) {
@@ -115,7 +115,7 @@ class Graph {
     return *layers_[layerID];
   }
 
-  void setInput(std::shared_ptr<Layer> layer, Tensor& vec) {
+  void setInput(const std::shared_ptr<Layer>& layer, Tensor& vec) {
     addOwnedLayer(layer);
     layer->setID(0);
     layers_.push_back(layer.get());
@@ -126,7 +126,7 @@ class Graph {
     in_edges_.resize(1);
   }
 
-  void addSingleLayer(std::shared_ptr<Layer> layer) {
+  void addSingleLayer(const std::shared_ptr<Layer>& layer) {
     addOwnedLayer(layer);
 
     bool layer_exists = false;
@@ -150,8 +150,8 @@ class Graph {
     }
   }
 
-  void makeConnection(std::shared_ptr<Layer> layPrev,
-                      std::shared_ptr<Layer> layNext) {
+  void makeConnection(const std::shared_ptr<Layer>& layPrev,
+                      const std::shared_ptr<Layer>& layNext) {
     addOwnedLayer(layPrev);
     addOwnedLayer(layNext);
 
@@ -193,8 +193,8 @@ class Graph {
     in_edges_[layNext->getID()].push_back(layPrev->getID());
   }
 
-  bool areLayerNext(std::shared_ptr<Layer> layPrev,
-                    std::shared_ptr<Layer> layNext) {
+  bool areLayerNext(const std::shared_ptr<Layer>& layPrev,
+                    const std::shared_ptr<Layer>& layNext) {
     for (int i = arrayV_[layPrev->getID()]; i < arrayV_[layPrev->getID() + 1];
          i++) {
       if (arrayE_[i] == layNext->getID()) {
@@ -302,7 +302,7 @@ class Graph {
     *outtenres_ = outten_[0];
   }
 
-  void setOutput(std::shared_ptr<Layer> layer, Tensor& vec) {
+  void setOutput(const std::shared_ptr<Layer>& layer, Tensor& vec) {
     end_ = layer->getID();
     outtenres_ = &vec;
     std::vector<int> vec1 = {1, 7, 1, 0};
