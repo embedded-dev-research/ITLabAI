@@ -24,11 +24,11 @@ struct BranchState {
 
 class Graph {
   int BiggestSize_;
-  int V_;                                             // amount of ids
+  int V_;  // amount of ids
   std::vector<std::shared_ptr<Layer>> owned_layers_;
   std::vector<Layer*> layers_;
-  std::vector<int> arrayV_;     // vertices (id -> vertex number)
-  std::vector<int> arrayE_;     // edges (vertex number -> id)
+  std::vector<int> arrayV_;  // vertices (id -> vertex number)
+  std::vector<int> arrayE_;  // edges (vertex number -> id)
   std::vector<Tensor> inten_;
   std::vector<Tensor> outten_;
   Tensor* outtenres_;
@@ -76,7 +76,6 @@ class Graph {
 
   void addOwnedLayer(std::shared_ptr<Layer> layer) {
     if (!layer) return;
-
     for (const auto& existing_layer : owned_layers_) {
       if (existing_layer.get() == layer.get()) {
         return;
@@ -116,16 +115,6 @@ class Graph {
     return *layers_[layerID];
   }
 
-  void setInput(Layer& lay, Tensor& vec) {
-    lay.setID(0);
-    layers_.push_back(&lay);
-    arrayV_.push_back(0);
-    inten_ = {vec};
-    start_ = lay.getID();
-    V_++;
-    in_edges_.resize(1);
-  }
-
   void setInput(std::shared_ptr<Layer> layer, Tensor& vec) {
     addOwnedLayer(layer);
     layer->setID(0);
@@ -137,18 +126,20 @@ class Graph {
     in_edges_.resize(1);
   }
 
-  void addSingleLayer(Layer& lay) {
+  void addSingleLayer(std::shared_ptr<Layer> layer) {
+    addOwnedLayer(layer);
+
     bool layer_exists = false;
-    for (const auto* layer : layers_) {
-      if (layer == &lay) {
+    for (const auto* existing_layer : layers_) {
+      if (existing_layer == layer.get()) {
         layer_exists = true;
         break;
       }
     }
 
     if (!layer_exists) {
-      lay.setID(V_);
-      layers_.push_back(&lay);
+      layer->setID(V_);
+      layers_.push_back(layer.get());
       arrayV_.push_back(static_cast<int>(arrayE_.size()));
 
       if (V_ >= static_cast<int>(in_edges_.size())) {
@@ -157,50 +148,13 @@ class Graph {
 
       V_++;
     }
-  }
-
-  void makeConnection(const Layer& layPrev, Layer& layNext) {
-    bool layer_exists = false;
-    for (const auto* layer : layers_) {
-      if (layer == &layNext) {
-        layer_exists = true;
-        break;
-      }
-    }
-
-    if (!layer_exists) {
-      layNext.setID(V_);
-      layers_.push_back(&layNext);
-      arrayV_.push_back(static_cast<int>(arrayE_.size()));
-
-      if (V_ >= static_cast<int>(in_edges_.size())) {
-        in_edges_.resize(V_ + 1);
-      }
-
-      V_++;
-    }
-
-    if (layPrev.getID() == layNext.getID()) {
-      throw std::out_of_range("i=j cant add edge");
-    }
-
-    for (int i = layPrev.getID() + 1; i < V_; ++i) {
-      arrayV_[i]++;
-    }
-    arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.getID()], layNext.getID());
-    arrayV_[V_] = static_cast<int>(arrayE_.size());
-
-    if (layNext.getID() >= static_cast<int>(in_edges_.size())) {
-      in_edges_.resize(layNext.getID() + 1);
-    }
-
-    in_edges_[layNext.getID()].push_back(layPrev.getID());
   }
 
   void makeConnection(std::shared_ptr<Layer> layPrev,
                       std::shared_ptr<Layer> layNext) {
     addOwnedLayer(layPrev);
     addOwnedLayer(layNext);
+
     bool layer_exists = false;
     for (const auto* layer : layers_) {
       if (layer == layNext.get()) {
@@ -239,10 +193,11 @@ class Graph {
     in_edges_[layNext->getID()].push_back(layPrev->getID());
   }
 
-  bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
-    for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];
+  bool areLayerNext(std::shared_ptr<Layer> layPrev,
+                    std::shared_ptr<Layer> layNext) {
+    for (int i = arrayV_[layPrev->getID()]; i < arrayV_[layPrev->getID() + 1];
          i++) {
-      if (arrayE_[i] == layNext.getID()) {
+      if (arrayE_[i] == layNext->getID()) {
         return true;
       }
     }
@@ -345,14 +300,6 @@ class Graph {
     }
 
     *outtenres_ = outten_[0];
-  }
-
-  void setOutput(const Layer& lay, Tensor& vec) {
-    end_ = lay.getID();
-    outtenres_ = &vec;
-    std::vector<int> vec1 = {1, 7, 1, 0};
-    Tensor start = make_tensor(vec1);
-    outten_.push_back(start);
   }
 
   void setOutput(std::shared_ptr<Layer> layer, Tensor& vec) {

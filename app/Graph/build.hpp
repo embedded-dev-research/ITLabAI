@@ -82,14 +82,11 @@ class LayerFactory {
   static bool onednn_;
 
  public:
-  static void configure(bool onednn) {
-    onednn_ = onednn;
-  }
+  static void configure(bool onednn) { onednn_ = onednn; }
 
   static std::shared_ptr<Layer> createEwLayer(const std::string& function,
                                               float alpha = 1.0f,
                                               float beta = 0.0f) {
-
     if (onednn_ && EwLayerOneDnn::is_function_supported(function)) {
       return std::make_shared<EwLayerOneDnn>(function, alpha, beta);
     } else {

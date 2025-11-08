@@ -43,16 +43,16 @@ int main() {
   }
   Tensor input = t;
   Tensor output = make_tensor(vec, sh1);
-  InputLayer a1(kNhwc, kNchw, 1, 2);
+  auto a1 = std::make_shared<InputLayer>(kNchw, kNchw, 1, 2);
   std::vector<float> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer a2(1, 0, 0, kernel);
+  auto a2 = std::make_shared<ConvolutionalLayer>(1, 0, 0, kernel);
   Shape poolshape = {2, 2};
-  EWLayer a3("linear", 2.0F, 3.0F);
-  PoolingLayer a4(poolshape, "average");
-  FCLayer a6;
-  OutputLayer a5;
+  auto a3 = std::make_shared<EWLayer>("linear", 2.0F, 3.0F);
+  auto a4 = std::make_shared<PoolingLayer>(poolshape, "average");
+  auto a5 = std::make_shared<OutputLayer>();
+  auto a6 = std::make_shared<FCLayer>();
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);

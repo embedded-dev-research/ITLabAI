@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
   bool parallel = false;
   bool onednn = false;
   for (int i = 1; i < argc; ++i) {
-    if (std::string(argv[i]) == "--parallel") { // change by Andrey
+    if (std::string(argv[i]) == "--parallel") {  // change by Andrey
       parallel = true;
     } else if (std::string(argv[i]) == "--model" && i + 1 < argc) {
       model_name = argv[++i];
@@ -69,8 +69,12 @@ int main(int argc, char* argv[]) {
         Graph graph = build_graph_linear(input, output, true);
 
         std::cout << "Starting inference..." << std::endl;
-        graph.inference();
-        std::cout << "Inference completed." << std::endl;
+        try {
+          graph.inference();
+          std::cout << "Inference completed successfully." << std::endl;
+        } catch (const std::exception& e) {
+          std::cerr << "ERROR during inference: " << e.what() << std::endl;
+        }
         print_time_stats(graph);
         std::vector<float> tmp_output = softmax<float>(*output.as<float>());
         int top_n = std::min(3, static_cast<int>(tmp_output.size()));
@@ -106,7 +110,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Starting inference..." << std::endl;
         try {
           graph.inference();
-              std::cout << "Inference completed successfully." << std::endl;
+          std::cout << "Inference completed successfully." << std::endl;
         } catch (const std::exception& e) {
           std::cerr << "ERROR during inference: " << e.what() << std::endl;
         }

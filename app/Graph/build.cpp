@@ -5,7 +5,7 @@
 using namespace it_lab_ai;
 
 Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                        bool comments) {
+                         bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -207,7 +207,7 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
 }
 
 Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                 const std::string& json_path, bool comments) {
+                  const std::string& json_path, bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -325,7 +325,6 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   graph.setSplitDistribution(split_distribution);
   auto output_layer = layers.back();
   graph.setOutput(output_layer, output);
-
   for (auto& layer : layers) {
     graph.addOwnedLayer(layer);
   }
