@@ -1219,5 +1219,7 @@ void print_time_stats(Graph& graph) {
   int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
   std::cout << "Elapsed inference time:" << sum << std::endl;
   std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+#else
+  (void)graph;
 #endif
 }
