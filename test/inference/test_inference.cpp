@@ -28,7 +28,7 @@ TEST(bfs, check_struct_graph) {
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
 
-  // Используем shared_ptr для всех слоев
+  // РСЃРїРѕР»СЊР·СѓРµРј shared_ptr РґР»СЏ РІСЃРµС… СЃР»РѕРµРІ
   auto a1 = std::make_shared<InputLayer>(kNhwc, kNchw, 1, 2);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
