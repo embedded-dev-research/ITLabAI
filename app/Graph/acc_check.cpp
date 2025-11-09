@@ -13,7 +13,6 @@ using namespace it_lab_ai;
 
 int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
-  // bool parallel = false;
   bool onednn = false;
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
