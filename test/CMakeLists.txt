@@ -1,9 +1,9 @@
 file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 add_executable(run_test ${TEST_SRC_FILES})
-if(OpenMP_FOUND)
-    target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
-endif()
+# if(OpenMP_FOUND)
+#     target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
+# endif()
 target_link_libraries(run_test PUBLIC perf_lib layers_lib layers_oneDNN_lib)
 target_link_libraries(run_test PUBLIC gtest)
 target_link_libraries(run_test PUBLIC ReadLib)
