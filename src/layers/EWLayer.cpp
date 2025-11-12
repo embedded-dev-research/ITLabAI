@@ -1,6 +1,7 @@
 #include "layers/EWLayer.hpp"
 
 #include <chrono>
+#include <cmath>
 
 namespace it_lab_ai {
 
