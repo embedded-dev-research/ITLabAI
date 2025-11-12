@@ -91,8 +91,9 @@ inline void impl_omp(std::size_t count, std::function<void(std::size_t)> func,
                      const Options& opt) {
   if (count == 0) return;
 
-  int num_threads =
-      opt.max_threads > 0 ? opt.max_threads : omp_get_max_threads();
+  int num_threads = opt.max_threads > 0
+                        ? opt.max_threads
+                        : static_cast<int>(std::thread::hardware_concurrency());
   int chunk_size =
       static_cast<int>(std::max(opt.grain, count / (num_threads * 8)));
 
