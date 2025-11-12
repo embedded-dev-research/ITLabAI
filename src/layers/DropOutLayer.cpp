@@ -11,6 +11,12 @@ void DropOutLayer::run(const std::vector<Tensor>& input,
   if (input.size() != 1) {
     throw std::runtime_error("DropOutLayer: Input tensors not 1");
   }
+  
+  // If not in training mode, just pass through the input
+  if (!training_mode_) {
+    output[0] = input[0];
+    return;
+  }
   const double lower_bound = 0;
   const double upper_bound = 100;
   std::uniform_real_distribution<double> unif(lower_bound, upper_bound);
