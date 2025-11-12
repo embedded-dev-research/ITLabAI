@@ -249,7 +249,7 @@ class Graph {
       tensors_.push_back(outten_[0]);
 #endif
 #ifdef ENABLE_STATISTIC_WEIGHTS
-      weights_.push_back(layers_[i]->get_weights());
+      weights_.push_back(layers_[current_layer]->get_weights());
 #endif
 
       inten_ = outten_;
@@ -295,7 +295,7 @@ class Graph {
       auto elapsed =
           std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
       time_.push_back(static_cast<int>(elapsed.count()));
-      time_layer_.push_back(layers_[i]->getName());
+      time_layer_.push_back(layers_[current_layer]->getName());
 #endif
     }
 
