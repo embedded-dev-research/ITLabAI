@@ -17,16 +17,17 @@
 namespace it_lab_ai {
 namespace parallel {
 
-enum class Backend { Seq = 0, Threads = 1, TBB = 2, OMP = 3 };
+enum class Backend { kSeq = 0, kThreads = 1, kTbb = 2, kOmp = 3 };
 
 struct Options {
-  Backend backend = Backend::Seq;
+  Backend backend = Backend::kSeq;
   int max_threads = 0;
   std::size_t min_parallel_n = 1000;
   std::size_t grain = 1024;
 };
 
-inline void impl_seq(std::size_t count, std::function<void(std::size_t)> func) {
+inline void impl_seq(std::size_t count,
+                     const std::function<void(std::size_t)>& func) {
   for (std::size_t i = 0; i < count; ++i) {
     func(i);
   }
@@ -34,7 +35,7 @@ inline void impl_seq(std::size_t count, std::function<void(std::size_t)> func) {
 }
 
 inline void impl_threads(std::size_t count,
-                         std::function<void(std::size_t)> func,
+                         const std::function<void(std::size_t)>& func,
                          const Options& opt) {
   int num_threads = opt.max_threads > 0
                         ? opt.max_threads
@@ -73,7 +74,8 @@ inline void impl_threads(std::size_t count,
   std::cout << "Stl " << std::endl;
 }
 
-inline void impl_tbb(std::size_t count, std::function<void(std::size_t)> func,
+inline void impl_tbb(std::size_t count,
+                     const std::function<void(std::size_t)>& func,
                      const Options& opt) {
   std::cout << "tbb " << std::endl;
   oneapi::tbb::parallel_for(
@@ -87,15 +89,17 @@ inline void impl_tbb(std::size_t count, std::function<void(std::size_t)> func,
 }
 
 #ifdef HAS_OPENMP
-inline void impl_omp(std::size_t count, std::function<void(std::size_t)> func,
+inline void impl_omp(std::size_t count,
+                     const std::function<void(std::size_t)>& func,
                      const Options& opt) {
   if (count == 0) return;
 
   int num_threads = opt.max_threads > 0
                         ? opt.max_threads
                         : static_cast<int>(std::thread::hardware_concurrency());
-  int chunk_size =
-      static_cast<int>(std::max(opt.grain, count / (num_threads * 8)));
+
+  // Убрана неиспользуемая переменная chunk_size
+  static_cast<void>(std::max(opt.grain, count / (num_threads * 8)));
 
   int int_count = static_cast<int>(count);
   if (int_count < 0 || static_cast<std::size_t>(int_count) != count) {
@@ -103,14 +107,15 @@ inline void impl_omp(std::size_t count, std::function<void(std::size_t)> func,
     return;
   }
 
-#pragma omp parallel for schedule(static, chunk_size) num_threads(num_threads)
+#pragma omp parallel for schedule(static) num_threads(num_threads)
   for (int i = 0; i < int_count; ++i) {
     func(static_cast<std::size_t>(i));
   }
   std::cout << "OMP " << std::endl;
 }
 #else
-inline void impl_omp(std::size_t count, std::function<void(std::size_t)> func,
+inline void impl_omp(std::size_t count,
+                     const std::function<void(std::size_t)>& func,
                      const Options& opt) {
   impl_seq(count, func);
 }

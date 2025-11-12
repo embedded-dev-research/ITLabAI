@@ -66,7 +66,7 @@ class Layer {
  protected:
   int id_ = 0;
   LayerType type_;
-  ParBackend parallel_backend_ = ParBackend::Seq;
+  ParBackend parallel_backend_ = ParBackend::kSeq;
 };
 
 template <typename ValueType>

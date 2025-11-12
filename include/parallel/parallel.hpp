@@ -4,7 +4,7 @@
 namespace it_lab_ai {
 namespace parallel {
 
-constexpr bool has_omp =
+constexpr bool kHasOmp =
 #ifdef HAS_OPENMP
     true;
 #else
@@ -13,23 +13,23 @@ constexpr bool has_omp =
 
 inline Backend resolve_default_backend(std::size_t n, const Options& opt) {
   if (n < opt.min_parallel_n) {
-    return Backend::Seq;
+    return Backend::kSeq;
   }
 
 #ifdef HAS_OPENMP
-  return Backend::OMP;
+  return Backend::kOmp;
 #else
-  return Backend::TBB;
+  return Backend::kTbb;
 #endif
 }
 
 inline Backend select_backend(const Options& opt, std::size_t n) {
-  if (opt.backend != Backend::Seq && n < opt.min_parallel_n) {
-    return Backend::Seq;
+  if (opt.backend != Backend::kSeq && n < opt.min_parallel_n) {
+    return Backend::kSeq;
   }
 
-  if (opt.backend == Backend::Seq || opt.backend == Backend::Threads ||
-      opt.backend == Backend::TBB || opt.backend == Backend::OMP) {
+  if (opt.backend == Backend::kSeq || opt.backend == Backend::kThreads ||
+      opt.backend == Backend::kTbb || opt.backend == Backend::kOmp) {
     return opt.backend;
   }
 
@@ -44,16 +44,16 @@ inline void parallel_for(std::size_t count, Func&& func,
   Backend backend = select_backend(opt, count);
 
   switch (backend) {
-    case Backend::Seq:
+    case Backend::kSeq:
       impl_seq(count, std::forward<Func>(func));
       break;
-    case Backend::Threads:
+    case Backend::kThreads:
       impl_threads(count, std::forward<Func>(func), opt);
       break;
-    case Backend::TBB:
+    case Backend::kTbb:
       impl_tbb(count, std::forward<Func>(func), opt);
       break;
-    case Backend::OMP:
+    case Backend::kOmp:
       impl_omp(count, std::forward<Func>(func), opt);
       break;
   }

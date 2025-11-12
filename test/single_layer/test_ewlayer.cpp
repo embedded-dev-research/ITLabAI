@@ -218,13 +218,13 @@ TEST(ewlayer, new_ewlayer_can_sigmoid_float_extreme_values) {
 
 TEST(ewlayer, parallel_for_ew) {
   EWLayer layer0("relu");
-  layer0.setParallelBackend(ParBackend::Seq);
+  layer0.setParallelBackend(ParBackend::kSeq);
   EWLayer layer1("relu");
-  layer1.setParallelBackend(ParBackend::Threads);
+  layer1.setParallelBackend(ParBackend::kThreads);
   EWLayer layer2("relu");
-  layer2.setParallelBackend(ParBackend::TBB);
+  layer2.setParallelBackend(ParBackend::kTbb);
   EWLayer layer3("relu");
-  layer3.setParallelBackend(ParBackend::OMP);
+  layer3.setParallelBackend(ParBackend::kOmp);
 
   std::vector<int> vec(800000000, -1);
   Tensor input = make_tensor<int>(vec);
@@ -275,13 +275,13 @@ TEST(ewlayer, parallel_for_ew) {
 
 TEST(ewlayer, parallel_for_ew_sigmoid) {
   EWLayer layer0("sigmoid");
-  layer0.setParallelBackend(ParBackend::Seq);
+  layer0.setParallelBackend(ParBackend::kSeq);
   EWLayer layer1("sigmoid");
-  layer1.setParallelBackend(ParBackend::Threads);
+  layer1.setParallelBackend(ParBackend::kThreads);
   EWLayer layer2("sigmoid");
-  layer2.setParallelBackend(ParBackend::TBB);
+  layer2.setParallelBackend(ParBackend::kTbb);
   EWLayer layer3("sigmoid");
-  layer3.setParallelBackend(ParBackend::OMP);
+  layer3.setParallelBackend(ParBackend::kOmp);
 
   std::vector<int> vec(800000000, -1);
   Tensor input = make_tensor<int>(vec);
@@ -337,7 +337,7 @@ TEST(ewlayer, parallel_for_direct) {
   auto start = std::chrono::high_resolution_clock::now();
   parallel::parallel_for(
       SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + matrix2[i]; },
-      ParBackend::Seq);
+      ParBackend::kSeq);
 
   auto end = std::chrono::high_resolution_clock::now();
   auto total_duration =
@@ -350,7 +350,7 @@ TEST(ewlayer, parallel_for_direct) {
   start = std::chrono::high_resolution_clock::now();
   parallel::parallel_for(
       SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + matrix2[i]; },
-      ParBackend::Threads);
+      ParBackend::kThreads);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -361,7 +361,7 @@ TEST(ewlayer, parallel_for_direct) {
   start = std::chrono::high_resolution_clock::now();
   parallel::parallel_for(
       SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + matrix2[i]; },
-      ParBackend::TBB);
+      ParBackend::kTbb);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -371,7 +371,7 @@ TEST(ewlayer, parallel_for_direct) {
   start = std::chrono::high_resolution_clock::now();
   parallel::parallel_for(
       SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + matrix2[i]; },
-      ParBackend::OMP);
+      ParBackend::kOmp);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -392,7 +392,7 @@ TEST(ewlayer, parallel_for_notmatrix) {
   auto start = std::chrono::high_resolution_clock::now();
   parallel::parallel_for(
       SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + 1; },
-      ParBackend::Seq);
+      ParBackend::kSeq);
 
   auto end = std::chrono::high_resolution_clock::now();
   auto total_duration =
@@ -405,7 +405,7 @@ TEST(ewlayer, parallel_for_notmatrix) {
   start = std::chrono::high_resolution_clock::now();
   parallel::parallel_for(
       SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + 1; },
-      ParBackend::Threads);
+      ParBackend::kThreads);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -416,7 +416,7 @@ TEST(ewlayer, parallel_for_notmatrix) {
   start = std::chrono::high_resolution_clock::now();
   parallel::parallel_for(
       SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + 1; },
-      ParBackend::TBB);
+      ParBackend::kTbb);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -427,7 +427,7 @@ TEST(ewlayer, parallel_for_notmatrix) {
   start = std::chrono::high_resolution_clock::now();
   parallel::parallel_for(
       SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + 1; },
-      ParBackend::OMP);
+      ParBackend::kOmp);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
