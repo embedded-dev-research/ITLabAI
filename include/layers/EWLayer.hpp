@@ -75,7 +75,6 @@ std::vector<ValueType> EWLayerImpl<ValueType>::run(
     const std::vector<ValueType>& input) const {
   std::vector<ValueType> res(this->outputShape_.count());
 
-  // Получаем настройки параллельности
   parallel::Options options;
   options.backend = parallel_backend_;
 
