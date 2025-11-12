@@ -17,4 +17,4 @@ file(GLOB_RECURSE reader_headers Weights_Reader/*.h Weights_Reader/*.hpp)
 set(READER_HEADERS "${reader_headers}" PARENT_SCOPE)
 
 file(GLOB_RECURSE parallel_headers parallel/*.h parallel/*.hpp)
-set(READER_HEADERS "${parallel_headers}" PARENT_SCOPE)
+set(LAYERS_HEADERS "${parallel_headers}" PARENT_SCOPE)
