@@ -11,7 +11,7 @@ void DropOutLayer::run(const std::vector<Tensor>& input,
   if (input.size() != 1) {
     throw std::runtime_error("DropOutLayer: Input tensors not 1");
   }
-  
+
   // If not in training mode, just pass through the input
   if (!training_mode_) {
     output[0] = input[0];
