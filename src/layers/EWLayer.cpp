@@ -1,5 +1,7 @@
 #include "layers/EWLayer.hpp"
 
+#include <chrono>
+
 namespace it_lab_ai {
 
 void EWLayer::run(const std::vector<Tensor>& input,
