@@ -4,6 +4,8 @@
 
 using namespace it_lab_ai;
 
+bool LayerFactory::onednn_ = false;
+
 std::unordered_map<std::string, std::string> model_paths = {
     {"alexnet_mnist", MODEL_PATH_H5},
     {"googlenet", MODEL_PATH_GOOGLENET_ONNX},

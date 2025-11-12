@@ -89,6 +89,4 @@ class LayerFactory {
   }
 };
 
-bool LayerFactory::onednn_ = false;
-
 }  // namespace it_lab_ai
