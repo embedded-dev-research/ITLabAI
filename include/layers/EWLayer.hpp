@@ -46,7 +46,8 @@ class EWLayerImpl : public LayerImpl<ValueType> {
  public:
   EWLayerImpl() = delete;
   EWLayerImpl(const Shape& shape, std::string function, float alpha = 0.0F,
-              float beta = 0.0F, ParBackend parallel_backend = ParBackend::Seq);
+              float beta = 0.0F,
+              ParBackend parallel_backend = ParBackend::kSeq);
   EWLayerImpl(const EWLayerImpl& c) = default;
   EWLayerImpl& operator=(const EWLayerImpl& c) = default;
   std::vector<ValueType> run(
