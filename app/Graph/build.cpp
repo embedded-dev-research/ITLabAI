@@ -4,6 +4,13 @@
 
 using namespace it_lab_ai;
 
+std::unordered_map<std::string, std::string> model_paths = {
+    {"alexnet_mnist", MODEL_PATH_H5},
+    {"googlenet", MODEL_PATH_GOOGLENET_ONNX},
+    {"resnet", MODEL_PATH_RESNET_ONNX},
+    {"densenet", MODEL_PATH_DENSENET_ONNX},
+    {"yolo", MODEL_PATH_YOLO11NET_ONNX}};
+
 Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
                          bool comments) {
   if (comments) {
