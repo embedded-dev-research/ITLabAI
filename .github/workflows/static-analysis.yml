@@ -12,20 +12,6 @@ jobs:
     - name: Install prerequisites
       run: |
         sudo apt install clang libomp-dev
-    - name: Download and extract TensorFlow
-      run: |
-         wget https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
-         tar -xzvf libtensorflow-cpu-linux-x86_64-2.7.0.tar.gz
-    - name: Set TensorFlow environment variables
-      run: |
-         echo "TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
-         echo "TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
-         echo "export TensorFlow_INCLUDE_DIRS=${PWD}/include" >> $GITHUB_ENV
-         echo "export TensorFlow_LIBRARIES=${PWD}/lib/libtensorflow.so" >> $GITHUB_ENV
-    - name: Display TensorFlow environment variables
-      run: |
-         echo "TensorFlow_INCLUDE_DIRS: ${{ env.TensorFlow_INCLUDE_DIRS }}"
-         echo "TensorFlow_LIBRARIES: ${{ env.TensorFlow_LIBRARIES }}"
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -37,9 +23,7 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-            -DTensorFlow_INCLUDE_DIRS=$TensorFlow_INCLUDE_DIRS \
-            -DTensorFlow_LIBRARIES=$TensorFlow_LIBRARIES
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
             cmake --build build --parallel
     - name: Run clang-tidy
       run: |
