@@ -4,7 +4,8 @@
 
 using namespace it_lab_ai;
 
-Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
+void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
+                         it_lab_ai::Tensor& output,
                          bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
@@ -131,7 +132,6 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   }
   if (comments)
     std::cout << "number of layers - " << layers.size() + 1 << std::endl;
-  it_lab_ai::Graph graph(static_cast<int>(layers.size()));
   auto a1 = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                     it_lab_ai::kNchw);
 
@@ -159,7 +159,6 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   for (auto& layer : layers) {
     graph.addOwnedLayer(layer);
   }
-  return graph;
 }
 
 std::string get_base_layer_name(const std::string& tensor_name) {
@@ -206,7 +205,8 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
   }
 }
 
-Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
+void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
+                  it_lab_ai::Tensor& output,
                   const std::string& json_path, bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
@@ -238,8 +238,6 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   auto& concat_connected_inputs = parse_result.concat_connected_inputs;
   auto& split_distribution = parse_result.split_distribution;
   auto& original_ids = parse_result.original_ids;
-
-  it_lab_ai::Graph graph(static_cast<int>(layers.size()));
 
   auto input_layer_it = std::find_if(
       layers.begin(), layers.end(),
@@ -328,8 +326,6 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   for (auto& layer : layers) {
     graph.addOwnedLayer(layer);
   }
-
-  return graph;
 }
 
 ParseResult parse_json_model(const std::string& json_path, bool comments) {

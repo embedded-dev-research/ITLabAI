@@ -50,10 +50,7 @@ class Graph {
 #endif
 
  public:
-  Graph(int vertices) : BiggestSize_(vertices) {
-    if (BiggestSize_ < 0) {
-      throw std::out_of_range("Vertices cannot be less than zero");
-    }
+  Graph() {
     arrayV_.push_back(0);
     V_ = 0;
     in_edges_.clear();
