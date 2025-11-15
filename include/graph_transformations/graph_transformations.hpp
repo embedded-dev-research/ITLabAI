@@ -15,5 +15,7 @@ bool run_search(const Graph& graph, const Graph& subgraph,
                 std::vector<int>& assignments,
                 std::vector<std::vector<int>>& results);
 
-Graph change_subgraphs(const Graph& graph, const Graph& subgraph_from);
+void change_ids(std::vector<std::vector<int>>& vec, int id);
+bool does_intersect(const std::vector<int>& vec1, const std::vector<int>& vec2);
+Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from);
 }  // namespace it_lab_ai

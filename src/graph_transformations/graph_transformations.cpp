@@ -96,15 +96,34 @@ bool run_search(const Graph& graph, const Graph& subgraph,
   return false;
 }
 
-Graph change_subgraphs(const Graph& graph, const Graph& subgraph_from) {
+void change_ids(std::vector<std::vector<int>>& vec, int id) {
+  for (size_t i = 0; i < vec.size(); i++) {
+    std::transform(vec[i].begin(), vec[i].end(), vec[i].begin(),
+                   [&](int elem) { return elem > id ? elem - 1 : elem; });
+  }
+}
+
+bool does_intersect(const std::vector<int>& vec1,
+                    const std::vector<int>& vec2) {
+  for (int i = 0; i < vec1.size(); i++) {
+    auto it = std::find(vec2.begin(), vec2.end(), vec1[i]);
+    if (it != vec2.end()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
   Graph new_graph = graph;
   std::vector<std::vector<int>> subs = find_subgraphs(graph, subgraph_from);
+  std::vector<std::vector<int>> subs_c = subs;
   std::vector<int> roots;
   std::vector<int> leafs;
-  std::vector<int> roots_final;
-  std::vector<int> leafs_final;
-  std::shared_ptr<Layer> layer = std::make_shared<EWLayer>("relu");
+  std::vector<int> roots_inps_final;
+  std::vector<int> leafs_outs_final;
   int amount_connected;
+  int amount_connected_s;
   for (int v = 0; v < subgraph_from.getLayersCount(); v++) {
     if (is_root(subgraph_from, v)) {
       roots.push_back(v);
@@ -114,27 +133,45 @@ Graph change_subgraphs(const Graph& graph, const Graph& subgraph_from) {
     }
   }
   for (int i = 0; i < subs.size(); i++) {
-    roots_final.clear();
-    leafs_final.clear();
+    bool flag = false;
+    for (int j = 0; j < i; j++) {
+      if (does_intersect(subs_c[j], subs_c[i])) {
+        flag = true;
+        break;
+      }
+    }
+    if (flag) {
+      continue;
+    }
+    std::shared_ptr<Layer> layer = std::make_shared<EWLayer>("relu");
+    std::vector<bool> is_root_special(roots.size(), false);
+    roots_inps_final.clear();
+    leafs_outs_final.clear();
     for (int j = 0; j < roots.size(); j++) {
+      std::vector<int> root_inps = graph.getInLayers(subs[i][roots[j]]);
       // recognize transformations we can apply with roots
       amount_connected = graph.getVertexValue(subs[i][roots[j]] + 1) -
                          graph.getVertexValue(subs[i][roots[j]]);
+      amount_connected_s = subgraph_from.getVertexValue(roots[j] + 1) -
+                           subgraph_from.getVertexValue(roots[j]);
+      if (amount_connected == amount_connected_s) {
+        continue;
+      }
       for (int k = 0; k < amount_connected; k++) {
-        int id = graph.getEdgeValue(graph.getVertexValue(subs[i][roots[j]]) + k);
+        int id =
+            graph.getEdgeValue(graph.getVertexValue(subs[i][roots[j]]) + k);
         auto it = std::find(subs[i].begin(), subs[i].end(), id);
-        if (it != subs[i].end()) {
-          // create copy of root
+        if (it == subs[i].end()) {
+          is_root_special[j] = true;
         }
       }
-      // subgraph -> single node
-      std::vector<int> root_inps = graph.getInLayers(subs[i][roots[j]]);
 
+      // subgraph -> single node
       for (int k = 0; k < root_inps.size(); k++) {
-        auto it =
-            std::find(roots_final.begin(), roots_final.end(), root_inps[k]);
-        if (it == roots_final.end()) {
-          roots_final.push_back(root_inps[k]);
+        auto it = std::find(roots_inps_final.begin(), roots_inps_final.end(),
+                            root_inps[k]);
+        if (it == roots_inps_final.end()) {
+          roots_inps_final.push_back(root_inps[k]);
         }
       }
     }
@@ -144,21 +181,40 @@ Graph change_subgraphs(const Graph& graph, const Graph& subgraph_from) {
       for (int k = 0; k < amount_connected; k++) {
         int id =
             graph.getEdgeValue(graph.getVertexValue(subs[i][leafs[j]]) + k);
-        auto it = std::find(leafs_final.begin(), leafs_final.end(), id);
-        if (it == leafs_final.end()) {
-          leafs_final.push_back(id);
+        auto it =
+            std::find(leafs_outs_final.begin(), leafs_outs_final.end(), id);
+        if (it == leafs_outs_final.end()) {
+          leafs_outs_final.push_back(id);
         }
       }
     }
     for (int j = 0; j < subs[i].size(); j++) {
-      new_graph.removeSingleLayer(subs[i][j]);
+      auto it = std::find(roots.begin(), roots.end(), j);
+      size_t index_for_root = std::distance(roots.begin(), it);
+      if (it == roots.end() ||
+          (it != roots.end() && !is_root_special[index_for_root])) {
+        new_graph.removeSingleLayer(subs[i][j]);
+        change_ids(subs, subs[i][j]);
+        std::transform(roots_inps_final.begin(), roots_inps_final.end(),
+                       roots_inps_final.begin(), [&](int elem) {
+                         return elem > subs[i][j] ? elem - 1 : elem;
+                       });
+        std::transform(leafs_outs_final.begin(), leafs_outs_final.end(),
+                       leafs_outs_final.begin(), [&](int elem) {
+                         return elem > subs[i][j] ? elem - 1 : elem;
+                       });
+      }
     }
-    for (int j = 0; j < roots_final.size(); j++) {
-      new_graph.makeConnection(new_graph.getLayerFromID(roots_final[j]), *layer);
+    for (int j = 0; j < roots_inps_final.size(); j++) {
+      new_graph.makeConnection(new_graph.getLayerFromID(roots_inps_final[j]),
+                               *layer);
     }
-    for (int j = 0; j < leafs_final.size(); j++) {
+    if (roots_inps_final.size() == 0) {
+      new_graph.addSingleLayer(*layer);
+    }
+    for (int j = 0; j < leafs_outs_final.size(); j++) {
       new_graph.makeConnection(*layer,
-                               new_graph.getLayerFromID(leafs_final[j]));
+                               new_graph.getLayerFromID(leafs_outs_final[j]));
     }
   }
   return new_graph;

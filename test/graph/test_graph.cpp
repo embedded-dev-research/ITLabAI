@@ -480,3 +480,37 @@ std::vector<std::tuple<int, int>> genVector() {
 
 INSTANTIATE_TEST_SUITE_P(graph_transformations, SubgraphTestsParameterized,
                          ::testing::Values(genVector()));
+
+TEST(graph_transformations, check_subgraphs_replace) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph(5);
+  Graph res_graph(4);
+  Graph subgraph(2);
+  FCLayer fcLayer(weights, bias);
+  FCLayer fcLayer2(weights, bias);
+  FCLayer fcLayer3(weights, bias);
+  FCLayer fcLayer4(weights, bias);
+
+  graph.setInput(fcLayer, input);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.makeConnection(fcLayer2, fcLayer3);
+  graph.makeConnection(fcLayer, fcLayer4);
+  graph.setOutput(fcLayer4, output);
+
+  subgraph.setInput(fcLayer, input);
+  subgraph.makeConnection(fcLayer, fcLayer2);
+
+  res_graph.setInput(fcLayer, input);
+  res_graph.makeConnection(fcLayer, fcLayer4);
+  std::shared_ptr<Layer> lay = std::make_shared<EWLayer>("relu");
+  res_graph.addSingleLayer(*lay);
+  res_graph.makeConnection(*lay, fcLayer3);
+
+  Graph res = changed_subgraphs(graph, subgraph);
+  ASSERT_EQ(res, res_graph);
+}

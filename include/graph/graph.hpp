@@ -228,7 +228,7 @@ class Graph {
           std::to_string(idNext));
     }
     arrayE_.erase(arrayE_it);
-    for (int i = idPrev + 1; i < V_; ++i) {
+    for (int i = idPrev + 1; i < arrayV_.size(); ++i) {
       arrayV_[i]--;
     }
   }
@@ -238,10 +238,12 @@ class Graph {
     }
     // remove inputs
     for (int i = 0; i < V_; i++) {
-      auto arrayE_it = std::find(arrayE_.begin() + arrayV_[i],
-                                 arrayE_.begin() + arrayV_[i + 1], id);
-      if (arrayE_it != arrayE_.begin() + arrayV_[i + 1]) {
-        removeConnection(i, id);
+      if (arrayV_[i] != arrayV_[i + 1]) {
+        auto arrayE_it = std::find(arrayE_.begin() + arrayV_[i],
+                                   arrayE_.begin() + arrayV_[i + 1], id);
+        if (arrayE_it != arrayE_.begin() + arrayV_[i + 1]) {
+          removeConnection(i, id);
+        }
       }
     }
     in_edges_.erase(in_edges_.begin() + id);
@@ -254,10 +256,16 @@ class Graph {
     for (int i = id; i < arrayV_.size(); i++) {
       arrayV_[i] -= amount_connected;
     }
+    for (int i = 0; i < arrayE_.size(); i++) {
+      if (arrayE_[i] > id) {
+        arrayE_[i] -= 1;
+      }
+    }
     for (int i = id + 1; i < layers_.size(); i++) {
       layers_[i]->setID(layers_[i]->getID() - 1);
     }
     layers_.erase(layers_.begin() + id);
+    V_--;
   }
   bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
     for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];
