@@ -20,9 +20,13 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (WIN32)
+    set(OPENCV_BIN_SOURCE "${OPENCV_BUILD_DIR}/bin")
+    if (MSVC)
+        set(OPENCV_BIN_SOURCE "${OPENCV_BUILD_DIR}/bin/$<CONFIG>")
+    endif()
     add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${OPENCV_BUILD_DIR}/bin/."
+            "${OPENCV_BIN_SOURCE}"
             "${CMAKE_BINARY_DIR}/bin/")
 endif()
 
