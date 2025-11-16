@@ -1,6 +1,16 @@
 set(OPENCV_BUILD_DIR "${CMAKE_BINARY_DIR}/3rdparty/opencv_build")
 file(MAKE_DIRECTORY "${OPENCV_BUILD_DIR}")
 
+set(_opencv_bin_dir "${OPENCV_BUILD_DIR}/bin")
+file(MAKE_DIRECTORY "${_opencv_bin_dir}")
+if (WIN32)
+    foreach(_cfg Debug Release RelWithDebInfo MinSizeRel)
+        file(MAKE_DIRECTORY "${_opencv_bin_dir}/${_cfg}")
+    endforeach()
+endif()
+
+unset(_opencv_bin_dir)
+
 execute_process(
     COMMAND ${CMAKE_COMMAND} 
         -S "${CMAKE_SOURCE_DIR}/3rdparty/opencv" 
