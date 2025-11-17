@@ -134,6 +134,7 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
   }
   for (size_t i = 0; i < subs.size(); i++) {
     bool flag = false;
+    // don't change already changed subgraph
     for (size_t j = 0; j < i; j++) {
       if (does_intersect(subs_c[j], subs_c[i])) {
         flag = true;
@@ -166,7 +167,7 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
         }
       }
 
-      // subgraph -> single node
+      // want subgraph -> single node
       for (size_t k = 0; k < root_inps.size(); k++) {
         auto it = std::find(roots_inps_final.begin(), roots_inps_final.end(),
                             root_inps[k]);
@@ -191,6 +192,7 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
     for (size_t j = 0; j < subs[i].size(); j++) {
       auto it = std::find(roots.begin(), roots.end(), j);
       size_t index_for_root = std::distance(roots.begin(), it);
+      // remove all nodes that isn't special roots
       if (it == roots.end() ||
           (it != roots.end() && !is_root_special[index_for_root])) {
         new_graph.removeSingleLayer(subs[i][j]);

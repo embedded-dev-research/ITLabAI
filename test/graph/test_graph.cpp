@@ -30,6 +30,47 @@ TEST(graph, check_connection) {
   ASSERT_EQ(graph.areLayerNext(inputLayer, fcLayer), 1);
 }
 
+TEST(graph, check_connection_remove) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  InputLayer inputLayer;
+  EWLayer ewLayer;
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, ewLayer);
+  graph.removeConnection(fcLayer.getID(), ewLayer.getID());
+  graph.removeConnection(inputLayer.getID(), fcLayer.getID());
+
+  ASSERT_EQ(graph.areLayerNext(fcLayer, ewLayer), 0);
+  ASSERT_EQ(graph.areLayerNext(inputLayer, fcLayer), 0);
+}
+
+TEST(graph, check_layer_remove) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  InputLayer inputLayer;
+  EWLayer ewLayer;
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, ewLayer);
+  graph.removeSingleLayer(fcLayer.getID());
+
+  ASSERT_EQ(graph.areLayerNext(inputLayer, fcLayer), 0);
+  ASSERT_ANY_THROW(graph.areLayerNext(fcLayer, ewLayer));
+}
+
 TEST(graph, check_connection1) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
@@ -203,6 +244,27 @@ TEST(graph, get_layer_out_of_range) {
   graph.makeConnection(fcLayer, fcLayer4);
   graph.setOutput(fcLayer4, output);
   ASSERT_ANY_THROW(graph.getLayerFromID(999));
+}
+
+TEST(graph, get_in_layers_out_of_range) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  FCLayer fcLayer2(weights, bias);
+  FCLayer fcLayer3(weights, bias);
+  FCLayer fcLayer4(weights, bias);
+
+  graph.setInput(fcLayer, input);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.makeConnection(fcLayer2, fcLayer3);
+  graph.makeConnection(fcLayer, fcLayer4);
+  graph.setOutput(fcLayer4, output);
+  ASSERT_ANY_THROW(graph.getInLayers(999));
 }
 
 TEST(graph_transformations, check_subgraphs_search) {
@@ -431,7 +493,7 @@ class SubgraphTestsParameterized
 
 TEST_P(SubgraphTestsParameterized, check_subgraphs_big_random_lines) {
   auto data = GetParam();
-  for (int m = 0; m < data.size(); m++) {
+  for (size_t m = 0; m < data.size(); m++) {
     std::cerr << "(" << std::get<1>(data[m]) << ") ";
     int num_vertices = std::get<0>(data[m]);
     int num_vertices_sub = std::get<1>(data[m]);
@@ -471,8 +533,8 @@ TEST_P(SubgraphTestsParameterized, check_subgraphs_big_random_lines) {
 
 std::vector<std::tuple<int, int>> genVector() {
   std::vector<std::tuple<int, int>> results(10);
-  for (int i = 0; i < results.size(); i++) {
-    results[i] = std::tuple<int, int>(105, 2 + 2 * i);
+  for (size_t i = 0; i < results.size(); i++) {
+    results[i] = std::tuple<int, int>(105, 2 + 2 * static_cast<int>(i));
   }
   return results;
 }

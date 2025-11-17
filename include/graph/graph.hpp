@@ -264,10 +264,14 @@ class Graph {
     for (size_t i = id + 1; i < layers_.size(); i++) {
       layers_[i]->setID(layers_[i]->getID() - 1);
     }
+    layers_[id]->setID(-1);
     layers_.erase(layers_.begin() + id);
     V_--;
   }
   bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
+    if (layPrev.getID() >= arrayV_.size() || layPrev.getID() < 0) {
+      throw std::invalid_argument("No such layer in graph");
+    }
     for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];
          i++) {
       if (arrayE_[i] == layNext.getID()) {

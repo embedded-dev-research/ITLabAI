@@ -117,7 +117,7 @@ class ConvImpl : public LayerImpl<ValueType> {
             }
             auto kercol = static_cast<size_t>(coloms / input_width_ + 1);
             color +=
-                matrix[(i + coloms + str) * input_flow_ + x] *
+                matrix.at((i + coloms + str) * input_flow_ + x) *
                 kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
           }
         }
