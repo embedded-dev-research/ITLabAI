@@ -2,8 +2,9 @@
 
 namespace it_lab_ai {
 
-bool layer_conditions(const Layer& layer, const Layer& layer_sub) {
-  return layer.getName() == layer_sub.getName();
+bool layer_conditions(const std::shared_ptr<Layer>& layer,
+                      const std::shared_ptr<Layer>& layer_sub) {
+  return layer->getName() == layer_sub->getName();
 }
 
 std::vector<std::vector<int>> find_subgraphs(const Graph& graph,
@@ -209,13 +210,13 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
     }
     for (size_t j = 0; j < roots_inps_final.size(); j++) {
       new_graph.makeConnection(new_graph.getLayerFromID(roots_inps_final[j]),
-                               *layer);
+                               layer);
     }
     if (roots_inps_final.size() == 0) {
-      new_graph.addSingleLayer(*layer);
+      new_graph.addSingleLayer(layer);
     }
     for (size_t j = 0; j < leafs_outs_final.size(); j++) {
-      new_graph.makeConnection(*layer,
+      new_graph.makeConnection(layer,
                                new_graph.getLayerFromID(leafs_outs_final[j]));
     }
   }

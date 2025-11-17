@@ -156,9 +156,6 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
   graph.setOutput(layers.back(), output);
 
-  for (auto& layer : layers) {
-    graph.addOwnedLayer(layer);
-  }
   return graph;
 }
 

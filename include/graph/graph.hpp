@@ -25,8 +25,7 @@ struct BranchState {
 class Graph {
   int BiggestSize_;
   int V_;  // amount of ids
-  std::vector<std::shared_ptr<Layer>> owned_layers_;
-  std::vector<Layer*> layers_;
+  std::vector<std::shared_ptr<Layer>> layers_;
   std::vector<int> arrayV_;  // vertices (id -> vertex number)
   std::vector<int> arrayE_;  // edges (vertex number -> id)
   std::vector<Tensor> inten_;
@@ -74,17 +73,6 @@ class Graph {
     split_distribution_ = split_dist;
   }
 
-  void addOwnedLayer(const std::shared_ptr<Layer>& layer) {
-    if (!layer) return;
-    for (const auto& existing_layer : owned_layers_) {
-      if (existing_layer.get() == layer.get()) {
-        return;
-      }
-    }
-
-    owned_layers_.push_back(layer);
-  }
-
   int getVertexValue(size_t layerID) const {
     if (layerID >= arrayV_.size()) {
       throw std::invalid_argument("ArrayV does not contain this ID.");
@@ -115,17 +103,16 @@ class Graph {
 
   int getLayersCount() const { return V_; }
 
-  const Layer& getLayerFromID(size_t layerID) const {
+  std::shared_ptr<Layer> getLayerFromID(size_t layerID) const {
     if (layerID >= layers_.size()) {
       throw std::invalid_argument("Layers do not contain this ID.");
     }
-    return *layers_[layerID];
+    return layers_[layerID];
   }
 
   void setInput(const std::shared_ptr<Layer>& layer, Tensor& vec) {
-    addOwnedLayer(layer);
     layer->setID(0);
-    layers_.push_back(layer.get());
+    layers_.push_back(layer);
     arrayV_.push_back(0);
     inten_ = {vec};
     start_ = layer->getID();
@@ -134,11 +121,9 @@ class Graph {
   }
 
   void addSingleLayer(const std::shared_ptr<Layer>& layer) {
-    addOwnedLayer(layer);
-
     bool layer_exists = false;
-    for (const auto* existing_layer : layers_) {
-      if (existing_layer == layer.get()) {
+    for (std::shared_ptr<Layer> existing_layer : layers_) {
+      if (existing_layer == layer) {
         layer_exists = true;
         break;
       }
@@ -146,7 +131,7 @@ class Graph {
 
     if (!layer_exists) {
       layer->setID(V_);
-      layers_.push_back(layer.get());
+      layers_.push_back(layer);
       arrayV_.push_back(static_cast<int>(arrayE_.size()));
 
       if (V_ >= static_cast<int>(in_edges_.size())) {
@@ -159,12 +144,9 @@ class Graph {
 
   void makeConnection(const std::shared_ptr<Layer>& layPrev,
                       const std::shared_ptr<Layer>& layNext) {
-    addOwnedLayer(layPrev);
-    addOwnedLayer(layNext);
-
     bool layer_exists = false;
-    for (const auto* layer : layers_) {
-      if (layer == layNext.get()) {
+    for (std::shared_ptr<Layer> layer : layers_) {
+      if (layer == layNext) {
         layer_exists = true;
         break;
       }
@@ -172,7 +154,7 @@ class Graph {
 
     if (!layer_exists) {
       layNext->setID(V_);
-      layers_.push_back(layNext.get());
+      layers_.push_back(layNext);
       arrayV_.push_back(static_cast<int>(arrayE_.size()));
 
       if (V_ >= static_cast<int>(in_edges_.size())) {
@@ -198,36 +180,6 @@ class Graph {
     }
 
     in_edges_[layNext->getID()].push_back(layPrev->getID());
-  }
-  
-  void makeConnection(const Layer& layPrev, const Layer& layNext) {
-    bool layer_exists = false;
-    for (const auto* layer : layers_) {
-      if (layer == &layNext) {
-        layer_exists = true;
-        break;
-      }
-    }
-
-    if (!layer_exists) {
-      return;
-    }
-
-    if (layPrev.getID() == layNext.getID()) {
-      throw std::out_of_range("i=j cant add edge");
-    }
-
-    for (int i = layPrev.getID() + 1; i < V_; ++i) {
-      arrayV_[i]++;
-    }
-    arrayE_.insert(arrayE_.begin() + arrayV_[layPrev.getID()], layNext.getID());
-    arrayV_[V_] = static_cast<int>(arrayE_.size());
-
-    if (layNext.getID() >= static_cast<int>(in_edges_.size())) {
-      in_edges_.resize(layNext.getID() + 1);
-    }
-
-    in_edges_[layNext.getID()].push_back(layPrev.getID());
   }
 
   void removeConnection(int idPrev, int idNext) {
@@ -292,7 +244,7 @@ class Graph {
   }
   bool areLayerNext(const std::shared_ptr<Layer>& layPrev,
                     const std::shared_ptr<Layer>& layNext) {
-    if (layPrev.getID() >= V_ || layPrev.getID() < 0) {
+    if (layPrev->getID() >= V_ || layPrev->getID() < 0) {
       throw std::invalid_argument("No such layer in graph");
     }
     for (int i = arrayV_[layPrev->getID()]; i < arrayV_[layPrev->getID() + 1];
