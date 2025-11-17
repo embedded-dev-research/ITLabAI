@@ -269,7 +269,7 @@ class Graph {
     V_--;
   }
   bool areLayerNext(const Layer& layPrev, const Layer& layNext) {
-    if (layPrev.getID() >= arrayV_.size() || layPrev.getID() < 0) {
+    if (layPrev.getID() >= V_ || layPrev.getID() < 0) {
       throw std::invalid_argument("No such layer in graph");
     }
     for (int i = arrayV_[layPrev.getID()]; i < arrayV_[layPrev.getID() + 1];
