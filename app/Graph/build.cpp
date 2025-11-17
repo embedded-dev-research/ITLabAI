@@ -322,9 +322,6 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   graph.setSplitDistribution(split_distribution);
   auto output_layer = layers.back();
   graph.setOutput(output_layer, output);
-  for (auto& layer : layers) {
-    graph.addOwnedLayer(layer);
-  }
 
   return graph;
 }
