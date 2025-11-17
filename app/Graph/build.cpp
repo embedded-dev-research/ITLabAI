@@ -4,8 +4,8 @@
 
 using namespace it_lab_ai;
 
-void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                        bool comments, bool parallel, bool onednn) {
+Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
+                         bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -25,8 +25,6 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       std::cout << std::endl << std::endl;
     }
   }
-  it_lab_ai::ImplType impl1 = parallel ? it_lab_ai::kTBB : it_lab_ai::kDefault;
-  it_lab_ai::ImplType impl2 = parallel ? it_lab_ai::kSTL : it_lab_ai::kDefault;
   std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
   std::vector<bool> layerpostop;
 
@@ -74,18 +72,13 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       it_lab_ai::Tensor tmp_values = tensor;
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
       auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-          1, pads, 1, tmp_values, tmp_bias, impl2, 1, true);
+          1, pads, 1, tmp_values, tmp_bias, kDefault, 1, true);
       layers.push_back(conv_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "ConvLayer added to layers." << std::endl;
     }
     if (layer_type.find("relu") != std::string::npos) {
-      std::shared_ptr<it_lab_ai::Layer> ew_layer;
-      if (onednn) {
-        ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>("relu");
-      } else {
-        ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
-      }
+      auto ew_layer = LayerFactory::createEwLayer("relu");
       layers.push_back(ew_layer);
       layerpostop.push_back(true);
       if (comments)
@@ -111,7 +104,7 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
                   << std::endl;
       auto pool_layer =
-          std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, impl1);
+          std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
       layers.push_back(pool_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
@@ -139,14 +132,15 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   if (comments)
     std::cout << "number of layers - " << layers.size() + 1 << std::endl;
   it_lab_ai::Graph graph(static_cast<int>(layers.size()));
-  it_lab_ai::InputLayer a1(it_lab_ai::kNchw, it_lab_ai::kNchw);
+  auto a1 = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
+                                                    it_lab_ai::kNchw);
 
   if (comments) std::cout << "InputLayer created." << std::endl;
 
   graph.setInput(a1, input);
   if (comments) std::cout << "Input set in graph." << std::endl;
 
-  graph.makeConnection(a1, *layers[0]);
+  graph.makeConnection(a1, layers[0]);
   if (comments)
     std::cout << "Connection made between InputLayer and first layer."
               << std::endl;
@@ -155,39 +149,17 @@ void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     if (layerpostop[i]) {
       layers[i - 1]->postops.layers.push_back(layers[i].get());
       layers[i - 1]->postops.count++;
-      graph.makeConnection(*layers[i - 1], *layers[i + 1]);
+      graph.makeConnection(layers[i - 1], layers[i + 1]);
     } else if (!layerpostop[i + 1])
-      graph.makeConnection(*layers[i], *layers[i + 1]);
+      graph.makeConnection(layers[i], layers[i + 1]);
   }
 
-  graph.setOutput(*layers.back(), output);
-  if (comments) std::cout << "Output set in graph." << std::endl;
+  graph.setOutput(layers.back(), output);
 
-  if (comments) std::cout << "Starting inference..." << std::endl;
-  graph.inference();
-#ifdef ENABLE_STATISTIC_TIME
-  std::vector<std::string> times = graph.getTimeInfo();
-  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
-  for (size_t i = 0; i < times.size(); i++) {
-    std::cout << times[i] << std::endl;
+  for (auto& layer : layers) {
+    graph.addOwnedLayer(layer);
   }
-  std::vector<int> elps_time = graph.getTime();
-  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-  std::cout << "Elapsed inference time:" << sum << std::endl;
-  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-#endif
-  if (comments) std::cout << "Inference completed." << std::endl;
-  if (comments) {
-    std::vector<float> tmp_output =
-        it_lab_ai::softmax<float>(*output.as<float>());
-    for (size_t i = 0; i < tmp_output.size(); i++) {
-      if (tmp_output[i] < 1e-6) {
-        std::cout << i << ": 0" << std::endl;
-      } else {
-        std::cout << i << ": " << tmp_output[i] << std::endl;
-      }
-    }
-  }
+  return graph;
 }
 
 std::string get_base_layer_name(const std::string& tensor_name) {
@@ -234,9 +206,8 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
   }
 }
 
-void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                 const std::string& json_path, bool comments, bool parallel,
-                 bool onednn) {
+Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
+                  const std::string& json_path, bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -257,7 +228,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     }
   }
 
-  auto parse_result = parse_json_model(json_path, comments, parallel, onednn);
+  auto parse_result = parse_json_model(json_path, comments);
 
   auto& layers = parse_result.layers;
   auto& name_to_layer = parse_result.name_to_layer;
@@ -275,7 +246,7 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       [](const auto& layer) { return layer->getName() == it_lab_ai::kInput; });
 
   if (input_layer_it != layers.end()) {
-    graph.setInput(**input_layer_it, input);
+    graph.setInput(*input_layer_it, input);
   }
 
   std::vector<std::pair<std::string, std::string>> connection_list;
@@ -331,8 +302,8 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       }
 
       try {
-        graph.makeConnection(*name_to_layer[source_name],
-                             *name_to_layer[target_name]);
+        graph.makeConnection(name_to_layer[source_name],
+                             name_to_layer[target_name]);
 
       } catch (const std::exception& e) {
         std::cerr << "Failed: " << source_name << " -> " << target_name << " : "
@@ -353,31 +324,15 @@ void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   }
   graph.setSplitDistribution(split_distribution);
   auto output_layer = layers.back();
-  graph.setOutput(*output_layer, output);
-
-  if (comments) std::cout << "Starting inference..." << std::endl;
-  try {
-    graph.inference();
-    if (comments) std::cout << "Inference completed successfully." << std::endl;
-  } catch (const std::exception& e) {
-    std::cerr << "ERROR during inference: " << e.what() << std::endl;
+  graph.setOutput(output_layer, output);
+  for (auto& layer : layers) {
+    graph.addOwnedLayer(layer);
   }
 
-#ifdef ENABLE_STATISTIC_TIME
-  std::vector<std::string> times = graph.getTimeInfo();
-  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
-  for (size_t i = 0; i < times.size(); i++) {
-    std::cout << times[i] << std::endl;
-  }
-  std::vector<int> elps_time = graph.getTime();
-  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-  std::cout << "Elapsed inference time:" << sum << std::endl;
-  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
-#endif
+  return graph;
 }
 
-ParseResult parse_json_model(const std::string& json_path, bool comments,
-                             bool parallel, bool onednn) {
+ParseResult parse_json_model(const std::string& json_path, bool comments) {
   ParseResult result;
 
   auto& layers = result.layers;
@@ -389,9 +344,6 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
   auto& split_name_to_index = result.split_name_to_index;
   auto& split_distribution = result.split_distribution;
   auto& original_ids = result.original_ids;
-
-  it_lab_ai::ImplType impl1 = parallel ? it_lab_ai::kTBB : it_lab_ai::kDefault;
-  it_lab_ai::ImplType impl2 = parallel ? it_lab_ai::kSTL : it_lab_ai::kDefault;
 
   std::unordered_map<std::string, std::vector<int64_t>> layer_parameters;
   std::unordered_map<std::string, float> float_parameters;
@@ -490,25 +442,13 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
 
         auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-            stride, pads, dilations, tmp_tensor, tmp_bias, impl2, group);
+            stride, pads, dilations, tmp_tensor, tmp_bias, kDefault, group);
         layer = conv_layer;
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
-        std::shared_ptr<it_lab_ai::Layer> ew_layer;
-        if (onednn) {
-          ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>("relu");
-        } else {
-          ew_layer = std::make_shared<it_lab_ai::EWLayer>("relu");
-        }
-        layer = ew_layer;
+        layer = LayerFactory::createEwLayer("relu");
       } else if (layer_type.find("Sigmoid") != std::string::npos) {
-        std::shared_ptr<it_lab_ai::Layer> ew_layer;
-        if (onednn) {
-          ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>("sigmoid");
-        } else {
-          ew_layer = std::make_shared<it_lab_ai::EWLayer>("sigmoid");
-        }
-        layer = ew_layer;
+        layer = LayerFactory::createEwLayer("sigmoid");
       } else if (layer_type.find("Dense") != std::string::npos ||
                  layer_type.find("FullyConnected") != std::string::npos) {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
@@ -538,7 +478,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
               << std::endl;
       } else if (layer_type == "GlobalAveragePool") {
         auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
-            it_lab_ai::Shape({0, 0}), "average", impl1);
+            it_lab_ai::Shape({0, 0}), "average", kDefault);
         layer = pool_layer;
         if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
@@ -599,8 +539,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
           }
         }
 
-        auto pool_layer =
-            std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, impl1);
+        auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
+            shape, pooltype, kDefault);
 
         try {
           if (strides[0] != 2 || strides[1] != 2) {
@@ -732,39 +672,13 @@ ParseResult parse_json_model(const std::string& json_path, bool comments,
 
           if (layer_type == "Mul") {
             ew_operation = "linear";
-            std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            if (onednn) {
-              ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>(
-                  ew_operation, value, 0.0F);
-            } else {
-              ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,
-                                                              value, 0.0F);
-            }
-            layer = ew_layer;
+            layer = LayerFactory::createEwLayer(ew_operation, value, 0.0F);
           } else if (layer_type == "Add") {
             ew_operation = "linear";
-            std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            if (onednn &&
-                it_lab_ai::EwLayerOneDnn::is_function_supported("linear")) {
-              ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>(
-                  ew_operation, 1.0F, value);
-            } else {
-              ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,
-                                                              1.0F, value);
-            }
-            layer = ew_layer;
+            layer = LayerFactory::createEwLayer(ew_operation, 1.0F, value);
           } else if (layer_type == "Sub") {
             ew_operation = "linear";
-            std::shared_ptr<it_lab_ai::Layer> ew_layer;
-            if (onednn &&
-                it_lab_ai::EwLayerOneDnn::is_function_supported("linear")) {
-              ew_layer = std::make_shared<it_lab_ai::EwLayerOneDnn>(
-                  ew_operation, 1.0F, -value);
-            } else {
-              ew_layer = std::make_shared<it_lab_ai::EWLayer>(ew_operation,
-                                                              1.0F, -value);
-            }
-            layer = ew_layer;
+            layer = LayerFactory::createEwLayer(ew_operation, 1.0F, -value);
           } else {
             continue;
           }
@@ -1292,4 +1206,20 @@ it_lab_ai::Tensor prepare_mnist_image(const cv::Mat& image) {
 
   Shape sh({1, 1, 28, 28});
   return it_lab_ai::make_tensor(res, sh);
+}
+
+void print_time_stats(Graph& graph) {
+#ifdef ENABLE_STATISTIC_TIME
+  std::vector<std::string> times = graph.getTimeInfo();
+  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
+  for (size_t i = 0; i < times.size(); i++) {
+    std::cout << times[i] << std::endl;
+  }
+  std::vector<int> elps_time = graph.getTime();
+  int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
+  std::cout << "Elapsed inference time:" << sum << std::endl;
+  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+#else
+  (void)graph;
+#endif
 }

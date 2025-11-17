@@ -118,11 +118,11 @@ void check_accuracy(const std::string& neural_network_path,
   Graph a1 = open_network(neural_network_path);
   Tensor input;
   Tensor output;
-  InputLayer inlayer;
-  OutputLayer outlayer;
+  auto inlayer = std::make_shared<InputLayer>();
+  auto outlayer = std::make_shared<OutputLayer>();
   // ?? warning from linux
-  outlayer.setID(1);
-  inlayer.setID(0);
+  outlayer->setID(1);
+  inlayer->setID(0);
   //
   size_t k = 5;
   for (size_t i = 0; i < imgs_size; i++) {

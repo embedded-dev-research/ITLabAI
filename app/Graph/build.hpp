@@ -56,17 +56,15 @@ struct ParseResult {
   std::unordered_map<std::string, int> original_ids;
 };
 
-void build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                 const std::string& json_path, bool comments,
-                 bool parallel = false, bool onednn = false);
-void build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                        bool comments, bool parallel = false,
-                        bool onednn = false);
+it_lab_ai::Graph build_graph(it_lab_ai::Tensor& input,
+                             it_lab_ai::Tensor& output,
+                             const std::string& json_path, bool comments);
+it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
+                                    it_lab_ai::Tensor& output, bool comments);
 std::unordered_map<int, std::string> load_class_names(
     const std::string& filename);
 
-ParseResult parse_json_model(const std::string& json_path, bool comments,
-                             bool parallel, bool onednn);
+ParseResult parse_json_model(const std::string& json_path, bool comments);
 
 std::vector<int> get_input_shape_from_json(const std::string& json_path);
 std::vector<float> process_model_output(const std::vector<float>& output,
@@ -75,3 +73,27 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
                                 const std::vector<int>& input_shape,
                                 const std::string& model_name = "");
 it_lab_ai::Tensor prepare_mnist_image(const cv::Mat& image);
+
+void print_time_stats(it_lab_ai::Graph& graph);
+
+namespace it_lab_ai {
+class LayerFactory {
+ private:
+  static bool onednn_;
+
+ public:
+  static void configure(bool onednn) { onednn_ = onednn; }
+
+  static std::shared_ptr<Layer> createEwLayer(const std::string& function,
+                                              float alpha = 1.0F,
+                                              float beta = 0.0F) {
+    if (onednn_ && EwLayerOneDnn::is_function_supported(function)) {
+      return std::make_shared<EwLayerOneDnn>(function, alpha, beta);
+    }
+    return std::make_shared<EWLayer>(function, alpha, beta);
+  }
+};
+
+bool LayerFactory::onednn_ = false;
+
+}  // namespace it_lab_ai

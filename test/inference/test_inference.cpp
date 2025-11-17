@@ -1,3 +1,4 @@
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -26,35 +27,35 @@ TEST(bfs, check_struct_graph) {
   }
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
-  InputLayer a1(kNhwc, kNchw, 1, 2);
+
+  auto a1 = std::make_shared<InputLayer>(kNhwc, kNchw, 1, 2);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer a2(1, 0, 1, kernel);
+  auto a2 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
 
-  ConvolutionalLayer a3_1(1, 0, 1, kernel);
-  EWLayer a3_1_1("relu");
-  ConvolutionalLayer a3_2(1, 0, 1, kernel);
-  EWLayer a3_2_1("relu");
+  auto a3_1 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
+  auto a3_1_1 = std::make_shared<EWLayer>("relu");
+  auto a3_2 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
+  auto a3_2_1 = std::make_shared<EWLayer>("relu");
 
-  ConcatLayer a4(0);
-  EWLayer a5("relu");
+  auto a4 = std::make_shared<ConcatLayer>(0);
+  auto a5 = std::make_shared<EWLayer>("relu");
 
-  EWLayer a6_1("relu");
-  EWLayer a6_2("relu");
+  auto a6_1 = std::make_shared<EWLayer>("relu");
+  auto a6_2 = std::make_shared<EWLayer>("relu");
 
-  ConcatLayer a7(0);
-  // EWLayer a8("relu");
-  SplitLayer a8(1, 3);
+  auto a7 = std::make_shared<ConcatLayer>(0);
+  auto a8 = std::make_shared<SplitLayer>(1, 3);
 
-  EWLayer a9_1("relu");
-  EWLayer a9_2("relu");
-  EWLayer a9_3("relu");
+  auto a9_1 = std::make_shared<EWLayer>("relu");
+  auto a9_2 = std::make_shared<EWLayer>("relu");
+  auto a9_3 = std::make_shared<EWLayer>("relu");
 
-  ConcatLayer a10(0);
-  EWLayer a11_1("relu");
+  auto a10 = std::make_shared<ConcatLayer>(0);
+  auto a11_1 = std::make_shared<EWLayer>("relu");
 
-  ConcatLayer a12(0);
+  auto a12 = std::make_shared<ConcatLayer>(0);
 
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
@@ -101,22 +102,18 @@ TEST(bfs, check_struct_graph_not_used_yolo) {
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  // EWLayer a2("relu"); //split 1 , 4
-  SplitLayer a2(1, 4);
 
-  EWLayer a3_1("relu");
-  EWLayer a3_1_1("relu");
-
-  ConcatLayer a3_2(0);
-  EWLayer a3_2_1("relu");
-
-  EWLayer a3_3("relu");
-  ConcatLayer a3_3_1(0);
-  EWLayer a3_3_2("relu");
-  EWLayer a3_3_3("relu");
-  EWLayer a3_3_4("relu");
-
-  ConcatLayer a4(0);
+  auto a2 = std::make_shared<SplitLayer>(1, 4);
+  auto a3_1 = std::make_shared<EWLayer>("relu");
+  auto a3_1_1 = std::make_shared<EWLayer>("relu");
+  auto a3_2 = std::make_shared<ConcatLayer>(0);
+  auto a3_2_1 = std::make_shared<EWLayer>("relu");
+  auto a3_3 = std::make_shared<EWLayer>("relu");
+  auto a3_3_1 = std::make_shared<ConcatLayer>(0);
+  auto a3_3_2 = std::make_shared<EWLayer>("relu");
+  auto a3_3_3 = std::make_shared<EWLayer>("relu");
+  auto a3_3_4 = std::make_shared<EWLayer>("relu");
+  auto a4 = std::make_shared<ConcatLayer>(0);
 
   graph.setInput(a2, input);
   graph.makeConnection(a2, a3_1);
@@ -151,19 +148,16 @@ TEST(bfs, check_struct_graph_resnet1) {
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
 
-  SplitLayer a2(1, 2);
-
-  EWLayer a2_1("relu");
-  EWLayer a2_1_1("relu");
-
-  EWLayer a2_1_1_1("relu");
-  EWLayer a2_1_1_2("relu");
-
-  BinaryOpLayer a2_1_2(BinaryOpLayer::Operation::kMul);
-  EWLayer a2_1_3("relu");
-  EWLayer a2_2("relu");
-  BinaryOpLayer a3(BinaryOpLayer::Operation::kAdd);
-  EWLayer a4("relu");
+  auto a2 = std::make_shared<SplitLayer>(1, 2);
+  auto a2_1 = std::make_shared<EWLayer>("relu");
+  auto a2_1_1 = std::make_shared<EWLayer>("relu");
+  auto a2_1_1_1 = std::make_shared<EWLayer>("relu");
+  auto a2_1_1_2 = std::make_shared<EWLayer>("relu");
+  auto a2_1_2 = std::make_shared<BinaryOpLayer>(BinaryOpLayer::Operation::kMul);
+  auto a2_1_3 = std::make_shared<EWLayer>("relu");
+  auto a2_2 = std::make_shared<EWLayer>("relu");
+  auto a3 = std::make_shared<BinaryOpLayer>(BinaryOpLayer::Operation::kAdd);
+  auto a4 = std::make_shared<EWLayer>("relu");
 
   graph.setInput(a2, input);
   graph.makeConnection(a2, a2_1);
@@ -195,18 +189,15 @@ TEST(bfs, check_struct_graph_resnet2) {
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
 
-  SplitLayer a2(1, 2);
-
-  EWLayer a2_1("relu");
-  EWLayer a2_1_1("relu");
-
-  EWLayer a2_1_1_1("relu");
-  EWLayer a2_1_1_2("relu");
-
-  BinaryOpLayer a2_1_2(BinaryOpLayer::Operation::kMul);
-  EWLayer a2_1_3("relu");
-  BinaryOpLayer a3(BinaryOpLayer::Operation::kAdd);
-  EWLayer a4("relu");
+  auto a2 = std::make_shared<SplitLayer>(1, 2);
+  auto a2_1 = std::make_shared<EWLayer>("relu");
+  auto a2_1_1 = std::make_shared<EWLayer>("relu");
+  auto a2_1_1_1 = std::make_shared<EWLayer>("relu");
+  auto a2_1_1_2 = std::make_shared<EWLayer>("relu");
+  auto a2_1_2 = std::make_shared<BinaryOpLayer>(BinaryOpLayer::Operation::kMul);
+  auto a2_1_3 = std::make_shared<EWLayer>("relu");
+  auto a3 = std::make_shared<BinaryOpLayer>(BinaryOpLayer::Operation::kAdd);
+  auto a4 = std::make_shared<EWLayer>("relu");
 
   graph.setInput(a2, input);
   graph.makeConnection(a2, a2_1);
@@ -237,17 +228,14 @@ TEST(bfs, check_struct_graph_google1) {
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
 
-  EWLayer a2("relu");
-
-  EWLayer a2_1("relu");
-  EWLayer a2_2("relu");
-  EWLayer a2_3("relu");
-  EWLayer a2_4("relu");
-
-  EWLayer a2_2_1("linear", 2.0F, 3.0F);
-  EWLayer a2_3_1("linear", 2.0F, 3.0F);
-
-  ConcatLayer a3(0);
+  auto a2 = std::make_shared<EWLayer>("relu");
+  auto a2_1 = std::make_shared<EWLayer>("relu");
+  auto a2_2 = std::make_shared<EWLayer>("relu");
+  auto a2_3 = std::make_shared<EWLayer>("relu");
+  auto a2_4 = std::make_shared<EWLayer>("relu");
+  auto a2_2_1 = std::make_shared<EWLayer>("linear", 2.0F, 3.0F);
+  auto a2_3_1 = std::make_shared<EWLayer>("linear", 2.0F, 3.0F);
+  auto a3 = std::make_shared<ConcatLayer>(0);
 
   graph.setInput(a2, input);
   graph.makeConnection(a2, a2_1);
@@ -280,13 +268,15 @@ TEST(bfs, check_result_vec) {
   }
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
-  InputLayer a1(kNhwc, kNchw, 1, 2);
-  InputLayer a3(kNhwc, kNhwc, 1, 1);
+
+  auto a1 = std::make_shared<InputLayer>(kNhwc, kNchw, 1, 2);
+  auto a3 = std::make_shared<InputLayer>(kNhwc, kNhwc, 1, 1);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer a2(1, 0, 1, kernel);
-  ConvolutionalLayer a4(1, 0, 1, kernel);
+  auto a2 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
+  auto a4 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
+
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a4);
@@ -351,7 +341,8 @@ TEST(bfs, check_end_to_end) {
   }
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
-  InputLayer a1(kNhwc, kNchw, 1, 2);
+
+  auto a1 = std::make_shared<InputLayer>(kNhwc, kNchw, 1, 2);
   std::vector<float> kernelvec;
   kernelvec.reserve(3 * 3 * 3 * 3);
   for (int i = 0; i < 81; ++i) {
@@ -359,12 +350,13 @@ TEST(bfs, check_end_to_end) {
   }
   Shape sh2({3, 3, 3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer a2(1, 0, 1, kernel);
+  auto a2 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
   Shape poolshape = {2, 2};
-  EWLayer a3("linear", 2.0F, 3.0F);
-  PoolingLayer a4(poolshape, "average");
-  FCLayer a6;
-  OutputLayer a5;
+  auto a3 = std::make_shared<EWLayer>("linear", 2.0F, 3.0F);
+  auto a4 = std::make_shared<PoolingLayer>(poolshape, "average");
+  auto a6 = std::make_shared<FCLayer>();
+  auto a5 = std::make_shared<OutputLayer>();
+
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -373,41 +365,13 @@ TEST(bfs, check_end_to_end) {
   graph.setOutput(a5, output);
   graph.inference();
 
-#ifdef ENABLE_STATISTIC_WEIGHTS
-  std::vector<Tensor> weights = graph.getWEIGHTS();
-  for (size_t i = 0; i < weights.size(); i++) {
-    switch (weights[i].get_type()) {
-      case Type::kInt: {
-        std::vector<int> ten = *weights[i].as<int>();
-        for (size_t j = 0; j < ten.size(); j++) {
-          std::cout << ten[j] << ' ';
-        }
-        std::cout << '\n';
-        break;
-      }
-      case Type::kFloat: {
-        std::vector<float> ten = *weights[i].as<float>();
-        for (size_t j = 0; j < ten.size(); j++) {
-          std::cout << ten[j] << ' ';
-        }
-        std::cout << '\n';
-        break;
-      }
-      case Type::kUnknown:
-      default: {
-        throw std::runtime_error("Unknown tensor type encountered");
-        break;
-      }
-    }
-  }
-#endif
-
   std::vector<float> tmp = *output.as<float>();
   ASSERT_GT(tmp.size(), 0);
   for (size_t i = 0; i < tmp.size(); ++i) {
     ASSERT_GE(tmp[i], 0);
   }
 }
+
 TEST(bfs, check_struct_layer) {
   Graph graph(5);
   Shape sh1({1, 5, 5, 3});
@@ -418,16 +382,14 @@ TEST(bfs, check_struct_layer) {
   }
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
-  InputLayer a1(kNhwc, kNchw, 1, 2);
+
+  auto a1 = std::make_shared<InputLayer>(kNhwc, kNchw, 1, 2);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer a2(1, 0, 1, kernel);
-  ConvolutionalLayer a3(1, 0, 1, kernel);
+  auto a2 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
+  auto a3 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
 
-  // EWLayer a4("linear", 2.0F, 3.0F);
-  // a2.ewops.layers.push_back(&a4);
-  // a2.ewops.countlayers++;
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
@@ -437,6 +399,7 @@ TEST(bfs, check_struct_layer) {
   std::vector<int> res = {81, 81, 81};
   ASSERT_EQ(tmp, res);
 }
+
 TEST(bfs, check_struct_layer_added) {
   Graph graph(5);
   Shape sh1({1, 5, 5, 3});
@@ -447,16 +410,16 @@ TEST(bfs, check_struct_layer_added) {
   }
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
-  InputLayer a1(kNhwc, kNchw, 1, 2);
+
+  auto a1 = std::make_shared<InputLayer>(kNhwc, kNchw, 1, 2);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer a2(1, 0, 1, kernel);
-  ConvolutionalLayer a3(1, 0, 1, kernel);
-
-  EWLayer a4("linear", 2.0F, 3.0F);
-  a2.postops.layers.push_back(&a4);
-  a2.postops.count++;
+  auto a2 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
+  auto a3 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
+  auto a4 = std::make_shared<EWLayer>("linear", 2.0F, 3.0F);
+  a2->postops.layers.push_back(a4.get());
+  a2->postops.count++;
 
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
@@ -480,35 +443,28 @@ FLAKY_TEST(bfs, check_struct_graph_split) {
   }
   Tensor input = make_tensor(vec, sh1);
   Tensor output = make_tensor(vec, sh1);
-  InputLayer a1(kNhwc, kNchw, 1, 2);
+
+  auto a1 = std::make_shared<InputLayer>(kNhwc, kNchw, 1, 2);
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-  ConvolutionalLayer a2(1, 0, 1, kernel);
-
-  ConvolutionalLayer a3_1(1, 0, 1, kernel);
-  EWLayer a3_1_1("relu");
-  ConvolutionalLayer a3_2(1, 0, 1, kernel);
-  EWLayer a3_2_1("relu");
-
-  ConcatLayer a4(0);
-  EWLayer a5("relu");
-
-  EWLayer a6_1("relu");
-  EWLayer a6_2("relu");
-
-  ConcatLayer a7(0);
-  // EWLayer a8("relu");
-  SplitLayer a8(1, 3);
-
-  EWLayer a9_1("relu");
-  EWLayer a9_2("relu");
-  EWLayer a9_3("relu");
-
-  ConcatLayer a10(0);
-  EWLayer a11_1("relu");
-
-  ConcatLayer a12(0);
+  auto a2 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
+  auto a3_1 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
+  auto a3_1_1 = std::make_shared<EWLayer>("relu");
+  auto a3_2 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
+  auto a3_2_1 = std::make_shared<EWLayer>("relu");
+  auto a4 = std::make_shared<ConcatLayer>(0);
+  auto a5 = std::make_shared<EWLayer>("relu");
+  auto a6_1 = std::make_shared<EWLayer>("relu");
+  auto a6_2 = std::make_shared<EWLayer>("relu");
+  auto a7 = std::make_shared<ConcatLayer>(0);
+  auto a8 = std::make_shared<SplitLayer>(1, 3);
+  auto a9_1 = std::make_shared<EWLayer>("relu");
+  auto a9_2 = std::make_shared<EWLayer>("relu");
+  auto a9_3 = std::make_shared<EWLayer>("relu");
+  auto a10 = std::make_shared<ConcatLayer>(0);
+  auto a11_1 = std::make_shared<EWLayer>("relu");
+  auto a12 = std::make_shared<ConcatLayer>(0);
 
   graph.setInput(a1, input);
   graph.makeConnection(a1, a2);
