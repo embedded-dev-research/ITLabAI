@@ -257,7 +257,7 @@ class Graph {
       arrayV_[i] -= amount_connected;
     }
     for (size_t i = 0; i < arrayE_.size(); i++) {
-      if (arrayE_[i] > static_cast<size_t>(id)) {
+      if (arrayE_[i] > id) {
         arrayE_[i] -= 1;
       }
     }
