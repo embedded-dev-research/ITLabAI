@@ -228,7 +228,7 @@ class Graph {
           std::to_string(idNext));
     }
     arrayE_.erase(arrayE_it);
-    for (int i = idPrev + 1; i < arrayV_.size(); ++i) {
+    for (size_t i = static_cast<size_t>(idPrev) + 1; i < arrayV_.size(); ++i) {
       arrayV_[i]--;
     }
   }
@@ -253,15 +253,15 @@ class Graph {
     int amount_connected = arrayV_[id + 1] - arrayV_[id];
     // remove vertex
     arrayV_.erase(arrayV_.begin() + id);
-    for (int i = id; i < arrayV_.size(); i++) {
+    for (size_t i = id; i < arrayV_.size(); i++) {
       arrayV_[i] -= amount_connected;
     }
-    for (int i = 0; i < arrayE_.size(); i++) {
-      if (arrayE_[i] > id) {
+    for (size_t i = 0; i < arrayE_.size(); i++) {
+      if (arrayE_[i] > static_cast<size_t>(id)) {
         arrayE_[i] -= 1;
       }
     }
-    for (int i = id + 1; i < layers_.size(); i++) {
+    for (size_t i = id + 1; i < layers_.size(); i++) {
       layers_[i]->setID(layers_[i]->getID() - 1);
     }
     layers_.erase(layers_.begin() + id);

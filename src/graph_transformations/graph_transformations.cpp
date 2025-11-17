@@ -105,7 +105,7 @@ void change_ids(std::vector<std::vector<int>>& vec, int id) {
 
 bool does_intersect(const std::vector<int>& vec1,
                     const std::vector<int>& vec2) {
-  for (int i = 0; i < vec1.size(); i++) {
+  for (size_t i = 0; i < vec1.size(); i++) {
     auto it = std::find(vec2.begin(), vec2.end(), vec1[i]);
     if (it != vec2.end()) {
       return true;
@@ -132,9 +132,9 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
       leafs.push_back(v);
     }
   }
-  for (int i = 0; i < subs.size(); i++) {
+  for (size_t i = 0; i < subs.size(); i++) {
     bool flag = false;
-    for (int j = 0; j < i; j++) {
+    for (size_t j = 0; j < i; j++) {
       if (does_intersect(subs_c[j], subs_c[i])) {
         flag = true;
         break;
@@ -147,7 +147,7 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
     std::vector<bool> is_root_special(roots.size(), false);
     roots_inps_final.clear();
     leafs_outs_final.clear();
-    for (int j = 0; j < roots.size(); j++) {
+    for (size_t j = 0; j < roots.size(); j++) {
       std::vector<int> root_inps = graph.getInLayers(subs[i][roots[j]]);
       // recognize transformations we can apply with roots
       amount_connected = graph.getVertexValue(subs[i][roots[j]] + 1) -
@@ -167,7 +167,7 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
       }
 
       // subgraph -> single node
-      for (int k = 0; k < root_inps.size(); k++) {
+      for (size_t k = 0; k < root_inps.size(); k++) {
         auto it = std::find(roots_inps_final.begin(), roots_inps_final.end(),
                             root_inps[k]);
         if (it == roots_inps_final.end()) {
@@ -175,7 +175,7 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
         }
       }
     }
-    for (int j = 0; j < leafs.size(); j++) {
+    for (size_t j = 0; j < leafs.size(); j++) {
       amount_connected = graph.getVertexValue(subs[i][leafs[j]] + 1) -
                          graph.getVertexValue(subs[i][leafs[j]]);
       for (int k = 0; k < amount_connected; k++) {
@@ -188,7 +188,7 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
         }
       }
     }
-    for (int j = 0; j < subs[i].size(); j++) {
+    for (size_t j = 0; j < subs[i].size(); j++) {
       auto it = std::find(roots.begin(), roots.end(), j);
       size_t index_for_root = std::distance(roots.begin(), it);
       if (it == roots.end() ||
@@ -205,14 +205,14 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
                        });
       }
     }
-    for (int j = 0; j < roots_inps_final.size(); j++) {
+    for (size_t j = 0; j < roots_inps_final.size(); j++) {
       new_graph.makeConnection(new_graph.getLayerFromID(roots_inps_final[j]),
                                *layer);
     }
     if (roots_inps_final.size() == 0) {
       new_graph.addSingleLayer(*layer);
     }
-    for (int j = 0; j < leafs_outs_final.size(); j++) {
+    for (size_t j = 0; j < leafs_outs_final.size(); j++) {
       new_graph.makeConnection(*layer,
                                new_graph.getLayerFromID(leafs_outs_final[j]));
     }
