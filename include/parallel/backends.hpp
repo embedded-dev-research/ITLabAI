@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -17,7 +18,12 @@
 namespace it_lab_ai {
 namespace parallel {
 
-enum class Backend { kSeq = 0, kThreads = 1, kTbb = 2, kOmp = 3 };
+enum class Backend : std::uint8_t {
+  kSeq = 0,
+  kThreads = 1,
+  kTbb = 2,
+  kOmp = 3
+};
 
 struct Options {
   Backend backend = Backend::kSeq;
@@ -98,7 +104,6 @@ inline void impl_omp(std::size_t count,
                         ? opt.max_threads
                         : static_cast<int>(std::thread::hardware_concurrency());
 
-  // Убрана неиспользуемая переменная chunk_size
   static_cast<void>(std::max(opt.grain, count / (num_threads * 8)));
 
   int int_count = static_cast<int>(count);
