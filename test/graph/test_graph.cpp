@@ -30,6 +30,44 @@ TEST(graph, check_connection) {
   ASSERT_EQ(graph.areLayerNext(inputLayer, fcLayer), 1);
 }
 
+TEST(graph, check_connection_for_existing_layer1) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  InputLayer inputLayer;
+  EWLayer ewLayer;
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, ewLayer);
+  const EWLayer ewLayer_c = ewLayer;
+  graph.makeConnection(inputLayer, ewLayer_c);
+
+  ASSERT_EQ(graph.areLayerNext(inputLayer, ewLayer_c), 1);
+}
+
+TEST(graph, check_connection_for_existing_layer2) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  InputLayer inputLayer;
+  EWLayer ewLayer;
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, ewLayer);
+  const EWLayer ewLayer_c = ewLayer;
+  ASSERT_ANY_THROW(graph.makeConnection(ewLayer_c, ewLayer_c));
+}
+
 TEST(graph, check_connection_remove) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
@@ -51,6 +89,41 @@ TEST(graph, check_connection_remove) {
   ASSERT_EQ(graph.areLayerNext(inputLayer, fcLayer), 0);
 }
 
+TEST(graph, check_connection_remove_out_of_range) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  InputLayer inputLayer;
+  EWLayer ewLayer;
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, ewLayer);
+  ASSERT_ANY_THROW(graph.removeConnection(999, -1));
+}
+
+TEST(graph, check_connection_double_remove_throw) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  InputLayer inputLayer;
+  EWLayer ewLayer;
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, ewLayer);
+  graph.removeConnection(fcLayer.getID(), ewLayer.getID());
+  ASSERT_ANY_THROW(graph.removeConnection(fcLayer.getID(), ewLayer.getID()));
+}
+
 TEST(graph, check_layer_remove) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
@@ -69,6 +142,24 @@ TEST(graph, check_layer_remove) {
 
   ASSERT_EQ(graph.areLayerNext(inputLayer, fcLayer), 0);
   ASSERT_ANY_THROW(graph.areLayerNext(fcLayer, ewLayer));
+}
+
+TEST(graph, check_layer_remove_out_of_range) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  Graph graph(5);
+  FCLayer fcLayer(weights, bias);
+  InputLayer inputLayer;
+  EWLayer ewLayer;
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, ewLayer);
+  ASSERT_ANY_THROW(graph.removeSingleLayer(999));
+  ASSERT_ANY_THROW(graph.removeSingleLayer(-1));
 }
 
 TEST(graph, check_connection1) {
@@ -571,6 +662,39 @@ TEST(graph_transformations, check_subgraphs_replace) {
   std::shared_ptr<Layer> lay = std::make_shared<EWLayer>("relu");
   res_graph.addSingleLayer(*lay);
   res_graph.makeConnection(*lay, fcLayer3);
+
+  Graph res = changed_subgraphs(graph, subgraph);
+  // ASSERT_EQ(res, res_graph);
+}
+
+TEST(graph_transformations, check_subgraphs_replace2) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph(5);
+  Graph res_graph(2);
+  Graph subgraph(2);
+  FCLayer fcLayer(weights, bias);
+  FCLayer fcLayer2(weights, bias);
+  FCLayer fcLayer3(weights, bias);
+  FCLayer fcLayer4(weights, bias);
+
+  graph.setInput(fcLayer, input);
+  graph.addSingleLayer(fcLayer2);
+  graph.makeConnection(fcLayer2, fcLayer3);
+  graph.makeConnection(fcLayer, fcLayer4);
+  graph.setOutput(fcLayer4, output);
+
+  subgraph.setInput(fcLayer, input);
+  subgraph.makeConnection(fcLayer, fcLayer2);
+
+  std::shared_ptr<Layer> lay = std::make_shared<EWLayer>("relu");
+  std::shared_ptr<Layer> lay2 = std::make_shared<EWLayer>("relu");
+  res_graph.setInput(*lay2, input);
+  res_graph.addSingleLayer(*lay);
 
   Graph res = changed_subgraphs(graph, subgraph);
   // ASSERT_EQ(res, res_graph);
