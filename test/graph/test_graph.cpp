@@ -44,7 +44,7 @@ TEST(graph, check_connection_for_existing_layer1) {
   graph.setInput(inputLayer, input);
   graph.makeConnection(inputLayer, fcLayer);
   graph.makeConnection(fcLayer, ewLayer);
-  const EWLayer ewLayer_c = ewLayer;
+  const EWLayer& ewLayer_c = ewLayer;
   graph.makeConnection(inputLayer, ewLayer_c);
 
   ASSERT_EQ(graph.areLayerNext(inputLayer, ewLayer_c), 1);
@@ -64,7 +64,7 @@ TEST(graph, check_connection_for_existing_layer2) {
   graph.setInput(inputLayer, input);
   graph.makeConnection(inputLayer, fcLayer);
   graph.makeConnection(fcLayer, ewLayer);
-  const EWLayer ewLayer_c = ewLayer;
+  const EWLayer& ewLayer_c = ewLayer;
   ASSERT_ANY_THROW(graph.makeConnection(ewLayer_c, ewLayer_c));
 }
 
@@ -681,12 +681,14 @@ TEST(graph_transformations, check_subgraphs_replace2) {
   FCLayer fcLayer2(weights, bias);
   FCLayer fcLayer3(weights, bias);
   FCLayer fcLayer4(weights, bias);
+  FCLayer fcLayer5(weights, bias);
 
   graph.setInput(fcLayer, input);
   graph.addSingleLayer(fcLayer2);
   graph.makeConnection(fcLayer2, fcLayer3);
   graph.makeConnection(fcLayer, fcLayer4);
-  graph.setOutput(fcLayer4, output);
+  graph.makeConnection(fcLayer4, fcLayer5);
+  graph.setOutput(fcLayer5, output);
 
   subgraph.setInput(fcLayer, input);
   subgraph.makeConnection(fcLayer, fcLayer2);

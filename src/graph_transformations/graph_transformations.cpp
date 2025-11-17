@@ -149,18 +149,18 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
     roots_inps_final.clear();
     leafs_outs_final.clear();
     for (size_t j = 0; j < roots.size(); j++) {
-      std::vector<int> root_inps = graph.getInLayers(subs[i][roots[j]]);
+      std::vector<int> root_inps = new_graph.getInLayers(subs[i][roots[j]]);
       // recognize transformations we can apply with roots
-      amount_connected = graph.getVertexValue(subs[i][roots[j]] + 1) -
-                         graph.getVertexValue(subs[i][roots[j]]);
+      amount_connected = new_graph.getVertexValue(subs[i][roots[j]] + 1) -
+                         new_graph.getVertexValue(subs[i][roots[j]]);
       amount_connected_s = subgraph_from.getVertexValue(roots[j] + 1) -
                            subgraph_from.getVertexValue(roots[j]);
       if (amount_connected == amount_connected_s) {
         continue;
       }
       for (int k = 0; k < amount_connected; k++) {
-        int id =
-            graph.getEdgeValue(graph.getVertexValue(subs[i][roots[j]]) + k);
+        int id = new_graph.getEdgeValue(
+            new_graph.getVertexValue(subs[i][roots[j]]) + k);
         auto it = std::find(subs[i].begin(), subs[i].end(), id);
         if (it == subs[i].end()) {
           is_root_special[j] = true;
@@ -177,11 +177,11 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
       }
     }
     for (size_t j = 0; j < leafs.size(); j++) {
-      amount_connected = graph.getVertexValue(subs[i][leafs[j]] + 1) -
-                         graph.getVertexValue(subs[i][leafs[j]]);
+      amount_connected = new_graph.getVertexValue(subs[i][leafs[j]] + 1) -
+                         new_graph.getVertexValue(subs[i][leafs[j]]);
       for (int k = 0; k < amount_connected; k++) {
-        int id =
-            graph.getEdgeValue(graph.getVertexValue(subs[i][leafs[j]]) + k);
+        int id = new_graph.getEdgeValue(
+            new_graph.getVertexValue(subs[i][leafs[j]]) + k);
         auto it =
             std::find(leafs_outs_final.begin(), leafs_outs_final.end(), id);
         if (it == leafs_outs_final.end()) {
