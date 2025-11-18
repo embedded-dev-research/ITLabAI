@@ -98,16 +98,16 @@ bool run_search(const Graph& graph, const Graph& subgraph,
 }
 
 void change_ids(std::vector<std::vector<int>>& vec, int id) {
-  for (size_t i = 0; i < vec.size(); i++) {
-    std::transform(vec[i].begin(), vec[i].end(), vec[i].begin(),
+  for (auto& i : vec) {
+    std::transform(i.begin(), i.end(), i.begin(),
                    [&](int elem) { return elem > id ? elem - 1 : elem; });
   }
 }
 
 bool does_intersect(const std::vector<int>& vec1,
                     const std::vector<int>& vec2) {
-  for (size_t i = 0; i < vec1.size(); i++) {
-    auto it = std::find(vec2.begin(), vec2.end(), vec1[i]);
+  for (int i : vec1) {
+    auto it = std::find(vec2.begin(), vec2.end(), i);
     if (it != vec2.end()) {
       return true;
     }
@@ -169,20 +169,20 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
       }
 
       // want subgraph -> single node
-      for (size_t k = 0; k < root_inps.size(); k++) {
+      for (int root_inp : root_inps) {
         auto it = std::find(roots_inps_final.begin(), roots_inps_final.end(),
-                            root_inps[k]);
+                            root_inp);
         if (it == roots_inps_final.end()) {
-          roots_inps_final.push_back(root_inps[k]);
+          roots_inps_final.push_back(root_inp);
         }
       }
     }
-    for (size_t j = 0; j < leafs.size(); j++) {
-      amount_connected = new_graph.getVertexValue(subs[i][leafs[j]] + 1) -
-                         new_graph.getVertexValue(subs[i][leafs[j]]);
+    for (int leaf : leafs) {
+      amount_connected = new_graph.getVertexValue(subs[i][leaf] + 1) -
+                         new_graph.getVertexValue(subs[i][leaf]);
       for (int k = 0; k < amount_connected; k++) {
-        int id = new_graph.getEdgeValue(
-            new_graph.getVertexValue(subs[i][leafs[j]]) + k);
+        int id =
+            new_graph.getEdgeValue(new_graph.getVertexValue(subs[i][leaf]) + k);
         auto it =
             std::find(leafs_outs_final.begin(), leafs_outs_final.end(), id);
         if (it == leafs_outs_final.end()) {
@@ -208,16 +208,14 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
                        });
       }
     }
-    for (size_t j = 0; j < roots_inps_final.size(); j++) {
-      new_graph.makeConnection(new_graph.getLayerFromID(roots_inps_final[j]),
-                               layer);
+    for (int j : roots_inps_final) {
+      new_graph.makeConnection(new_graph.getLayerFromID(j), layer);
     }
-    if (roots_inps_final.size() == 0) {
+    if (roots_inps_final.empty()) {
       new_graph.addSingleLayer(layer);
     }
-    for (size_t j = 0; j < leafs_outs_final.size(); j++) {
-      new_graph.makeConnection(layer,
-                               new_graph.getLayerFromID(leafs_outs_final[j]));
+    for (int j : leafs_outs_final) {
+      new_graph.makeConnection(layer, new_graph.getLayerFromID(j));
     }
   }
   return new_graph;

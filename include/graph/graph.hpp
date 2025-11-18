@@ -122,7 +122,7 @@ class Graph {
 
   void addSingleLayer(const std::shared_ptr<Layer>& layer) {
     bool layer_exists = false;
-    for (std::shared_ptr<Layer> existing_layer : layers_) {
+    for (const std::shared_ptr<Layer>& existing_layer : layers_) {
       if (existing_layer == layer) {
         layer_exists = true;
         break;
@@ -145,7 +145,7 @@ class Graph {
   void makeConnection(const std::shared_ptr<Layer>& layPrev,
                       const std::shared_ptr<Layer>& layNext) {
     bool layer_exists = false;
-    for (std::shared_ptr<Layer> layer : layers_) {
+    for (const std::shared_ptr<Layer>& layer : layers_) {
       if (layer == layNext) {
         layer_exists = true;
         break;
@@ -194,14 +194,14 @@ class Graph {
           std::to_string(idNext));
     }
     in_edges_[idNext].erase(it);
-    auto arrayE_it = std::find(arrayE_.begin() + arrayV_[idPrev],
-                               arrayE_.begin() + arrayV_[idPrev + 1], idNext);
-    if (arrayE_it == arrayE_.begin() + arrayV_[idPrev + 1]) {
+    auto array_e_it = std::find(arrayE_.begin() + arrayV_[idPrev],
+                                arrayE_.begin() + arrayV_[idPrev + 1], idNext);
+    if (array_e_it == arrayE_.begin() + arrayV_[idPrev + 1]) {
       throw std::invalid_argument(
           (std::string("No such edge ") + std::to_string(idPrev)) + " " +
           std::to_string(idNext));
     }
-    arrayE_.erase(arrayE_it);
+    arrayE_.erase(array_e_it);
     for (size_t i = static_cast<size_t>(idPrev) + 1; i < arrayV_.size(); ++i) {
       arrayV_[i]--;
     }
@@ -213,9 +213,9 @@ class Graph {
     // remove inputs
     for (int i = 0; i < V_; i++) {
       if (arrayV_[i] != arrayV_[i + 1]) {
-        auto arrayE_it = std::find(arrayE_.begin() + arrayV_[i],
-                                   arrayE_.begin() + arrayV_[i + 1], id);
-        if (arrayE_it != arrayE_.begin() + arrayV_[i + 1]) {
+        auto array_e_it = std::find(arrayE_.begin() + arrayV_[i],
+                                    arrayE_.begin() + arrayV_[i + 1], id);
+        if (array_e_it != arrayE_.begin() + arrayV_[i + 1]) {
           removeConnection(i, id);
         }
       }
@@ -230,9 +230,9 @@ class Graph {
     for (size_t i = id; i < arrayV_.size(); i++) {
       arrayV_[i] -= amount_connected;
     }
-    for (size_t i = 0; i < arrayE_.size(); i++) {
-      if (arrayE_[i] > id) {
-        arrayE_[i] -= 1;
+    for (int& i : arrayE_) {
+      if (i > id) {
+        i -= 1;
       }
     }
     for (size_t i = id + 1; i < layers_.size(); i++) {
