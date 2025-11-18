@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
         it_lab_ai::Tensor output({1, output_classes}, it_lab_ai::Type::kFloat);
 
         Graph graph;
-        build_graph(graph, sinput, output, json_path, false);
+        build_graph(graph, input, output, json_path, false);
 
         std::cout << "Starting inference..." << std::endl;
         try {
