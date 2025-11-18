@@ -106,13 +106,9 @@ void change_ids(std::vector<std::vector<int>>& vec, int id) {
 
 bool does_intersect(const std::vector<int>& vec1,
                     const std::vector<int>& vec2) {
-  for (int i : vec1) {
-    auto it = std::find(vec2.begin(), vec2.end(), i);
-    if (it != vec2.end()) {
-      return true;
-    }
-  }
-  return false;
+  return !std::any_of(vec1.begin(), vec1.end(), [&](int elem) {
+    return std::find(vec2.begin(), vec2.end(), elem) == vec2.end();
+  });
 }
 
 Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
