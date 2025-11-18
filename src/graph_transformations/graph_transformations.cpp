@@ -106,8 +106,9 @@ void change_ids(std::vector<std::vector<int>>& vec, int id) {
 
 bool does_intersect(const std::vector<int>& vec1,
                     const std::vector<int>& vec2) {
-  return !std::any_of(vec1.begin(), vec1.end(), [&](int elem) {
-    return std::find(vec2.begin(), vec2.end(), elem) == vec2.end();
+  // exists elem in vec1 which is found in vec2
+  return std::any_of(vec1.begin(), vec1.end(), [&](int elem) {
+    return std::find(vec2.begin(), vec2.end(), elem) != vec2.end();
   });
 }
 
