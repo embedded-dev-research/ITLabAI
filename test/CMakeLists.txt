@@ -1,9 +1,7 @@
 file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 add_executable(run_test ${TEST_SRC_FILES})
-if (NOT WIN32)
-    target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
-endif()
+target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(run_test PUBLIC perf_lib layers_lib layers_oneDNN_lib)
 target_link_libraries(run_test PUBLIC gtest)
 target_link_libraries(run_test PUBLIC ReadLib)
@@ -24,9 +22,7 @@ if (WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BUILD_DIR}/bin/."
             "${CMAKE_BINARY_DIR}/bin/")
-endif()
 
-if (WIN32)
     add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
             $<TARGET_FILE:dnnl>
