@@ -418,7 +418,7 @@ TEST(bfs, check_struct_layer_added) {
   auto a2 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
   auto a3 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
   auto a4 = std::make_shared<EWLayer>("linear", 2.0F, 3.0F);
-  a2->postops.layers.push_back(a4.get());
+  a2->postops.layers.push_back(a4);
   a2->postops.count++;
 
   graph.setInput(a1, input);
