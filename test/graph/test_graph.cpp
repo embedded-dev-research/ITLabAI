@@ -489,9 +489,12 @@ TEST(graph_transformations, check_subgraphs_big_random) {
   }
 
   graph.setInput(layer_ptrs[0], input);
+  std::mt19937 rng(42);
+  std::uniform_int_distribution<int> first_dist(0, num_vertices - 2);
+  std::uniform_int_distribution<int> second_dist(1, num_vertices - 1);
   for (int i = 0; i < num_vertices; i++) {
-    int rFirst = rand() % (num_vertices - 1);
-    int rSecond = 1 + rand() % (num_vertices - 1);
+    int rFirst = first_dist(rng);
+    int rSecond = second_dist(rng);
     if ((rFirst == rSecond) ||
         ((layer_ptrs[rFirst]->getID() == layer_ptrs[rSecond]->getID()) &&
          (layer_ptrs[rFirst]->getID() != 0))) {
