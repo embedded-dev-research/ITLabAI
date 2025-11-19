@@ -32,10 +32,6 @@ TEST(graph, check_connection) {
   graph.makeConnection(inputLayer_ptr, fcLayer_ptr);
   graph.makeConnection(fcLayer_ptr, ewLayer_ptr);
 
-  graph.addOwnedLayer(std::move(inputLayer));
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(ewLayer));
-
   ASSERT_EQ(graph.areLayerNext(inputLayer_ptr, fcLayer_ptr), 1);
 }
 
@@ -63,11 +59,6 @@ TEST(graph, check_connection1) {
   graph.makeConnection(fcLayer_ptr, fcLayer2_ptr);
   graph.setOutput(fcLayer2_ptr, output);
 
-  graph.addOwnedLayer(std::move(inputLayer));
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(ewLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-
   ASSERT_EQ(graph.areLayerNext(fcLayer_ptr, fcLayer2_ptr), 1);
 }
 
@@ -93,11 +84,6 @@ TEST(graph, check_connection_when_not_connection) {
   graph.makeConnection(inputLayer_ptr, fcLayer_ptr);
   graph.makeConnection(fcLayer_ptr, fcLayer2_ptr);
   graph.setOutput(fcLayer2_ptr, output);
-
-  graph.addOwnedLayer(std::move(inputLayer));
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(ewLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
 
   ASSERT_EQ(graph.areLayerNext(fcLayer_ptr, ewLayer_ptr), false);
 
@@ -130,11 +116,6 @@ TEST(graph, check_connection_when_not_connection1) {
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
-
   ASSERT_EQ(graph.areLayerNext(fcLayer_ptr, fcLayer_ptr), 0);
 }
 
@@ -161,11 +142,6 @@ TEST(graph, check_connection_when_not_connection2) {
   graph.makeConnection(fcLayer2_ptr, fcLayer3_ptr);
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
-
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
 
   ASSERT_EQ(graph.areLayerNext(fcLayer2_ptr, fcLayer4_ptr), 0);
 }
@@ -194,11 +170,6 @@ TEST(graph, vertex_out_of_range) {
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
-
   ASSERT_ANY_THROW(graph.getVertexValue(5));
 }
 
@@ -225,11 +196,6 @@ TEST(graph, edges_out_of_range) {
   graph.makeConnection(fcLayer2_ptr, fcLayer3_ptr);
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
-
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
 
   ASSERT_ANY_THROW(graph.getEdgeValue(999));
 }
@@ -258,11 +224,6 @@ TEST(graph, inputs_out_of_range) {
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
-
   ASSERT_ANY_THROW(graph.getInputsSize(999));
 }
 
@@ -289,11 +250,6 @@ TEST(graph, get_layer_out_of_range) {
   graph.makeConnection(fcLayer2_ptr, fcLayer3_ptr);
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
-
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
 
   ASSERT_ANY_THROW(graph.getLayerFromID(999));
 }
@@ -323,16 +279,8 @@ TEST(graph_transformations, check_subgraphs_search) {
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
-
   subgraph.setInput(fcLayer_ptr, input);
   subgraph.makeConnection(fcLayer_ptr, fcLayer2_ptr);
-
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
 
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({1, 2}));
@@ -367,17 +315,8 @@ TEST(graph_transformations, check_subgraphs_search1) {
   graph.makeConnection(fcLayer4_ptr, ewLayer5_ptr);
   graph.setOutput(ewLayer5_ptr, output);
 
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
-  graph.addOwnedLayer(std::move(ewLayer5));
-
   subgraph.setInput(fcLayer_ptr, input);
   subgraph.makeConnection(fcLayer_ptr, ewLayer5_ptr);
-
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<EWLayer>("relu"));
 
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({3, 4}));
@@ -410,18 +349,9 @@ TEST(graph_transformations, check_subgraphs_search2) {
   graph.makeConnection(fcLayer3_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
-
   subgraph.setInput(fcLayer_ptr, input);
   subgraph.makeConnection(fcLayer_ptr, fcLayer2_ptr);
   subgraph.makeConnection(fcLayer2_ptr, fcLayer3_ptr);
-
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
 
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({0, 1, 2}));
@@ -454,18 +384,9 @@ TEST(graph_transformations, check_subgraphs_search3) {
   graph.makeConnection(fcLayer2_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
-
   subgraph.setInput(fcLayer_ptr, input);
   subgraph.makeConnection(fcLayer_ptr, fcLayer2_ptr);
   subgraph.makeConnection(fcLayer2_ptr, fcLayer3_ptr);
-
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
 
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({2, 0, 1}));
@@ -498,18 +419,9 @@ TEST(graph_transformations, check_subgraphs_search4) {
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
-
   subgraph.setInput(fcLayer_ptr, input);
   subgraph.makeConnection(fcLayer_ptr, fcLayer2_ptr);
   subgraph.makeConnection(fcLayer2_ptr, fcLayer3_ptr);
-
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
 
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({1, 2, 0}));
@@ -544,21 +456,10 @@ TEST(graph_transformations, check_subgraphs_search5) {
   graph.makeConnection(fcLayer4_ptr, ewLayer5_ptr);
   graph.setOutput(ewLayer5_ptr, output);
 
-  graph.addOwnedLayer(std::move(fcLayer));
-  graph.addOwnedLayer(std::move(fcLayer2));
-  graph.addOwnedLayer(std::move(fcLayer3));
-  graph.addOwnedLayer(std::move(fcLayer4));
-  graph.addOwnedLayer(std::move(ewLayer5));
-
   subgraph.setInput(fcLayer_ptr, input);
   subgraph.makeConnection(fcLayer_ptr, fcLayer2_ptr);
   subgraph.addSingleLayer(fcLayer3_ptr);
   subgraph.makeConnection(fcLayer3_ptr, ewLayer5_ptr);
-
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<EWLayer>("relu"));
 
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({1, 3, 2, 4}));
@@ -611,10 +512,6 @@ TEST(graph_transformations, check_subgraphs_big_random) {
   subgraph.setInput(layer_ptrs[0], input);
   subgraph.makeConnection(layer_ptrs[0], layer_ptrs[50]);
   subgraph.makeConnection(layer_ptrs[50], layer_ptrs[1]);
-
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
-  subgraph.addOwnedLayer(std::make_unique<FCLayer>(weights, bias));
 
   std::vector<std::vector<int>> res1 = find_subgraphs(graph, subgraph);
   double res1_time =

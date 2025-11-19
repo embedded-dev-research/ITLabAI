@@ -277,7 +277,7 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
 
             if (concat_connected_inputs[target_name].size() ==
                 concat_connections[target_name].size()) {
-              auto concat_layer = dynamic_cast<it_lab_ai::ConcatLayer*>(
+              auto* concat_layer = dynamic_cast<it_lab_ai::ConcatLayer*>(
                   name_to_layer_ptr[target_name]);
               if (concat_layer) {
                 concat_layer->setInputOrder(concat_orders[target_name]);
@@ -311,7 +311,7 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   graph.setSplitDistribution(split_distribution);
 
   if (!layers.empty()) {
-    auto output_layer = layers.back().get();
+    auto* output_layer = layers.back().get();
     graph.setOutput(output_layer, output);
   }
 
@@ -969,7 +969,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         layers.push_back(std::move(layer));
 
         if (layer_type == "Split") {
-          auto split_ptr = dynamic_cast<it_lab_ai::SplitLayer*>(layer_ptr);
+          auto* split_ptr = dynamic_cast<it_lab_ai::SplitLayer*>(layer_ptr);
           if (split_ptr) {
             split_layers[layer_name] =
                 std::make_unique<it_lab_ai::SplitLayer>(*split_ptr);

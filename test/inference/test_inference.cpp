@@ -95,25 +95,6 @@ TEST(bfs, check_struct_graph) {
   graph.makeConnection(a10_ptr, a12_ptr);
   graph.setOutput(a12_ptr, output);
 
-  graph.addOwnedLayer(std::move(a1));
-  graph.addOwnedLayer(std::move(a2));
-  graph.addOwnedLayer(std::move(a3_1));
-  graph.addOwnedLayer(std::move(a3_1_1));
-  graph.addOwnedLayer(std::move(a3_2));
-  graph.addOwnedLayer(std::move(a3_2_1));
-  graph.addOwnedLayer(std::move(a4));
-  graph.addOwnedLayer(std::move(a5));
-  graph.addOwnedLayer(std::move(a6_1));
-  graph.addOwnedLayer(std::move(a6_2));
-  graph.addOwnedLayer(std::move(a7));
-  graph.addOwnedLayer(std::move(a8));
-  graph.addOwnedLayer(std::move(a9_1));
-  graph.addOwnedLayer(std::move(a9_2));
-  graph.addOwnedLayer(std::move(a9_3));
-  graph.addOwnedLayer(std::move(a10));
-  graph.addOwnedLayer(std::move(a11_1));
-  graph.addOwnedLayer(std::move(a12));
-
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(36, 81);
@@ -175,18 +156,6 @@ TEST(bfs, check_struct_graph_not_used_yolo) {
   graph.makeConnection(a3_3_4_ptr, a3_2_ptr);
   graph.setOutput(a4_ptr, output);
 
-  graph.addOwnedLayer(std::move(a2));
-  graph.addOwnedLayer(std::move(a3_1));
-  graph.addOwnedLayer(std::move(a3_1_1));
-  graph.addOwnedLayer(std::move(a3_2));
-  graph.addOwnedLayer(std::move(a3_2_1));
-  graph.addOwnedLayer(std::move(a3_3));
-  graph.addOwnedLayer(std::move(a3_3_1));
-  graph.addOwnedLayer(std::move(a3_3_2));
-  graph.addOwnedLayer(std::move(a3_3_3));
-  graph.addOwnedLayer(std::move(a3_3_4));
-  graph.addOwnedLayer(std::move(a4));
-
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(16, 3);
@@ -240,17 +209,6 @@ TEST(bfs, check_struct_graph_resnet1) {
   graph.makeConnection(a3_ptr, a4_ptr);
   graph.setOutput(a4_ptr, output);
 
-  graph.addOwnedLayer(std::move(a2));
-  graph.addOwnedLayer(std::move(a2_1));
-  graph.addOwnedLayer(std::move(a2_1_1));
-  graph.addOwnedLayer(std::move(a2_1_1_1));
-  graph.addOwnedLayer(std::move(a2_1_1_2));
-  graph.addOwnedLayer(std::move(a2_1_2));
-  graph.addOwnedLayer(std::move(a2_1_3));
-  graph.addOwnedLayer(std::move(a2_2));
-  graph.addOwnedLayer(std::move(a3));
-  graph.addOwnedLayer(std::move(a4));
-
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(4, 12);
@@ -301,16 +259,6 @@ TEST(bfs, check_struct_graph_resnet2) {
   graph.makeConnection(a3_ptr, a4_ptr);
   graph.setOutput(a4_ptr, output);
 
-  graph.addOwnedLayer(std::move(a2));
-  graph.addOwnedLayer(std::move(a2_1));
-  graph.addOwnedLayer(std::move(a2_1_1));
-  graph.addOwnedLayer(std::move(a2_1_1_1));
-  graph.addOwnedLayer(std::move(a2_1_1_2));
-  graph.addOwnedLayer(std::move(a2_1_2));
-  graph.addOwnedLayer(std::move(a2_1_3));
-  graph.addOwnedLayer(std::move(a3));
-  graph.addOwnedLayer(std::move(a4));
-
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(4, 12);
@@ -359,15 +307,6 @@ TEST(bfs, check_struct_graph_google1) {
   graph.makeConnection(a2_1_ptr, a3_ptr);
   graph.setOutput(a3_ptr, output);
 
-  graph.addOwnedLayer(std::move(a2));
-  graph.addOwnedLayer(std::move(a2_1));
-  graph.addOwnedLayer(std::move(a2_2));
-  graph.addOwnedLayer(std::move(a2_3));
-  graph.addOwnedLayer(std::move(a2_4));
-  graph.addOwnedLayer(std::move(a2_2_1));
-  graph.addOwnedLayer(std::move(a2_3_1));
-  graph.addOwnedLayer(std::move(a3));
-
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(32, 3);
@@ -404,11 +343,6 @@ TEST(bfs, check_result_vec) {
   graph.makeConnection(a1_ptr, a2_ptr);
   graph.makeConnection(a2_ptr, a4_ptr);
   graph.setOutput(a4_ptr, output);
-
-  graph.addOwnedLayer(std::move(a1));
-  graph.addOwnedLayer(std::move(a2));
-  graph.addOwnedLayer(std::move(a3));
-  graph.addOwnedLayer(std::move(a4));
 
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
@@ -500,13 +434,6 @@ TEST(bfs, check_end_to_end) {
   graph.makeConnection(a4_ptr, a5_ptr);
   graph.setOutput(a5_ptr, output);
 
-  graph.addOwnedLayer(std::move(a1));
-  graph.addOwnedLayer(std::move(a2));
-  graph.addOwnedLayer(std::move(a3));
-  graph.addOwnedLayer(std::move(a4));
-  graph.addOwnedLayer(std::move(a5));
-  graph.addOwnedLayer(std::move(a6));
-
   graph.inference();
 
   std::vector<float> tmp = *output.as<float>();
@@ -542,10 +469,6 @@ TEST(bfs, check_struct_layer) {
   graph.makeConnection(a1_ptr, a2_ptr);
   graph.makeConnection(a2_ptr, a3_ptr);
   graph.setOutput(a3_ptr, output);
-
-  graph.addOwnedLayer(std::move(a1));
-  graph.addOwnedLayer(std::move(a2));
-  graph.addOwnedLayer(std::move(a3));
 
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
@@ -584,11 +507,6 @@ TEST(bfs, check_struct_layer_added) {
   graph.makeConnection(a1_ptr, a2_ptr);
   graph.makeConnection(a2_ptr, a3_ptr);
   graph.setOutput(a3_ptr, output);
-
-  graph.addOwnedLayer(std::move(a1));
-  graph.addOwnedLayer(std::move(a2));
-  graph.addOwnedLayer(std::move(a3));
-  graph.addOwnedLayer(std::move(a4));
 
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
@@ -675,25 +593,6 @@ FLAKY_TEST(bfs, check_struct_graph_split) {
   graph.makeConnection(a11_1_ptr, a12_ptr);
   graph.makeConnection(a10_ptr, a12_ptr);
   graph.setOutput(a12_ptr, output);
-
-  graph.addOwnedLayer(std::move(a1));
-  graph.addOwnedLayer(std::move(a2));
-  graph.addOwnedLayer(std::move(a3_1));
-  graph.addOwnedLayer(std::move(a3_1_1));
-  graph.addOwnedLayer(std::move(a3_2));
-  graph.addOwnedLayer(std::move(a3_2_1));
-  graph.addOwnedLayer(std::move(a4));
-  graph.addOwnedLayer(std::move(a5));
-  graph.addOwnedLayer(std::move(a6_1));
-  graph.addOwnedLayer(std::move(a6_2));
-  graph.addOwnedLayer(std::move(a7));
-  graph.addOwnedLayer(std::move(a8));
-  graph.addOwnedLayer(std::move(a9_1));
-  graph.addOwnedLayer(std::move(a9_2));
-  graph.addOwnedLayer(std::move(a9_3));
-  graph.addOwnedLayer(std::move(a10));
-  graph.addOwnedLayer(std::move(a11_1));
-  graph.addOwnedLayer(std::move(a12));
 
   graph.inference();
   std::vector<int> tmp = *output.as<int>();
