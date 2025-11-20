@@ -8,7 +8,7 @@
 #include <vector>
 
 #ifdef HAS_OPENMP
-#include <omp.h>
+// #include <omp.h>
 #endif
 
 #include <oneapi/tbb/blocked_range.h>
