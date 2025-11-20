@@ -41,7 +41,7 @@ include_directories( ${OpenMP_C_INCLUDE_DIRS} ${OpenMP_CXX_INCLUDE_DIRS} )
 
 if(OpenMP_FOUND)
     message(STATUS "OpenMP found - enabling parallel support")
-    add_definitions(-DHAS_OPENMP)
+    #add_definitions(-DHAS_OPENMP)
 else()
     message(STATUS "OpenMP not found - parallel features disabled")
 endif()
