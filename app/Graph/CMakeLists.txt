@@ -31,9 +31,6 @@ if (WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BUILD_DIR}/bin/."
             "${CMAKE_BINARY_DIR}/bin/")
-endif()
-
-if (WIN32)
 	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
 	    set(CMAKE_BUILD_TYPE "Debug")
 	endif()
