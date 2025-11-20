@@ -49,6 +49,7 @@ inline void impl_threads(std::size_t count,
   if (num_threads == 0) num_threads = 4;
 
   double end = omp_get_wtime();
+  end++;
 
   std::size_t min_chunk_size = std::max(opt.grain, count / (num_threads * 4));
   if (count / num_threads < min_chunk_size) {
