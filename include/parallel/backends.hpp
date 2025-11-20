@@ -48,6 +48,8 @@ inline void impl_threads(std::size_t count,
                         : static_cast<int>(std::thread::hardware_concurrency());
   if (num_threads == 0) num_threads = 4;
 
+  double end = omp_get_wtime();
+
   std::size_t min_chunk_size = std::max(opt.grain, count / (num_threads * 4));
   if (count / num_threads < min_chunk_size) {
     num_threads = std::max(1, static_cast<int>(count / min_chunk_size));
