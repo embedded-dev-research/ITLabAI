@@ -22,22 +22,12 @@ target_link_libraries(Graph_Build BuildGraph)
 add_executable(ACC acc_check.cpp)
 target_link_libraries(ACC BuildGraph)
 
-if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug")
-endif()
-
 if (WIN32)
     add_custom_command(TARGET Graph_Build POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BUILD_DIR}/bin/."
             "${CMAKE_BINARY_DIR}/bin/")
 
-	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
-	    set(CMAKE_BUILD_TYPE "Debug")
-	endif()
-    if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
-	    set(CMAKE_BUILD_TYPE "Release")
-	endif()
     add_custom_command(TARGET ACC POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BUILD_DIR}/bin/."
