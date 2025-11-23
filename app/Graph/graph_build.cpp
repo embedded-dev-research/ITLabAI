@@ -2,7 +2,6 @@
 #include <numeric>
 #include <unordered_map>
 
-#include "build.cpp"
 #include "build.hpp"
 
 namespace fs = std::filesystem;

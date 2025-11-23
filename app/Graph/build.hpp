@@ -33,12 +33,7 @@
 #include "layers/TransposeLayer.hpp"
 #include "layers_oneDNN/EWLayer.hpp"
 
-std::unordered_map<std::string, std::string> model_paths = {
-    {"alexnet_mnist", MODEL_PATH_H5},
-    {"googlenet", MODEL_PATH_GOOGLENET_ONNX},
-    {"resnet", MODEL_PATH_RESNET_ONNX},
-    {"densenet", MODEL_PATH_DENSENET_ONNX},
-    {"yolo", MODEL_PATH_YOLO11NET_ONNX}};
+extern std::unordered_map<std::string, std::string> model_paths;
 
 struct ParseResult {
   std::vector<std::unique_ptr<it_lab_ai::Layer>> layers;
@@ -92,7 +87,5 @@ class LayerFactory {
     return std::make_unique<EWLayer>(function, alpha, beta);
   }
 };
-
-bool LayerFactory::onednn_ = false;
 
 }  // namespace it_lab_ai
