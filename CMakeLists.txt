@@ -32,9 +32,7 @@ add_subdirectory(3rdparty)
 
 include(cmake/opencv_config.cmake)
 
-if (NOT WIN32)
-    find_package(OpenMP REQUIRED)
-endif()
+find_package(OpenMP REQUIRED)
 
 if (NOT WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")

@@ -8,6 +8,16 @@
 
 namespace it_lab_ai {
 
+inline size_t ComputeConvOutputDim(size_t input_size, size_t kernel_size,
+                                   size_t stride, size_t padding,
+                                   size_t dilation) {
+  const size_t effective_kernel = dilation * (kernel_size - 1) + 1;
+  if (stride == 0 || input_size + 2 * padding < effective_kernel) {
+    return 0;
+  }
+  return (input_size + 2 * padding - effective_kernel) / stride + 1;
+}
+
 class ConvolutionalLayer : public Layer {
  private:
   size_t stride_;
@@ -165,12 +175,10 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
     }
   }
 
-  size_t out_height =
-      (in_height + 2 * pads_ - dilations_ * (kernel_height - 1) - 1) / stride_ +
-      1;
+  size_t out_height = ComputeConvOutputDim(in_height, kernel_height, stride_,
+                                           pads_, dilations_);
   size_t out_width =
-      (in_width + 2 * pads_ - dilations_ * (kernel_width - 1) - 1) / stride_ +
-      1;
+      ComputeConvOutputDim(in_width, kernel_width, stride_, pads_, dilations_);
 
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> padded_input(
       batch_size,
@@ -352,20 +360,10 @@ void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
   for (auto& t : threads) t.join();
   threads.clear();
 
-  size_t crat = 0;
-  if ((in_height + 2 * pads_ - dilations_ * (kernel_height - 1)) % stride_ != 0)
-    crat = 1;
-
-  size_t out_height =
-      (in_height + 2 * pads_ - dilations_ * (kernel_height - 1)) / stride_ +
-      crat;
-
-  crat = 0;
-  if ((in_width + 2 * pads_ - dilations_ * (kernel_width - 1)) % stride_ != 0)
-    crat = 1;
-
+  size_t out_height = ComputeConvOutputDim(in_height, kernel_height, stride_,
+                                           pads_, dilations_);
   size_t out_width =
-      (in_width + 2 * pads_ - dilations_ * (kernel_width - 1)) / stride_ + crat;
+      ComputeConvOutputDim(in_width, kernel_width, stride_, pads_, dilations_);
 
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> output_tensor(
       batch_size, std::vector<std::vector<std::vector<ValueType>>>(
@@ -474,12 +472,10 @@ void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
     throw std::runtime_error("Invalid kernel shape for depthwise convolution");
   }
 
-  size_t out_height =
-      (in_height + 2 * pads_ - dilations_ * (kernel_height - 1) - 1) / stride_ +
-      1;
+  size_t out_height = ComputeConvOutputDim(in_height, kernel_height, stride_,
+                                           pads_, dilations_);
   size_t out_width =
-      (in_width + 2 * pads_ - dilations_ * (kernel_width - 1) - 1) / stride_ +
-      1;
+      ComputeConvOutputDim(in_width, kernel_width, stride_, pads_, dilations_);
 
   Tensor output_tensor(Shape({batch_size, channels, out_height, out_width}),
                        input.get_type());
@@ -568,20 +564,10 @@ void Conv4D_Legacy(const Tensor& input, const Tensor& kernel_,
     }
   }
 
-  size_t crat = 0;
-  if ((in_height + 2 * pads_ - dilations_ * (kernel_height - 1)) % stride_ != 0)
-    crat = 1;
-
-  size_t out_height =
-      (in_height + 2 * pads_ - dilations_ * (kernel_height - 1)) / stride_ +
-      crat;
-
-  crat = 0;
-  if ((in_width + 2 * pads_ - dilations_ * (kernel_width - 1)) % stride_ != 0)
-    crat = 1;
-
+  size_t out_height = ComputeConvOutputDim(in_height, kernel_height, stride_,
+                                           pads_, dilations_);
   size_t out_width =
-      (in_width + 2 * pads_ - dilations_ * (kernel_width - 1)) / stride_ + crat;
+      ComputeConvOutputDim(in_width, kernel_width, stride_, pads_, dilations_);
 
   std::vector<std::vector<std::vector<std::vector<ValueType>>>> output_tensor(
       batch_size, std::vector<std::vector<std::vector<ValueType>>>(

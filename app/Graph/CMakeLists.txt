@@ -44,6 +44,12 @@ if (WIN32)
             "${OPENCV_BIN_SOURCE}"
             "${CMAKE_BINARY_DIR}/bin/")
 
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
+	    set(CMAKE_BUILD_TYPE "Debug")
+	endif()
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "RELEASE")
+	    set(CMAKE_BUILD_TYPE "Release")
+	endif()
     add_custom_command(TARGET ACC POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BIN_SOURCE}"
