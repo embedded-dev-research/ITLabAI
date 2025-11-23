@@ -49,7 +49,7 @@ struct PostOperations {
 class Layer {
  public:
   Layer() = default;
-  Layer(LayerType type) : type_(type) {}
+  explicit Layer(LayerType type) : type_(type) {}
   virtual ~Layer() = default;
   PostOperations postops;
   int getID() const { return id_; }

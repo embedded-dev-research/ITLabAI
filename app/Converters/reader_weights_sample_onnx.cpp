@@ -30,10 +30,11 @@ int main() {
         if (value.is_array()) {
           std::cout << "[";
           for (const auto& v : value) {
-            if (v.is_number())
+            if (v.is_number()) {
               std::cout << v.get<float>() << " ";
-            else if (v.is_string())
+            } else if (v.is_string()) {
               std::cout << v.get<std::string>() << " ";
+            }
           }
           std::cout << "]";
         } else if (value.is_number()) {

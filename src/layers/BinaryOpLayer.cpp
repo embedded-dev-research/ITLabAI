@@ -169,7 +169,7 @@ std::vector<size_t> BinaryOpLayer::get_strides(const Shape& shape) {
   if (strides.empty()) return strides;
 
   strides.back() = 1;
-  for (int i = (int)shape.dims() - 2; i >= 0; --i) {
+  for (int i = static_cast<int>(shape.dims()) - 2; i >= 0; --i) {
     strides[i] = strides[i + 1] * shape[i + 1];
   }
   return strides;

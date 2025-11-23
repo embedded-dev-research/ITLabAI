@@ -125,7 +125,11 @@ class ConvImpl : public LayerImpl<ValueType> {
             if (input_width_ == 0) {
               throw std::out_of_range("Input = 0");
             }
-            auto kercol = static_cast<size_t>(coloms / input_width_ + 1);
+            int kercol_index = coloms / input_width_ + 1;
+            if (kercol_index < 0) {
+              throw std::out_of_range("Kernel column index is negative");
+            }
+            auto kercol = static_cast<size_t>(kercol_index);
             color +=
                 matrix[(i + coloms + str) * input_flow_ + x] *
                 kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
