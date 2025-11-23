@@ -18,13 +18,9 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (WIN32)
-    set(OPENCV_BIN_SOURCE "${OPENCV_BUILD_DIR}/bin")
-    if (MSVC)
-        set(OPENCV_BIN_SOURCE "${OPENCV_BUILD_DIR}/bin/$<CONFIG>")
-    endif()
     add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${OPENCV_BIN_SOURCE}"
+            "${OPENCV_BUILD_DIR}/bin/."
             "${CMAKE_BINARY_DIR}/bin/")
 
     add_custom_command(TARGET run_test POST_BUILD
@@ -32,15 +28,9 @@ if (WIN32)
             $<TARGET_FILE:dnnl>
             $<TARGET_FILE_DIR:run_test>
     )
-
-    add_test(NAME UnitTests
-        COMMAND ${CMAKE_COMMAND} -E env
-            "PATH=$<TARGET_FILE_DIR:dnnl>;$<TARGET_FILE_DIR:TBB::tbb>;$ENV{PATH}"
-            $<TARGET_FILE:run_test>
-    )
-else()
-    add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/run_test)
 endif()
+
+add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/run_test)
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
