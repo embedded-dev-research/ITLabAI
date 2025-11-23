@@ -17,7 +17,7 @@ TEST(DropOutLayer, IncompatibleInput) {
 }
 
 TEST(DropOutLayer, dropoutlayer_int) {
-  DropOutLayer layer(1);
+  DropOutLayer layer(1, true);
   Shape sh({2, 2});
   Tensor input = make_tensor<int>({1, -1, 2, -2}, sh);
   Tensor output;
@@ -47,7 +47,7 @@ TEST(DropOutLayer, dropoutlayer_float) {
 }
 
 TEST(DropOutLayer, dropoutlayer_float_50proc) {
-  DropOutLayer layer(0.5);
+  DropOutLayer layer(0.5, true);
   Shape sh({10, 10});
   std::vector<float> a(100, static_cast<float>(0.01));
   Tensor input = make_tensor<float>(a, sh);
@@ -60,7 +60,7 @@ TEST(DropOutLayer, dropoutlayer_float_50proc) {
 }
 
 TEST(DropOutLayer, dropoutlayer_float_30proc) {
-  DropOutLayer layer(0.3);
+  DropOutLayer layer(0.3, true);
   Shape sh({10, 10});
   std::vector<float> a(100, static_cast<float>(0.01));
   Tensor input = make_tensor<float>(a, sh);
@@ -73,7 +73,7 @@ TEST(DropOutLayer, dropoutlayer_float_30proc) {
 }
 
 TEST(DropOutLayer, dropoutlayer_float_70proc) {
-  DropOutLayer layer(0.7);
+  DropOutLayer layer(0.7, true);
   Shape sh({10, 10});
   std::vector<float> a(100, static_cast<float>(0.01));
   Tensor input = make_tensor<float>(a, sh);
