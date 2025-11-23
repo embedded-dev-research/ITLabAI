@@ -36,26 +36,25 @@
 extern std::unordered_map<std::string, std::string> model_paths;
 
 struct ParseResult {
-  std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
-  std::unordered_map<std::string, std::shared_ptr<it_lab_ai::Layer>>
-      name_to_layer;
+  std::vector<std::unique_ptr<it_lab_ai::Layer>> layers;
+  std::unordered_map<std::string, it_lab_ai::Layer*> name_to_layer_ptr;
   std::unordered_map<std::string, std::vector<std::string>> connections;
   std::unordered_map<std::string, std::vector<std::string>> concat_connections;
   std::unordered_map<std::string, std::vector<int>> concat_orders;
   std::unordered_map<std::string, std::unordered_set<std::string>>
       concat_connected_inputs;
-  std::unordered_map<std::string, std::shared_ptr<it_lab_ai::SplitLayer>>
+  std::unordered_map<std::string, std::unique_ptr<it_lab_ai::SplitLayer>>
       split_layers;
   std::unordered_map<std::string, int> split_name_to_index;
   std::vector<std::vector<std::pair<int, int>>> split_distribution;
   std::unordered_map<std::string, int> original_ids;
 };
 
-it_lab_ai::Graph build_graph(it_lab_ai::Tensor& input,
-                             it_lab_ai::Tensor& output,
-                             const std::string& json_path, bool comments);
-it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
-                                    it_lab_ai::Tensor& output, bool comments);
+void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
+                 it_lab_ai::Tensor& output, const std::string& json_path,
+                 bool comments);
+void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
+                        it_lab_ai::Tensor& output, bool comments);
 std::unordered_map<int, std::string> load_class_names(
     const std::string& filename);
 
@@ -79,13 +78,13 @@ class LayerFactory {
  public:
   static void configure(bool onednn) { onednn_ = onednn; }
 
-  static std::shared_ptr<Layer> createEwLayer(const std::string& function,
+  static std::unique_ptr<Layer> createEwLayer(const std::string& function,
                                               float alpha = 1.0F,
                                               float beta = 0.0F) {
     if (onednn_ && EwLayerOneDnn::is_function_supported(function)) {
-      return std::make_shared<EwLayerOneDnn>(function, alpha, beta);
+      return std::make_unique<EwLayerOneDnn>(function, alpha, beta);
     }
-    return std::make_shared<EWLayer>(function, alpha, beta);
+    return std::make_unique<EWLayer>(function, alpha, beta);
   }
 };
 

@@ -76,7 +76,8 @@ int main(int argc, char* argv[]) {
     Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
     Tensor t = make_tensor<float>(res, sh);
     input = t;
-    auto graph = build_graph_linear(input, output, false);
+    Graph graph;
+    build_graph_linear(graph, input, output, false);
     graph.inference();
     print_time_stats(graph);
     std::vector<std::vector<float>> tmp_output =
@@ -185,7 +186,8 @@ int main(int argc, char* argv[]) {
   it_lab_ai::Tensor output =
       it_lab_ai::Tensor(output_shape, it_lab_ai::Type::kFloat);
 
-  auto graph = build_graph(input, output, json_path, false);
+  Graph graph;
+  build_graph(graph, input, output, json_path, false);
   graph.inference();
   print_time_stats(graph);
   std::vector<std::vector<float>> processed_outputs;
