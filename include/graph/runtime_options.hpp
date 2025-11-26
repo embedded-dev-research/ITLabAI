@@ -1,9 +1,9 @@
 #pragma once
 
-enum class Backend { Naive, OneDnn };
+enum class Backend { kNaive, kOneDnn };
 
 struct RuntimeOptions {
-  Backend backend{Backend::Naive};
+  Backend backend{Backend::kNaive};
   int threads{0};
   bool parallel{false};
 };

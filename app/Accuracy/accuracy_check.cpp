@@ -11,7 +11,7 @@ using namespace it_lab_ai;
 
 int main() {
   RuntimeOptions options;
-  options.backend = Backend::Naive;
+  options.backend = Backend::kNaive;
   options.threads = 4;
   options.parallel = true;
   std::string image_path = IMAGE1_PATH;

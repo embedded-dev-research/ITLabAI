@@ -12,8 +12,10 @@ int main(int argc, char* argv[]) {
   RuntimeOptions options;
 
   for (int i = 1; i < argc; ++i) {
-    if (std::string(argv[i]) == "--onednn") {
-      options.backend = Backend::OneDnn;
+    if (std::string(argv[i]) == "--model" && i + 1 < argc) {
+      model_name = argv[++i];
+    } else if (std::string(argv[i]) == "--onednn") {
+      options.backend = Backend::kOneDnn;
     } else if (std::string(argv[i]) == "--parallel") {
       options.parallel = true;
     } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {

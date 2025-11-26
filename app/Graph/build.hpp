@@ -80,7 +80,7 @@ class LayerFactory {
                                               const RuntimeOptions& options,
                                               float alpha = 1.0F,
                                               float beta = 0.0F) {
-    if (options.backend == Backend::OneDnn &&
+    if (options.backend == Backend::kOneDnn &&
         EwLayerOneDnn::is_function_supported(function)) {
       return std::make_unique<EwLayerOneDnn>(function, alpha, beta);
     }
