@@ -22,6 +22,10 @@ target_link_libraries(Graph_Build BuildGraph)
 add_executable(ACC acc_check.cpp)
 target_link_libraries(ACC BuildGraph)
 
+add_executable(onnx_subs onnx_subs.cpp)
+target_link_libraries(onnx_subs BuildGraph)
+target_link_libraries(onnx_subs graphT_lib)
+
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
