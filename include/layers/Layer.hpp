@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 
+#include "graph/runtime_options.hpp"
 #include "layers/Shape.hpp"
 #include "layers/Tensor.hpp"
 #include "oneapi/tbb.h"
-#include "graph/runtime_options.hpp"
 
 namespace it_lab_ai {
 
