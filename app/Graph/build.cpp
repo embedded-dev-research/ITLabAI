@@ -4,14 +4,24 @@
 
 using namespace it_lab_ai;
 
-Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                         bool comments) {
+bool LayerFactory::onednn_ = false;
+
+std::unordered_map<std::string, std::string> model_paths = {
+    {"alexnet_mnist", MODEL_PATH_H5},
+    {"googlenet", MODEL_PATH_GOOGLENET_ONNX},
+    {"resnet", MODEL_PATH_RESNET_ONNX},
+    {"densenet", MODEL_PATH_DENSENET_ONNX},
+    {"yolo", MODEL_PATH_YOLO11NET_ONNX}};
+
+void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
+                        it_lab_ai::Tensor& output, bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
     }
   }
-  std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
+  std::vector<std::unique_ptr<it_lab_ai::Layer>> layers;
+  std::vector<Layer*> layer_ptrs;
   std::vector<bool> layerpostop;
 
   std::string json_file = MODEL_PATH_H5;
@@ -57,23 +67,26 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
       it_lab_ai::Tensor tmp_values = tensor;
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
-      auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
+      auto conv_layer = std::make_unique<it_lab_ai::ConvolutionalLayer>(
           1, pads, 1, tmp_values, tmp_bias, kDefault, 1, true);
-      layers.push_back(conv_layer);
+      layer_ptrs.push_back(conv_layer.get());
+      layers.push_back(std::move(conv_layer));
       layerpostop.push_back(false);
       if (comments) std::cout << "ConvLayer added to layers." << std::endl;
     }
     if (layer_type.find("relu") != std::string::npos) {
       auto ew_layer = LayerFactory::createEwLayer("relu");
-      layers.push_back(ew_layer);
+      layer_ptrs.push_back(ew_layer.get());
+      layers.push_back(std::move(ew_layer));
       layerpostop.push_back(true);
       if (comments)
         std::cout << "Element wise (relu) added to layers" << std::endl;
     }
     if (layer_type.find("Dense") != std::string::npos) {
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
-      auto fc_layer = std::make_shared<it_lab_ai::FCLayer>(tensor, tmp_bias);
-      layers.push_back(fc_layer);
+      auto fc_layer = std::make_unique<it_lab_ai::FCLayer>(tensor, tmp_bias);
+      layer_ptrs.push_back(fc_layer.get());
+      layers.push_back(std::move(fc_layer));
       layerpostop.push_back(false);
       if (comments) std::cout << "DenseLayer added to layers." << std::endl;
     }
@@ -90,23 +103,26 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
                   << std::endl;
       auto pool_layer =
-          std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
-      layers.push_back(pool_layer);
+          std::make_unique<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
+      layer_ptrs.push_back(pool_layer.get());
+      layers.push_back(std::move(pool_layer));
       layerpostop.push_back(false);
       if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
     }
 
     if (layer_type.find("Flatten") != std::string::npos) {
-      auto flatten_layer = std::make_shared<it_lab_ai::FlattenLayer>(
+      auto flatten_layer = std::make_unique<it_lab_ai::FlattenLayer>(
           std::vector<size_t>({0, 3, 2, 1}));
-      layers.push_back(flatten_layer);
+      layer_ptrs.push_back(flatten_layer.get());
+      layers.push_back(std::move(flatten_layer));
       layerpostop.push_back(false);
       if (comments) std::cout << "FlattenLayer added to layers." << std::endl;
     }
 
     if (layer_type.find("Dropout") != std::string::npos) {
-      auto dropout_layer = std::make_shared<it_lab_ai::DropOutLayer>(0.0);
-      layers.push_back(dropout_layer);
+      auto dropout_layer = std::make_unique<it_lab_ai::DropOutLayer>(0.0);
+      layer_ptrs.push_back(dropout_layer.get());
+      layers.push_back(std::move(dropout_layer));
       layerpostop.push_back(false);
       if (comments)
         std::cout
@@ -117,32 +133,35 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   }
   if (comments)
     std::cout << "number of layers - " << layers.size() + 1 << std::endl;
-  it_lab_ai::Graph graph(static_cast<int>(layers.size()));
-  auto a1 = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
+  auto a1 = std::make_unique<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                     it_lab_ai::kNchw);
+  Layer* a1_ptr = a1.get();
 
   if (comments) std::cout << "InputLayer created." << std::endl;
 
-  graph.setInput(a1, input);
+  graph.setInput(a1_ptr, input);
   if (comments) std::cout << "Input set in graph." << std::endl;
 
-  graph.makeConnection(a1, layers[0]);
+  graph.makeConnection(a1_ptr, layer_ptrs[0]);
   if (comments)
     std::cout << "Connection made between InputLayer and first layer."
               << std::endl;
 
   for (size_t i = 0; i < layers.size() - 1; ++i) {
     if (layerpostop[i]) {
-      layers[i - 1]->postops.layers.push_back(layers[i]);
-      layers[i - 1]->postops.count++;
-      graph.makeConnection(layers[i - 1], layers[i + 1]);
+      layer_ptrs[i - 1]->postops.layers.push_back(layer_ptrs[i]);
+      layer_ptrs[i - 1]->postops.count++;
+      graph.makeConnection(layer_ptrs[i - 1], layer_ptrs[i + 1]);
     } else if (!layerpostop[i + 1])
-      graph.makeConnection(layers[i], layers[i + 1]);
+      graph.makeConnection(layer_ptrs[i], layer_ptrs[i + 1]);
   }
 
-  graph.setOutput(layers.back(), output);
+  graph.setOutput(layer_ptrs.back(), output);
 
-  return graph;
+  graph.addOwnedLayer(std::move(a1));
+  for (auto& layer : layers) {
+    graph.addOwnedLayer(std::move(layer));
+  }
 }
 
 std::string get_base_layer_name(const std::string& tensor_name) {
@@ -189,32 +208,13 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
   }
 }
 
-Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                  const std::string& json_path, bool comments) {
-  if (comments) {
-    for (size_t i = 0; i < input.get_shape().dims(); i++) {
-      std::cout << input.get_shape()[i] << ' ';
-    }
-    std::cout << std::endl;
-    if (input.get_shape().dims() == 4) {
-      for (size_t n = 0; n < input.get_shape()[0]; n++) {
-        for (size_t h = 0; h < input.get_shape()[2]; h++) {
-          for (size_t w = 0; w < input.get_shape()[3]; w++) {
-            for (size_t c = 0; c < input.get_shape()[1]; c++) {
-              std::cout << input.get<float>({n, c, h, w}) << ' ';
-            }
-          }
-          std::cerr << std::endl;
-        }
-      }
-      std::cout << std::endl << std::endl;
-    }
-  }
-
+void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
+                 it_lab_ai::Tensor& output, const std::string& json_path,
+                 bool comments) {
   auto parse_result = parse_json_model(json_path, comments);
 
   auto& layers = parse_result.layers;
-  auto& name_to_layer = parse_result.name_to_layer;
+  auto& name_to_layer_ptr = parse_result.name_to_layer_ptr;
   auto& connections = parse_result.connections;
   auto& concat_connections = parse_result.concat_connections;
   auto& concat_orders = parse_result.concat_orders;
@@ -222,14 +222,12 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   auto& split_distribution = parse_result.split_distribution;
   auto& original_ids = parse_result.original_ids;
 
-  it_lab_ai::Graph graph(static_cast<int>(layers.size()));
-
   auto input_layer_it = std::find_if(
       layers.begin(), layers.end(),
       [](const auto& layer) { return layer->getName() == it_lab_ai::kInput; });
 
   if (input_layer_it != layers.end()) {
-    graph.setInput(*input_layer_it, input);
+    graph.setInput(input_layer_it->get(), input);
   }
 
   std::vector<std::pair<std::string, std::string>> connection_list;
@@ -243,23 +241,24 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   }
 
   try {
-    std::sort(
-        connection_list.begin(), connection_list.end(),
-        [&](const auto& a, const auto& b) {
-          if (!name_to_layer.count(a.first) || !name_to_layer.count(b.first)) {
-            return false;
-          }
-          return name_to_layer[a.first]->getID() <
-                 name_to_layer[b.first]->getID();
-        });
+    std::sort(connection_list.begin(), connection_list.end(),
+              [&](const auto& a, const auto& b) {
+                if (!name_to_layer_ptr.count(a.first) ||
+                    !name_to_layer_ptr.count(b.first)) {
+                  return false;
+                }
+                return name_to_layer_ptr[a.first]->getID() <
+                       name_to_layer_ptr[b.first]->getID();
+              });
   } catch (const std::exception& e) {
     std::cerr << "ERROR during sorting: " << e.what() << std::endl;
   }
 
   for (const auto& [source_name, target_name] : connection_list) {
-    if (name_to_layer.count(source_name) && name_to_layer.count(target_name)) {
+    if (name_to_layer_ptr.count(source_name) &&
+        name_to_layer_ptr.count(target_name)) {
       if (target_name.find("Concat") != std::string::npos ||
-          name_to_layer[target_name]->getName() == it_lab_ai::kConcat) {
+          name_to_layer_ptr[target_name]->getName() == it_lab_ai::kConcat) {
         if (concat_connections.find(target_name) != concat_connections.end()) {
           const auto& expected_inputs = concat_connections[target_name];
           auto it = std::find(expected_inputs.begin(), expected_inputs.end(),
@@ -273,9 +272,8 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
             if (concat_connected_inputs[target_name].size() ==
                 concat_connections[target_name].size()) {
-              auto concat_layer =
-                  std::dynamic_pointer_cast<it_lab_ai::ConcatLayer>(
-                      name_to_layer[target_name]);
+              auto* concat_layer = dynamic_cast<it_lab_ai::ConcatLayer*>(
+                  name_to_layer_ptr[target_name]);
               if (concat_layer) {
                 concat_layer->setInputOrder(concat_orders[target_name]);
               }
@@ -285,9 +283,8 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       }
 
       try {
-        graph.makeConnection(name_to_layer[source_name],
-                             name_to_layer[target_name]);
-
+        graph.makeConnection(name_to_layer_ptr[source_name],
+                             name_to_layer_ptr[target_name]);
       } catch (const std::exception& e) {
         std::cerr << "Failed: " << source_name << " -> " << target_name << " : "
                   << e.what() << std::endl;
@@ -297,7 +294,7 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
 
   for (auto& split_dist : split_distribution) {
     for (auto& connection : split_dist) {
-      for (const auto& [name, layer] : name_to_layer) {
+      for (const auto& [name, layer] : name_to_layer_ptr) {
         if (original_ids[name] == connection.first) {
           connection.first = layer->getID();
           break;
@@ -305,18 +302,24 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
       }
     }
   }
-  graph.setSplitDistribution(split_distribution);
-  auto output_layer = layers.back();
-  graph.setOutput(output_layer, output);
 
-  return graph;
+  graph.setSplitDistribution(split_distribution);
+
+  if (!layers.empty()) {
+    auto* output_layer = layers.back().get();
+    graph.setOutput(output_layer, output);
+  }
+
+  for (auto& layer : layers) {
+    graph.addOwnedLayer(std::move(layer));
+  }
 }
 
 ParseResult parse_json_model(const std::string& json_path, bool comments) {
   ParseResult result;
 
   auto& layers = result.layers;
-  auto& name_to_layer = result.name_to_layer;
+  auto& name_to_layer_ptr = result.name_to_layer_ptr;
   auto& connections = result.connections;
   auto& concat_connections = result.concat_connections;
   auto& concat_connected_inputs = result.concat_connected_inputs;
@@ -345,12 +348,14 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
 
   if (comments) std::cout << "Loaded model data from JSON." << std::endl;
 
-  auto input_layer = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
-                                                             it_lab_ai::kNchw);
-  layers.push_back(input_layer);
-  name_to_layer[input_layer_name] = input_layer;
   int current_id = 0;
+
+  auto input_layer = std::make_unique<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
+                                                             it_lab_ai::kNchw);
   input_layer->setID(current_id++);
+  name_to_layer_ptr[input_layer_name] = input_layer.get();
+  layers.push_back(std::move(input_layer));
+  original_ids[input_layer_name] = 0;
 
   for (const auto& layer_data : model_data) {
     try {
@@ -364,7 +369,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
                   << " (" << layer_type << ")" << std::endl;
       }
 
-      std::shared_ptr<it_lab_ai::Layer> layer;
+      std::unique_ptr<it_lab_ai::Layer> layer;
 
       if (layer_type.find("Conv") != std::string::npos) {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
@@ -418,12 +423,11 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         }
 
         it_lab_ai::Tensor tmp_tensor = tensor;
-
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
 
-        auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
+        auto conv_layer = std::make_unique<it_lab_ai::ConvolutionalLayer>(
             stride, pads, dilations, tmp_tensor, tmp_bias, kDefault, group);
-        layer = conv_layer;
+        layer = std::move(conv_layer);
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
         layer = LayerFactory::createEwLayer("relu");
@@ -446,20 +450,20 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
 
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
         auto fc_layer =
-            std::make_shared<it_lab_ai::FCLayer>(tmp_tensor, tmp_bias);
-        layer = fc_layer;
+            std::make_unique<it_lab_ai::FCLayer>(tmp_tensor, tmp_bias);
+        layer = std::move(fc_layer);
       } else if (layer_type.find("Dropout") != std::string::npos) {
-        auto dropout_layer = std::make_shared<it_lab_ai::DropOutLayer>(0.0);
-        layer = dropout_layer;
+        auto dropout_layer = std::make_unique<it_lab_ai::DropOutLayer>(0.0);
+        layer = std::move(dropout_layer);
         if (comments)
           std::cout
               << "DropOutLayer added to layers with probability 0.4 (turned "
                  "off for inference)."
               << std::endl;
       } else if (layer_type == "GlobalAveragePool") {
-        auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
+        auto pool_layer = std::make_unique<it_lab_ai::PoolingLayer>(
             it_lab_ai::Shape({0, 0}), "average", kDefault);
-        layer = pool_layer;
+        layer = std::move(pool_layer);
         if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
                        "dimensions as kernel)"
@@ -519,7 +523,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
           }
         }
 
-        auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
+        auto pool_layer = std::make_unique<it_lab_ai::PoolingLayer>(
             shape, pooltype, kDefault);
 
         try {
@@ -543,7 +547,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
                       << e.what() << std::endl;
           }
         }
-        layer = pool_layer;
+        layer = std::move(pool_layer);
       } else if (layer_type.find("Flatten") != std::string::npos) {
         int axis = 1;
 
@@ -553,8 +557,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             axis = attributes["axis"].get<int>();
           }
         }
-        auto flatten_layer = std::make_shared<it_lab_ai::FlattenLayer>(axis);
-        layer = flatten_layer;
+        auto flatten_layer = std::make_unique<it_lab_ai::FlattenLayer>(axis);
+        layer = std::move(flatten_layer);
       } else if (layer_type == "Concat") {
         int axis = 0;
         if (layer_data["attributes"].contains("axis")) {
@@ -567,8 +571,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             concat_connections[layer_name].push_back(base_input_name);
           }
         }
-        auto concat_layer = std::make_shared<it_lab_ai::ConcatLayer>(axis);
-        layer = concat_layer;
+        auto concat_layer = std::make_unique<it_lab_ai::ConcatLayer>(axis);
+        layer = std::move(concat_layer);
         concat_connected_inputs[layer_name] = std::unordered_set<std::string>();
       } else if (layer_type == "Split") {
         int axis = 0;
@@ -599,13 +603,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         }
 
         auto split_layer =
-            std::make_shared<it_lab_ai::SplitLayer>(axis, splits);
-        layer = split_layer;
-
-        split_layers[layer_name] = split_layer;
-        split_name_to_index[layer_name] =
-            static_cast<int>(split_distribution.size());
-        split_distribution.emplace_back();
+            std::make_unique<it_lab_ai::SplitLayer>(axis, splits);
+        layer = std::move(split_layer);
       } else if (layer_type == "Add" || layer_type == "Mul" ||
                  layer_type == "Sub" || layer_type == "Div") {
         bool has_scalar_constant = false;
@@ -676,8 +675,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             op = it_lab_ai::BinaryOpLayer::Operation::kAdd;
           }
 
-          auto bin_layer = std::make_shared<it_lab_ai::BinaryOpLayer>(op);
-          layer = bin_layer;
+          auto bin_layer = std::make_unique<it_lab_ai::BinaryOpLayer>(op);
+          layer = std::move(bin_layer);
         }
       } else if (layer_type == "Gemm") {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
@@ -739,8 +738,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         }
 
         auto fc_layer =
-            std::make_shared<it_lab_ai::FCLayer>(tmp_tensor, tmp_bias);
-        layer = fc_layer;
+            std::make_unique<it_lab_ai::FCLayer>(tmp_tensor, tmp_bias);
+        layer = std::move(fc_layer);
       } else if (layer_type == "Transpose" ||
                  layer_type.find("transpose") != std::string::npos) {
         std::vector<int64_t> perm;
@@ -755,8 +754,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         }
 
         auto transpose_layer =
-            std::make_shared<it_lab_ai::TransposeLayer>(perm);
-        layer = transpose_layer;
+            std::make_unique<it_lab_ai::TransposeLayer>(perm);
+        layer = std::move(transpose_layer);
 
         if (comments) {
           std::cout << "TransposeLayer added with perm: [";
@@ -800,8 +799,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         }
 
         auto reshape_layer =
-            std::make_shared<it_lab_ai::ReshapeLayer>(allowzero, shape);
-        layer = reshape_layer;
+            std::make_unique<it_lab_ai::ReshapeLayer>(allowzero, shape);
+        layer = std::move(reshape_layer);
 
       } else if (layer_type == "ReduceMean") {
         std::vector<int64_t> axes;
@@ -819,9 +818,9 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             keepdims = attributes["keepdims"].get<int64_t>();
           }
         }
-        auto reduce_layer = std::make_shared<it_lab_ai::ReduceLayer>(
+        auto reduce_layer = std::make_unique<it_lab_ai::ReduceLayer>(
             it_lab_ai::ReduceLayer::Operation::kMean, keepdims, axes);
-        layer = reduce_layer;
+        layer = std::move(reduce_layer);
       } else if (layer_type == "ReduceSum") {
         int64_t keepdims = 0;
         if (layer_data.contains("attributes")) {
@@ -846,9 +845,9 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             }
           }
         }
-        auto reduce_layer = std::make_shared<it_lab_ai::ReduceLayer>(
+        auto reduce_layer = std::make_unique<it_lab_ai::ReduceLayer>(
             it_lab_ai::ReduceLayer::Operation::kSum, keepdims, axes);
-        layer = reduce_layer;
+        layer = std::move(reduce_layer);
       } else if (layer_type == "Constant") {
         if (layer_data.contains("attributes")) {
           const auto& attributes = layer_data["attributes"];
@@ -870,8 +869,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
 
         continue;
       } else if (layer_type == "MatMul") {
-        auto matmul_layer = std::make_shared<it_lab_ai::MatmulLayer>();
-        layer = matmul_layer;
+        auto matmul_layer = std::make_unique<it_lab_ai::MatmulLayer>();
+        layer = std::move(matmul_layer);
 
       } else if (layer_type == "Softmax") {
         int axis = -1;
@@ -882,8 +881,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             axis = attributes["axis"].get<int>();
           }
         }
-        auto softmax_layer = std::make_shared<it_lab_ai::SoftmaxLayer>(axis);
-        layer = softmax_layer;
+        auto softmax_layer = std::make_unique<it_lab_ai::SoftmaxLayer>(axis);
+        layer = std::move(softmax_layer);
 
       } else if (layer_type == "BatchNormalization") {
         float epsilon = 1e-5F;
@@ -947,18 +946,34 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         it_lab_ai::Tensor var =
             it_lab_ai::make_tensor(var_data, it_lab_ai::Shape({num_channels}));
 
-        auto bn_layer = std::make_shared<it_lab_ai::BatchNormalizationLayer>(
+        auto bn_layer = std::make_unique<it_lab_ai::BatchNormalizationLayer>(
             scale, bias, mean, var, epsilon, momentum, training_mode);
-        layer = bn_layer;
+        layer = std::move(bn_layer);
       } else {
         continue;
       }
+
       if (layer) {
         int original_id = current_id;
         layer->setID(current_id++);
-        layers.push_back(layer);
-        name_to_layer[layer_name] = layer;
+
+        Layer* layer_ptr = layer.get();
+        name_to_layer_ptr[layer_name] = layer_ptr;
         original_ids[layer_name] = original_id;
+
+        layers.push_back(std::move(layer));
+
+        if (layer_type == "Split") {
+          auto* split_ptr = dynamic_cast<it_lab_ai::SplitLayer*>(layer_ptr);
+          if (split_ptr) {
+            split_layers[layer_name] =
+                std::make_unique<it_lab_ai::SplitLayer>(*split_ptr);
+            split_name_to_index[layer_name] =
+                static_cast<int>(split_distribution.size());
+            split_distribution.emplace_back();
+          }
+        }
+
         if (layer_data.contains("inputs")) {
           for (const auto& input_name : layer_data["inputs"]) {
             std::string input_tensor = input_name.get<std::string>();
@@ -972,7 +987,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
               int output_index = std::stoi(matches[2].str());
 
               if (split_layers.find(split_layer_name) != split_layers.end()) {
-                int target_layer_id = layer->getID();
+                int target_layer_id = layer_ptr->getID();
 
                 int split_index = split_name_to_index[split_layer_name];
 
@@ -990,6 +1005,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
                   split_distribution[split_index].emplace_back(target_layer_id,
                                                                output_index);
                 }
+
                 bool connection_in_list = false;
                 for (const auto& existing_target :
                      connections[split_layer_name]) {
