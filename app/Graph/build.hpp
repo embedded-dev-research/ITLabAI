@@ -13,6 +13,7 @@
 
 #include "Weights_Reader/reader_weights.hpp"
 #include "graph/graph.hpp"
+#include "graph/runtime_options.hpp"
 #include "layers/BatchNormalizationLayer.hpp"
 #include "layers/BinaryOpLayer.hpp"
 #include "layers/ConcatLayer.hpp"
@@ -72,16 +73,13 @@ void print_time_stats(it_lab_ai::Graph& graph);
 
 namespace it_lab_ai {
 class LayerFactory {
- private:
-  static bool onednn_;
-
  public:
-  static void configure(bool onednn) { onednn_ = onednn; }
-
   static std::unique_ptr<Layer> createEwLayer(const std::string& function,
+                                              const RuntimeOptions& options,
                                               float alpha = 1.0F,
                                               float beta = 0.0F) {
-    if (onednn_ && EwLayerOneDnn::is_function_supported(function)) {
+    if (options.backend == Backend::OneDnn &&
+        EwLayerOneDnn::is_function_supported(function)) {
       return std::make_unique<EwLayerOneDnn>(function, alpha, beta);
     }
     return std::make_unique<EWLayer>(function, alpha, beta);

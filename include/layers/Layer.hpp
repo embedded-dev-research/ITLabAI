@@ -8,6 +8,7 @@
 #include "layers/Shape.hpp"
 #include "layers/Tensor.hpp"
 #include "oneapi/tbb.h"
+#include "graph/runtime_options.hpp"
 
 namespace it_lab_ai {
 
@@ -52,6 +53,10 @@ class Layer {
   LayerType getName() const { return type_; }
   virtual void run(const std::vector<Tensor>& input,
                    std::vector<Tensor>& output) = 0;
+  virtual void run(std::vector<Tensor>& input, std::vector<Tensor>& output,
+                   const RuntimeOptions& options) {
+    run(input, output);
+  }
 #ifdef ENABLE_STATISTIC_WEIGHTS
   virtual Tensor get_weights() = 0;
 #endif

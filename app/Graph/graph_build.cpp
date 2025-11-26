@@ -9,16 +9,22 @@ using namespace it_lab_ai;
 
 int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
-  bool onednn = false;
+  RuntimeOptions options;
+
   for (int i = 1; i < argc; ++i) {
-    if (std::string(argv[i]) == "--model" && i + 1 < argc) {
-      model_name = argv[++i];
-    } else if (std::string(argv[i]) == "--onednn") {
-      onednn = true;
+    if (std::string(argv[i]) == "--onednn") {
+      options.backend = Backend::OneDnn;
+    } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
+      options.threads = std::stoi(argv[++i]);
+    } else if (std::string(argv[i]) == "--parallel") {
+      options.parallel = true;
     }
   }
 
-  it_lab_ai::LayerFactory::configure(onednn);
+  RuntimeOptions options;
+  options.backend = Backend::OneDnn;
+  options.threads = 4;
+  options.parallel = true;
 
   std::string json_path = model_paths[model_name];
 
@@ -66,7 +72,7 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Starting inference..." << std::endl;
         try {
-          graph.inference();
+          graph.inference(options);
           std::cout << "Inference completed successfully." << std::endl;
         } catch (const std::exception& e) {
           std::cerr << "ERROR during inference: " << e.what() << std::endl;
@@ -106,7 +112,7 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Starting inference..." << std::endl;
         try {
-          graph.inference();
+          graph.inference(options);
           std::cout << "Inference completed successfully." << std::endl;
         } catch (const std::exception& e) {
           std::cerr << "ERROR during inference: " << e.what() << std::endl;
