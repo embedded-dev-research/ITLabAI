@@ -14,17 +14,12 @@ int main(int argc, char* argv[]) {
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--onednn") {
       options.backend = Backend::OneDnn;
-    } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
-      options.threads = std::stoi(argv[++i]);
     } else if (std::string(argv[i]) == "--parallel") {
       options.parallel = true;
+    } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
+      options.threads = std::stoi(argv[++i]);
     }
   }
-
-  RuntimeOptions options;
-  options.backend = Backend::OneDnn;
-  options.threads = 4;
-  options.parallel = true;
 
   std::string json_path = model_paths[model_name];
 
@@ -68,7 +63,7 @@ int main(int argc, char* argv[]) {
         std::vector<float> vec(75, 3);
         it_lab_ai::Tensor output = it_lab_ai::make_tensor(vec, sh1);
         Graph graph;
-        build_graph_linear(graph, input, output, true);
+        build_graph_linear(graph, input, output, options, true);
 
         std::cout << "Starting inference..." << std::endl;
         try {
@@ -108,7 +103,7 @@ int main(int argc, char* argv[]) {
         it_lab_ai::Tensor output({1, output_classes}, it_lab_ai::Type::kFloat);
 
         Graph graph;
-        build_graph(graph, input, output, json_path, false);
+        build_graph(graph, input, output, json_path, options, false);
 
         std::cout << "Starting inference..." << std::endl;
         try {

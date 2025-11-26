@@ -12,7 +12,8 @@ std::unordered_map<std::string, std::string> model_paths = {
     {"yolo", MODEL_PATH_YOLO11NET_ONNX}};
 
 void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
-                        it_lab_ai::Tensor& output, bool comments) {
+                        it_lab_ai::Tensor& output, RuntimeOptions options,
+                        bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -87,7 +88,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       if (comments) std::cout << "ConvLayer added to layers." << std::endl;
     }
     if (layer_type.find("relu") != std::string::npos) {
-      auto ew_layer = LayerFactory::createEwLayer("relu");
+      auto ew_layer = LayerFactory::createEwLayer("relu", options);
       layer_ptrs.push_back(ew_layer.get());
       layers.push_back(std::move(ew_layer));
       layerpostop.push_back(true);
@@ -222,8 +223,8 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
 
 void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                  it_lab_ai::Tensor& output, const std::string& json_path,
-                 bool comments) {
-  auto parse_result = parse_json_model(json_path, comments);
+                 RuntimeOptions options, bool comments) {
+  auto parse_result = parse_json_model(options, json_path, comments);
 
   auto& layers = parse_result.layers;
   auto& name_to_layer_ptr = parse_result.name_to_layer_ptr;
@@ -327,7 +328,8 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   }
 }
 
-ParseResult parse_json_model(const std::string& json_path, bool comments) {
+ParseResult parse_json_model(RuntimeOptions options,
+                             const std::string& json_path, bool comments) {
   ParseResult result;
 
   auto& layers = result.layers;
@@ -442,9 +444,9 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         layer = std::move(conv_layer);
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
-        layer = LayerFactory::createEwLayer("relu");
+        layer = LayerFactory::createEwLayer("relu", options);
       } else if (layer_type.find("Sigmoid") != std::string::npos) {
-        layer = LayerFactory::createEwLayer("sigmoid");
+        layer = LayerFactory::createEwLayer("sigmoid", options);
       } else if (layer_type.find("Dense") != std::string::npos ||
                  layer_type.find("FullyConnected") != std::string::npos) {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
@@ -663,13 +665,16 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
 
           if (layer_type == "Mul") {
             ew_operation = "linear";
-            layer = LayerFactory::createEwLayer(ew_operation, value, 0.0F);
+            layer =
+                LayerFactory::createEwLayer(ew_operation, options, value, 0.0F);
           } else if (layer_type == "Add") {
             ew_operation = "linear";
-            layer = LayerFactory::createEwLayer(ew_operation, 1.0F, value);
+            layer =
+                LayerFactory::createEwLayer(ew_operation, options, 1.0F, value);
           } else if (layer_type == "Sub") {
             ew_operation = "linear";
-            layer = LayerFactory::createEwLayer(ew_operation, 1.0F, -value);
+            layer = LayerFactory::createEwLayer(ew_operation, options, 1.0F,
+                                                -value);
           } else {
             continue;
           }

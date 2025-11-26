@@ -54,7 +54,7 @@ class Layer {
   virtual void run(const std::vector<Tensor>& input,
                    std::vector<Tensor>& output) = 0;
   virtual void run(std::vector<Tensor>& input, std::vector<Tensor>& output,
-                   const RuntimeOptions& options) {
+                   [[maybe_unused]] const RuntimeOptions& options) {
     run(input, output);
   }
 #ifdef ENABLE_STATISTIC_WEIGHTS
