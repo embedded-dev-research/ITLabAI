@@ -1,6 +1,6 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <random>
 #include <string>
 
 #include "gtest/gtest.h"
@@ -62,10 +62,8 @@ TEST(OutputLayer, can_get_topk_with_vector) {
                  labels);
   std::vector<double> input;
   // get random nums
-  std::mt19937 rng(42);
-  std::uniform_real_distribution<double> dist01(0.0, 1.0);
   for (size_t i = 0; i < labels.size(); i++) {
-    input.push_back(dist01(rng));
+    input.push_back(static_cast<double>(std::rand()) / RAND_MAX);
   }
   ASSERT_NO_THROW(auto topk1 = top_k_vec(input, labels, k));
 }
@@ -77,10 +75,9 @@ TEST(OutputLayer, can_get_topk_with_layer_float) {
                  labels);
   std::vector<float> input;
   // get random nums
-  std::mt19937 rng2(42);
-  std::uniform_real_distribution<float> dist01f(0.0F, 1.0F);
   for (size_t i = 0; i < labels.size(); i++) {
-    input.push_back(dist01f(rng2));
+    input.push_back(
+        static_cast<float>(static_cast<double>(std::rand()) / RAND_MAX));
   }
   Tensor input_tensor = make_tensor(input);
   OutputLayer layer(labels);
@@ -94,11 +91,8 @@ TEST(OutputLayer, can_get_topk_with_layer_int) {
                  labels);
   std::vector<int> input;
   // get random nums
-  std::mt19937 rng3(42);
-  std::uniform_int_distribution<int> dist_int(0,
-                                              std::numeric_limits<int>::max());
   for (size_t i = 0; i < labels.size(); i++) {
-    input.push_back(dist_int(rng3));
+    input.push_back(std::rand());
   }
   Tensor input_tensor = make_tensor(input);
   OutputLayer layer(labels);
@@ -112,11 +106,8 @@ TEST(OutputLayer, topk_throws_when_not_1d_input) {
                  labels);
   std::vector<int> input;
   // get random nums
-  std::mt19937 rng4(42);
-  std::uniform_int_distribution<int> dist_int2(0,
-                                               std::numeric_limits<int>::max());
   for (size_t i = 0; i < labels.size(); i++) {
-    input.push_back(dist_int2(rng4));
+    input.push_back(std::rand());
   }
   Tensor input_tensor = make_tensor(input, {5, 200});
   OutputLayer layer(labels);
@@ -130,11 +121,8 @@ TEST(OutputLayer, topk_throws_when_incorrect_input_size) {
                  labels);
   std::vector<int> input;
   // get random nums
-  std::mt19937 rng5(42);
-  std::uniform_int_distribution<int> dist_int3(0,
-                                               std::numeric_limits<int>::max());
   for (size_t i = 0; i < 20; i++) {
-    input.push_back(dist_int3(rng5));
+    input.push_back(std::rand());
   }
   Tensor input_tensor = make_tensor(input);
   OutputLayer layer(labels);
@@ -148,11 +136,8 @@ TEST(OutputLayer, topk_throws_when_too_big_k) {
                  labels);
   std::vector<int> input;
   // get random nums
-  std::mt19937 rng6(42);
-  std::uniform_int_distribution<int> dist_int4(0,
-                                               std::numeric_limits<int>::max());
   for (size_t i = 0; i < labels.size(); i++) {
-    input.push_back(dist_int4(rng6));
+    input.push_back(std::rand());
   }
   Tensor input_tensor = make_tensor(input);
   OutputLayer layer(labels);

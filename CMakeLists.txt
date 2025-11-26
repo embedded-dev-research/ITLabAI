@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 
 project(ITLabAI)
 
-set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
-
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
 
 if(ENABLE_STATISTIC_TENSORS)
@@ -34,7 +32,9 @@ add_subdirectory(3rdparty)
 
 include(cmake/opencv_config.cmake)
 
-find_package(OpenMP REQUIRED)
+if (NOT WIN32)
+    find_package(OpenMP REQUIRED)
+endif()
 
 if (NOT WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")

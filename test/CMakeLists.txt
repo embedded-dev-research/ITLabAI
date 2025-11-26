@@ -1,7 +1,9 @@
 file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 add_executable(run_test ${TEST_SRC_FILES})
-target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
+if (NOT WIN32)
+    target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
+endif()
 target_link_libraries(run_test PUBLIC perf_lib layers_lib layers_oneDNN_lib)
 target_link_libraries(run_test PUBLIC gtest)
 target_link_libraries(run_test PUBLIC ReadLib)
@@ -13,12 +15,18 @@ target_link_libraries(run_test PUBLIC graphT_lib)
 target_include_directories(run_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
 
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Debug")
+endif()
+
 if (WIN32)
     add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BUILD_DIR}/bin/."
             "${CMAKE_BINARY_DIR}/bin/")
+endif()
 
+if (WIN32)
     add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
             $<TARGET_FILE:dnnl>

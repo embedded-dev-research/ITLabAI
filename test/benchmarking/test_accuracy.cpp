@@ -33,13 +33,11 @@ TEST(accuracy, bad_accuracy_test_L) {
   size_t n = 5000;
   double a[5000];
   double b[5000];
-  std::mt19937 rng(42);
-  std::uniform_real_distribution<double> dist(-100.0, 100.0);
   for (size_t i = 0; i < n; i++) {
-    a[i] = dist(rng);
+    a[i] = (static_cast<double>(rand()) / RAND_MAX - 1.0) * 100;  // [-100;100]
   }
   for (size_t i = 0; i < n; i++) {
-    b[i] = dist(rng);
+    b[i] = (static_cast<double>(rand()) / RAND_MAX - 1.0) * 100;  // [-100;100]
   }
   double actual_acc = 0.0;
   for (size_t i = 0; i < n; i++) {
@@ -69,13 +67,11 @@ TEST(accuracy, bad_accuracy_norm_test_L) {
   size_t n = 5000;
   double a[5000];
   double b[5000];
-  std::mt19937 rng2(42);
-  std::uniform_real_distribution<double> dist2(-100.0, 100.0);
   for (size_t i = 0; i < n; i++) {
-    a[i] = dist2(rng2);
+    a[i] = (static_cast<double>(rand()) / RAND_MAX - 1.0) * 100;  // [-100;100]
   }
   for (size_t i = 0; i < n; i++) {
-    b[i] = dist2(rng2);
+    b[i] = (static_cast<double>(rand()) / RAND_MAX - 1.0) * 100;  // [-100;100]
   }
   double actual_acc = 0.0;
   for (size_t i = 0; i < n; i++) {
