@@ -1,6 +1,6 @@
 #pragma once
 
-enum class Backend { kNaive, kOneDnn };
+enum class Backend : uint8_t { kNaive, kOneDnn };
 
 struct RuntimeOptions {
   Backend backend{Backend::kNaive};
