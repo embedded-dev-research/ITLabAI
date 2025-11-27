@@ -161,4 +161,4 @@ Now you can run accuracy check - *build\bin\ACC.exe --model googlenet*
 ## **Documentation of project**
 https://github.com/embedded-dev-research/ITLabAI/blob/Semyon1104/Final_documentation/docs/IT_Lab_2023.pdf
 ## **Structure of our library**
-![Class diagram](./docs/class_diagram.svg)
+![Class diagram](./docs/Диаграмма классовv2.drawio.svg)
