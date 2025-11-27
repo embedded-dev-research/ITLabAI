@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint> 
+#include <cstdint>
 
 enum class Backend : uint8_t { kNaive, kOneDnn };
 
