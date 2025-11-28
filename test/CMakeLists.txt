@@ -14,10 +14,6 @@ target_link_libraries(run_test PUBLIC graphT_lib)
 target_include_directories(run_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
 
-if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug")
-endif()
-
 if (WIN32)
     add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory

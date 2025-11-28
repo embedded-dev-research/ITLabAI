@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(ITLabAI)
 
+set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
 
 if(ENABLE_STATISTIC_TENSORS)
