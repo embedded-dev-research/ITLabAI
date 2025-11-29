@@ -53,7 +53,8 @@ class Layer {
   LayerType getName() const { return type_; }
   virtual void run(const std::vector<Tensor>& input,
                    std::vector<Tensor>& output) = 0;
-  virtual void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
+  virtual void run(const std::vector<Tensor>& input,
+                   std::vector<Tensor>& output,
                    [[maybe_unused]] const RuntimeOptions& options) {
     run(input, output);
   }
