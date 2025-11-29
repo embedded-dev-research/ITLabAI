@@ -46,8 +46,8 @@ int main(int argc, char* argv[]) {
         options.parallel_backend = ParallelBackend::kSycl;
       } else {
         std::cerr << "Unknown parallel backend: " << backend_str
-                  << ". Using default (TBB)." << std::endl;
-        options.parallel_backend = ParallelBackend::kTBB;
+                  << ". Using default (STL)." << std::endl;
+        options.parallel_backend = ParallelBackend::kSTL;
       }
     } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
       options.threads = std::stoi(argv[++i]);
