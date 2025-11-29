@@ -50,9 +50,10 @@ class ConvolutionalLayer : public Layer {
     implType_ = implType;
     useLegacyImpl_ = useLegacyImpl;
   }
-
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
+  void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
+           const RuntimeOptions& options);
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return kernel_; }
 #endif

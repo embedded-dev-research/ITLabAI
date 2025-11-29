@@ -4,6 +4,13 @@ namespace it_lab_ai {
 
 void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                              std::vector<Tensor>& output) {
+  RuntimeOptions default_options;
+  run(input, output, default_options);
+}
+
+void ConvolutionalLayer::run(const std::vector<Tensor>& input,
+                             std::vector<Tensor>& output,
+                             const RuntimeOptions& options) {
   if (input.size() != 1) {
     throw std::runtime_error("ConvolutionalLayer: Input tensors not 1");
   }
@@ -26,6 +33,29 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
               "Unsupported type for depthwise convolution");
       }
       return;
+    }
+  }
+  if (options.parallel) {
+    switch (options.parallel_backend) {
+      case ParallelBackend::kTBB:
+        implType_ = kTBB;
+        break;
+      case ParallelBackend::kSTL:
+        implType_ = kSTL;
+        break;
+      // case ParallelBackend::kOMP:
+      //   implType = kOMP;
+      //   break;
+      // case ParallelBackend::kKokkos:
+      //   implType = kKokkos;
+      //   break;
+      // case ParallelBackend::kSycl:
+      //   implType = kSycl;
+      //   break;
+      case ParallelBackend::kNone:
+      default:
+        implType_ = kDefault;
+        break;
     }
   }
   switch (input[0].get_type()) {
@@ -84,6 +114,11 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                            group_, dilations_);
             break;
           }
+          /*case kTBB: {
+            Conv4DTBB<int>(input[0], kernel_, bias_, output[0], stride_, pads_,
+                        group_, dilations_);
+            break;
+          }*/
           default: {
             Conv4D<int>(input[0], kernel_, bias_, output[0], stride_, pads_,
                         group_, dilations_);
@@ -152,6 +187,10 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                                pads_, group_, dilations_);
               break;
             }
+            /*case kTBB: {
+              Conv4DTBB<float>(input[0], kernel_, bias_, output[0], stride_,
+            pads_, group_, dilations_); break;
+            }*/
             default: {
               Conv4D<float>(input[0], kernel_, bias_, output[0], stride_, pads_,
                             group_, dilations_);

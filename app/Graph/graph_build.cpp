@@ -16,8 +16,39 @@ int main(int argc, char* argv[]) {
       model_name = argv[++i];
     } else if (std::string(argv[i]) == "--onednn") {
       options.backend = Backend::kOneDnn;
-    } else if (std::string(argv[i]) == "--parallel") {
+      if (options.parallel) {
+        std::cout << "Warning: oneDNN backend is not compatible with parallel "
+                     "execution. Disabling parallelism."
+                  << std::endl;
+        options.parallel = false;
+        options.parallel_backend = ParallelBackend::kNone;
+      }
+    } else if (std::string(argv[i]) == "--parallel" && i + 1 < argc) {
+      if (options.backend == Backend::kOneDnn) {
+        std::cout << "Warning: Parallel execution is not compatible with "
+                     "oneDNN backend. Ignoring --parallel option."
+                  << std::endl;
+        i++;
+        continue;
+      }
+
       options.parallel = true;
+      std::string backend_str = argv[++i];
+      if (backend_str == "tbb") {
+        options.parallel_backend = ParallelBackend::kTBB;
+      } else if (backend_str == "stl") {
+        options.parallel_backend = ParallelBackend::kSTL;
+      } else if (backend_str == "omp") {
+        options.parallel_backend = ParallelBackend::kOMP;
+      } else if (backend_str == "kokkos") {
+        options.parallel_backend = ParallelBackend::kKokkos;
+      } else if (backend_str == "sycl") {
+        options.parallel_backend = ParallelBackend::kSycl;
+      } else {
+        std::cerr << "Unknown parallel backend: " << backend_str
+                  << ". Using default (TBB)." << std::endl;
+        options.parallel_backend = ParallelBackend::kTBB;
+      }
     } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
       options.threads = std::stoi(argv[++i]);
     }
