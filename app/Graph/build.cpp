@@ -10,6 +10,20 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
     }
+    std::cout << std::endl;
+    if (input.get_shape().dims() == 4) {
+      for (size_t n = 0; n < input.get_shape()[0]; n++) {
+        for (size_t h = 0; h < input.get_shape()[2]; h++) {
+          for (size_t w = 0; w < input.get_shape()[3]; w++) {
+            for (size_t c = 0; c < input.get_shape()[1]; c++) {
+              std::cout << input.get<float>({n, c, h, w}) << ' ';
+            }
+          }
+          std::cerr << std::endl;
+        }
+      }
+      std::cout << std::endl << std::endl;
+    }
   }
   std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
   std::vector<bool> layerpostop;
