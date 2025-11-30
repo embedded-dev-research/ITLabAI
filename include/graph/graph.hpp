@@ -49,7 +49,10 @@ class Graph {
 #endif
 
  public:
-  Graph() {
+  Graph(int vertices) : BiggestSize_(vertices) {
+    if (BiggestSize_ < 0) {
+      throw std::out_of_range("Vertices cannot be less than zero");
+    }
     arrayV_.push_back(0);
     V_ = 0;
     in_edges_.clear();
@@ -65,15 +68,9 @@ class Graph {
     in_edges_.clear();
   }
 
-  Graph(const Graph&) = delete;
-  Graph& operator=(const Graph&) = delete;
-  Graph(Graph&&) noexcept = default;
-  Graph& operator=(Graph&&) noexcept = default;
-  ~Graph() = default;
-
   void setSplitDistribution(
-      std::vector<std::vector<std::pair<int, int>>> split_dist) {
-    split_distribution_ = std::move(split_dist);
+      const std::vector<std::vector<std::pair<int, int>>>& split_dist) {
+    split_distribution_ = split_dist;
   }
 
   int getVertexValue(size_t layerID) const {
@@ -177,13 +174,6 @@ class Graph {
 
     if (layPrev->getID() == layNext->getID()) {
       throw std::out_of_range("i=j cant add edge");
-    }
-
-    for (int i = arrayV_[layPrev->getID()]; i < arrayV_[layPrev->getID() + 1];
-         ++i) {
-      if (arrayE_[i] == layNext->getID()) {
-        return;
-      }
     }
 
     for (int i = layPrev->getID() + 1; i < V_; ++i) {
@@ -371,23 +361,15 @@ class Graph {
 #endif
     }
 
-    if (outtenres_ && !outten_.empty()) {
-      *outtenres_ = outten_[0];
-    }
+    *outtenres_ = outten_[0];
   }
 
-  void setOutput(Layer* layer, Tensor& vec) {
-    if (!layer) {
-      throw std::invalid_argument("Layer cannot be null");
-    }
+  void setOutput(const std::shared_ptr<Layer>& layer, Tensor& vec) {
     end_ = layer->getID();
     outtenres_ = &vec;
-
-    if (outten_.empty()) {
-      std::vector<int> vec1 = {1, 7, 1, 0};
-      Tensor start = make_tensor(vec1);
-      outten_.push_back(start);
-    }
+    std::vector<int> vec1 = {1, 7, 1, 0};
+    Tensor start = make_tensor(vec1);
+    outten_.push_back(start);
   }
 
 #ifdef ENABLE_STATISTIC_TENSORS

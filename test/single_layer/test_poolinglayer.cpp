@@ -1,5 +1,4 @@
-﻿#include <random>
-#include <vector>
+﻿#include <vector>
 
 #include "gtest/gtest.h"
 #include "layers/PoolingLayer.hpp"
@@ -366,10 +365,9 @@ TEST(poolinglayer, maxpool_onnx_example) {
   EXPECT_EQ(impl.get_output_shape(), expected_output_shape);
 
   std::vector<float> input(input_shape.count());
-  std::mt19937 rng(42);
-  std::uniform_real_distribution<float> dist(0.0F, 10.0F);
   for (size_t i = 0; i < input.size(); i++) {
-    input[i] = dist(rng);
+    input[i] =
+        static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 10.0f;
   }
 
   std::vector<float> output = impl.run(input);
@@ -405,10 +403,9 @@ TEST(poolinglayer, maxpool_onnx_with_pooling_layer) {
   PoolingLayer layer(poolshape, strides, pads, dilations, ceil_mode, "max");
 
   std::vector<float> input(input_shape.count());
-  std::mt19937 rng2(42);
-  std::uniform_real_distribution<float> dist2(0.0F, 10.0F);
   for (size_t i = 0; i < input.size(); i++) {
-    input[i] = dist2(rng2);
+    input[i] =
+        static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 10.0f;
   }
 
   Tensor input_tensor = make_tensor(input, input_shape);

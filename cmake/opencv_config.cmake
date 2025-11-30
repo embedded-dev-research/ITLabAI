@@ -13,7 +13,6 @@ execute_process(
         -DBUILD_PERF_TESTS=OFF 
         -DBUILD_TESTS=OFF 
         -DBUILD_opencv_apps=OFF
-        -DBUILD_JAVA=OFF
     WORKING_DIRECTORY "${OPENCV_BUILD_DIR}"
 )
 
