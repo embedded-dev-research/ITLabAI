@@ -25,12 +25,7 @@ struct BranchState {
 class Graph {
   int BiggestSize_;
   int V_;  // amount of ids
-<<<<<<< HEAD
   std::vector<std::unique_ptr<Layer>> layers_;
-=======
-  std::vector<std::unique_ptr<Layer>> owned_layers_;
-  std::vector<Layer*> layers_;
->>>>>>> parent of 2dd056b (Revert "Merge")
   std::vector<int> arrayV_;  // vertices (id -> vertex number)
   std::vector<int> arrayE_;  // edges (vertex number -> id)
   std::vector<Tensor> inten_;
@@ -81,25 +76,6 @@ class Graph {
     split_distribution_ = std::move(split_dist);
   }
 
-  void addOwnedLayer(std::unique_ptr<Layer> layer) {
-    if (!layer) return;
-
-    for (const auto& existing_layer : owned_layers_) {
-      if (existing_layer.get() == layer.get()) {
-        return;
-      }
-    }
-
-    owned_layers_.push_back(std::move(layer));
-  }
-
-  Layer* addLayer(std::unique_ptr<Layer> layer) {
-    if (!layer) return nullptr;
-    Layer* raw_ptr = layer.get();
-    addOwnedLayer(std::move(layer));
-    return raw_ptr;
-  }
-
   int getVertexValue(size_t layerID) const {
     if (layerID >= arrayV_.size()) {
       throw std::invalid_argument("ArrayV does not contain this ID.");
@@ -121,39 +97,23 @@ class Graph {
     return in_edges_[layerID].size();
   }
 
-  std::vector<int> getInLayers(size_t layerID) const {
-    if (layerID >= in_edges_.size()) {
-      throw std::invalid_argument("Input edges array do not contain this ID.");
-    }
-    return in_edges_[layerID];
-  }
-
   int getLayersCount() const { return V_; }
 
-  std::shared_ptr<Layer> getLayerFromID(size_t layerID) const {
+  const Layer& getLayerFromID(size_t layerID) const {
     if (layerID >= layers_.size()) {
       throw std::invalid_argument("Layers do not contain this ID.");
     }
-    return layers_[layerID];
+    return *layers_[layerID];
   }
 
-<<<<<<< HEAD
-  void setInput(const std::shared_ptr<Layer>& layer, Tensor& vec) {
-	if (!layer) {
-=======
   void setInput(Layer* layer, Tensor& vec) {
     if (!layer) {
->>>>>>> parent of 2dd056b (Revert "Merge")
       throw std::invalid_argument("Layer cannot be null");
     }
 
     bool layer_exists = false;
-    for (const auto* existing_layer : layers_) {
-<<<<<<< HEAD
-	  if (existing_layer == layer) {
-=======
-      if (existing_layer == layer) {
->>>>>>> parent of 2dd056b (Revert "Merge")
+    for (std::unique_ptr<Layer>& existing_layer : layers_) {
+      if (existing_layer.get() == layer) {
         layer_exists = true;
         break;
       }
@@ -161,7 +121,7 @@ class Graph {
 
     if (!layer_exists) {
       layer->setID(V_);
-      layers_.push_back(layer);
+      layers_.push_back(std::unique_ptr<Layer>(layer));
       arrayV_.push_back(static_cast<int>(arrayE_.size()));
 
       if (V_ >= static_cast<int>(in_edges_.size())) {
@@ -175,18 +135,12 @@ class Graph {
     start_ = layer->getID();
   }
 
-<<<<<<< HEAD
-  void addSingleLayer(const std::shared_ptr<Layer>& layer) {
-	if (!layer) return;
-	
-=======
   void addSingleLayer(Layer* layer) {
     if (!layer) return;
 
->>>>>>> parent of 2dd056b (Revert "Merge")
     bool layer_exists = false;
-    for (const auto* existing_layer : layers_) {
-      if (existing_layer == layer) {
+    for (std::unique_ptr<Layer>& existing_layer : layers_) {
+      if (existing_layer.get() == layer) {
         layer_exists = true;
         break;
       }
@@ -194,7 +148,7 @@ class Graph {
 
     if (!layer_exists) {
       layer->setID(V_);
-      layers_.push_back(layer);
+      layers_.push_back(std::unique_ptr<Layer>(layer));
       arrayV_.push_back(static_cast<int>(arrayE_.size()));
 
       if (V_ >= static_cast<int>(in_edges_.size())) {
@@ -205,22 +159,12 @@ class Graph {
     }
   }
 
-<<<<<<< HEAD
-  void makeConnection(const std::shared_ptr<Layer>& layPrev,
-                      const std::shared_ptr<Layer>& layNext) {
-	if (!layPrev || !layNext) {
-      throw std::invalid_argument("Layers cannot be null");
-    }
-	
-	addSingleLayer(layPrev);
-=======
   void makeConnection(Layer* layPrev, Layer* layNext) {
     if (!layPrev || !layNext) {
       throw std::invalid_argument("Layers cannot be null");
     }
 
     addSingleLayer(layPrev);
->>>>>>> parent of 2dd056b (Revert "Merge")
     addSingleLayer(layNext);
 
     if (layPrev->getID() == layNext->getID()) {
@@ -248,7 +192,7 @@ class Graph {
     in_edges_[layNext->getID()].push_back(layPrev->getID());
   }
 
-  void removeConnection(int idPrev, int idNext) {
+   void removeConnection(int idPrev, int idNext) {
     if (idPrev >= V_ || idNext >= V_ || idPrev < 0 || idNext < 0) {
       throw std::out_of_range("Layer ID out of range");
     }
@@ -308,19 +252,13 @@ class Graph {
     layers_.erase(layers_.begin() + id);
     V_--;
   }
-<<<<<<< HEAD
-  bool areLayerNext(const std::shared_ptr<Layer>& layPrev,
-                    const std::shared_ptr<Layer>& layNext) {
-	if (!layPrev || !layNext) return false;
-	
-    if (layPrev->getID() >= V_ || layPrev->getID() < 0) {
-=======
   bool areLayerNext(Layer* layPrev, Layer* layNext) {
     if (!layPrev || !layNext) return false;
-	if (layPrev->getID() >= V_ || layPrev->getID() < 0) {
->>>>>>> parent of 2dd056b (Revert "Merge")
+
+    if (layPrev->getID() >= V_ || layPrev->getID() < 0) {
       throw std::invalid_argument("No such layer in graph");
     }
+
     for (int i = arrayV_[layPrev->getID()]; i < arrayV_[layPrev->getID() + 1];
          i++) {
       if (arrayE_[i] == layNext->getID()) {

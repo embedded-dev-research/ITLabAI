@@ -491,15 +491,6 @@ TEST(bfs, check_struct_layer_added) {
   std::vector<int> kernelvec = {1, 1, 1, 1, 1, 1, 1, 1, 1};
   Shape sh2({3, 3});
   Tensor kernel = make_tensor(kernelvec, sh2);
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-  auto a2 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
-  auto a3 = std::make_shared<ConvolutionalLayer>(1, 0, 1, kernel);
-  auto a4 = std::make_shared<EWLayer>("linear", 2.0F, 3.0F);
-  a2->postops.layers.push_back(a4);
-=======
->>>>>>> parent of 2dd056b (Revert "Merge")
   auto a2 = std::make_unique<ConvolutionalLayer>(1, 0, 1, kernel);
   auto a3 = std::make_unique<ConvolutionalLayer>(1, 0, 1, kernel);
   auto a4 = std::make_unique<EWLayer>("linear", 2.0F, 3.0F);
@@ -510,10 +501,6 @@ TEST(bfs, check_struct_layer_added) {
   Layer* a4_ptr = a4.get();
 
   a2->postops.layers.push_back(a4_ptr);
-<<<<<<< HEAD
-=======
->>>>>>> 752c27330c6d8a8bccefe8f778fcc1e8999e289e
->>>>>>> parent of 2dd056b (Revert "Merge")
   a2->postops.count++;
 
   graph.setInput(a1_ptr, input);

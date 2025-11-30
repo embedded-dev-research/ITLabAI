@@ -157,14 +157,6 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   }
 
   graph.setOutput(layer_ptrs.back(), output);
-<<<<<<< HEAD
-=======
-
-  graph.addOwnedLayer(std::move(a1));
-  for (auto& layer : layers) {
-    graph.addOwnedLayer(std::move(layer));
-  }
->>>>>>> parent of 2dd056b (Revert "Merge")
 }
 
 std::string get_base_layer_name(const std::string& tensor_name) {
@@ -305,25 +297,13 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       }
     }
   }
-<<<<<<< HEAD
-  graph.setSplitDistribution(split_distribution);
-
-=======
 
   graph.setSplitDistribution(split_distribution);
 
->>>>>>> parent of 2dd056b (Revert "Merge")
   if (!layers.empty()) {
     auto* output_layer = layers.back().get();
     graph.setOutput(output_layer, output);
   }
-<<<<<<< HEAD
-=======
-
-  for (auto& layer : layers) {
-    graph.addOwnedLayer(std::move(layer));
-  }
->>>>>>> parent of 2dd056b (Revert "Merge")
 }
 
 ParseResult parse_json_model(const std::string& json_path, bool comments) {
