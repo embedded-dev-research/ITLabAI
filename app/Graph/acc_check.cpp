@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
     Tensor t = make_tensor<float>(res, sh);
     input = t;
-    auto graph = build_graph_linear(input, output, true);
+    auto graph = build_graph_linear(input, output, false);
     graph.inference();
     print_time_stats(graph);
     std::vector<std::vector<float>> tmp_output =
