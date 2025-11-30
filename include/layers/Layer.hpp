@@ -37,7 +37,7 @@ enum ImplType : uint8_t { kDefault, kTBB, kSTL };
 class Layer;
 
 struct PostOperations {
-  std::vector<Layer*> layers;
+  std::vector<std::shared_ptr<Layer>> layers;
   unsigned int count = 0;
 };
 
