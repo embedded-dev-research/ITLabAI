@@ -1,4 +1,8 @@
 #pragma once
+#include <oneapi/tbb/blocked_range.h>
+#include <oneapi/tbb/info.h>
+#include <oneapi/tbb/parallel_for.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -6,10 +10,6 @@
 #include <limits>
 #include <thread>
 #include <vector>
-
-#include <oneapi/tbb/blocked_range.h>
-#include <oneapi/tbb/info.h>
-#include <oneapi/tbb/parallel_for.h>
 
 namespace it_lab_ai {
 namespace parallel {
@@ -124,3 +124,4 @@ inline void impl_omp(std::size_t count,
 }  // namespace parallel
 
 }  // namespace it_lab_ai
+
