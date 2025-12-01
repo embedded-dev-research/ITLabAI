@@ -22,7 +22,8 @@ struct BranchState {
   std::vector<std::pair<int, int>> distribution;
 };
 
-std::unique_ptr<Layer> layer_based_unique_copy(std::unique_ptr<Layer>& layer);
+std::unique_ptr<Layer> layer_based_unique_copy(
+    const std::unique_ptr<Layer>& layer);
 
 class Graph {
   int BiggestSize_;

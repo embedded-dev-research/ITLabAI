@@ -58,8 +58,8 @@ TEST(conv_test, is_conv_stl_ok) {
   Tensor input = make_tensor(a1, test_shape);
   Tensor kernel = make_tensor(a2, Shape({5, 5, 3, 16}));
   Tensor output;
-  ConvolutionalLayer p1(1, 1, 2, kernel, Tensor(), kDefault);
-  ConvolutionalLayer p2(1, 1, 2, kernel, Tensor(), kSTL);
+  ConvolutionalLayer p1(1, 1, 2, kernel, *std::make_shared<Tensor>(), kDefault);
+  ConvolutionalLayer p2(1, 1, 2, kernel, *std::make_shared<Tensor>(), kSTL);
   double count1 =
       elapsed_time<double, std::milli>(test_func, p1, input, output);
   double count2 =

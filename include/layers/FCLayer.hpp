@@ -82,25 +82,25 @@ class FCLayerImpl : public LayerImpl<ValueType> {
     if (i >= this->outputShape_[0] || j >= this->inputShape_[0]) {
       throw std::out_of_range("Invalid weight index");
     }
-    weights_[i * this->inputShape_[0] + j] = value;
+    (*weights_)[i * this->inputShape_[0] + j] = value;
   }
   ValueType get_weight(size_t i, size_t j) const {
     if (i >= this->outputShape_[0] || j >= this->inputShape_[0]) {
       throw std::out_of_range("Invalid weight index");
     }
-    return weights_[i * this->inputShape_[0] + j];
+    return (*weights_)[i * this->inputShape_[0] + j];
   }
   void set_bias(size_t i, const ValueType& value) {
     if (i >= this->outputShape_[0]) {
       throw std::out_of_range("Invalid bias index");
     }
-    bias_[i] = value;
+    (*bias_)[i] = value;
   }
   ValueType get_bias(size_t i) const {
     if (i >= this->outputShape_[0]) {
       throw std::out_of_range("Invalid bias index");
     }
-    return bias_[i];
+    return (*bias_)[i];
   }
   std::vector<ValueType> run(
       const std::vector<ValueType>& input) const override;
@@ -128,7 +128,7 @@ FCLayerImpl<ValueType>::FCLayerImpl(std::vector<ValueType>& input_weights,
     throw std::invalid_argument("Bias size doesn't match output size");
   }
 
-  *weights_.resize(input_weights_shape.count(), ValueType(0));
+  (*weights_).resize(input_weights_shape.count(), ValueType(0));
 }
 
 template <typename ValueType>
@@ -137,12 +137,12 @@ std::vector<ValueType> FCLayerImpl<ValueType>::run(
   Shape cur_w_shape({this->inputShape_[0], this->outputShape_[0]});
 
   std::vector<ValueType> output_values =
-      mat_vec_mul(*weights_, *cur_w_shape, input);
+      mat_vec_mul(*weights_, cur_w_shape, input);
 
   size_t batch_size = output_values.size() / this->outputShape_[0];
   for (size_t batch = 0; batch < batch_size; ++batch) {
-    for (size_t i = 0; i < bias_.size(); ++i) {
-      output_values[batch * this->outputShape_[0] + i] += bias_[i];
+    for (size_t i = 0; i < bias_->size(); ++i) {
+      output_values[batch * this->outputShape_[0] + i] += (*bias_)[i];
     }
   }
 
