@@ -81,7 +81,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       it_lab_ai::Tensor tmp_values = tensor;
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
       auto conv_layer = std::make_unique<it_lab_ai::ConvolutionalLayer>(
-          1, pads, 1, tmp_values, tmp_bias, kDefault, 1, true);
+          1, pads, 1, tmp_values, tmp_bias, 1, true);
       layer_ptrs.push_back(conv_layer.get());
       layers.push_back(std::move(conv_layer));
       layerpostop.push_back(false);
@@ -116,7 +116,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
                   << std::endl;
       auto pool_layer =
-          std::make_unique<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
+          std::make_unique<it_lab_ai::PoolingLayer>(shape, pooltype);
       layer_ptrs.push_back(pool_layer.get());
       layers.push_back(std::move(pool_layer));
       layerpostop.push_back(false);
@@ -440,7 +440,7 @@ ParseResult parse_json_model(RuntimeOptions options,
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
 
         auto conv_layer = std::make_unique<it_lab_ai::ConvolutionalLayer>(
-            stride, pads, dilations, tmp_tensor, tmp_bias, kDefault, group);
+            stride, pads, dilations, tmp_tensor, tmp_bias, group);
         layer = std::move(conv_layer);
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
@@ -476,7 +476,7 @@ ParseResult parse_json_model(RuntimeOptions options,
               << std::endl;
       } else if (layer_type == "GlobalAveragePool") {
         auto pool_layer = std::make_unique<it_lab_ai::PoolingLayer>(
-            it_lab_ai::Shape({0, 0}), "average", kDefault);
+            it_lab_ai::Shape({0, 0}), "average");
         layer = std::move(pool_layer);
         if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
@@ -537,8 +537,8 @@ ParseResult parse_json_model(RuntimeOptions options,
           }
         }
 
-        auto pool_layer = std::make_unique<it_lab_ai::PoolingLayer>(
-            shape, pooltype, kDefault);
+        auto pool_layer =
+            std::make_unique<it_lab_ai::PoolingLayer>(shape, pooltype);
 
         try {
           if (strides[0] != 2 || strides[1] != 2) {

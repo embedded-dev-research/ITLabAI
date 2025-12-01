@@ -3,11 +3,40 @@
 namespace it_lab_ai {
 
 void PoolingLayer::run(const std::vector<Tensor>& input,
-                       std::vector<Tensor>& output) {
+                             std::vector<Tensor>& output) {
+  RuntimeOptions default_options;
+  run(input, output, default_options);
+}
+
+void PoolingLayer::run(const std::vector<Tensor>& input,
+                       std::vector<Tensor>& output,
+                       const RuntimeOptions& options) {
   if (input.size() != 1) {
     throw std::runtime_error("PoolingLayer: Input tensors not 1");
   }
-
+  if (options.parallel) {
+    switch (options.parallel_backend) {
+      case ParallelBackend::kTBB:
+        implType_ = kTBB;
+        break;
+      case ParallelBackend::kSTL:
+        implType_ = kSTL;
+        break;
+      // case ParallelBackend::kOMP:
+      //   implType = kOMP;
+      //   break;
+      // case ParallelBackend::kKokkos:
+      //   implType = kKokkos;
+      //   break;
+      // case ParallelBackend::kSycl:
+      //   implType = kSycl;
+      //   break;
+      case ParallelBackend::kNone:
+      default:
+        implType_ = kDefault;
+        break;
+    }
+  }
   switch (input[0].get_type()) {
     case Type::kInt: {
       switch (implType_) {
@@ -19,6 +48,14 @@ void PoolingLayer::run(const std::vector<Tensor>& input,
                                   used_impl.get_output_shape());
           break;
         }
+        /*case kSTL: {
+          PoolingLayerImplSTL<int> used_impl(
+              input[0].get_shape(), poolingShape_, strides_, pads_, dilations_,
+              ceil_mode_, poolingType_);
+          output[0] = make_tensor(used_impl.run(*input[0].as<int>()),
+                                  used_impl.get_output_shape());
+          break;
+        }*/
         default: {
           PoolingLayerImpl<int> used_impl(input[0].get_shape(), poolingShape_,
                                           strides_, pads_, dilations_,
@@ -40,6 +77,14 @@ void PoolingLayer::run(const std::vector<Tensor>& input,
                                   used_impl.get_output_shape());
           break;
         }
+        /*case kSTL: {
+          PoolingLayerImplSTL<float> used_impl(
+              input[0].get_shape(), poolingShape_, strides_, pads_, dilations_,
+              ceil_mode_, poolingType_);
+          output[0] = make_tensor(used_impl.run(*input[0].as<float>()),
+                                  used_impl.get_output_shape());
+          break;
+        }*/
         default: {
           PoolingLayerImpl<float> used_impl(input[0].get_shape(), poolingShape_,
                                             strides_, pads_, dilations_,

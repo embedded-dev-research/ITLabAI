@@ -445,7 +445,7 @@ TEST(ConvolutionalLayerTest, DepthwiseIntegration) {
   std::vector<float> output_vec(32, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 1, 1, kernel, Tensor(), kDefault, 2);
+  ConvolutionalLayer layer(1, 1, 1, kernel, Tensor(), 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -569,7 +569,7 @@ TEST(ConvolutionalLayerTest, DepthwiseViaConvolutionalLayer) {
   std::vector<float> output_vec(8, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kDefault, 2);
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
   layer.run(in, out);
@@ -583,6 +583,11 @@ TEST(ConvolutionalLayerTest, DepthwiseViaConvolutionalLayer) {
 }
 
 TEST(ConvolutionalLayerTest, Conv4DSTLViaConvolutionalLayer) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.parallel_backend = ParallelBackend::kSTL;
+
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
   Tensor input = make_tensor(image, input_shape);
@@ -595,10 +600,10 @@ TEST(ConvolutionalLayerTest, Conv4DSTLViaConvolutionalLayer) {
   std::vector<float> output_vec(8, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kSTL);
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor());
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
-  layer.run(in, out);
+  layer.run(in, out, options);
 
   std::vector<float> result = *out[0].as<float>();
 
@@ -684,7 +689,7 @@ TEST(ConvolutionalLayerTest, Conv4DLegacyViaConvolutionalLayer) {
   std::vector<float> output_vec(8, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kDefault, 1, true);
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), 1, true);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -747,7 +752,7 @@ TEST(ConvolutionalLayerTest, DepthwiseConv4DIntPathCoverage) {
   std::vector<int> output_vec(6, 0);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, bias, kDefault, 2);
+  ConvolutionalLayer layer(1, 0, 1, kernel, bias, 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -776,7 +781,7 @@ TEST(ConvolutionalLayerTest, DepthwiseConv4DFloatPathCoverage) {
   std::vector<float> output_vec(2, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, bias, kDefault, 2);
+  ConvolutionalLayer layer(1, 0, 1, kernel, bias, 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -801,7 +806,7 @@ TEST(ConvolutionalLayerTest, DepthwiseConv4DNoBiasIntPathCoverage) {
   std::vector<int> output_vec(2, 0);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kDefault, 2);
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -827,7 +832,7 @@ TEST(ConvolutionalLayerTest, DepthwiseConv4DNoBiasFloatPathCoverage) {
   std::vector<float> output_vec(2, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kDefault, 2);
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
