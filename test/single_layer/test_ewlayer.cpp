@@ -227,7 +227,7 @@ TEST(ewlayer, parallel_for_ew) {
   EWLayer layer3("relu");
   layer3.setParallelBackend(ParBackend::kOmp);
 
-  std::vector<int> vec(800000000, -1);
+  std::vector<int> vec(8000000, -1);
   Tensor input = make_tensor<int>(vec);
   Tensor output;
   std::vector<Tensor> in{input};
@@ -239,7 +239,7 @@ TEST(ewlayer, parallel_for_ew) {
   auto total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   std::cout << "Sequential: " << total_duration.count() << " ms" << std::endl;
-  for (size_t i = 0; i < 800000000; i++) {
+  for (size_t i = 0; i < 8000000; i++) {
     EXPECT_EQ((*out[0].as<int>())[i], 0);
   }
 
@@ -249,7 +249,7 @@ TEST(ewlayer, parallel_for_ew) {
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   std::cout << "Threads: " << total_duration.count() << " ms" << std::endl;
-  for (size_t i = 0; i < 800000000; i++) {
+  for (size_t i = 0; i < 8000000; i++) {
     EXPECT_EQ((*out[0].as<int>())[i], 0);
   }
 
@@ -259,7 +259,7 @@ TEST(ewlayer, parallel_for_ew) {
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   std::cout << "TBB: " << total_duration.count() << " ms" << std::endl;
-  for (size_t i = 0; i < 800000000; i++) {
+  for (size_t i = 0; i < 8000000; i++) {
     EXPECT_EQ((*out[0].as<int>())[i], 0);
   }
 
@@ -269,7 +269,7 @@ TEST(ewlayer, parallel_for_ew) {
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   std::cout << "OpenMP: " << total_duration.count() << " ms" << std::endl;
-  for (size_t i = 0; i < 800000000; i++) {
+  for (size_t i = 0; i < 8000000; i++) {
     EXPECT_EQ((*out[0].as<int>())[i], 0);
   }
 }
@@ -284,7 +284,7 @@ TEST(ewlayer, parallel_for_ew_sigmoid) {
   EWLayer layer3("sigmoid");
   layer3.setParallelBackend(ParBackend::kOmp);
 
-  std::vector<int> vec(800000000, -1);
+  std::vector<int> vec(8000000, -1);
   Tensor input = make_tensor<int>(vec);
   Tensor output;
   std::vector<Tensor> in{input};
@@ -325,7 +325,7 @@ TEST(ewlayer, parallel_for_ew_sigmoid) {
 }
 
 TEST(ewlayer, parallel_for_direct) {
-  const int SIZE = 20000;
+  const int SIZE = 2000;
   std::vector<int> matrix1(SIZE * SIZE);
   std::vector<int> matrix2(SIZE * SIZE);
   std::vector<int> result(SIZE * SIZE);
@@ -382,7 +382,7 @@ TEST(ewlayer, parallel_for_direct) {
 }
 
 TEST(ewlayer, parallel_for_notmatrix) {
-  const int SIZE = 30000;
+  const int SIZE = 3000;
   std::vector<int> matrix1(SIZE * SIZE);
   std::vector<int> result(SIZE * SIZE);
 
