@@ -7,10 +7,6 @@
 #include <thread>
 #include <vector>
 
-#ifdef HAS_OPENMP
-// #include <omp.h>
-#endif
-
 #include <oneapi/tbb/blocked_range.h>
 #include <oneapi/tbb/info.h>
 #include <oneapi/tbb/parallel_for.h>
@@ -111,8 +107,7 @@ inline void impl_omp(std::size_t count,
     impl_seq(count, func);
     return;
   }
-
-  // #pragma omp parallel for schedule(static) num_threads(num_threads)
+#pragma omp parallel for schedule(static) num_threads(num_threads)
   for (int i = 0; i < int_count; ++i) {
     func(static_cast<std::size_t>(i));
   }
@@ -127,4 +122,5 @@ inline void impl_omp(std::size_t count,
 #endif
 
 }  // namespace parallel
+
 }  // namespace it_lab_ai
