@@ -122,6 +122,4 @@ inline void impl_omp(std::size_t count,
 #endif
 
 }  // namespace parallel
-
 }  // namespace it_lab_ai
-
