@@ -3,7 +3,7 @@
 namespace it_lab_ai {
 
 void PoolingLayer::run(const std::vector<Tensor>& input,
-                             std::vector<Tensor>& output) {
+                       std::vector<Tensor>& output) {
   RuntimeOptions default_options;
   run(input, output, default_options);
 }
