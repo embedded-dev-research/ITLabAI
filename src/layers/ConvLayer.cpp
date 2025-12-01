@@ -11,14 +11,14 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
     throw std::out_of_range("input must be 4-dimensional");
   }
   if (group_ > 1) {
-    if (group_ == input[0].get_shape()[1] && group_ == kernel_.get_shape()[0]) {
+    if (group_ == input[0].get_shape()[1] && group_ == kernel_->get_shape()[0]) {
       switch (input[0].get_type()) {
         case Type::kFloat:
-          DepthwiseConv4D<float>(input[0], kernel_, bias_, output[0], stride_,
+          DepthwiseConv4D<float>(input[0], *kernel_, *bias_, output[0], stride_,
                                  pads_, dilations_);
           break;
         case Type::kInt:
-          DepthwiseConv4D<int>(input[0], kernel_, bias_, output[0], stride_,
+          DepthwiseConv4D<int>(input[0], *kernel_, *bias_, output[0], stride_,
                                pads_, dilations_);
           break;
         default:
@@ -30,7 +30,7 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
   }
   switch (input[0].get_type()) {
     case Type::kInt: {
-      if (kernel_.get_shape().dims() == 2) {
+      if (kernel_->get_shape().dims() == 2) {
         if (dilations_ > 0) {
           dilations_--;
         }
@@ -44,15 +44,15 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                 input[0].get_shape()[input[0].get_shape().dims() - 3]),
             input[0].get_shape()[input[0].get_shape().dims() - 1] *
                 input[0].get_shape()[input[0].get_shape().dims() - 2],
-            bias_.empty() ? std::vector<int>() : *bias_.as<int>());
+            bias_->empty() ? std::vector<int>() : *bias_->as<int>());
         auto sizeforshape = static_cast<size_t>(
             ((static_cast<int>(
                   input[0].get_shape()[input[0].get_shape().dims() - 1]) -
               1 -
               static_cast<int>(
-                  (1 + kernel_.get_shape()[kernel_.get_shape().dims() - 1]) *
+                  (1 + kernel_->get_shape()[kernel_->get_shape().dims() - 1]) *
                       dilations_ +
-                  kernel_.get_shape()[kernel_.get_shape().dims() - 1] - 1)) /
+                  kernel_->get_shape()[kernel_->get_shape().dims() - 1] - 1)) /
              static_cast<int>(stride_)) +
             1);
 
@@ -66,26 +66,26 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                 static_cast<int>(
                     input[0].get_shape()[input[0].get_shape().dims() - 2]) +
                     2 * static_cast<int>(pads_),
-                *kernel_.as<int>(),
-                kernel_.get_shape()[kernel_.get_shape().dims() - 1],
-                (1 + kernel_.get_shape()[kernel_.get_shape().dims() - 1]) *
+                *kernel_->as<int>(),
+                kernel_->get_shape()[kernel_->get_shape().dims() - 1],
+                (1 + kernel_->get_shape()[kernel_->get_shape().dims() - 1]) *
                         dilations_ +
-                    kernel_.get_shape()[kernel_.get_shape().dims() - 1],
+                    kernel_->get_shape()[kernel_->get_shape().dims() - 1],
                 static_cast<int>(
-                    ((1 + kernel_.get_shape()[kernel_.get_shape().dims() - 1]) *
+                    ((1 + kernel_->get_shape()[kernel_->get_shape().dims() - 1]) *
                          dilations_ +
-                     kernel_.get_shape()[kernel_.get_shape().dims() - 1] - 1) /
+                     kernel_->get_shape()[kernel_->get_shape().dims() - 1] - 1) /
                     2)),
             sh);
       } else {
         switch (implType_) {
           case kSTL: {
-            Conv4DSTL<int>(input[0], kernel_, bias_, output[0], stride_, pads_,
-                           group_, dilations_);
+            Conv4DSTL<int>(input[0], *kernel_, *bias_, output[0], stride_,
+                           pads_, group_, dilations_);
             break;
           }
           default: {
-            Conv4D<int>(input[0], kernel_, bias_, output[0], stride_, pads_,
+            Conv4D<int>(input[0], *kernel_, *bias_, output[0], stride_, pads_,
                         group_, dilations_);
             break;
           }
@@ -94,7 +94,7 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
       break;
     }
     case Type::kFloat: {
-      if (kernel_.get_shape().dims() == 2) {
+      if (kernel_->get_shape().dims() == 2) {
         if (dilations_ > 0) {
           dilations_--;
         }
@@ -108,15 +108,15 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                 input[0].get_shape()[input[0].get_shape().dims() - 3]),
             input[0].get_shape()[input[0].get_shape().dims() - 1] *
                 input[0].get_shape()[input[0].get_shape().dims() - 2],
-            bias_.empty() ? std::vector<float>() : *bias_.as<float>());
+            bias_->empty() ? std::vector<float>() : *bias_->as<float>());
         auto sizeforshape = static_cast<size_t>(
             ((static_cast<int>(
                   input[0].get_shape()[input[0].get_shape().dims() - 1]) -
               1 -
               static_cast<int>(
-                  (1 + kernel_.get_shape()[kernel_.get_shape().dims() - 1]) *
+                  (1 + kernel_->get_shape()[kernel_->get_shape().dims() - 1]) *
                       dilations_ +
-                  kernel_.get_shape()[kernel_.get_shape().dims() - 1] - 1)) /
+                  kernel_->get_shape()[kernel_->get_shape().dims() - 1] - 1)) /
              static_cast<int>(stride_)) +
             1);
 
@@ -130,31 +130,31 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                 static_cast<int>(
                     input[0].get_shape()[input[0].get_shape().dims() - 2]) +
                     2 * static_cast<int>(pads_),
-                *kernel_.as<float>(),
-                kernel_.get_shape()[kernel_.get_shape().dims() - 1],
-                (1 + kernel_.get_shape()[kernel_.get_shape().dims() - 1]) *
+                *kernel_->as<float>(),
+                kernel_->get_shape()[kernel_->get_shape().dims() - 1],
+                (1 + kernel_->get_shape()[kernel_->get_shape().dims() - 1]) *
                         dilations_ +
-                    kernel_.get_shape()[kernel_.get_shape().dims() - 1],
+                    kernel_->get_shape()[kernel_->get_shape().dims() - 1],
                 static_cast<int>(
-                    ((1 + kernel_.get_shape()[kernel_.get_shape().dims() - 1]) *
+                    ((1 + kernel_->get_shape()[kernel_->get_shape().dims() - 1]) *
                          dilations_ +
-                     kernel_.get_shape()[kernel_.get_shape().dims() - 1] - 1) /
+                     kernel_->get_shape()[kernel_->get_shape().dims() - 1] - 1) /
                     2)),
             sh);
       } else {
         if (useLegacyImpl_) {
-          Conv4D_Legacy<float>(input[0], kernel_, bias_, output[0], stride_,
+          Conv4D_Legacy<float>(input[0], *kernel_, *bias_, output[0], stride_,
                                pads_, dilations_);
         } else {
           switch (implType_) {
             case kSTL: {
-              Conv4DSTL<float>(input[0], kernel_, bias_, output[0], stride_,
+              Conv4DSTL<float>(input[0], *kernel_, *bias_, output[0], stride_,
                                pads_, group_, dilations_);
               break;
             }
             default: {
-              Conv4D<float>(input[0], kernel_, bias_, output[0], stride_, pads_,
-                            group_, dilations_);
+              Conv4D<float>(input[0], *kernel_, *bias_, output[0], stride_,
+                            pads_, group_, dilations_);
               break;
             }
           }

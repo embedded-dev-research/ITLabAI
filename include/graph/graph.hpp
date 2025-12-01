@@ -22,6 +22,8 @@ struct BranchState {
   std::vector<std::pair<int, int>> distribution;
 };
 
+std::unique_ptr<Layer> layer_based_unique_copy(std::unique_ptr<Layer>& layer);
+
 class Graph {
   int BiggestSize_;
   int V_;  // amount of ids
@@ -65,11 +67,13 @@ class Graph {
     in_edges_.clear();
   }
 
-  Graph(const Graph&) = delete;
+  Graph(const Graph&) = default;
   Graph& operator=(const Graph&) = delete;
   Graph(Graph&&) noexcept = default;
   Graph& operator=(Graph&&) noexcept = default;
   ~Graph() = default;
+
+  Graph clone(Tensor& out) const;
 
   void setSplitDistribution(
       std::vector<std::vector<std::pair<int, int>>> split_dist) {
@@ -97,13 +101,20 @@ class Graph {
     return in_edges_[layerID].size();
   }
 
+  std::vector<int> getInLayers(size_t layerID) const {
+    if (layerID >= in_edges_.size()) {
+      throw std::invalid_argument("Input edges array do not contain this ID.");
+    }
+    return in_edges_[layerID];
+  }
+
   int getLayersCount() const { return V_; }
 
-  const Layer& getLayerFromID(size_t layerID) const {
+  Layer* getLayerFromID(size_t layerID) const {
     if (layerID >= layers_.size()) {
       throw std::invalid_argument("Layers do not contain this ID.");
     }
-    return *layers_[layerID];
+    return layers_[layerID].get();
   }
 
   void setInput(Layer* layer, Tensor& vec) {

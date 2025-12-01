@@ -11,13 +11,13 @@ namespace it_lab_ai {
 
 class FCLayer : public Layer {
  private:
-  Tensor weights_;
-  Tensor bias_;
+  std::shared_ptr<Tensor> weights_;
+  std::shared_ptr<Tensor> bias_;
 
  public:
-  FCLayer() : Layer(kFullyConnected) {}
-  FCLayer(Tensor weights, const Tensor& bias)
-      : Layer(kFullyConnected), weights_(std::move(weights)), bias_(bias) {}
+  FCLayer() : Layer(kFullyConnected), weights_(nullptr), bias_(nullptr) {}
+  FCLayer(Tensor& weights, Tensor& bias)
+      : Layer(kFullyConnected), weights_(&weights), bias_(&bias) {}
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
@@ -73,9 +73,9 @@ template <typename ValueType>
 class FCLayerImpl : public LayerImpl<ValueType> {
  public:
   FCLayerImpl() = delete;
-  FCLayerImpl(const std::vector<ValueType>& input_weights,
+  FCLayerImpl(std::vector<ValueType>& input_weights,
               const Shape& input_weights_shape,
-              const std::vector<ValueType>& input_bias);
+              std::vector<ValueType>& input_bias);
   FCLayerImpl(const FCLayerImpl& c) = default;
   FCLayerImpl& operator=(const FCLayerImpl& sec) = default;
   void set_weight(size_t i, size_t j, const ValueType& value) {
@@ -106,17 +106,17 @@ class FCLayerImpl : public LayerImpl<ValueType> {
       const std::vector<ValueType>& input) const override;
 
  private:
-  std::vector<ValueType> weights_;
-  std::vector<ValueType> bias_;
+  std::vector<ValueType>* weights_;
+  std::vector<ValueType>* bias_;
 };
 
 // weights * inputValues + bias = outputValues
 
 template <typename ValueType>
-FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
+FCLayerImpl<ValueType>::FCLayerImpl(std::vector<ValueType>& input_weights,
                                     const Shape& input_weights_shape,
-                                    const std::vector<ValueType>& input_bias)
-    : LayerImpl<ValueType>(1, 1), weights_(input_weights), bias_(input_bias) {
+                                    std::vector<ValueType>& input_bias)
+    : LayerImpl<ValueType>(1, 1), weights_(&input_weights), bias_(&input_bias) {
   if (input_weights.empty()) {
     throw std::invalid_argument("Empty weights for FCLayer");
   }
@@ -128,7 +128,7 @@ FCLayerImpl<ValueType>::FCLayerImpl(const std::vector<ValueType>& input_weights,
     throw std::invalid_argument("Bias size doesn't match output size");
   }
 
-  weights_.resize(input_weights_shape.count(), ValueType(0));
+  *weights_.resize(input_weights_shape.count(), ValueType(0));
 }
 
 template <typename ValueType>
@@ -137,7 +137,7 @@ std::vector<ValueType> FCLayerImpl<ValueType>::run(
   Shape cur_w_shape({this->inputShape_[0], this->outputShape_[0]});
 
   std::vector<ValueType> output_values =
-      mat_vec_mul(weights_, cur_w_shape, input);
+      mat_vec_mul(*weights_, *cur_w_shape, input);
 
   size_t batch_size = output_values.size() / this->outputShape_[0];
   for (size_t batch = 0; batch < batch_size; ++batch) {

@@ -65,10 +65,13 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
         std::cout << std::endl;
       }
 
-      it_lab_ai::Tensor tmp_values = tensor;
-      it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
+      std::shared_ptr<it_lab_ai::Tensor> tmp_values =
+          std::make_shared<it_lab_ai::Tensor>(tensor);
+      std::shared_ptr<it_lab_ai::Tensor> tmp_bias =
+          std::make_shared<it_lab_ai::Tensor>(
+              it_lab_ai::make_tensor(tensor.get_bias()));
       auto conv_layer = std::make_unique<it_lab_ai::ConvolutionalLayer>(
-          1, pads, 1, tmp_values, tmp_bias, kDefault, 1, true);
+          1, pads, 1, *tmp_values, *tmp_bias, kDefault, 1, true);
       layer_ptrs.push_back(conv_layer.get());
       layers.push_back(std::move(conv_layer));
       layerpostop.push_back(false);
@@ -83,8 +86,13 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
         std::cout << "Element wise (relu) added to layers" << std::endl;
     }
     if (layer_type.find("Dense") != std::string::npos) {
-      it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
-      auto fc_layer = std::make_unique<it_lab_ai::FCLayer>(tensor, tmp_bias);
+      std::shared_ptr<it_lab_ai::Tensor> tmp_tensor =
+          std::make_shared<it_lab_ai::Tensor>(tensor);
+      std::shared_ptr<it_lab_ai::Tensor> tmp_bias =
+          std::make_shared<it_lab_ai::Tensor>(
+              it_lab_ai::make_tensor(tensor.get_bias()));
+      auto fc_layer =
+          std::make_unique<it_lab_ai::FCLayer>(*tmp_tensor, *tmp_bias);
       layer_ptrs.push_back(fc_layer.get());
       layers.push_back(std::move(fc_layer));
       layerpostop.push_back(false);
@@ -413,11 +421,14 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
           }
         }
 
-        it_lab_ai::Tensor tmp_tensor = tensor;
-        it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
+        std::shared_ptr<it_lab_ai::Tensor> tmp_tensor =
+            std::make_shared<it_lab_ai::Tensor>(tensor);
+        std::shared_ptr<it_lab_ai::Tensor> tmp_bias =
+            std::make_shared<it_lab_ai::Tensor>(
+                it_lab_ai::make_tensor(tensor.get_bias()));
 
         auto conv_layer = std::make_unique<it_lab_ai::ConvolutionalLayer>(
-            stride, pads, dilations, tmp_tensor, tmp_bias, kDefault, group);
+            stride, pads, dilations, *tmp_tensor, *tmp_bias, kDefault, group);
         layer = std::move(conv_layer);
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
@@ -429,19 +440,23 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
             layer_data, it_lab_ai::Type::kFloat);
 
-        it_lab_ai::Tensor tmp_tensor = it_lab_ai::Tensor(
-            it_lab_ai::Shape({tensor.get_shape()[1], tensor.get_shape()[0]}),
-            it_lab_ai::Type::kFloat);
+        std::shared_ptr<it_lab_ai::Tensor> tmp_tensor =
+            std::make_shared<it_lab_ai::Tensor>(
+                it_lab_ai::Shape(
+                    {tensor.get_shape()[1], tensor.get_shape()[0]}),
+                it_lab_ai::Type::kFloat);
 
         for (size_t h = 0; h < tensor.get_shape()[0]; h++) {
           for (size_t w = 0; w < tensor.get_shape()[1]; w++) {
-            tmp_tensor.set<float>({w, h}, tensor.get<float>({h, w}));
+            tmp_tensor->set<float>({w, h}, tensor.get<float>({h, w}));
           }
         }
 
-        it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
+        std::shared_ptr<it_lab_ai::Tensor> tmp_bias =
+            std::make_shared<it_lab_ai::Tensor>(
+                it_lab_ai::make_tensor(tensor.get_bias()));
         auto fc_layer =
-            std::make_unique<it_lab_ai::FCLayer>(tmp_tensor, tmp_bias);
+            std::make_unique<it_lab_ai::FCLayer>(*tmp_tensor, *tmp_bias);
         layer = std::move(fc_layer);
       } else if (layer_type.find("Dropout") != std::string::npos) {
         auto dropout_layer = std::make_unique<it_lab_ai::DropOutLayer>(0.0);
@@ -687,8 +702,11 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
           trans_b = layer_data["transB"].get<int>() != 0;
         }
 
-        it_lab_ai::Tensor tmp_tensor = tensor;
-        it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
+        std::shared_ptr<it_lab_ai::Tensor> tmp_tensor =
+            std::make_shared<it_lab_ai::Tensor>(tensor);
+        std::shared_ptr<it_lab_ai::Tensor> tmp_bias =
+            std::make_shared<it_lab_ai::Tensor>(
+                it_lab_ai::make_tensor(tensor.get_bias()));
         if (trans_b) {
           it_lab_ai::Shape transposed_shape(
               {tensor.get_shape()[1], tensor.get_shape()[0]});
@@ -702,7 +720,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             }
           }
 
-          tmp_tensor = transposed_tensor;
+          *tmp_tensor = transposed_tensor;
 
           if (comments) {
             std::cout << "Weights transposed from [" << tensor.get_shape()[0]
@@ -713,23 +731,23 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         }
 
         if (alpha != 1.0F) {
-          auto weights_data = *tmp_tensor.as<float>();
+          auto weights_data = *tmp_tensor->as<float>();
           for (auto& val : weights_data) {
             val *= alpha;
           }
-          tmp_tensor = make_tensor(weights_data, tmp_tensor.get_shape());
+          *tmp_tensor = make_tensor(weights_data, tmp_tensor->get_shape());
         }
 
         if (beta != 1.0F) {
-          auto bias_data = *tmp_bias.as<float>();
+          auto bias_data = *tmp_bias->as<float>();
           for (auto& val : bias_data) {
             val *= beta;
           }
-          tmp_bias = make_tensor(bias_data, tmp_bias.get_shape());
+          *tmp_bias = make_tensor(bias_data, tmp_bias->get_shape());
         }
 
         auto fc_layer =
-            std::make_unique<it_lab_ai::FCLayer>(tmp_tensor, tmp_bias);
+            std::make_unique<it_lab_ai::FCLayer>(*tmp_tensor, *tmp_bias);
         layer = std::move(fc_layer);
       } else if (layer_type == "Transpose" ||
                  layer_type.find("transpose") != std::string::npos) {

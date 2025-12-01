@@ -23,8 +23,8 @@ class ConvolutionalLayer : public Layer {
   size_t stride_;
   size_t pads_;
   size_t dilations_;
-  Tensor kernel_;
-  Tensor bias_;
+  std::shared_ptr<Tensor> kernel_;
+  std::shared_ptr<Tensor> bias_;
   size_t group_;
   ImplType implType_;
   bool useLegacyImpl_;
@@ -36,17 +36,15 @@ class ConvolutionalLayer : public Layer {
     dilations_ = 0;
     implType_ = kDefault;
   }
-  ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
-                     const Tensor& kernel, const Tensor& bias = Tensor(),
+  ConvolutionalLayer(size_t step, size_t pads, size_t dilations, Tensor& kernel,
+                     Tensor& bias = *std::make_shared<Tensor>(),
                      ImplType implType = kDefault, size_t group = 1,
                      bool useLegacyImpl = false)
-      : Layer(kConvolution) {
+      : Layer(kConvolution), kernel_(&kernel), bias_(&bias) {
     stride_ = step;
     pads_ = pads;
     group_ = group;
     dilations_ = dilations;
-    kernel_ = kernel;
-    bias_ = bias;
     implType_ = implType;
     useLegacyImpl_ = useLegacyImpl;
   }
@@ -152,7 +150,7 @@ class ConvImpl : public LayerImpl<ValueType> {
 
 // NCHW -> NCHW only
 template <typename ValueType>
-void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
+void Conv4D(const Tensor& input, Tensor& kernel_, Tensor& bias_,
             Tensor& output, size_t stride_, size_t pads_, size_t group_,
             size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
@@ -284,7 +282,7 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
 
 // NCHW -> NCHW only
 template <typename ValueType>
-void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
+void Conv4DSTL(const Tensor& input, Tensor& kernel_, Tensor& bias_,
                Tensor& output, size_t stride_, size_t pads_, size_t group_,
                size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
@@ -455,9 +453,9 @@ void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
 }
 
 template <typename ValueType>
-void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
-                     const Tensor& bias_, Tensor& output, size_t stride_,
-                     size_t pads_, size_t dilations_) {
+void DepthwiseConv4D(const Tensor& input, Tensor& kernel_, Tensor& bias_,
+                     Tensor& output, size_t stride_, size_t pads_,
+                     size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
   size_t channels = input.get_shape()[1];
   size_t in_height = input.get_shape()[2];
@@ -515,9 +513,9 @@ void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
 
 // NCHW -> NCHW only
 template <typename ValueType>
-void Conv4D_Legacy(const Tensor& input, const Tensor& kernel_,
-                   const Tensor& bias_, Tensor& output, size_t stride_,
-                   size_t pads_, size_t dilations_) {
+void Conv4D_Legacy(const Tensor& input, Tensor& kernel_, Tensor& bias_,
+                   Tensor& output, size_t stride_, size_t pads_,
+                   size_t dilations_) {
   size_t batch_size = input.get_shape()[0];
   size_t in_height = input.get_shape()[2];
   size_t in_width = input.get_shape()[3];

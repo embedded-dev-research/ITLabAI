@@ -2,8 +2,7 @@
 
 namespace it_lab_ai {
 
-bool layer_conditions(const std::shared_ptr<Layer>& layer,
-                      const std::shared_ptr<Layer>& layer_sub) {
+bool layer_conditions(Layer* layer, Layer* layer_sub) {
   return layer->getName() == layer_sub->getName();
 }
 
@@ -112,8 +111,8 @@ bool does_intersect(const std::vector<int>& vec1,
   });
 }
 
-Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
-  Graph new_graph = graph;
+Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from, Tensor& out) {
+  Graph new_graph = graph.clone(out);
   std::vector<std::vector<int>> subs = find_subgraphs(graph, subgraph_from);
   std::vector<std::vector<int>> subs_c = subs;
   std::vector<int> roots;
@@ -142,7 +141,7 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
     if (flag) {
       continue;
     }
-    std::shared_ptr<Layer> layer = std::make_shared<EWLayer>("relu");
+    std::unique_ptr<Layer> layer = std::make_unique<EWLayer>("relu");
     std::vector<bool> is_root_special(roots.size(), false);
     roots_inps_final.clear();
     leafs_outs_final.clear();
@@ -206,13 +205,13 @@ Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from) {
       }
     }
     for (int j : roots_inps_final) {
-      new_graph.makeConnection(new_graph.getLayerFromID(j), layer);
+      new_graph.makeConnection(new_graph.getLayerFromID(j), layer.get());
     }
     if (roots_inps_final.empty()) {
-      new_graph.addSingleLayer(layer);
+      new_graph.addSingleLayer(layer.get());
     }
     for (int j : leafs_outs_final) {
-      new_graph.makeConnection(layer, new_graph.getLayerFromID(j));
+      new_graph.makeConnection(layer.get(), new_graph.getLayerFromID(j));
     }
   }
   return new_graph;

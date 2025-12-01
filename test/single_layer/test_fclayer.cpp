@@ -53,13 +53,13 @@ INSTANTIATE_TEST_SUITE_P(
                         std::vector<double>({13.1, -0.3, 9.9}))));
 
 TEST(fclayer, throws_when_empty_weights) {
-  const std::vector<double> a1;
+  std::vector<double> a1;
   Shape wshape({3, 2});
   std::vector<double> bias = {0.5, 0.5, 1.0};
   ASSERT_ANY_THROW(FCLayerImpl<double> layer(a1, wshape, bias));
 }
 TEST(fclayer, throws_when_empty_bias) {
-  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
   Shape wshape({3, 2});
   std::vector<double> bias;
   ASSERT_ANY_THROW(FCLayerImpl<double> layer(a1, wshape, bias));
@@ -74,7 +74,7 @@ TEST(fclayer, matvecmul_works) {
   EXPECT_EQ(res, true_res);
 }
 TEST(fclayer, set_get_bias_is_correct) {
-  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
   Shape wshape({3, 2});
   std::vector<double> bias = {0.5, 0.5};
   FCLayerImpl<double> layer(a1, wshape, bias);
@@ -90,7 +90,7 @@ TEST(fclayer, set_get_bias_is_correct) {
 }
 
 TEST(fclayer, set_get_weight_throws_when_out_of_range) {
-  const std::vector<double> a1 = {2.0, 1.5, 3.5, 0.1, 1.9, 2.6, 0.0, 5.5, 1.7};
+  std::vector<double> a1 = {2.0, 1.5, 3.5, 0.1, 1.9, 2.6, 0.0, 5.5, 1.7};
   Shape wshape({3, 3});
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayerImpl<double> layer(a1, wshape, bias);
@@ -100,7 +100,7 @@ TEST(fclayer, set_get_weight_throws_when_out_of_range) {
   ASSERT_ANY_THROW(layer.set_weight(0, 4, 1.3));
 }
 TEST(fclayer, set_get_bias_throws_when_out_of_range) {
-  const std::vector<double> a1 = {2.0, 1.5, 3.5, 0.1, 1.9, 2.6, 0.0, 5.5, 1.7};
+  std::vector<double> a1 = {2.0, 1.5, 3.5, 0.1, 1.9, 2.6, 0.0, 5.5, 1.7};
   Shape wshape({3, 3});
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayerImpl<double> layer(a1, wshape, bias);
@@ -109,7 +109,7 @@ TEST(fclayer, set_get_bias_throws_when_out_of_range) {
 }
 
 TEST(fclayer, get_dims_returns_correctly) {
-  const std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
+  std::vector<double> a1 = {2.0, 1.5, 0.1, 1.9, 0.0, 5.5};
   Shape wshape({3, 2});
   std::vector<double> bias = {0.5, 0.5};
   FCLayerImpl<double> layer(a1, wshape, bias);

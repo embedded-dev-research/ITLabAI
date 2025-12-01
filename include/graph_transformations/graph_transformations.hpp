@@ -6,6 +6,7 @@
 #include "layers/Layer.hpp"
 
 namespace it_lab_ai {
+bool layer_conditions(Layer* layer, Layer* layer_sub);
 std::vector<std::vector<int>> find_subgraphs(const Graph& graph,
                                              const Graph& subgraph);
 bool has_edge(const Graph& graph, int id_from, int id_to);
@@ -17,5 +18,6 @@ bool run_search(const Graph& graph, const Graph& subgraph,
 
 void change_ids(std::vector<std::vector<int>>& vec, int id);
 bool does_intersect(const std::vector<int>& vec1, const std::vector<int>& vec2);
-Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from);
+Graph changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
+                        Tensor& out);
 }  // namespace it_lab_ai
