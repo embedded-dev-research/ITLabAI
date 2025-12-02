@@ -19,9 +19,9 @@ void PoolingLayer::run(const std::vector<Tensor>& input,
       case ParallelBackend::kTBB:
         implType_ = kTBB;
         break;
-      case ParallelBackend::kSTL:
+      /*case ParallelBackend::kSTL:
         implType_ = kSTL;
-        break;
+        break;*/
       // case ParallelBackend::kOMP:
       //   implType = kOMP;
       //   break;

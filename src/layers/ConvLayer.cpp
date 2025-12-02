@@ -37,9 +37,9 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
   }
   if (options.parallel) {
     switch (options.parallel_backend) {
-      case ParallelBackend::kTBB:
+      /*case ParallelBackend::kTBB:
         implType_ = kTBB;
-        break;
+        break;*/
       case ParallelBackend::kSTL:
         implType_ = kSTL;
         break;
