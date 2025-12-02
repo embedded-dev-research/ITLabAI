@@ -238,7 +238,6 @@ TEST(ewlayer, parallel_for_ew) {
   auto end = std::chrono::high_resolution_clock::now();
   auto total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "Sequential: " << total_duration.count() << " ms" << std::endl;
   for (size_t i = 0; i < 8000000; i++) {
     EXPECT_EQ((*out[0].as<int>())[i], 0);
   }
@@ -248,7 +247,6 @@ TEST(ewlayer, parallel_for_ew) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "Threads: " << total_duration.count() << " ms" << std::endl;
   for (size_t i = 0; i < 8000000; i++) {
     EXPECT_EQ((*out[0].as<int>())[i], 0);
   }
@@ -258,7 +256,6 @@ TEST(ewlayer, parallel_for_ew) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "TBB: " << total_duration.count() << " ms" << std::endl;
   for (size_t i = 0; i < 8000000; i++) {
     EXPECT_EQ((*out[0].as<int>())[i], 0);
   }
@@ -268,7 +265,6 @@ TEST(ewlayer, parallel_for_ew) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "OpenMP: " << total_duration.count() << " ms" << std::endl;
   for (size_t i = 0; i < 8000000; i++) {
     EXPECT_EQ((*out[0].as<int>())[i], 0);
   }
@@ -295,31 +291,24 @@ TEST(ewlayer, parallel_for_ew_sigmoid) {
   auto end = std::chrono::high_resolution_clock::now();
   auto total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "Sequential sigmoid: " << total_duration.count() << " ms"
-            << std::endl;
 
   start = std::chrono::high_resolution_clock::now();
   layer1.run(in, out);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "Threads sigmoid: " << total_duration.count() << " ms"
-            << std::endl;
 
   start = std::chrono::high_resolution_clock::now();
   layer2.run(in, out);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "TBB sigmoid: " << total_duration.count() << " ms" << std::endl;
 
   start = std::chrono::high_resolution_clock::now();
   layer3.run(in, out);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "OpenMP sigmoid: " << total_duration.count() << " ms"
-            << std::endl;
 
   EXPECT_EQ(0, 0);
 }
@@ -343,8 +332,6 @@ TEST(ewlayer, parallel_for_direct) {
   auto end = std::chrono::high_resolution_clock::now();
   auto total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "Sequential direct: " << total_duration.count() << " ms"
-            << std::endl;
 
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 
@@ -355,8 +342,6 @@ TEST(ewlayer, parallel_for_direct) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "Threads direct: " << total_duration.count() << " ms"
-            << std::endl;
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 
   start = std::chrono::high_resolution_clock::now();
@@ -366,7 +351,6 @@ TEST(ewlayer, parallel_for_direct) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "TBB direct: " << total_duration.count() << " ms" << std::endl;
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 
   start = std::chrono::high_resolution_clock::now();
@@ -376,8 +360,6 @@ TEST(ewlayer, parallel_for_direct) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "OpenMP direct: " << total_duration.count() << " ms"
-            << std::endl;
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 }
 
@@ -398,8 +380,6 @@ TEST(ewlayer, parallel_for_notmatrix) {
   auto end = std::chrono::high_resolution_clock::now();
   auto total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "Sequential notmatrix: " << total_duration.count() << " ms"
-            << std::endl;
 
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 
@@ -410,8 +390,6 @@ TEST(ewlayer, parallel_for_notmatrix) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "Threads notmatrix: " << total_duration.count() << " ms"
-            << std::endl;
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 
   start = std::chrono::high_resolution_clock::now();
@@ -421,8 +399,6 @@ TEST(ewlayer, parallel_for_notmatrix) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "TBB notmatrix: " << total_duration.count() << " ms"
-            << std::endl;
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 
   start = std::chrono::high_resolution_clock::now();
@@ -432,7 +408,5 @@ TEST(ewlayer, parallel_for_notmatrix) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << "OpenMP notmatrix: " << total_duration.count() << " ms"
-            << std::endl;
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 }

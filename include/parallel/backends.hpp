@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <limits>
 #include <thread>
 #include <vector>
@@ -33,7 +32,6 @@ inline void impl_seq(std::size_t count,
   for (std::size_t i = 0; i < count; ++i) {
     func(i);
   }
-  std::cout << "Seq " << std::endl;
 }
 
 inline void impl_threads(std::size_t count,
@@ -73,13 +71,11 @@ inline void impl_threads(std::size_t count,
   for (auto& thread : threads) {
     thread.join();
   }
-  std::cout << "Stl " << std::endl;
 }
 
 inline void impl_tbb(std::size_t count,
                      const std::function<void(std::size_t)>& func,
                      const Options& opt) {
-  std::cout << "tbb " << std::endl;
   oneapi::tbb::parallel_for(
       oneapi::tbb::blocked_range<std::size_t>(0, count, opt.grain),
       [&](const oneapi::tbb::blocked_range<std::size_t>& range) {
@@ -111,7 +107,6 @@ inline void impl_omp(std::size_t count,
   for (int i = 0; i < int_count; ++i) {
     func(static_cast<std::size_t>(i));
   }
-  std::cout << "OMP " << std::endl;
 }
 #else
 inline void impl_omp(std::size_t count,
