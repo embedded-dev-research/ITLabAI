@@ -28,13 +28,6 @@ enable_testing()
 
 include_directories("include")
 
-if(OpenMP_FOUND)
-    message(STATUS "OpenMP found - enabling parallel support")
-    add_definitions(-DHAS_OPENMP)
-else()
-    message(STATUS "OpenMP not found - parallel features disabled")
-endif()
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 add_subdirectory(3rdparty)
@@ -59,3 +52,12 @@ add_subdirectory(app)
 add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(test)
+
+find_package(OpenMP REQUIRED)
+
+if(OpenMP_FOUND)
+    message(STATUS "OpenMP found - enabling parallel support")
+    add_definitions(-DHAS_OPENMP)
+else()
+    message(STATUS "OpenMP not found - parallel features disabled")
+endif()
