@@ -4,6 +4,15 @@ project(ITLabAI)
 
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 
+find_package(OpenMP REQUIRED)
+
+if(OpenMP_FOUND)
+    message(STATUS "OpenMP found - enabling parallel support")
+    add_definitions(-DHAS_OPENMP)
+else()
+    message(STATUS "OpenMP not found - parallel features disabled")
+endif()
+
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
 
 if(ENABLE_STATISTIC_TENSORS)
@@ -34,21 +43,12 @@ add_subdirectory(3rdparty)
 
 include(cmake/opencv_config.cmake)
 
-find_package(OpenMP REQUIRED)
-
-# if (NOT WIN32)
-#     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
-#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
-# else()
-#     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /wd4996 /wd4190 /wd4189 /WX")
-#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /wd4996 /wd4190 /wd4189 /WX")
-# endif()
-
-if(OpenMP_FOUND)
-    message(STATUS "OpenMP found - enabling parallel support")
-    add_definitions(-DHAS_OPENMP)
+if (NOT WIN32)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 else()
-    message(STATUS "OpenMP not found - parallel features disabled")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /wd4996 /wd4190 /wd4189 /WX")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /wd4996 /wd4190 /wd4189 /WX")
 endif()
 
 foreach(CONFIG "" _DEBUG _RELEASE)
