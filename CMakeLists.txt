@@ -4,15 +4,6 @@ project(ITLabAI)
 
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 
-find_package(OpenMP REQUIRED)
-
-if(OpenMP_FOUND)
-    message(STATUS "OpenMP found - enabling parallel support")
-    add_definitions(-DHAS_OPENMP)
-else()
-    message(STATUS "OpenMP not found - parallel features disabled")
-endif()
-
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
 
 if(ENABLE_STATISTIC_TENSORS)
@@ -61,3 +52,12 @@ add_subdirectory(app)
 add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(test)
+
+find_package(OpenMP REQUIRED)
+
+if(OpenMP_FOUND)
+    message(STATUS "OpenMP found - enabling parallel support")
+    add_definitions(-DHAS_OPENMP)
+else()
+    message(STATUS "OpenMP not found - parallel features disabled")
+endif()
