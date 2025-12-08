@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "graph/graph.hpp"
-#include "layers/EWLayer.hpp"
 #include "layers/Layer.hpp"
 
 namespace it_lab_ai {

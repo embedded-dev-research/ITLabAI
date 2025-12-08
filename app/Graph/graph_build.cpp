@@ -2,7 +2,6 @@
 #include <numeric>
 #include <unordered_map>
 
-#include "build.cpp"
 #include "build.hpp"
 
 namespace fs = std::filesystem;
@@ -62,7 +61,6 @@ int main(int argc, char* argv[]) {
         it_lab_ai::Shape sh1({1, 5, 5, 3});
         std::vector<float> vec(75, 3);
         it_lab_ai::Tensor output = it_lab_ai::make_tensor(vec, sh1);
-
         Graph graph;
         build_graph_linear(graph, input, output, true);
 
