@@ -5,10 +5,10 @@
 #include <sstream>
 #include <unordered_map>
 
-#include "graph_transformations/graph_transformations.hpp"
-#include "perf/benchmarking.hpp"
 #include "build.cpp"
 #include "build.hpp"
+#include "graph_transformations/graph_transformations.hpp"
+#include "perf/benchmarking.hpp"
 
 using namespace it_lab_ai;
 
