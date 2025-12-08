@@ -8,10 +8,13 @@ namespace it_lab_ai {
 class DropOutLayer : public Layer {
  private:
   double drop_rate_;
+  bool training_mode_;
 
  public:
-  DropOutLayer(double drop_rate = 0.0) : Layer(kDropout) {
+  DropOutLayer(double drop_rate = 0.0, bool training_mode = false)
+      : Layer(kDropout) {
     drop_rate_ = drop_rate;
+    training_mode_ = training_mode;
   }
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;

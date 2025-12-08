@@ -23,8 +23,10 @@ TEST(pooling_test, is_pooling_tbb_ok) {
   size_t w = 224;
   Shape test_shape = {n, c, h, w};
   std::vector<int> a1(n * c * h * w);
+  std::mt19937 rng(42);
+  std::uniform_int_distribution<int> dist(0, std::numeric_limits<int>::max());
   for (size_t i = 0; i < n * c * h * w; i++) {
-    a1[i] = rand();
+    a1[i] = dist(rng);
   }
   Tensor input = make_tensor(a1, test_shape);
   Tensor output;
@@ -45,11 +47,13 @@ TEST(conv_test, is_conv_stl_ok) {
   Shape test_shape = {n, c, h, w};
   std::vector<int> a1(n * c * h * w);
   std::vector<int> a2(3 * 25 * 16);
+  std::mt19937 rng2(42);
+  std::uniform_int_distribution<int> dist2(0, std::numeric_limits<int>::max());
   for (size_t i = 0; i < n * c * h * w; i++) {
-    a1[i] = rand();
+    a1[i] = dist2(rng2);
   }
   for (size_t i = 0; i < 3 * 25 * 16; i++) {
-    a2[i] = rand();
+    a2[i] = dist2(rng2);
   }
   Tensor input = make_tensor(a1, test_shape);
   Tensor kernel = make_tensor(a2, Shape({5, 5, 3, 16}));
