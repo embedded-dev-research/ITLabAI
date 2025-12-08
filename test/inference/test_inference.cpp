@@ -18,7 +18,7 @@
 using namespace it_lab_ai;
 
 TEST(bfs, check_struct_graph) {
-  Graph graph(151);
+  Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<int> vec;
   vec.reserve(75);
@@ -89,7 +89,7 @@ TEST(bfs, check_struct_graph) {
 }
 
 TEST(bfs, check_struct_graph_not_used_yolo) {
-  Graph graph(151);
+  Graph graph;
   Shape sh1({1, 4, 2, 2});
   std::vector<int> vec;
   vec.reserve(16);
@@ -138,7 +138,7 @@ TEST(bfs, check_struct_graph_not_used_yolo) {
 }
 
 TEST(bfs, check_struct_graph_resnet1) {
-  Graph graph(151);
+  Graph graph;
   Shape sh1({1, 2, 2, 2});
   std::vector<int> vec;
   vec.reserve(8);
@@ -179,7 +179,7 @@ TEST(bfs, check_struct_graph_resnet1) {
 }
 
 TEST(bfs, check_struct_graph_resnet2) {
-  Graph graph(151);
+  Graph graph;
   Shape sh1({1, 2, 2, 2});
   std::vector<int> vec;
   vec.reserve(8);
@@ -218,7 +218,7 @@ TEST(bfs, check_struct_graph_resnet2) {
 }
 
 TEST(bfs, check_struct_graph_google1) {
-  Graph graph(151);
+  Graph graph;
   Shape sh1({1, 2, 2, 2});
   std::vector<int> vec;
   vec.reserve(8);
@@ -259,7 +259,7 @@ TEST(bfs, check_struct_graph_google1) {
 }
 
 TEST(bfs, check_result_vec) {
-  Graph graph(5);
+  Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<int> vec;
   vec.reserve(75);
@@ -332,7 +332,7 @@ TEST(bfs, check_result_vec) {
   ASSERT_EQ(tmp, res);
 }
 TEST(bfs, check_end_to_end) {
-  Graph graph(6);
+  Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<float> vec;
   vec.reserve(75);
@@ -373,7 +373,7 @@ TEST(bfs, check_end_to_end) {
 }
 
 TEST(bfs, check_struct_layer) {
-  Graph graph(5);
+  Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<int> vec;
   vec.reserve(75);
@@ -401,7 +401,7 @@ TEST(bfs, check_struct_layer) {
 }
 
 TEST(bfs, check_struct_layer_added) {
-  Graph graph(5);
+  Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<int> vec;
   vec.reserve(75);

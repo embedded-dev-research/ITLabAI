@@ -56,11 +56,11 @@ struct ParseResult {
   std::unordered_map<std::string, int> original_ids;
 };
 
-it_lab_ai::Graph build_graph(it_lab_ai::Tensor& input,
-                             it_lab_ai::Tensor& output,
-                             const std::string& json_path, bool comments);
-it_lab_ai::Graph build_graph_linear(it_lab_ai::Tensor& input,
-                                    it_lab_ai::Tensor& output, bool comments);
+void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
+                 it_lab_ai::Tensor& output, const std::string& json_path,
+                 bool comments);
+void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
+                        it_lab_ai::Tensor& output, bool comments);
 std::unordered_map<int, std::string> load_class_names(
     const std::string& filename);
 

@@ -4,8 +4,8 @@
 
 using namespace it_lab_ai;
 
-Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                         bool comments) {
+void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
+                        it_lab_ai::Tensor& output, bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -117,7 +117,6 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   }
   if (comments)
     std::cout << "number of layers - " << layers.size() + 1 << std::endl;
-  it_lab_ai::Graph graph(static_cast<int>(layers.size()));
   auto a1 = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                     it_lab_ai::kNchw);
 
@@ -141,8 +140,6 @@ Graph build_graph_linear(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   }
 
   graph.setOutput(layers.back(), output);
-
-  return graph;
 }
 
 std::string get_base_layer_name(const std::string& tensor_name) {
@@ -189,28 +186,9 @@ std::string layerTypeToString(it_lab_ai::LayerType type) {
   }
 }
 
-Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
-                  const std::string& json_path, bool comments) {
-  if (comments) {
-    for (size_t i = 0; i < input.get_shape().dims(); i++) {
-      std::cout << input.get_shape()[i] << ' ';
-    }
-    std::cout << std::endl;
-    if (input.get_shape().dims() == 4) {
-      for (size_t n = 0; n < input.get_shape()[0]; n++) {
-        for (size_t h = 0; h < input.get_shape()[2]; h++) {
-          for (size_t w = 0; w < input.get_shape()[3]; w++) {
-            for (size_t c = 0; c < input.get_shape()[1]; c++) {
-              std::cout << input.get<float>({n, c, h, w}) << ' ';
-            }
-          }
-          std::cerr << std::endl;
-        }
-      }
-      std::cout << std::endl << std::endl;
-    }
-  }
-
+void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
+                 it_lab_ai::Tensor& output, const std::string& json_path,
+                 bool comments) {
   auto parse_result = parse_json_model(json_path, comments);
 
   auto& layers = parse_result.layers;
@@ -221,8 +199,6 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   auto& concat_connected_inputs = parse_result.concat_connected_inputs;
   auto& split_distribution = parse_result.split_distribution;
   auto& original_ids = parse_result.original_ids;
-
-  it_lab_ai::Graph graph(static_cast<int>(layers.size()));
 
   auto input_layer_it = std::find_if(
       layers.begin(), layers.end(),
@@ -308,8 +284,6 @@ Graph build_graph(it_lab_ai::Tensor& input, it_lab_ai::Tensor& output,
   graph.setSplitDistribution(split_distribution);
   auto output_layer = layers.back();
   graph.setOutput(output_layer, output);
-
-  return graph;
 }
 
 ParseResult parse_json_model(const std::string& json_path, bool comments) {

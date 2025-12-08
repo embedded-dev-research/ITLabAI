@@ -34,7 +34,7 @@ int main() {
   }
   Shape sh({static_cast<size_t>(count_pic), 227, 227, 3});
   Tensor t = make_tensor<float>(res, sh);
-  Graph graph(6);
+  Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<float> vec;
   vec.reserve(75);

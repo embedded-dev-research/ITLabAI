@@ -16,9 +16,10 @@ int main() {
   int type = 2;
   Tensor aaaa = make_tensor(std::vector<int>({0}));
   if (type == 0) {
-    auto graph1 = build_graph(aaaa, aaaa, MODEL_PATH_DENSENET_ONNX, false);
+    Graph graph1;
+    build_graph(graph1, aaaa, aaaa, MODEL_PATH_DENSENET_ONNX, false);
 
-    Graph subgraph(5);
+    Graph subgraph;
     Tensor scale = make_tensor(std::vector<float>({1.0}));
     std::shared_ptr<Layer> layer_0 =
         std::make_shared<BatchNormalizationLayer>(scale, scale, scale, scale);
@@ -32,7 +33,7 @@ int main() {
     subgraph.makeConnection(layer_2, layer_3);
     subgraph.makeConnection(layer_3, layer_4);
 
-    Graph subgraph2(5);
+    Graph subgraph2;
     std::shared_ptr<Layer> layer_5 = std::make_shared<ConcatLayer>();
     std::shared_ptr<Layer> layer_6 =
         std::make_shared<PoolingLayer>(Shape({1, 1, 1}), "max");
@@ -65,9 +66,10 @@ int main() {
     std::cerr << "Time for concat:" << time2 << std::endl;
     return 0;
   } else if (type == 1) {
-    auto graph1 = build_graph(aaaa, aaaa, MODEL_PATH_RESNET_ONNX, false);
+    Graph graph1;
+    build_graph(graph1, aaaa, aaaa, MODEL_PATH_RESNET_ONNX, false);
 
-    Graph subgraph(5);
+    Graph subgraph;
     std::shared_ptr<Layer> layer_0 = std::make_shared<TransposeLayer>();
     std::shared_ptr<Layer> layer_1 = std::make_shared<SoftmaxLayer>();
     std::shared_ptr<Layer> layer_2 = std::make_shared<ReshapeLayer>();
@@ -91,9 +93,10 @@ int main() {
     std::cerr << "Time for path5:" << time << std::endl;
     return 0;
   } else if (type == 2) {
-    auto graph1 = build_graph(aaaa, aaaa, MODEL_PATH_GOOGLENET_ONNX, false);
+    Graph graph1;
+    build_graph(graph1, aaaa, aaaa, MODEL_PATH_GOOGLENET_ONNX, false);
 
-    Graph subgraph(7);
+    Graph subgraph;
     Shape shape(2);
     std::shared_ptr<Layer> layer_0 = std::make_shared<ConcatLayer>();
     std::shared_ptr<Layer> layer_1 = std::make_shared<ConvolutionalLayer>();

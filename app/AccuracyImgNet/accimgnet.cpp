@@ -57,7 +57,7 @@ size_t str_to_sizet(const std::string& inp) {
 
 Graph open_network(std::string path) {
   path += " ";
-  return Graph(1);
+  return Graph();
 }
 
 void process_image(Tensor& input, const std::string& file) {
