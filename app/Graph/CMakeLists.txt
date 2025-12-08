@@ -24,6 +24,7 @@ target_link_libraries(ACC BuildGraph)
 
 add_executable(onnx_subs onnx_subs.cpp)
 target_link_libraries(onnx_subs BuildGraph)
+target_link_libraries(onnx_subs OpenMP::OpenMP_CXX)
 target_link_libraries(onnx_subs graphT_lib)
 
 if (WIN32)
