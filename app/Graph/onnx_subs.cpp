@@ -49,16 +49,16 @@ int main() {
                                                      subgraph);
     auto time2 = elapsed_time_avg<double, std::milli>(10, find_subgraphs,
                                                       graph1, subgraph2);
-    for (int i = 0; i < vec.size(); i++) {
-      for (int j = 0; j < vec[i].size(); j++) {
+    for (size_t i = 0; i < vec.size(); i++) {
+      for (size_t j = 0; j < vec[i].size(); j++) {
         std::cerr << vec[i][j] << ' ';
       }
       std::cerr << '\n';
     }
     std::cerr << "Time for path5:" << time << std::endl;
 
-    for (int i = 0; i < vec2.size(); i++) {
-      for (int j = 0; j < vec2[i].size(); j++) {
+    for (size_t i = 0; i < vec2.size(); i++) {
+      for (size_t j = 0; j < vec2[i].size(); j++) {
         std::cerr << vec2[i][j] << ' ';
       }
       std::cerr << '\n';
@@ -84,8 +84,8 @@ int main() {
     auto vec = find_subgraphs(graph1, subgraph);
     auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
                                                      subgraph);
-    for (int i = 0; i < vec.size(); i++) {
-      for (int j = 0; j < vec[i].size(); j++) {
+    for (size_t i = 0; i < vec.size(); i++) {
+      for (size_t j = 0; j < vec[i].size(); j++) {
         std::cerr << vec[i][j] << ' ';
       }
       std::cerr << '\n';
@@ -117,8 +117,8 @@ int main() {
     auto vec = find_subgraphs(graph1, subgraph);
     auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
                                                      subgraph);
-    for (int i = 0; i < vec.size(); i++) {
-      for (int j = 0; j < vec[i].size(); j++) {
+    for (size_t i = 0; i < vec.size(); i++) {
+      for (size_t j = 0; j < vec[i].size(); j++) {
         std::cerr << vec[i][j] << ' ';
       }
       std::cerr << '\n';
