@@ -1,5 +1,7 @@
 #include "layers_oneDNN/EWLayer.hpp"
 
+#include <chrono>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
