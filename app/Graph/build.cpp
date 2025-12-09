@@ -81,7 +81,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
 
       it_lab_ai::Tensor tmp_values = tensor;
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
-      auto conv_layer = std::make_unique<it_lab_ai::ConvolutionalLayer>(
+      auto conv_layer = it_lab_ai::LayerFactory::createConvLayer(
           1, pads, 1, tmp_values, tmp_bias, kDefault, 1, true);
       layer_ptrs.push_back(conv_layer.get());
       layers.push_back(std::move(conv_layer));
@@ -439,7 +439,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         it_lab_ai::Tensor tmp_tensor = tensor;
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
 
-        auto conv_layer = std::make_unique<it_lab_ai::ConvolutionalLayer>(
+        auto conv_layer = it_lab_ai::LayerFactory::createConvLayer(
             stride, pads, dilations, tmp_tensor, tmp_bias, kDefault, group);
         layer = std::move(conv_layer);
       } else if (layer_type.find("Relu") != std::string::npos ||

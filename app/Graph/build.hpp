@@ -32,6 +32,7 @@
 #include "layers/Tensor.hpp"
 #include "layers/TransposeLayer.hpp"
 #include "layers_oneDNN/EWLayer.hpp"
+#include "layers_oneDNN/ConvLayer.hpp"
 
 extern std::unordered_map<std::string, std::string> model_paths;
 
@@ -85,6 +86,23 @@ class LayerFactory {
       return std::make_unique<EwLayerOneDnn>(function, alpha, beta);
     }
     return std::make_unique<EWLayer>(function, alpha, beta);
+  }
+
+  static std::unique_ptr<Layer> createConvLayer(
+      size_t step, size_t pads, size_t dilations, const Tensor& kernel,
+      const Tensor& bias = Tensor(), ImplType implType = kDefault,
+      size_t group = 1, bool useLegacyImpl = false) {
+    if (onednn_) {
+      return std::make_unique<ConvLayerOneDnn>(step, pads, dilations, kernel,
+                                               bias, group, useLegacyImpl);
+      std::cout << "DEBUG: Creating conv layer" << std::endl;
+      std::cout << "DEBUG: Kernel shape: " << kernel.get_shape() << std::endl;
+      std::cout << "DEBUG: Bias empty? " << bias.empty() << std::endl;
+      std::cout << "DEBUG: Bias shape: " << bias.get_shape() << std::endl;
+    } else {
+      return std::make_unique<ConvolutionalLayer>(
+          step, pads, dilations, kernel, bias, implType, group, useLegacyImpl);
+    }
   }
 };
 
