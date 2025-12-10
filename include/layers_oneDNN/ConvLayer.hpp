@@ -41,8 +41,7 @@ class ConvLayerOneDnn : public Layer {
 #endif
 
  private:
-  void initialize_convolution(const Shape& input_shape,
-                                               Type data_type);
+  void initialize_convolution(const Shape& input_shape, Type data_type);
   void validate_input(const std::vector<Tensor>& input) const;
   void validate_depthwise_input(const std::vector<Tensor>& input) const;
   void create_output_tensor(Tensor& output_tensor, const Shape& output_shape,
