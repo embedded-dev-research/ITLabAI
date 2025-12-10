@@ -41,7 +41,7 @@ class ConvLayerOneDnn : public Layer {
 #endif
 
  private:
-  void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
+  void initialize_convolution(const Shape& input_shape,
                                                Type data_type);
   void validate_input(const std::vector<Tensor>& input) const;
   void validate_depthwise_input(const std::vector<Tensor>& input) const;
@@ -89,6 +89,7 @@ class ConvLayerOneDnn : public Layer {
   Tensor kernel_;
   Tensor bias_;
   size_t group_;
+  bool use_legacy_;
   bool depthwise_;
 
   std::unique_ptr<dnnl::engine> engine_;
@@ -109,7 +110,6 @@ class ConvLayerOneDnn : public Layer {
   bool initialized_ = false;
   Shape last_input_shape_;
   Type last_data_type_;
-  bool use_legacy_;
 };
 
 }  // namespace it_lab_ai
