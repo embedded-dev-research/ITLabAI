@@ -205,9 +205,7 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
     dnnl::memory::dims kernel_dims;
     dnnl::memory::format_tag weights_format;
     if (is_depthwise) {
-      kernel_dims = {static_cast<dnnl::memory::dim>(group_),
-                     1,
-                     1,
+      kernel_dims = {static_cast<dnnl::memory::dim>(group_), 1, 1,
                      static_cast<dnnl::memory::dim>(kernel_.get_shape()[2]),
                      static_cast<dnnl::memory::dim>(kernel_.get_shape()[3])};
       weights_format = dnnl::memory::format_tag::goihw;
@@ -277,7 +275,6 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
     throw;
   }
 }
-
 
 void ConvLayerOneDnn::fill_memory_with_tensor(dnnl::memory& memory,
                                               const Tensor& tensor,
@@ -386,8 +383,7 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
         static_cast<dnnl::memory::dim>(k_shape[3]),
         static_cast<dnnl::memory::dim>(k_shape[2]),
         static_cast<dnnl::memory::dim>(k_shape[0]),
-        static_cast<dnnl::memory::dim>(k_shape[1])
-    };
+        static_cast<dnnl::memory::dim>(k_shape[1])};
 
     std::cout << "Weights dims for oneDNN (oihw): OC=" << weights_dims[0]
               << ", IC=" << weights_dims[1] << ", KH=" << weights_dims[2]
@@ -402,8 +398,7 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
         dnnl::convolution_forward::primitive_desc(
             *engine_, dnnl::prop_kind::forward_inference,
             dnnl::algorithm::convolution_direct, src_md, weights_md,
-            dnnl::memory::desc(),
-            dst_md, strides, dilation, padding, padding);
+            dnnl::memory::desc(), dst_md, strides, dilation, padding, padding);
 
     std::cout << "SUCCESS: Convolution primitive created!" << std::endl;
 
@@ -504,7 +499,6 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
   }
 }
 
-
 void ConvLayerOneDnn::run_special_conv(const std::vector<Tensor>& input,
                                        std::vector<Tensor>& output) {
   const Tensor& input_tensor = input[0];
@@ -563,7 +557,6 @@ void ConvLayerOneDnn::run_special_conv(const std::vector<Tensor>& input,
     output[0] = make_tensor(output_data, output_shape);
   }
 }
-
 
 template <typename T>
 std::vector<T> ConvLayerOneDnn::reorder_hwio_to_oihw(const Tensor& kernel) {

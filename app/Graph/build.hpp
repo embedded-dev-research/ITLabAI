@@ -31,8 +31,8 @@
 #include "layers/SplitLayer.hpp"
 #include "layers/Tensor.hpp"
 #include "layers/TransposeLayer.hpp"
-#include "layers_oneDNN/EWLayer.hpp"
 #include "layers_oneDNN/ConvLayer.hpp"
+#include "layers_oneDNN/EWLayer.hpp"
 
 extern std::unordered_map<std::string, std::string> model_paths;
 
