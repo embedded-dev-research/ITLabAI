@@ -182,7 +182,6 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
     stream_ = std::make_unique<dnnl::stream>(*engine_);
 
     const size_t in_channels = input_shape[1];
-    const size_t batch = input_shape[0];
     bool is_depthwise = (group_ > 1 && group_ == in_channels);
 
     dnnl::memory::dims src_dims = shape_to_dims(input_shape);
@@ -307,17 +306,15 @@ dnnl::memory::dims ConvLayerOneDnn::get_kernel_dims() const {
 Shape ConvLayerOneDnn::get_output_shape(const Shape& input_shape) const {
   const Shape& kernel_shape = kernel_.get_shape();
 
-  size_t kernel_out_channels, kernel_in_channels, kernel_height, kernel_width;
+  size_t kernel_out_channels, kernel_height, kernel_width;
 
   if (use_legacy_ ||
       (kernel_shape.dims() == 4 && kernel_shape[3] > kernel_shape[2])) {
     kernel_height = kernel_shape[0];
     kernel_width = kernel_shape[1];
-    kernel_in_channels = kernel_shape[2];
     kernel_out_channels = kernel_shape[3];
   } else {
     kernel_out_channels = kernel_shape[0];
-    kernel_in_channels = kernel_shape[1];
     kernel_height = kernel_shape[2];
     kernel_width = kernel_shape[3];
   }
