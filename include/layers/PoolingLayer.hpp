@@ -18,11 +18,12 @@ enum PoolingType : uint8_t { kAverage, kMax };
 
 class PoolingLayer : public Layer {
  public:
-  PoolingLayer(const Shape& pooling_shape, const Shape& strides = {2, 2},
-               const Shape& pads = {0, 0, 0, 0},
-               const Shape& dilations = {1, 1}, bool ceil_mode = false,
-               std::string pooling_type = "average",
-               ImplType implType = kDefault)
+  explicit PoolingLayer(const Shape& pooling_shape,
+                        const Shape& strides = {2, 2},
+                        const Shape& pads = {0, 0, 0, 0},
+                        const Shape& dilations = {1, 1}, bool ceil_mode = false,
+                        std::string pooling_type = "average",
+                        ImplType implType = kDefault)
       : Layer(kPooling),
         poolingShape_(pooling_shape),
         strides_(strides),
@@ -31,8 +32,9 @@ class PoolingLayer : public Layer {
         ceil_mode_(ceil_mode),
         poolingType_(std::move(pooling_type)),
         implType_(implType) {}
-  PoolingLayer(const Shape& pooling_shape, std::string pooling_type = "average",
-               ImplType implType = kDefault)
+  explicit PoolingLayer(const Shape& pooling_shape,
+                        std::string pooling_type = "average",
+                        ImplType implType = kDefault)
       : Layer(kPooling),
         poolingShape_(pooling_shape),
         strides_({2, 2}),
@@ -250,9 +252,10 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
                 if (batch_dim >= 0) input_coords[batch_dim] = n;
                 if (channel_dim >= 0) input_coords[channel_dim] = c;
                 input_coords[this->inputShape_.dims() - spatial_dims] = pos_h;
-                if (spatial_dims > 1)
+                if (spatial_dims > 1) {
                   input_coords[this->inputShape_.dims() - spatial_dims + 1] =
                       pos_w;
+                }
 
                 size_t input_index = this->inputShape_.get_index(input_coords);
                 pooling_buf.push_back(input[input_index]);
@@ -264,8 +267,9 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
           if (batch_dim >= 0) output_coords[batch_dim] = n;
           if (channel_dim >= 0) output_coords[channel_dim] = c;
           output_coords[this->outputShape_.dims() - spatial_dims] = h;
-          if (spatial_dims > 1)
+          if (spatial_dims > 1) {
             output_coords[this->outputShape_.dims() - spatial_dims + 1] = w;
+          }
 
           size_t output_index = this->outputShape_.get_index(output_coords);
 
@@ -377,9 +381,10 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
                             if (channel_dim >= 0) input_coords[channel_dim] = c;
                             input_coords[this->inputShape_.dims() -
                                          spatial_dims] = pos_h;
-                            if (spatial_dims > 1)
+                            if (spatial_dims > 1) {
                               input_coords[this->inputShape_.dims() -
                                            spatial_dims + 1] = pos_w;
+                            }
 
                             size_t input_index =
                                 this->inputShape_.get_index(input_coords);
@@ -394,9 +399,10 @@ std::vector<ValueType> PoolingLayerImplTBB<ValueType>::run(
                       if (channel_dim >= 0) output_coords[channel_dim] = c;
                       output_coords[this->outputShape_.dims() - spatial_dims] =
                           h;
-                      if (spatial_dims > 1)
+                      if (spatial_dims > 1) {
                         output_coords[this->outputShape_.dims() - spatial_dims +
                                       1] = w;
+                      }
 
                       size_t output_index =
                           this->outputShape_.get_index(output_coords);

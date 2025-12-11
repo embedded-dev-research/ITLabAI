@@ -20,7 +20,7 @@ T relu(const T& value) {
 class EWLayer : public Layer {
  public:
   EWLayer() : Layer(kElementWise), func_("none"), alpha_(0.0F), beta_(0.0F) {}
-  EWLayer(std::string function, float alpha = 0.0F, float beta = 0.0F)
+  explicit EWLayer(std::string function, float alpha = 0.0F, float beta = 0.0F)
       : Layer(kElementWise),
         func_(std::move(function)),
         alpha_(alpha),

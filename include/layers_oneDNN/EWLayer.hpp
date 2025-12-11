@@ -14,7 +14,8 @@ class EwLayerOneDnn : public Layer {
   EwLayerOneDnn()
       : Layer(kElementWise), func_("none"), alpha_(0.0F), beta_(0.0F) {}
 
-  EwLayerOneDnn(std::string function, float alpha = 0.0F, float beta = 0.0F)
+  explicit EwLayerOneDnn(std::string function, float alpha = 0.0F,
+                         float beta = 0.0F)
       : Layer(kElementWise),
         func_(std::move(function)),
         alpha_(alpha),
