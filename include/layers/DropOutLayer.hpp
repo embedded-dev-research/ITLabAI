@@ -11,7 +11,7 @@ class DropOutLayer : public Layer {
   bool training_mode_;
 
  public:
-  DropOutLayer(double drop_rate = 0.0, bool training_mode = false)
+  explicit DropOutLayer(double drop_rate = 0.0, bool training_mode = false)
       : Layer(kDropout) {
     drop_rate_ = drop_rate;
     training_mode_ = training_mode;

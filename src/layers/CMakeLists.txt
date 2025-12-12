@@ -6,4 +6,5 @@ target_include_directories(layers_lib PUBLIC
 )
 
 target_link_libraries(layers_lib PUBLIC TBB_unified)
+target_link_libraries(layers_lib PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(layers_lib PUBLIC dnnl)

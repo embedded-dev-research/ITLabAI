@@ -1,5 +1,9 @@
 #pragma once
+#include <algorithm>
+#include <execution>
+#include <functional>
 #include <initializer_list>
+#include <iostream>
 #include <numeric>
 #include <stdexcept>
 #include <string>
@@ -8,7 +12,7 @@
 #include "graph/runtime_options.hpp"
 #include "layers/Shape.hpp"
 #include "layers/Tensor.hpp"
-#include "oneapi/tbb.h"
+#include "parallel/parallel.hpp"
 
 namespace it_lab_ai {
 
@@ -34,6 +38,7 @@ enum LayerType : uint8_t {
 };
 
 enum ImplType : uint8_t { kDefault, kTBB, kSTL };
+using ParBackend = parallel::Backend;
 
 class Layer;
 
@@ -45,11 +50,13 @@ struct PostOperations {
 class Layer {
  public:
   Layer() = default;
-  Layer(LayerType type) : type_(type) {}
+  explicit Layer(LayerType type) : type_(type) {}
   virtual ~Layer() = default;
   PostOperations postops;
   int getID() const { return id_; }
   void setID(int id) { id_ = id; }
+  void setParallelBackend(ParBackend backend) { parallel_backend_ = backend; }
+  ParBackend getParallelBackend() const { return parallel_backend_; }
   LayerType getName() const { return type_; }
   virtual void run(const std::vector<Tensor>& input,
                    std::vector<Tensor>& output) = 0;
@@ -65,6 +72,7 @@ class Layer {
  protected:
   int id_ = 0;
   LayerType type_;
+  ParBackend parallel_backend_ = ParBackend::kSeq;
 };
 
 template <typename ValueType>
@@ -88,5 +96,4 @@ class LayerImpl {
   Shape inputShape_;
   Shape outputShape_;
 };
-
 }  // namespace it_lab_ai

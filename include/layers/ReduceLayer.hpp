@@ -11,8 +11,8 @@ class ReduceLayer : public Layer {
  public:
   enum class Operation : uint8_t { kSum, kMean, kMult, kMax, kMin };
 
-  ReduceLayer(Operation op, int64_t keepdims = 0,
-              const std::vector<int64_t>& axes = {});
+  explicit ReduceLayer(Operation op, int64_t keepdims = 0,
+                       const std::vector<int64_t>& axes = {});
 
   explicit ReduceLayer(int64_t keepdims = 0,
                        const std::vector<int64_t>& axes = {})

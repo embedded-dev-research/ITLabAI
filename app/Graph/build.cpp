@@ -44,8 +44,9 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
 
   for (const auto& layer_data : model_data) {
     std::string layer_type = layer_data["type"];
-    if (comments)
+    if (comments) {
       std::cout << "Processing layer of type: " << layer_type << std::endl;
+    }
 
     it_lab_ai::Tensor tensor =
         it_lab_ai::create_tensor_from_json(layer_data, it_lab_ai::Type::kFloat);
@@ -92,8 +93,9 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       layer_ptrs.push_back(ew_layer.get());
       layers.push_back(std::move(ew_layer));
       layerpostop.push_back(true);
-      if (comments)
+      if (comments) {
         std::cout << "Element wise (relu) added to layers" << std::endl;
+      }
     }
     if (layer_type.find("Dense") != std::string::npos) {
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
@@ -112,9 +114,10 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       } else {
         pooltype = "average";
       }
-      if (comments)
+      if (comments) {
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
                   << std::endl;
+      }
       auto pool_layer =
           std::make_unique<it_lab_ai::PoolingLayer>(shape, pooltype);
       layer_ptrs.push_back(pool_layer.get());
@@ -137,15 +140,17 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       layer_ptrs.push_back(dropout_layer.get());
       layers.push_back(std::move(dropout_layer));
       layerpostop.push_back(false);
-      if (comments)
+      if (comments) {
         std::cout
             << "DropOutLayer added to layers with probability 0.4 (turned "
                "off for inference)."
             << std::endl;
+      }
     }
   }
-  if (comments)
+  if (comments) {
     std::cout << "number of layers - " << layers.size() + 1 << std::endl;
+  }
   auto a1 = std::make_unique<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                     it_lab_ai::kNchw);
   Layer* a1_ptr = a1.get();
@@ -156,17 +161,19 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   if (comments) std::cout << "Input set in graph." << std::endl;
 
   graph.makeConnection(a1_ptr, layer_ptrs[0]);
-  if (comments)
+  if (comments) {
     std::cout << "Connection made between InputLayer and first layer."
               << std::endl;
+  }
 
   for (size_t i = 0; i < layers.size() - 1; ++i) {
     if (layerpostop[i]) {
       layer_ptrs[i - 1]->postops.layers.push_back(layer_ptrs[i]);
       layer_ptrs[i - 1]->postops.count++;
       graph.makeConnection(layer_ptrs[i - 1], layer_ptrs[i + 1]);
-    } else if (!layerpostop[i + 1])
+    } else if (!layerpostop[i + 1]) {
       graph.makeConnection(layer_ptrs[i], layer_ptrs[i + 1]);
+    }
   }
 
   graph.setOutput(layer_ptrs.back(), output);
@@ -469,11 +476,12 @@ ParseResult parse_json_model(RuntimeOptions options,
       } else if (layer_type.find("Dropout") != std::string::npos) {
         auto dropout_layer = std::make_unique<it_lab_ai::DropOutLayer>(0.0);
         layer = std::move(dropout_layer);
-        if (comments)
+        if (comments) {
           std::cout
               << "DropOutLayer added to layers with probability 0.4 (turned "
                  "off for inference)."
               << std::endl;
+        }
       } else if (layer_type == "GlobalAveragePool") {
         auto pool_layer = std::make_unique<it_lab_ai::PoolingLayer>(
             it_lab_ai::Shape({0, 0}), "average");
@@ -679,17 +687,24 @@ ParseResult parse_json_model(RuntimeOptions options,
             continue;
           }
         } else {
-          it_lab_ai::BinaryOpLayer::Operation op;
-          if (layer_type == "Add")
+          it_lab_ai::BinaryOpLayer::Operation op =
+              it_lab_ai::BinaryOpLayer::Operation::kAdd;
+          bool supported_type = true;
+
+          if (layer_type == "Add") {
             op = it_lab_ai::BinaryOpLayer::Operation::kAdd;
-          else if (layer_type == "Sub")
+          } else if (layer_type == "Sub") {
             op = it_lab_ai::BinaryOpLayer::Operation::kSub;
-          else if (layer_type == "Mul")
+          } else if (layer_type == "Mul") {
             op = it_lab_ai::BinaryOpLayer::Operation::kMul;
-          else if (layer_type == "Div")
+          } else if (layer_type == "Div") {
             op = it_lab_ai::BinaryOpLayer::Operation::kDiv;
-          else {
-            op = it_lab_ai::BinaryOpLayer::Operation::kAdd;
+          } else {
+            supported_type = false;
+          }
+
+          if (!supported_type) {
+            continue;
           }
 
           auto bin_layer = std::make_unique<it_lab_ai::BinaryOpLayer>(op);

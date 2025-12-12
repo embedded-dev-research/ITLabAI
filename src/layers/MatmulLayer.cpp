@@ -26,11 +26,10 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
       size_t b_rows = b_shape[b_shape.dims() - 2];
       size_t b_cols = b_shape[b_shape.dims() - 1];
 
-      if (b_rows > a_rows) {
+      const bool same_row_count = b_rows == a_rows;
+      if (b_rows > a_rows || (same_row_count && b_cols > a_cols)) {
         should_swap = true;
-      } else if (b_rows == a_rows && b_cols > a_cols) {
-        should_swap = true;
-      } else if (b_rows == a_rows && b_cols == a_cols) {
+      } else if (same_row_count && b_cols == a_cols) {
         size_t a_batch = 1;
         size_t b_batch = 1;
         for (size_t i = 0; i < a_shape.dims() - 2; ++i) a_batch *= a_shape[i];
@@ -129,7 +128,7 @@ void MatmulLayer::matmul_1d_2d(const Tensor& a, const Tensor& b,
   }
 
   std::vector<size_t> temp_a_shape = {1, a.get_shape()[0]};
-  Tensor temp_a = make_tensor(*a_data, temp_a_shape);
+  Tensor temp_a = make_tensor(*a_data, Shape(temp_a_shape));
 
   Tensor temp_output;
   matmul_nd_nd<T>(temp_a, b, temp_output);
@@ -141,7 +140,7 @@ void MatmulLayer::matmul_1d_2d(const Tensor& a, const Tensor& b,
     final_shape.push_back(temp_shape[i]);
   }
 
-  output = make_tensor(*temp_output.as<T>(), final_shape);
+  output = make_tensor(*temp_output.as<T>(), Shape(final_shape));
 }
 
 template <typename T>
@@ -158,7 +157,7 @@ void MatmulLayer::matmul_2d_1d(const Tensor& a, const Tensor& b,
   }
 
   std::vector<size_t> temp_b_shape = {b.get_shape()[0], 1};
-  Tensor temp_b = make_tensor(*b_data, temp_b_shape);
+  Tensor temp_b = make_tensor(*b_data, Shape(temp_b_shape));
 
   Tensor temp_output;
   matmul_nd_nd<T>(a, temp_b, temp_output);
@@ -170,7 +169,7 @@ void MatmulLayer::matmul_2d_1d(const Tensor& a, const Tensor& b,
     final_shape.push_back(temp_shape[i]);
   }
 
-  output = make_tensor(*temp_output.as<T>(), final_shape);
+  output = make_tensor(*temp_output.as<T>(), Shape(final_shape));
 }
 
 template <typename T>
@@ -327,7 +326,7 @@ void MatmulLayer::matmul_nd_nd(const Tensor& a, const Tensor& b,
     }
   }
 
-  output = make_tensor(output_values, output_shape);
+  output = make_tensor(output_values, Shape(output_shape));
 }
 
 template void MatmulLayer::matmul_impl<float>(const Tensor&, const Tensor&,
