@@ -203,9 +203,6 @@ jobs:
         submodules: true
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install -y gcovr
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -218,8 +215,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_FLAGS="--coverage" \
           -DCMAKE_CXX_FLAGS="--coverage" \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
         cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
