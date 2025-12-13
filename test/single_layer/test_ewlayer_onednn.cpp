@@ -38,7 +38,7 @@ TEST(ewlayer_onednn, relu_float) {
   }
 }
 
-TEST(ewlayer_onednn, DISABLED_relu_int) {
+TEST(ewlayer_onednn, relu_int) {
   EwLayerOneDnn layer("relu");
 
   Tensor input = make_tensor<int>({1, -1, 2, -2, 0, -5});
@@ -74,7 +74,7 @@ TEST(ewlayer_onednn, linear_float) {
   }
 }
 
-TEST(ewlayer_onednn, DISABLED_linear_int) {
+TEST(ewlayer_onednn, linear_int) {
   EwLayerOneDnn layer("linear", 2.0f, 1.0f);
 
   Tensor input = make_tensor<int>({1, -1, 2, -5, 0});
@@ -182,7 +182,7 @@ TEST(ewlayer_onednn, multidim_tensor_relu) {
   }
 }
 
-TEST(ewlayer_onednn, DISABLED_multidim_tensor_relu_int) {
+TEST(ewlayer_onednn, multidim_tensor_relu_int) {
   Shape shape({2, 2, 2});
 
   EwLayerOneDnn layer("relu");
