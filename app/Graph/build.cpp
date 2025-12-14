@@ -185,49 +185,14 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   }
 }
 
+namespace {
+
 std::string get_base_layer_name(const std::string& tensor_name) {
   static const auto kPattern = std::regex("(_output|_out|:)[_\\d]*$");
   return std::regex_replace(tensor_name, kPattern, "");
 }
 
-std::string layerTypeToString(it_lab_ai::LayerType type) {
-  switch (type) {
-    case it_lab_ai::kInput:
-      return "Input";
-    case it_lab_ai::kPooling:
-      return "Pooling";
-    case it_lab_ai::kElementWise:
-      return "ElementWise";
-    case it_lab_ai::kConvolution:
-      return "Convolution";
-    case it_lab_ai::kFullyConnected:
-      return "FullyConnected";
-    case it_lab_ai::kFlatten:
-      return "Flatten";
-    case it_lab_ai::kConcat:
-      return "Concat";
-    case it_lab_ai::kDropout:
-      return "Dropout";
-    case it_lab_ai::kSplit:
-      return "Split";
-    case it_lab_ai::kBinaryOp:
-      return "BinaryOp";
-    case it_lab_ai::kTranspose:
-      return "Transpose";
-    case it_lab_ai::kMatmul:
-      return "MatMul";
-    case it_lab_ai::kReshape:
-      return "Reshape";
-    case it_lab_ai::kSoftmax:
-      return "Softmax";
-    case it_lab_ai::kReduce:
-      return "Reduce";
-    case it_lab_ai::kBatchNormalization:
-      return "BatchNormalization";
-    default:
-      return "Unknown";
-  }
-}
+}  // namespace
 
 void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                  it_lab_ai::Tensor& output, const std::string& json_path,
