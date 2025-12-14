@@ -6,10 +6,8 @@ int main() {
   std::string json_file = MODEL_PATH_GOOGLENET_ONNX;
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
 
-  std::cout << "Model contains " << model_data.size()
-            << " layers:" << std::endl;
-  std::cout << "--------------------------------------------------"
-            << std::endl;
+  std::cout << "Model contains " << model_data.size() << " layers:" << '\n';
+  std::cout << "--------------------------------------------------" << '\n';
 
   for (const auto& layer_data : model_data) {
     int layer_index = layer_data["index"];
@@ -20,11 +18,11 @@ int main() {
     bool has_value = layer_data.contains("value");
 
     std::cout << "Layer " << layer_index << ": " << layer_name << " ("
-              << layer_type << ")" << std::endl;
+              << layer_type << ")" << '\n';
 
     if (layer_data.contains("attributes") &&
         !layer_data["attributes"].empty()) {
-      std::cout << "  Attributes:" << std::endl;
+      std::cout << "  Attributes:" << '\n';
       for (const auto& [key, value] : layer_data["attributes"].items()) {
         std::cout << "    " << key << ": ";
         if (value.is_array()) {
@@ -42,16 +40,16 @@ int main() {
         } else if (value.is_string()) {
           std::cout << value.get<std::string>();
         }
-        std::cout << std::endl;
+        std::cout << '\n';
       }
     }
 
     if (has_value) {
       try {
         float value = layer_data["value"].get<float>();
-        std::cout << "  Value: " << value << std::endl;
+        std::cout << "  Value: " << value << '\n';
       } catch (const std::exception& e) {
-        std::cerr << "  Error processing value: " << e.what() << std::endl;
+        std::cerr << "  Error processing value: " << e.what() << '\n';
       }
     }
 
@@ -60,20 +58,19 @@ int main() {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
             layer_data, it_lab_ai::Type::kFloat);
 
-        std::cout << "  Weights shape: " << tensor.get_shape() << std::endl;
+        std::cout << "  Weights shape: " << tensor.get_shape() << '\n';
 
         if (!tensor.get_bias().empty()) {
-          std::cout << "  Bias size: " << tensor.get_bias().size() << std::endl;
+          std::cout << "  Bias size: " << tensor.get_bias().size() << '\n';
         }
       } catch (const std::exception& e) {
-        std::cerr << "  Error processing weights: " << e.what() << std::endl;
+        std::cerr << "  Error processing weights: " << e.what() << '\n';
       }
     } else if (!has_value) {
-      std::cout << "  No weights or value" << std::endl;
+      std::cout << "  No weights or value" << '\n';
     }
 
-    std::cout << "--------------------------------------------------"
-              << std::endl;
+    std::cout << "--------------------------------------------------" << '\n';
   }
 
   return 0;

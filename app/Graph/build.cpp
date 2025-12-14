@@ -19,7 +19,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
     }
-    std::cout << std::endl;
+    std::cout << '\n';
     if (input.get_shape().dims() == 4) {
       for (size_t n = 0; n < input.get_shape()[0]; n++) {
         for (size_t h = 0; h < input.get_shape()[2]; h++) {
@@ -28,10 +28,10 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
               std::cout << input.get<float>({n, c, h, w}) << ' ';
             }
           }
-          std::cerr << std::endl;
+          std::cerr << '\n';
         }
       }
-      std::cout << std::endl << std::endl;
+      std::cout << '\n' << '\n';
     }
   }
   std::vector<std::unique_ptr<it_lab_ai::Layer>> layers;
@@ -41,12 +41,12 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   std::string json_file = MODEL_PATH_H5;
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
 
-  if (comments) std::cout << "Loaded model data from JSON." << std::endl;
+  if (comments) std::cout << "Loaded model data from JSON." << '\n';
 
   for (const auto& layer_data : model_data) {
     std::string layer_type = layer_data["type"];
     if (comments) {
-      std::cout << "Processing layer of type: " << layer_type << std::endl;
+      std::cout << "Processing layer of type: " << layer_type << '\n';
     }
 
     it_lab_ai::Tensor tensor =
@@ -77,7 +77,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
         for (size_t i = 0; i < shape.dims(); ++i) {
           std::cout << shape[i] << " ";
         }
-        std::cout << std::endl;
+        std::cout << '\n';
       }
 
       it_lab_ai::Tensor tmp_values = tensor;
@@ -87,7 +87,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       layer_ptrs.push_back(conv_layer.get());
       layers.push_back(std::move(conv_layer));
       layerpostop.push_back(false);
-      if (comments) std::cout << "ConvLayer added to layers." << std::endl;
+      if (comments) std::cout << "ConvLayer added to layers." << '\n';
     }
     if (layer_type.find("relu") != std::string::npos) {
       auto ew_layer = LayerFactory::createEwLayer("relu");
@@ -95,7 +95,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       layers.push_back(std::move(ew_layer));
       layerpostop.push_back(true);
       if (comments) {
-        std::cout << "Element wise (relu) added to layers" << std::endl;
+        std::cout << "Element wise (relu) added to layers" << '\n';
       }
     }
     if (layer_type.find("Dense") != std::string::npos) {
@@ -104,7 +104,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       layer_ptrs.push_back(fc_layer.get());
       layers.push_back(std::move(fc_layer));
       layerpostop.push_back(false);
-      if (comments) std::cout << "DenseLayer added to layers." << std::endl;
+      if (comments) std::cout << "DenseLayer added to layers." << '\n';
     }
 
     if (layer_type.find("Pool") != std::string::npos) {
@@ -117,14 +117,14 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       }
       if (comments) {
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
-                  << std::endl;
+                  << '\n';
       }
       auto pool_layer =
           std::make_unique<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
       layer_ptrs.push_back(pool_layer.get());
       layers.push_back(std::move(pool_layer));
       layerpostop.push_back(false);
-      if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
+      if (comments) std::cout << "PoolingLayer added to layers." << '\n';
     }
 
     if (layer_type.find("Flatten") != std::string::npos) {
@@ -133,7 +133,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       layer_ptrs.push_back(flatten_layer.get());
       layers.push_back(std::move(flatten_layer));
       layerpostop.push_back(false);
-      if (comments) std::cout << "FlattenLayer added to layers." << std::endl;
+      if (comments) std::cout << "FlattenLayer added to layers." << '\n';
     }
 
     if (layer_type.find("Dropout") != std::string::npos) {
@@ -145,26 +145,25 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
         std::cout
             << "DropOutLayer added to layers with probability 0.4 (turned "
                "off for inference)."
-            << std::endl;
+            << '\n';
       }
     }
   }
   if (comments) {
-    std::cout << "number of layers - " << layers.size() + 1 << std::endl;
+    std::cout << "number of layers - " << layers.size() + 1 << '\n';
   }
   auto a1 = std::make_unique<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                     it_lab_ai::kNchw);
   Layer* a1_ptr = a1.get();
 
-  if (comments) std::cout << "InputLayer created." << std::endl;
+  if (comments) std::cout << "InputLayer created." << '\n';
 
   graph.setInput(a1_ptr, input);
-  if (comments) std::cout << "Input set in graph." << std::endl;
+  if (comments) std::cout << "Input set in graph." << '\n';
 
   graph.makeConnection(a1_ptr, layer_ptrs[0]);
   if (comments) {
-    std::cout << "Connection made between InputLayer and first layer."
-              << std::endl;
+    std::cout << "Connection made between InputLayer and first layer." << '\n';
   }
 
   for (size_t i = 0; i < layers.size() - 1; ++i) {
@@ -237,7 +236,7 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                        name_to_layer_ptr[b.first]->getID();
               });
   } catch (const std::exception& e) {
-    std::cerr << "ERROR during sorting: " << e.what() << std::endl;
+    std::cerr << "ERROR during sorting: " << e.what() << '\n';
   }
 
   for (const auto& [source_name, target_name] : connection_list) {
@@ -273,7 +272,7 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                              name_to_layer_ptr[target_name]);
       } catch (const std::exception& e) {
         std::cerr << "Failed: " << source_name << " -> " << target_name << " : "
-                  << e.what() << std::endl;
+                  << e.what() << '\n';
       }
     }
   }
@@ -332,7 +331,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
     }
   }
 
-  if (comments) std::cout << "Loaded model data from JSON." << std::endl;
+  if (comments) std::cout << "Loaded model data from JSON." << '\n';
 
   int current_id = 0;
 
@@ -352,7 +351,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
       int layer_index = layer_data["index"];
       if (comments) {
         std::cout << "Processing layer " << layer_index << ": " << layer_name
-                  << " (" << layer_type << ")" << std::endl;
+                  << " (" << layer_type << ")" << '\n';
       }
 
       std::unique_ptr<it_lab_ai::Layer> layer;
@@ -445,7 +444,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
           std::cout
               << "DropOutLayer added to layers with probability 0.4 (turned "
                  "off for inference)."
-              << std::endl;
+              << '\n';
         }
       } else if (layer_type == "GlobalAveragePool") {
         auto pool_layer = std::make_unique<it_lab_ai::PoolingLayer>(
@@ -454,7 +453,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
                        "dimensions as kernel)"
-                    << std::endl;
+                    << '\n';
         }
       } else if ((layer_type == "MaxPool" || layer_type == "AveragePool")) {
         std::string pooltype =
@@ -531,7 +530,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         } catch (const std::exception& e) {
           if (comments) {
             std::cout << "Warning: Some pooling parameters not supported: "
-                      << e.what() << std::endl;
+                      << e.what() << '\n';
           }
         }
         layer = std::move(pool_layer);
@@ -711,7 +710,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             std::cout << "Weights transposed from [" << tensor.get_shape()[0]
                       << ", " << tensor.get_shape()[1] << "] to ["
                       << transposed_shape[0] << ", " << transposed_shape[1]
-                      << "]" << std::endl;
+                      << "]" << '\n';
           }
         }
 
@@ -757,7 +756,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             std::cout << perm[i];
             if (i < perm.size() - 1) std::cout << ", ";
           }
-          std::cout << "]" << std::endl;
+          std::cout << "]" << '\n';
         }
       } else if (layer_type == "Reshape") {
         bool allowzero = false;
@@ -1027,7 +1026,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
       }
     } catch (const std::exception& e) {
       std::cerr << "Error processing layer " << layer_data["index"] << " ("
-                << layer_data["name"] << "): " << e.what() << std::endl;
+                << layer_data["name"] << "): " << e.what() << '\n';
       throw;
     }
   }
@@ -1201,14 +1200,14 @@ it_lab_ai::Tensor prepare_mnist_image(const cv::Mat& image) {
 void print_time_stats(Graph& graph) {
 #ifdef ENABLE_STATISTIC_TIME
   std::vector<std::string> times = graph.getTimeInfo();
-  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
+  std::cout << "!INFERENCE TIME INFO START!" << '\n';
   for (size_t i = 0; i < times.size(); i++) {
-    std::cout << times[i] << std::endl;
+    std::cout << times[i] << '\n';
   }
   std::vector<int> elps_time = graph.getTime();
   int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-  std::cout << "Elapsed inference time:" << sum << std::endl;
-  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+  std::cout << "Elapsed inference time:" << sum << '\n';
+  std::cout << "!INFERENCE TIME INFO END!" << '\n';
 #else
   (void)graph;
 #endif

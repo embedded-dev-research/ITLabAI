@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
   std::string json_path = model_paths[model_name];
   std::vector<int> input_shape = get_input_shape_from_json(json_path);
 
-  std::cout << std::endl;
+  std::cout << '\n';
 
   if (model_name == "alexnet_mnist") {
     std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
     double percentage =
         (static_cast<double>(stat) / static_cast<double>(sum + 10)) * 100;
     std::cout << "Stat: " << std::fixed << std::setprecision(2) << percentage
-              << "%" << std::endl;
+              << "%" << '\n';
     return 0;
   }
   std::vector<size_t> counts;
@@ -130,8 +130,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (total_images == 0) {
-    std::cerr << "No images found in dataset path: " << dataset_path
-              << std::endl;
+    std::cerr << "No images found in dataset path: " << dataset_path << '\n';
     return 1;
   }
 
@@ -157,7 +156,7 @@ int main(int argc, char* argv[]) {
         cv::Mat image = cv::imread(entry.path().string());
         if (image.empty()) {
           std::cerr << "Failed to load image: " << entry.path().string()
-                    << std::endl;
+                    << '\n';
           continue;
         }
 
@@ -237,18 +236,18 @@ int main(int argc, char* argv[]) {
   double final_accuracy_top5 =
       (static_cast<double>(correct_predictions_top5) / total_images) * 100;
 
-  std::cout << "\nFinal Results:" << std::endl;
-  std::cout << "Model: " << model_name << std::endl;
-  std::cout << "Dataset: " << dataset_path << std::endl;
-  std::cout << "Total images: " << total_images << std::endl;
+  std::cout << "\nFinal Results:" << '\n';
+  std::cout << "Model: " << model_name << '\n';
+  std::cout << "Dataset: " << dataset_path << '\n';
+  std::cout << "Total images: " << total_images << '\n';
   std::cout << "Correct predictions (Top-1): " << correct_predictions_top1
-            << std::endl;
+            << '\n';
   std::cout << "Correct predictions (Top-5): " << correct_predictions_top5
-            << std::endl;
+            << '\n';
   std::cout << "Top-1 Accuracy: " << std::fixed << std::setprecision(2)
-            << final_accuracy_top1 << "%" << std::endl;
+            << final_accuracy_top1 << "%" << '\n';
   std::cout << "Top-5 Accuracy: " << std::fixed << std::setprecision(2)
-            << final_accuracy_top5 << "%" << std::endl;
+            << final_accuracy_top5 << "%" << '\n';
 
   return 0;
 }
