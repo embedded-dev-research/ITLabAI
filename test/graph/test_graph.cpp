@@ -200,22 +200,26 @@ TEST(graph, set_output_null_layer) {
 
 TEST(graph, get_vertex_value_invalid_id) {
   Graph graph;
-  EXPECT_THROW(graph.getVertexValue(1000), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(graph.getVertexValue(1000)),
+               std::invalid_argument);
 }
 
 TEST(graph, get_edge_value_invalid_pos) {
   Graph graph;
-  EXPECT_THROW(graph.getEdgeValue(1000), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(graph.getEdgeValue(1000)),
+               std::invalid_argument);
 }
 
 TEST(graph, get_inputs_size_invalid_id) {
   Graph graph;
-  EXPECT_THROW(graph.getInputsSize(1000), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(graph.getInputsSize(1000)),
+               std::invalid_argument);
 }
 
 TEST(graph, get_layer_from_id_invalid_id) {
   Graph graph;
-  EXPECT_THROW(graph.getLayerFromID(1000), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(graph.getLayerFromID(1000)),
+               std::invalid_argument);
 }
 
 TEST(graph, complex_graph_with_split_distribution) {
@@ -283,7 +287,7 @@ TEST(graph, vertex_out_of_range) {
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  ASSERT_ANY_THROW(graph.getVertexValue(5));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getVertexValue(5)));
 }
 
 TEST(graph, edges_out_of_range) {
@@ -310,7 +314,7 @@ TEST(graph, edges_out_of_range) {
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  ASSERT_ANY_THROW(graph.getEdgeValue(999));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getEdgeValue(999)));
 }
 
 TEST(graph, inputs_out_of_range) {
@@ -337,7 +341,7 @@ TEST(graph, inputs_out_of_range) {
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  ASSERT_ANY_THROW(graph.getInputsSize(999));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getInputsSize(999)));
 }
 
 TEST(graph, get_layer_out_of_range) {
@@ -364,7 +368,7 @@ TEST(graph, get_layer_out_of_range) {
   graph.makeConnection(fcLayer_ptr, fcLayer4_ptr);
   graph.setOutput(fcLayer4_ptr, output);
 
-  ASSERT_ANY_THROW(graph.getLayerFromID(999));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getLayerFromID(999)));
 }
 
 TEST(graph_transformations, check_subgraphs_search) {
