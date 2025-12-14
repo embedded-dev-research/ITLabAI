@@ -52,11 +52,13 @@ class Layer {
   explicit Layer(LayerType type) : type_(type) {}
   virtual ~Layer() = default;
   PostOperations postops;
-  int getID() const { return id_; }
+  [[nodiscard]] int getID() const { return id_; }
   void setID(int id) { id_ = id; }
   void setParallelBackend(ParBackend backend) { parallel_backend_ = backend; }
-  ParBackend getParallelBackend() const { return parallel_backend_; }
-  LayerType getName() const { return type_; }
+  [[nodiscard]] ParBackend getParallelBackend() const {
+    return parallel_backend_;
+  }
+  [[nodiscard]] LayerType getName() const { return type_; }
   virtual void run(const std::vector<Tensor>& input,
                    std::vector<Tensor>& output) = 0;
 #ifdef ENABLE_STATISTIC_WEIGHTS
@@ -79,10 +81,10 @@ class LayerImpl {
   LayerImpl& operator=(const LayerImpl& c) = default;
   virtual std::vector<ValueType> run(
       const std::vector<ValueType>& input) const = 0;
-  Shape get_input_shape() const { return inputShape_; }
-  Shape get_output_shape() const { return outputShape_; }
+  [[nodiscard]] Shape get_input_shape() const { return inputShape_; }
+  [[nodiscard]] Shape get_output_shape() const { return outputShape_; }
   // weights width x height
-  std::pair<Shape, Shape> get_dims() const {
+  [[nodiscard]] std::pair<Shape, Shape> get_dims() const {
     return std::pair<Shape, Shape>(outputShape_, inputShape_);
   }
 
