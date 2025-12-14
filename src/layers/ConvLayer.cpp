@@ -36,11 +36,11 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
     }
   }
   if (options.parallel) {
-    switch (options.parallel_backend) {
+    switch (options.par_backend) {
       /*case ParallelBackend::kTBB:
         implType_ = kTBB;
         break;*/
-      case ParallelBackend::kSTL:
+      case ParBackend::kThreads:
         implType_ = kSTL;
         break;
       // case ParallelBackend::kOMP:
@@ -52,7 +52,7 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
       // case ParallelBackend::kSycl:
       //   implType = kSycl;
       //   break;
-      case ParallelBackend::kNone:
+      case ParBackend::kSeq:
       default:
         implType_ = kDefault;
         break;

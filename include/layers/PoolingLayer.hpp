@@ -22,27 +22,23 @@ class PoolingLayer : public Layer {
                         const Shape& strides = {2, 2},
                         const Shape& pads = {0, 0, 0, 0},
                         const Shape& dilations = {1, 1}, bool ceil_mode = false,
-                        std::string pooling_type = "average",
-                        ImplType implType = kDefault)
+                        std::string pooling_type = "average")
       : Layer(kPooling),
         poolingShape_(pooling_shape),
         strides_(strides),
         pads_(pads),
         dilations_(dilations),
         ceil_mode_(ceil_mode),
-        poolingType_(std::move(pooling_type)),
-        implType_(implType) {}
+        poolingType_(std::move(pooling_type)) {}
   explicit PoolingLayer(const Shape& pooling_shape,
-                        std::string pooling_type = "average",
-                        ImplType implType = kDefault)
+                        std::string pooling_type = "average")
       : Layer(kPooling),
         poolingShape_(pooling_shape),
         strides_({2, 2}),
         pads_({0, 0, 0, 0}),
         dilations_({1, 1}),
         ceil_mode_(false),
-        poolingType_(std::move(pooling_type)),
-        implType_(implType) {}
+        poolingType_(std::move(pooling_type)) {}
   void setStrides(size_t h, size_t w) { strides_ = {h, w}; }
   void setPads(size_t top, size_t bottom, size_t left, size_t right) {
     pads_ = {top, bottom, left, right};

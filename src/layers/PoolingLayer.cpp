@@ -15,8 +15,8 @@ void PoolingLayer::run(const std::vector<Tensor>& input,
     throw std::runtime_error("PoolingLayer: Input tensors not 1");
   }
   if (options.parallel) {
-    switch (options.parallel_backend) {
-      case ParallelBackend::kTBB:
+    switch (options.par_backend) {
+      case ParBackend::kTbb:
         implType_ = kTBB;
         break;
       /*case ParallelBackend::kSTL:
@@ -31,7 +31,7 @@ void PoolingLayer::run(const std::vector<Tensor>& input,
       // case ParallelBackend::kSycl:
       //   implType = kSycl;
       //   break;
-      case ParallelBackend::kNone:
+      case ParBackend::kSeq:
       default:
         implType_ = kDefault;
         break;

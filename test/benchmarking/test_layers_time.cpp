@@ -33,11 +33,11 @@ TEST(pooling_test, is_pooling_tbb_ok) {
   Tensor output;
   RuntimeOptions options_seq;
   options_seq.parallel = false;
-  options_seq.parallel_backend = ParallelBackend::kNone;
+  options_seq.par_backend = ParBackend::kSeq;
 
   RuntimeOptions options_tbb;
   options_tbb.parallel = true;
-  options_tbb.parallel_backend = ParallelBackend::kTBB;
+  options_tbb.par_backend = ParBackend::kTbb;
 
   PoolingLayer p1(Shape({2, 2}), "max");
   PoolingLayer p2(Shape({2, 2}), "max");
@@ -70,11 +70,11 @@ TEST(conv_test, is_conv_stl_ok) {
 
   RuntimeOptions options_seq;
   options_seq.parallel = false;
-  options_seq.parallel_backend = ParallelBackend::kNone;
+  options_seq.par_backend = ParBackend::kSeq;
 
   RuntimeOptions options_stl;
   options_stl.parallel = true;
-  options_stl.parallel_backend = ParallelBackend::kTBB;
+  options_stl.par_backend = ParBackend::kTbb;
 
   ConvolutionalLayer p1(1, 1, 2, kernel, Tensor());
   ConvolutionalLayer p2(1, 1, 2, kernel, Tensor());

@@ -34,6 +34,8 @@
 #include "layers/TransposeLayer.hpp"
 #include "layers_oneDNN/EWLayer.hpp"
 
+using namespace it_lab_ai;
+
 extern std::unordered_map<std::string, std::string> model_paths;
 
 struct ParseResult {
@@ -72,7 +74,6 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
 it_lab_ai::Tensor prepare_mnist_image(const cv::Mat& image);
 
 void print_time_stats(it_lab_ai::Graph& graph);
-
 namespace it_lab_ai {
 class LayerFactory {
  public:

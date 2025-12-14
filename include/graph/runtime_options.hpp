@@ -1,19 +1,31 @@
 #pragma once
 #include <cstdint>
 
+#include "parallel/parallel.hpp"
+
+namespace it_lab_ai {
+
 enum class Backend : uint8_t { kNaive, kOneDnn };
-enum class ParallelBackend : uint8_t {
-  kNone,
-  kTBB,
-  kSTL,
-  kOMP,
-  kKokkos,
-  kSycl
-};
+using ParBackend = parallel::Backend;
 
 struct RuntimeOptions {
   Backend backend{Backend::kNaive};
-  ParallelBackend parallel_backend{ParallelBackend::kNone};
+  ParBackend par_backend{ParBackend::kSeq};
   int threads{0};
   bool parallel{false};
+
+  ParBackend getEffectiveParBackend() const {
+    return parallel ? par_backend : ParBackend::kSeq;
+  }
+
+  void setParallelBackend(ParBackend p) {
+    par_backend = p;
+    parallel = (p != ParBackend::kSeq);
+  }
+
+  bool isParallel() const {
+    return parallel && (par_backend != ParBackend::kSeq);
+  }
 };
+
+}  // namespace it_lab_ai

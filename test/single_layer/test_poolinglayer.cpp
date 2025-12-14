@@ -287,7 +287,7 @@ TEST(poolinglayer, new_pooling_layer_can_run_int_avg_tbb) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
   options.parallel = true;
-  options.parallel_backend = ParallelBackend::kTBB;
+  options.par_backend = ParBackend::kTbb;
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};
   PoolingLayer a(poolshape, {2, 2}, {0, 0, 0, 0}, {1, 1}, false, "average");
@@ -330,7 +330,7 @@ TEST(poolinglayer, new_pooling_layer_tbb_can_run_1d_pooling_float) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
   options.parallel = true;
-  options.parallel_backend = ParallelBackend::kTBB;
+  options.par_backend = ParBackend::kTbb;
   Shape inpshape = {8};
   Shape poolshape = {3};
   PoolingLayer a(poolshape, "average");
@@ -444,7 +444,7 @@ TEST(poolinglayer, new_pooling_layer_with_parallel_none) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
   options.parallel = true;
-  options.parallel_backend = ParallelBackend::kNone;
+  options.par_backend = ParBackend::kSeq;
 
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};
@@ -462,7 +462,7 @@ TEST(poolinglayer, new_pooling_layer_int_avg_with_parallel_none) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
   options.parallel = true;
-  options.parallel_backend = ParallelBackend::kNone;
+  options.par_backend = ParBackend::kSeq;
 
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};
@@ -491,7 +491,7 @@ TEST(poolinglayer, new_pooling_layer_int_avg_without_parallel_flag) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
   options.parallel = false;
-  options.parallel_backend = ParallelBackend::kTBB;
+  options.par_backend = ParBackend::kTbb;
 
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};

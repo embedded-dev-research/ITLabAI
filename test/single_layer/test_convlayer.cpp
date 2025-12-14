@@ -586,7 +586,7 @@ TEST(ConvolutionalLayerTest, Conv4DSTLViaConvolutionalLayer) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
   options.parallel = true;
-  options.parallel_backend = ParallelBackend::kSTL;
+  options.par_backend = ParBackend::kThreads;
 
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
@@ -1044,7 +1044,7 @@ TEST(ConvolutionalLayerTest, Conv4DWithParallelNoneBackend) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
   options.parallel = true;
-  options.parallel_backend = ParallelBackend::kNone;
+  options.par_backend = ParBackend::kSeq;
 
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
@@ -1105,7 +1105,7 @@ TEST(ConvolutionalLayerTest, Conv4DWithoutParallelFlag) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
   options.parallel = false;
-  options.parallel_backend = ParallelBackend::kSTL;
+  options.par_backend = ParBackend::kThreads;
 
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
@@ -1136,7 +1136,7 @@ TEST(ConvolutionalLayerTest, Conv4DLegacyFloatWithParallelNone) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
   options.parallel = true;
-  options.parallel_backend = ParallelBackend::kNone;
+  options.par_backend = ParBackend::kSeq;
 
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
