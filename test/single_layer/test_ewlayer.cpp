@@ -238,7 +238,7 @@ TEST(ewlayer, parallel_for_ew) {
     auto end = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-
+    std::cout << " time: " << duration.count() << " ms" << std::endl;
     for (size_t i = 0; i < 8000000; i++) {
       EXPECT_EQ((*out[0].as<int>())[i], 0);
     }
