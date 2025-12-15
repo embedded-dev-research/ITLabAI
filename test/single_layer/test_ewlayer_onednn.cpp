@@ -304,3 +304,235 @@ TEST(ewlayer_onednn, initialization_failure_propagation) {
     FAIL() << "Expected std::invalid_argument exception";
   }
 }
+
+TEST(ewlayer_onednn, various_dimensions) {
+  {
+    EwLayerOneDnn layer("relu");
+    Tensor input = make_tensor<float>({1.0F, -1.0F, 0.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto result = *out[0].as<float>();
+    EXPECT_EQ(result.size(), 3);
+  }
+
+  {
+    EwLayerOneDnn layer("relu");
+    Shape shape2d({2, 3});
+    std::vector<float> data2d = {1, -1, 2, -2, 0, 3};
+    Tensor input = make_tensor(data2d, shape2d);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+  }
+
+  {
+    EwLayerOneDnn layer("relu");
+    Shape shape3d({2, 2, 2});
+    std::vector<float> data3d(8, 1.0f);
+    Tensor input = make_tensor(data3d, shape3d);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+  }
+
+  {
+    EwLayerOneDnn layer("relu");
+    Shape shape4d({1, 2, 2, 2});
+    std::vector<float> data4d(8, -1.0f);
+    Tensor input = make_tensor(data4d, shape4d);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto result = *out[0].as<float>();
+    for (auto val : result) {
+      EXPECT_EQ(val, 0.0f);
+    }
+  }
+
+  {
+    EwLayerOneDnn layer("relu");
+    Shape shape5d({1, 1, 2, 2, 2});
+    std::vector<float> data5d(8, 2.0f);
+    Tensor input = make_tensor(data5d, shape5d);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+  }
+}
+
+TEST(ewlayer_onednn, linear_various_alpha_beta) {
+  {
+    EwLayerOneDnn layer("linear", 0.0f, 0.0f);
+    Tensor input = make_tensor<float>({1.0F, 2.0F, -1.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto result = *out[0].as<float>();
+    for (auto val : result) {
+      EXPECT_NEAR(val, 0.0f, 1e-5);
+    }
+  }
+
+  {
+    EwLayerOneDnn layer("linear", 1.0f, 0.0f);
+    Tensor input = make_tensor<float>({1.0F, 2.0F, -1.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto result = *out[0].as<float>();
+    auto input_data = *input.as<float>();
+    for (size_t i = 0; i < result.size(); i++) {
+      EXPECT_NEAR(result[i], input_data[i], 1e-5);
+    }
+  }
+
+  {
+    EwLayerOneDnn layer("linear", 0.0f, 5.0f);
+    Tensor input = make_tensor<float>({1.0F, 2.0F, -1.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto result = *out[0].as<float>();
+    for (auto val : result) {
+      EXPECT_NEAR(val, 5.0f, 1e-5);
+    }
+  }
+
+  {
+    EwLayerOneDnn layer("linear", -2.0f, 3.0f);
+    Tensor input = make_tensor<float>({1.0F, 2.0F, -1.0F});
+    Tensor output;
+    std::vector<float> expected = {1.0f, -1.0f, 5.0f};
+
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto result = *out[0].as<float>();
+    for (size_t i = 0; i < result.size(); i++) {
+      EXPECT_NEAR(result[i], expected[i], 1e-5);
+    }
+  }
+}
+
+TEST(ewlayer_onednn, reinitialization_for_int) {
+  EwLayerOneDnn layer("relu");
+
+  {
+    Tensor input = make_tensor<float>({1.0F, -1.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto float_result = *out[0].as<float>();
+    EXPECT_NEAR(float_result[0], 1.0f, 1e-5);
+    EXPECT_NEAR(float_result[1], 0.0f, 1e-5);
+  }
+
+  {
+    Tensor input = make_tensor<int>({1, -1});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto int_result = *out[0].as<int>();
+    EXPECT_EQ(int_result[0], 1);
+    EXPECT_EQ(int_result[1], 0);
+  }
+
+  {
+    Tensor input = make_tensor<float>({2.0F, -2.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto float_result = *out[0].as<float>();
+    EXPECT_NEAR(float_result[0], 2.0f, 1e-5);
+    EXPECT_NEAR(float_result[1], 0.0f, 1e-5);
+  }
+}
+
+TEST(ewlayer_onednn, edge_case_dimensions) {
+  {
+    EwLayerOneDnn layer("relu");
+    Shape large_shape({1000});
+    std::vector<float> large_data(1000);
+    for (size_t i = 0; i < large_data.size(); i++) {
+      large_data[i] = static_cast<float>(i) - 500.0f;
+    }
+
+    Tensor input = make_tensor(large_data, large_shape);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto result = *out[0].as<float>();
+    EXPECT_EQ(result.size(), 1000);
+  }
+
+  {
+    EwLayerOneDnn layer("relu");
+    Tensor input = make_tensor<float>({5.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto result = *out[0].as<float>();
+    EXPECT_EQ(result.size(), 1);
+    EXPECT_NEAR(result[0], 5.0f, 1e-5);
+  }
+}
+
+TEST(ewlayer_onednn, all_functions_int) {
+  std::vector<std::pair<std::string, std::vector<int>>> test_cases = {
+      {"relu", {1, 0, 2, 0}},
+      {"linear", {3, -1, 5, -9}},
+  };
+
+  for (const auto& [func, expected] : test_cases) {
+    EwLayerOneDnn layer(func, 2.0f, 1.0f);
+
+    std::vector<int> input_data;
+    if (func == "relu") {
+      input_data = {1, -1, 2, -2};
+    } else if (func == "linear") {
+      input_data = {1, -1, 2, -5};
+    }
+
+    Tensor input = make_tensor<int>(input_data);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto result = *out[0].as<int>();
+
+    ASSERT_EQ(result.size(), expected.size());
+    for (size_t i = 0; i < result.size(); i++) {
+      EXPECT_EQ(result[i], expected[i])
+          << "Function: " << func << ", index: " << i;
+    }
+  }
+}

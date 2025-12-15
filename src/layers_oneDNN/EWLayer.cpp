@@ -182,7 +182,7 @@ void EwLayerOneDnn::initialize_onednn(const Shape& shape, Type data_type) {
   }
 }
 
-dnnl::memory::data_type EwLayerOneDnn::get_dnnl_data_type(Type type) const {
+dnnl::memory::data_type EwLayerOneDnn::get_dnnl_data_type(Type type) {
   switch (type) {
     case Type::kFloat:
       return dnnl::memory::data_type::f32;
