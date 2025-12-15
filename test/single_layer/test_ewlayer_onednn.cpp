@@ -246,7 +246,7 @@ TEST(ewlayer_onednn, multiple_input_tensors) {
   EXPECT_THROW({ layer.run(in, out); }, std::runtime_error);
 }
 
-TEST(ewlayer_onednn, unsupported_tensor_dimensionality) {
+TEST(ewlayer_onednn, unsupported_tensor_dimensionality1) {
   EwLayerOneDnn layer("relu");
 
   Shape shape_6d({2, 3, 4, 5, 6, 7});
@@ -534,5 +534,48 @@ TEST(ewlayer_onednn, all_functions_int) {
       EXPECT_EQ(result[i], expected[i])
           << "Function: " << func << ", index: " << i;
     }
+  }
+}
+
+TEST(ewlayer_onednn, unsupported_tensor_dimensionality) {
+  EwLayerOneDnn layer("relu");
+  Shape shape6d({2, 2, 2, 2, 2, 2});
+  std::vector<float> data6d(64, 1.0f);
+  Tensor input = make_tensor(data6d, shape6d);
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
+
+  try {
+    layer.run(in, out);
+    FAIL() << "Expected std::invalid_argument exception";
+  } catch (const std::invalid_argument& e) {
+    EXPECT_NE(std::string(e.what()).find("Unsupported tensor dimensionality"),
+              std::string::npos);
+    EXPECT_NE(std::string(e.what()).find("6"), std::string::npos);
+  }
+}
+
+TEST(ewlayer_onednn, unsupported_function_algorithm) {
+  EwLayerOneDnn layer("relu");
+  EwLayerOneDnn invalid_layer("invalid_func_123", 1.0f, 0.0f);
+
+  Tensor input = make_tensor<float>({1.0F});
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(invalid_layer.run(in, out), std::invalid_argument);
+
+  try {
+    invalid_layer.run(in, out);
+    FAIL() << "Expected std::invalid_argument";
+  } catch (const std::invalid_argument& e) {
+    EXPECT_NE(std::string(e.what()).find("Unsupported function for oneDNN"),
+              std::string::npos);
+    EXPECT_NE(std::string(e.what()).find("invalid_func_123"),
+              std::string::npos);
   }
 }

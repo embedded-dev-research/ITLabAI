@@ -94,8 +94,6 @@ void EwLayerOneDnn::run(const std::vector<Tensor>& input,
       stream_->wait();
 
       output[0] = make_tensor(output_data, input_tensor.get_shape());
-    } else {
-      throw std::runtime_error("EwLayerOneDnn: Unsupported data type");
     }
 
   } catch (const std::exception& e) {
