@@ -15,7 +15,6 @@ Checks: >
   -modernize-return-braced-init-list,
   -modernize-use-trailing-return-type,
   -modernize-concat-nested-namespaces,
-  -modernize-use-nodiscard,
   -modernize-avoid-c-arrays,
   -modernize-pass-by-value,
   -performance-move-const-arg,
