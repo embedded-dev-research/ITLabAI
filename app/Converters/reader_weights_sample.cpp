@@ -12,15 +12,15 @@ int main() {
     std::string layer_type = layer_data["type"];
 
     std::cout << "Layer " << layer_index << " (" << layer_type << ", "
-              << layer_name << "):" << std::endl;
+              << layer_name << "):" << '\n';
 
     try {
       it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
           layer_data, it_lab_ai::Type::kFloat);
-      // std::cout << tensor << std::endl;
+      // std::cout << tensor << '\n';
     } catch (const std::exception& e) {
       std::cerr << "Error processing layer " << layer_name << ": " << e.what()
-                << std::endl;
+                << '\n';
     }
   }
 

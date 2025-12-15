@@ -19,7 +19,6 @@ Checks: >
   -modernize-avoid-c-arrays,
   -modernize-pass-by-value,
   -performance-move-const-arg,
-  -performance-avoid-endl,
   -readability-braces-around-statements,
   -readability-identifier-length,
   -readability-magic-numbers,

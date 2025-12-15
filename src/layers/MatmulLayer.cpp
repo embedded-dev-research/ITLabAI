@@ -60,10 +60,10 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
         throw std::runtime_error("Unsupported tensor data type for MatMul");
     }
   } catch (const std::exception& e) {
-    std::cerr << "ERROR in MatMul: " << e.what() << std::endl;
+    std::cerr << "ERROR in MatMul: " << e.what() << '\n';
     throw;
   } catch (...) {
-    std::cerr << "UNKNOWN ERROR in MatMul" << std::endl;
+    std::cerr << "UNKNOWN ERROR in MatMul" << '\n';
     throw;
   }
 }
@@ -311,12 +311,12 @@ void MatmulLayer::matmul_nd_nd(const Tensor& a, const Tensor& b,
           size_t b_index = b_offset + l * n + j;
           if (a_index >= a_data->size()) {
             std::cerr << "a_idx out of bounds: " << a_index
-                      << " >= " << a_data->size() << std::endl;
+                      << " >= " << a_data->size() << '\n';
             throw std::runtime_error("MatMul: a index out of bounds");
           }
           if (b_index >= b_data->size()) {
             std::cerr << "b_idx out of bounds: " << b_index
-                      << " >= " << b_data->size() << std::endl;
+                      << " >= " << b_data->size() << '\n';
             throw std::runtime_error("MatMul: b index out of bounds");
           }
           sum += (*a_data)[a_index] * (*b_data)[b_index];
