@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
       if (options.isParallel()) {
         std::cout << "Warning: oneDNN backend is not compatible with parallel "
                      "execution. Disabling parallelism."
-                  << std::endl;
+                  << '\n';
         options.setParallelBackend(
             ParBackend::kSeq);  // Автоматически sets parallel=false
       }
@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
       if (options.backend == Backend::kOneDnn) {
         std::cout << "Warning: Parallel execution is not compatible with "
                      "oneDNN backend. Ignoring --parallel option."
-                  << std::endl;
+                  << '\n';
         i++;
         continue;
       }
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
         options.setParallelBackend(ParBackend::kOmp);
       } else {
         std::cerr << "Unknown parallel backend: " << backend_str
-                  << ". Using default (Threads)." << std::endl;
+                  << ". Using default (Threads)." << '\n';
         options.setParallelBackend(ParBackend::kThreads);
       }
     } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
@@ -93,12 +93,12 @@ int main(int argc, char* argv[]) {
         Graph graph;
         build_graph_linear(graph, input, output, options, true);
 
-        std::cout << "Starting inference..." << std::endl;
+        std::cout << "Starting inference..." << '\n';
         try {
           graph.inference(options);
-          std::cout << "Inference completed successfully." << std::endl;
+          std::cout << "Inference completed successfully." << '\n';
         } catch (const std::exception& e) {
-          std::cerr << "ERROR during inference: " << e.what() << std::endl;
+          std::cerr << "ERROR during inference: " << e.what() << '\n';
         }
         print_time_stats(graph);
         std::vector<float> tmp_output = softmax<float>(*output.as<float>());
@@ -136,9 +136,9 @@ int main(int argc, char* argv[]) {
         std::cout << "Starting inference..." << std::endl;
         try {
           graph.inference(options);
-          std::cout << "Inference completed successfully." << std::endl;
+          std::cout << "Inference completed successfully." << '\n';
         } catch (const std::exception& e) {
-          std::cerr << "ERROR during inference: " << e.what() << std::endl;
+          std::cerr << "ERROR during inference: " << e.what() << '\n';
         }
         print_time_stats(graph);
         std::vector<float> tmp_output =

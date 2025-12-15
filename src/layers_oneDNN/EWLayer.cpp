@@ -113,10 +113,14 @@ void EwLayerOneDnn::initialize_onednn(const Shape& shape, Type data_type) {
     }
 
     dnnl::memory::data_type dnnl_data_type;
-    if (data_type == Type::kFloat) {
-      dnnl_data_type = dnnl::memory::data_type::f32;
-    } else {
-      throw std::invalid_argument("Unsupported data type for oneDNN EW layer");
+
+    switch (data_type) {
+      case Type::kFloat:
+        dnnl_data_type = dnnl::memory::data_type::f32;
+        break;
+      default:
+        throw std::invalid_argument(
+            "Unsupported data type for oneDNN EW layer");
     }
 
     memory_desc_ = dnnl::memory::desc(dims, dnnl_data_type, format);
