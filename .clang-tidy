@@ -1,6 +1,7 @@
 Checks: >
   bugprone-*,
   modernize-*,
+  misc-*,
   performance-*,
   portability-*,
   readability-*,
@@ -10,6 +11,7 @@ Checks: >
   -misc-non-private-member-variables-in-classes,
   -misc-const-correctness,
   -misc-include-cleaner,
+  -misc-no-recursion,
   -modernize-return-braced-init-list,
   -modernize-use-trailing-return-type,
   -modernize-concat-nested-namespaces,
@@ -17,7 +19,6 @@ Checks: >
   -modernize-avoid-c-arrays,
   -modernize-pass-by-value,
   -performance-move-const-arg,
-  -performance-avoid-endl,
   -readability-braces-around-statements,
   -readability-identifier-length,
   -readability-magic-numbers,

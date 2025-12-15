@@ -162,7 +162,7 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
     poolingType_ = kMax;
   } else {
     std::cerr << "ERROR: Unknown pooling type: '" << pooling_type << "'"
-              << std::endl;
+              << '\n';
     throw std::invalid_argument("Pooling type " + pooling_type +
                                 " is not supported");
   }
