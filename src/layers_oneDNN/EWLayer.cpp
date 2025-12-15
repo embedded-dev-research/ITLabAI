@@ -71,8 +71,8 @@ void EwLayerOneDnn::initialize_onednn(const Shape& shape, Type data_type) {
 
   memory_desc_ = dnnl::memory::desc(dims, dnnl_type, format);
 
-  float alpha = 0.0f;
-  float beta = 0.0f;
+  float alpha = 0.0F;
+  float beta = 0.0F;
 
   if (func_ == "linear") {
     alpha = alpha_;
