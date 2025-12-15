@@ -59,7 +59,7 @@ void EwLayerOneDnn::run(const std::vector<Tensor>& input,
     }
 
   } catch (const std::exception& e) {
-    std::cerr << "oneDNN execution failed: " << e.what() << std::endl;
+    std::cerr << "oneDNN execution failed: " << e.what() << '\n';
     throw;
   }
 }
@@ -143,7 +143,7 @@ void EwLayerOneDnn::initialize_onednn(const Shape& shape, Type data_type) {
 
   } catch (const std::exception& e) {
     std::cerr << "oneDNN initialization failed for function '" << func_
-              << "': " << e.what() << std::endl;
+              << "': " << e.what() << '\n';
     throw;
   }
 }

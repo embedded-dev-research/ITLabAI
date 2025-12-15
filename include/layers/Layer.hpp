@@ -55,7 +55,7 @@ class Layer {
   PostOperations postops;
   [[nodiscard]] int getID() const { return id_; }
   void setID(int id) { id_ = id; }
-  LayerType getName() const { return type_; }
+  [[nodiscard]] LayerType getName() const { return type_; }
   virtual void run(const std::vector<Tensor>& input,
                    std::vector<Tensor>& output) = 0;
   virtual void run(const std::vector<Tensor>& input,

@@ -14,7 +14,7 @@ struct RuntimeOptions {
   int threads{0};
   bool parallel{false};
 
-  ParBackend getEffectiveParBackend() const {
+  [[nodiscard]] ParBackend getEffectiveParBackend() const {
     return parallel ? par_backend : ParBackend::kSeq;
   }
 
@@ -23,7 +23,7 @@ struct RuntimeOptions {
     parallel = (p != ParBackend::kSeq);
   }
 
-  bool isParallel() const {
+  [[nodiscard]] bool isParallel() const {
     return parallel && (par_backend != ParBackend::kSeq);
   }
 };
