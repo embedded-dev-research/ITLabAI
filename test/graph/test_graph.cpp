@@ -632,5 +632,5 @@ TEST(graph_transformations, check_subgraphs_big_random) {
   std::vector<std::vector<int>> res1 = find_subgraphs(graph, subgraph);
   double res1_time =
       elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph, subgraph);
-  std::cerr << "Find subgraphs time in ms " << res1_time << std::endl;
+  std::cerr << "Find subgraphs time in ms " << res1_time << '\n';
 }
