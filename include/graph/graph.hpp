@@ -96,30 +96,30 @@ class Graph {
     return raw_ptr;
   }
 
-  int getVertexValue(size_t layerID) const {
+  [[nodiscard]] int getVertexValue(size_t layerID) const {
     if (layerID >= arrayV_.size()) {
       throw std::invalid_argument("ArrayV does not contain this ID.");
     }
     return arrayV_[layerID];
   }
 
-  int getEdgeValue(size_t pos) const {
+  [[nodiscard]] int getEdgeValue(size_t pos) const {
     if (pos >= arrayE_.size()) {
       throw std::invalid_argument("ArrayE does not contain this.");
     }
     return arrayE_[pos];
   }
 
-  size_t getInputsSize(size_t layerID) const {
+  [[nodiscard]] size_t getInputsSize(size_t layerID) const {
     if (layerID >= in_edges_.size()) {
       throw std::invalid_argument("Input edges array do not contain this ID.");
     }
     return in_edges_[layerID].size();
   }
 
-  int getLayersCount() const { return V_; }
+  [[nodiscard]] int getLayersCount() const { return V_; }
 
-  const Layer& getLayerFromID(size_t layerID) const {
+  [[nodiscard]] const Layer& getLayerFromID(size_t layerID) const {
     if (layerID >= layers_.size()) {
       throw std::invalid_argument("Layers do not contain this ID.");
     }
@@ -376,7 +376,7 @@ class Graph {
   std::vector<Tensor> getWEIGHTS() { return weights_; }
 #endif
 
-  std::vector<std::pair<int, int>> getInOutDegrees() const {
+  [[nodiscard]] std::vector<std::pair<int, int>> getInOutDegrees() const {
     std::vector<int> in_degree(V_, 0);
 
     for (int i = 0; i < V_; ++i) {
@@ -397,7 +397,7 @@ class Graph {
     return result;
   }
 
-  std::vector<int> getTraversalOrder() const {
+  [[nodiscard]] std::vector<int> getTraversalOrder() const {
     auto in_out_degrees = getInOutDegrees();
     std::vector<int> in_degree(V_);
     for (int i = 0; i < V_; ++i) {

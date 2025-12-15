@@ -86,15 +86,17 @@ class ConvImpl : public LayerImpl<ValueType> {
 
   ConvImpl(const ConvImpl& c) = default;
 
-  std::vector<ValueType> run(
+  [[nodiscard]] std::vector<ValueType> run(
       const std::vector<ValueType>& input) const override {
     return input;
   }
 
-  std::vector<ValueType> run(std::vector<ValueType> startmatrix, int new_rows,
-                             int new_cols, std::vector<ValueType> startkernel,
-                             size_t start_kernel_size, size_t kernel_size,
-                             int center_distance) const {
+  [[nodiscard]] std::vector<ValueType> run(std::vector<ValueType> startmatrix,
+                                           int new_rows, int new_cols,
+                                           std::vector<ValueType> startkernel,
+                                           size_t start_kernel_size,
+                                           size_t kernel_size,
+                                           int center_distance) const {
     std::vector<ValueType> matrix(new_rows * new_cols * input_flow_, 0);
     for (int i = 0; i < input_height_; ++i) {
       for (int j = 0; j < input_width_; ++j) {

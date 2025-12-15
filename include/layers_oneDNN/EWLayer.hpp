@@ -35,7 +35,7 @@ class EwLayerOneDnn : public Layer {
 
  private:
   void initialize_onednn(const Shape& shape, Type data_type);
-  dnnl::algorithm get_algorithm() const;
+  [[nodiscard]] dnnl::algorithm get_algorithm() const;
   void validate_input(const std::vector<Tensor>& input) const;
 
   std::string func_;

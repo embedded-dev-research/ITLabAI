@@ -28,7 +28,7 @@ class SplitLayer : public Layer {
   std::optional<int> num_outputs_;
 
   void validate(const Tensor& input) const;
-  int get_normalized_axis(int rank) const;
+  [[nodiscard]] int get_normalized_axis(int rank) const;
   template <typename T>
   void split_impl(const Tensor& input, std::vector<Tensor>& outputs) const;
 };
