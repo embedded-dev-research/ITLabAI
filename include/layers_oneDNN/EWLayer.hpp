@@ -37,8 +37,7 @@ class EwLayerOneDnn : public Layer {
   void initialize_onednn(const Shape& shape, Type data_type);
   [[nodiscard]] dnnl::algorithm get_algorithm() const;
   void validate_input(const std::vector<Tensor>& input) const;
-  [[nodiscard]] static dnnl::memory::data_type get_dnnl_data_type(
-      Type type);
+  [[nodiscard]] static dnnl::memory::data_type get_dnnl_data_type(Type type);
 
   std::string func_;
   float alpha_;
