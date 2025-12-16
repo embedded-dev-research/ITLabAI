@@ -37,21 +37,9 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
   }
   if (options.parallel) {
     switch (options.par_backend) {
-      /*case ParallelBackend::kTBB:
-        implType_ = kTBB;
-        break;*/
       case ParBackend::kThreads:
         implType_ = kSTL;
         break;
-      // case ParallelBackend::kOMP:
-      //   implType = kOMP;
-      //   break;
-      // case ParallelBackend::kKokkos:
-      //   implType = kKokkos;
-      //   break;
-      // case ParallelBackend::kSycl:
-      //   implType = kSycl;
-      //   break;
       case ParBackend::kSeq:
       default:
         implType_ = kDefault;
@@ -114,11 +102,6 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                            group_, dilations_);
             break;
           }
-          /*case kTBB: {
-            Conv4DTBB<int>(input[0], kernel_, bias_, output[0], stride_, pads_,
-                        group_, dilations_);
-            break;
-          }*/
           default: {
             Conv4D<int>(input[0], kernel_, bias_, output[0], stride_, pads_,
                         group_, dilations_);
@@ -187,10 +170,6 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                                pads_, group_, dilations_);
               break;
             }
-            /*case kTBB: {
-              Conv4DTBB<float>(input[0], kernel_, bias_, output[0], stride_,
-            pads_, group_, dilations_); break;
-            }*/
             default: {
               Conv4D<float>(input[0], kernel_, bias_, output[0], stride_, pads_,
                             group_, dilations_);

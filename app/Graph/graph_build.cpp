@@ -20,8 +20,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Warning: oneDNN backend is not compatible with parallel "
                      "execution. Disabling parallelism."
                   << '\n';
-        options.setParallelBackend(
-            ParBackend::kSeq);  // Автоматически sets parallel=false
+        options.setParallelBackend(ParBackend::kSeq);
       }
     } else if (std::string(argv[i]) == "--parallel" && i + 1 < argc) {
       if (options.backend == Backend::kOneDnn) {

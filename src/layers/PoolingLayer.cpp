@@ -19,18 +19,6 @@ void PoolingLayer::run(const std::vector<Tensor>& input,
       case ParBackend::kTbb:
         implType_ = kTBB;
         break;
-      /*case ParallelBackend::kSTL:
-        implType_ = kSTL;
-        break;*/
-      // case ParallelBackend::kOMP:
-      //   implType = kOMP;
-      //   break;
-      // case ParallelBackend::kKokkos:
-      //   implType = kKokkos;
-      //   break;
-      // case ParallelBackend::kSycl:
-      //   implType = kSycl;
-      //   break;
       case ParBackend::kSeq:
       default:
         implType_ = kDefault;
@@ -48,14 +36,6 @@ void PoolingLayer::run(const std::vector<Tensor>& input,
                                   used_impl.get_output_shape());
           break;
         }
-        /*case kSTL: {
-          PoolingLayerImplSTL<int> used_impl(
-              input[0].get_shape(), poolingShape_, strides_, pads_, dilations_,
-              ceil_mode_, poolingType_);
-          output[0] = make_tensor(used_impl.run(*input[0].as<int>()),
-                                  used_impl.get_output_shape());
-          break;
-        }*/
         default: {
           PoolingLayerImpl<int> used_impl(input[0].get_shape(), poolingShape_,
                                           strides_, pads_, dilations_,
@@ -77,14 +57,6 @@ void PoolingLayer::run(const std::vector<Tensor>& input,
                                   used_impl.get_output_shape());
           break;
         }
-        /*case kSTL: {
-          PoolingLayerImplSTL<float> used_impl(
-              input[0].get_shape(), poolingShape_, strides_, pads_, dilations_,
-              ceil_mode_, poolingType_);
-          output[0] = make_tensor(used_impl.run(*input[0].as<float>()),
-                                  used_impl.get_output_shape());
-          break;
-        }*/
         default: {
           PoolingLayerImpl<float> used_impl(input[0].get_shape(), poolingShape_,
                                             strides_, pads_, dilations_,
