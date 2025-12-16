@@ -22,7 +22,7 @@ target_link_libraries(Graph_Build BuildGraph)
 add_executable(ACC acc_check.cpp)
 target_link_libraries(ACC BuildGraph)
 
-if (WIN32)
+if (WIN32 AND EXISTS "${OPENCV_BUILD_DIR}/bin")
     add_custom_command(TARGET Graph_Build POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${OPENCV_BUILD_DIR}/bin/."
