@@ -7,11 +7,17 @@ namespace it_lab_ai {
 
 void EWLayer::run(const std::vector<Tensor>& input,
                   std::vector<Tensor>& output) {
+  RuntimeOptions default_options;
+  run(input, output, default_options);
+}
+
+void EWLayer::run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
+                  const RuntimeOptions& options) {
   if (input.size() != 1) {
     throw std::runtime_error("EWLayer: Input tensors not 1");
   }
 
-  ParBackend backend = getParallelBackend();
+  ParBackend backend = options.getEffectiveParBackend();
 
   switch (input[0].get_type()) {
     case Type::kInt: {

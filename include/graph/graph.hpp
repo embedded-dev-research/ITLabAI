@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "layers/Layer.hpp"
+#include "runtime_options.hpp"
 
 namespace it_lab_ai {
 
@@ -224,7 +225,7 @@ class Graph {
     return false;
   }
 
-  void inference() {
+  void inference(const RuntimeOptions& options) {
     std::vector<std::pair<int, int>> countinout = getInOutDegrees();
     std::vector<int> traversal = getTraversalOrder();
     count_used_split_distribution_ = 0;
@@ -262,7 +263,7 @@ class Graph {
           }
         }
       }
-      layers_[current_layer]->run(inten_, outten_);
+      layers_[current_layer]->run(inten_, outten_, options);
 
 #ifdef ENABLE_STATISTIC_TENSORS
       tensors_.push_back(inten_[0]);
@@ -277,7 +278,8 @@ class Graph {
       if (layers_[current_layer]->postops.count > 0) {
         for (unsigned int j = 0; j < layers_[current_layer]->postops.count;
              j++) {
-          layers_[current_layer]->postops.layers[j]->run(inten_, outten_);
+          layers_[current_layer]->postops.layers[j]->run(inten_, outten_,
+                                                         options);
         }
         inten_ = outten_;
       }

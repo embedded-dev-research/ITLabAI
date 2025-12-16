@@ -4,10 +4,27 @@ namespace it_lab_ai {
 
 void PoolingLayer::run(const std::vector<Tensor>& input,
                        std::vector<Tensor>& output) {
+  RuntimeOptions default_options;
+  run(input, output, default_options);
+}
+
+void PoolingLayer::run(const std::vector<Tensor>& input,
+                       std::vector<Tensor>& output,
+                       const RuntimeOptions& options) {
   if (input.size() != 1) {
     throw std::runtime_error("PoolingLayer: Input tensors not 1");
   }
-
+  if (options.parallel) {
+    switch (options.par_backend) {
+      case ParBackend::kTbb:
+        implType_ = kTBB;
+        break;
+      case ParBackend::kSeq:
+      default:
+        implType_ = kDefault;
+        break;
+    }
+  }
   switch (input[0].get_type()) {
     case Type::kInt: {
       switch (implType_) {

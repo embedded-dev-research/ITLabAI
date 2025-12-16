@@ -9,16 +9,44 @@ using namespace it_lab_ai;
 
 int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
-  bool onednn = false;
+  RuntimeOptions options;
+
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
       model_name = argv[++i];
     } else if (std::string(argv[i]) == "--onednn") {
-      onednn = true;
+      options.backend = Backend::kOneDnn;
+      if (options.isParallel()) {
+        std::cout << "Warning: oneDNN backend is not compatible with parallel "
+                     "execution. Disabling parallelism."
+                  << '\n';
+        options.setParallelBackend(ParBackend::kSeq);
+      }
+    } else if (std::string(argv[i]) == "--parallel" && i + 1 < argc) {
+      if (options.backend == Backend::kOneDnn) {
+        std::cout << "Warning: Parallel execution is not compatible with "
+                     "oneDNN backend. Ignoring --parallel option."
+                  << '\n';
+        i++;
+        continue;
+      }
+
+      std::string backend_str = argv[++i];
+      if (backend_str == "tbb") {
+        options.setParallelBackend(ParBackend::kTbb);
+      } else if (backend_str == "threads" || backend_str == "stl") {
+        options.setParallelBackend(ParBackend::kThreads);
+      } else if (backend_str == "omp") {
+        options.setParallelBackend(ParBackend::kOmp);
+      } else {
+        std::cerr << "Unknown parallel backend: " << backend_str
+                  << ". Using default (Threads)." << '\n';
+        options.setParallelBackend(ParBackend::kThreads);
+      }
+    } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
+      options.threads = std::stoi(argv[++i]);
     }
   }
-
-  it_lab_ai::LayerFactory::configure(onednn);
 
   std::string json_path = model_paths[model_name];
 
@@ -62,11 +90,11 @@ int main(int argc, char* argv[]) {
         std::vector<float> vec(75, 3);
         it_lab_ai::Tensor output = it_lab_ai::make_tensor(vec, sh1);
         Graph graph;
-        build_graph_linear(graph, input, output, true);
+        build_graph_linear(graph, input, output, options, true);
 
         std::cout << "Starting inference..." << '\n';
         try {
-          graph.inference();
+          graph.inference(options);
           std::cout << "Inference completed successfully." << '\n';
         } catch (const std::exception& e) {
           std::cerr << "ERROR during inference: " << e.what() << '\n';
@@ -102,11 +130,11 @@ int main(int argc, char* argv[]) {
         it_lab_ai::Tensor output({1, output_classes}, it_lab_ai::Type::kFloat);
 
         Graph graph;
-        build_graph(graph, input, output, json_path, false);
+        build_graph(graph, input, output, json_path, options, false);
 
         std::cout << "Starting inference..." << '\n';
         try {
-          graph.inference();
+          graph.inference(options);
           std::cout << "Inference completed successfully." << '\n';
         } catch (const std::exception& e) {
           std::cerr << "ERROR during inference: " << e.what() << '\n';
