@@ -16,10 +16,6 @@ target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage
 
 if (WIN32)
     add_custom_command(TARGET run_test POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${OPENCV_BUILD_DIR}/bin/."
-            "${CMAKE_BINARY_DIR}/bin/")
-    add_custom_command(TARGET run_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
             $<TARGET_FILE:dnnl>
             $<TARGET_FILE_DIR:run_test>

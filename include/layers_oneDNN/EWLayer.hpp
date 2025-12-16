@@ -14,7 +14,8 @@ class EwLayerOneDnn : public Layer {
   EwLayerOneDnn()
       : Layer(kElementWise), func_("none"), alpha_(0.0F), beta_(0.0F) {}
 
-  EwLayerOneDnn(std::string function, float alpha = 0.0F, float beta = 0.0F)
+  explicit EwLayerOneDnn(std::string function, float alpha = 0.0F,
+                         float beta = 0.0F)
       : Layer(kElementWise),
         func_(std::move(function)),
         alpha_(alpha),
@@ -34,7 +35,7 @@ class EwLayerOneDnn : public Layer {
 
  private:
   void initialize_onednn(const Shape& shape, Type data_type);
-  dnnl::algorithm get_algorithm() const;
+  [[nodiscard]] dnnl::algorithm get_algorithm() const;
   void validate_input(const std::vector<Tensor>& input) const;
 
   std::string func_;

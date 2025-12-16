@@ -9,16 +9,44 @@ using namespace it_lab_ai;
 
 int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
-  bool onednn = false;
+  RuntimeOptions options;
+
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
       model_name = argv[++i];
     } else if (std::string(argv[i]) == "--onednn") {
-      onednn = true;
+      options.backend = Backend::kOneDnn;
+      if (options.isParallel()) {
+        std::cout << "Warning: oneDNN backend is not compatible with parallel "
+                     "execution. Disabling parallelism."
+                  << '\n';
+        options.setParallelBackend(ParBackend::kSeq);
+      }
+    } else if (std::string(argv[i]) == "--parallel" && i + 1 < argc) {
+      if (options.backend == Backend::kOneDnn) {
+        std::cout << "Warning: Parallel execution is not compatible with "
+                     "oneDNN backend. Ignoring --parallel option."
+                  << '\n';
+        i++;
+        continue;
+      }
+
+      std::string backend_str = argv[++i];
+      if (backend_str == "tbb") {
+        options.setParallelBackend(ParBackend::kTbb);
+      } else if (backend_str == "threads" || backend_str == "stl") {
+        options.setParallelBackend(ParBackend::kThreads);
+      } else if (backend_str == "omp") {
+        options.setParallelBackend(ParBackend::kOmp);
+      } else {
+        std::cerr << "Unknown parallel backend: " << backend_str
+                  << ". Using default (Threads)." << '\n';
+        options.setParallelBackend(ParBackend::kThreads);
+      }
+    } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
+      options.threads = std::stoi(argv[++i]);
     }
   }
-
-  it_lab_ai::LayerFactory::configure(onednn);
 
   std::string json_path = model_paths[model_name];
 
@@ -45,13 +73,13 @@ int main(int argc, char* argv[]) {
   try {
     class_names = load_class_names(IMAGENET_LABELS);
   } catch (const std::exception& e) {
-    std::cerr << "Warning: " << e.what() << std::endl;
+    std::cerr << "Warning: " << e.what() << '\n';
   }
 
   for (const auto& image_path : image_paths) {
     cv::Mat image = cv::imread(image_path);
     if (image.empty()) {
-      std::cerr << "Failed to load image: " << image_path << std::endl;
+      std::cerr << "Failed to load image: " << image_path << '\n';
       continue;
     }
 
@@ -62,14 +90,14 @@ int main(int argc, char* argv[]) {
         std::vector<float> vec(75, 3);
         it_lab_ai::Tensor output = it_lab_ai::make_tensor(vec, sh1);
         Graph graph;
-        build_graph_linear(graph, input, output, true);
+        build_graph_linear(graph, input, output, options, true);
 
-        std::cout << "Starting inference..." << std::endl;
+        std::cout << "Starting inference..." << '\n';
         try {
-          graph.inference();
-          std::cout << "Inference completed successfully." << std::endl;
+          graph.inference(options);
+          std::cout << "Inference completed successfully." << '\n';
         } catch (const std::exception& e) {
-          std::cerr << "ERROR during inference: " << e.what() << std::endl;
+          std::cerr << "ERROR during inference: " << e.what() << '\n';
         }
         print_time_stats(graph);
         std::vector<float> tmp_output = softmax<float>(*output.as<float>());
@@ -80,12 +108,12 @@ int main(int argc, char* argv[]) {
             indices.begin(), indices.begin() + top_n, indices.end(),
             [&](int a, int b) { return tmp_output[a] > tmp_output[b]; });
 
-        std::cout << "Top " << top_n << " predictions for MNIST:" << std::endl;
+        std::cout << "Top " << top_n << " predictions for MNIST:" << '\n';
         for (int i = 0; i < top_n; i++) {
           int idx = indices[i];
           std::cout << "  " << (i + 1) << ". Class " << idx << ": "
                     << std::fixed << std::setprecision(6)
-                    << tmp_output[idx] * 100 << "%" << std::endl;
+                    << tmp_output[idx] * 100 << "%" << '\n';
         }
 
         int max_class = indices[0];
@@ -93,7 +121,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Image: " << fs::path(image_path).filename().string()
                   << " -> Predicted digit: " << max_class
                   << " (probability: " << std::fixed << std::setprecision(6)
-                  << max_prob * 100 << "%)" << std::endl;
+                  << max_prob * 100 << "%)" << '\n';
 
       } else {
         it_lab_ai::Tensor input = prepare_image(image, input_shape, model_name);
@@ -102,14 +130,14 @@ int main(int argc, char* argv[]) {
         it_lab_ai::Tensor output({1, output_classes}, it_lab_ai::Type::kFloat);
 
         Graph graph;
-        build_graph(graph, input, output, json_path, false);
+        build_graph(graph, input, output, json_path, options, false);
 
-        std::cout << "Starting inference..." << std::endl;
+        std::cout << "Starting inference..." << '\n';
         try {
-          graph.inference();
-          std::cout << "Inference completed successfully." << std::endl;
+          graph.inference(options);
+          std::cout << "Inference completed successfully." << '\n';
         } catch (const std::exception& e) {
-          std::cerr << "ERROR during inference: " << e.what() << std::endl;
+          std::cerr << "ERROR during inference: " << e.what() << '\n';
         }
         print_time_stats(graph);
         std::vector<float> tmp_output =
@@ -122,7 +150,7 @@ int main(int argc, char* argv[]) {
             indices.begin(), indices.begin() + top_n, indices.end(),
             [&](int a, int b) { return tmp_output[a] > tmp_output[b]; });
 
-        std::cout << "Top " << top_n << " predictions:" << std::endl;
+        std::cout << "Top " << top_n << " predictions:" << '\n';
         for (int i = 0; i < top_n; i++) {
           int idx = indices[i];
           std::cout << "  " << (i + 1) << ". Class " << idx << ": "
@@ -131,7 +159,7 @@ int main(int argc, char* argv[]) {
           if (class_names.find(idx) != class_names.end()) {
             std::cout << " (" << class_names[idx] << ")";
           }
-          std::cout << std::endl;
+          std::cout << '\n';
         }
 
         int max_class = indices[0];
@@ -142,12 +170,12 @@ int main(int argc, char* argv[]) {
           std::cout << " (" << class_names[max_class] << ")";
         }
         std::cout << " (probability: " << std::fixed << std::setprecision(6)
-                  << max_prob << ")" << std::endl;
+                  << max_prob << ")" << '\n';
       }
-      std::cout << "----------------------------------------" << std::endl;
+      std::cout << "----------------------------------------" << '\n';
     } catch (const std::exception& e) {
       std::cerr << "Error processing image " << image_path << ": " << e.what()
-                << std::endl;
+                << '\n';
     }
   }
   return 0;

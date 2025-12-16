@@ -11,7 +11,7 @@ using namespace it_lab_ai;
 class EWTestsParameterized
     : public ::testing::TestWithParam<
           std::tuple<std::vector<double>, EWLayerImpl<double>,
-                     std::vector<double>, std::function<double(double)> > > {};
+                     std::vector<double>, std::function<double(double)>>> {};
 // 1) input; 2) constructed ewlayerimpl; 3) expected_output; 4) lambda_expr.
 
 TEST_P(EWTestsParameterized, element_wise_works_correctly) {
@@ -218,14 +218,7 @@ TEST(ewlayer, new_ewlayer_can_sigmoid_float_extreme_values) {
 }
 
 TEST(ewlayer, parallel_for_ew) {
-  EWLayer layer0("relu");
-  layer0.setParallelBackend(ParBackend::kSeq);
-  EWLayer layer1("relu");
-  layer1.setParallelBackend(ParBackend::kThreads);
-  EWLayer layer2("relu");
-  layer2.setParallelBackend(ParBackend::kTbb);
-  EWLayer layer3("relu");
-  layer3.setParallelBackend(ParBackend::kOmp);
+  EWLayer layer("relu");
 
   std::vector<int> vec(8000000, -1);
   Tensor input = make_tensor<int>(vec);
@@ -233,52 +226,27 @@ TEST(ewlayer, parallel_for_ew) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  auto start = std::chrono::high_resolution_clock::now();
-  layer0.run(in, out);
-  auto end = std::chrono::high_resolution_clock::now();
-  auto total_duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  for (size_t i = 0; i < 8000000; i++) {
-    EXPECT_EQ((*out[0].as<int>())[i], 0);
-  }
+  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
+                                      ParBackend::kTbb, ParBackend::kOmp};
 
-  start = std::chrono::high_resolution_clock::now();
-  layer1.run(in, out);
-  end = std::chrono::high_resolution_clock::now();
-  total_duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  for (size_t i = 0; i < 8000000; i++) {
-    EXPECT_EQ((*out[0].as<int>())[i], 0);
-  }
+  for (auto backend : backends) {
+    RuntimeOptions options;
+    options.setParallelBackend(backend);
 
-  start = std::chrono::high_resolution_clock::now();
-  layer2.run(in, out);
-  end = std::chrono::high_resolution_clock::now();
-  total_duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  for (size_t i = 0; i < 8000000; i++) {
-    EXPECT_EQ((*out[0].as<int>())[i], 0);
-  }
-
-  start = std::chrono::high_resolution_clock::now();
-  layer3.run(in, out);
-  end = std::chrono::high_resolution_clock::now();
-  total_duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  for (size_t i = 0; i < 8000000; i++) {
-    EXPECT_EQ((*out[0].as<int>())[i], 0);
+    auto start = std::chrono::high_resolution_clock::now();
+    layer.run(in, out, options);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << " time: " << duration.count() << " ms" << std::endl;
+    for (size_t i = 0; i < 8000000; i++) {
+      EXPECT_EQ((*out[0].as<int>())[i], 0);
+    }
   }
 }
 
-TEST(ewlayer, parallel_for_ew_sigmoid) {
-  EWLayer layer0("sigmoid");
-  layer0.setParallelBackend(ParBackend::kSeq);
-  EWLayer layer1("sigmoid");
-  layer1.setParallelBackend(ParBackend::kThreads);
-  EWLayer layer2("sigmoid");
-  layer2.setParallelBackend(ParBackend::kTbb);
-  EWLayer layer3("sigmoid");
-  layer3.setParallelBackend(ParBackend::kOmp);
+TEST(ewlayer, parallel_for_ew_sigmoid_compact) {
+  EWLayer layer("sigmoid");
 
   std::vector<int> vec(8000000, -1);
   Tensor input = make_tensor<int>(vec);
@@ -286,31 +254,47 @@ TEST(ewlayer, parallel_for_ew_sigmoid) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  auto start = std::chrono::high_resolution_clock::now();
-  layer0.run(in, out);
-  auto end = std::chrono::high_resolution_clock::now();
-  auto total_duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::vector<std::pair<ParBackend, std::string>> backends = {
+      {ParBackend::kSeq, "Sequential"},
+      {ParBackend::kThreads, "Threads"},
+      {ParBackend::kTbb, "TBB"},
+      {ParBackend::kOmp, "OpenMP"}};
 
-  start = std::chrono::high_resolution_clock::now();
-  layer1.run(in, out);
-  end = std::chrono::high_resolution_clock::now();
-  total_duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::vector<int> reference_result;
+  bool first = true;
 
-  start = std::chrono::high_resolution_clock::now();
-  layer2.run(in, out);
-  end = std::chrono::high_resolution_clock::now();
-  total_duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  for (const auto& [backend, name] : backends) {
+    RuntimeOptions options;
+    options.parallel = (backend != ParBackend::kSeq);
+    options.par_backend = backend;
+    if (backend == ParBackend::kThreads) {
+      options.threads = 4;
+    }
 
-  start = std::chrono::high_resolution_clock::now();
-  layer3.run(in, out);
-  end = std::chrono::high_resolution_clock::now();
-  total_duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    auto start = std::chrono::high_resolution_clock::now();
+    layer.run(in, out, options);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-  EXPECT_EQ(0, 0);
+    std::cout << "Sigmoid " << name << " time: " << duration.count() << " ms"
+              << std::endl;
+
+    auto current_result = *out[0].as<int>();
+    if (first) {
+      reference_result = current_result;
+      first = false;
+      for (size_t i = 0; i < 100; i++) {
+        EXPECT_EQ(current_result[i], 0)
+            << "Invalid sigmoid result at index " << i;
+      }
+    } else {
+      for (size_t i = 0; i < reference_result.size(); i++) {
+        EXPECT_EQ(current_result[i], reference_result[i])
+            << "Mismatch with " << name << " at index " << i;
+      }
+    }
+  }
 }
 
 TEST(ewlayer, parallel_for_direct) {

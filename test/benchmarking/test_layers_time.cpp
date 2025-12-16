@@ -10,10 +10,11 @@
 
 using namespace it_lab_ai;
 
-void test_func(Layer& p, const Tensor& input, Tensor& output) {
+void test_func(Layer& p, const Tensor& input, Tensor& output,
+               const RuntimeOptions& options) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
-  p.run(in, out);
+  p.run(in, out, options);
 }
 
 TEST(pooling_test, is_pooling_tbb_ok) {
@@ -30,12 +31,20 @@ TEST(pooling_test, is_pooling_tbb_ok) {
   }
   Tensor input = make_tensor(a1, test_shape);
   Tensor output;
-  PoolingLayer p1(Shape({2, 2}), "max", kDefault);
-  PoolingLayer p2(Shape({2, 2}), "max", kTBB);
-  double count1 =
-      elapsed_time<double, std::milli>(test_func, p1, input, output);
-  double count2 =
-      elapsed_time<double, std::milli>(test_func, p2, input, output);
+  RuntimeOptions options_seq;
+  options_seq.parallel = false;
+  options_seq.par_backend = ParBackend::kSeq;
+
+  RuntimeOptions options_tbb;
+  options_tbb.parallel = true;
+  options_tbb.par_backend = ParBackend::kTbb;
+
+  PoolingLayer p1(Shape({2, 2}), "max");
+  PoolingLayer p2(Shape({2, 2}), "max");
+  double count1 = elapsed_time<double, std::milli>(test_func, p1, input, output,
+                                                   options_seq);
+  double count2 = elapsed_time<double, std::milli>(test_func, p2, input, output,
+                                                   options_tbb);
   std::cout << count1 << " vs. " << count2 << " (parallel)\n";
 }
 
@@ -58,11 +67,20 @@ TEST(conv_test, is_conv_stl_ok) {
   Tensor input = make_tensor(a1, test_shape);
   Tensor kernel = make_tensor(a2, Shape({5, 5, 3, 16}));
   Tensor output;
-  ConvolutionalLayer p1(1, 1, 2, kernel, Tensor(), kDefault);
-  ConvolutionalLayer p2(1, 1, 2, kernel, Tensor(), kSTL);
-  double count1 =
-      elapsed_time<double, std::milli>(test_func, p1, input, output);
-  double count2 =
-      elapsed_time<double, std::milli>(test_func, p2, input, output);
+
+  RuntimeOptions options_seq;
+  options_seq.parallel = false;
+  options_seq.par_backend = ParBackend::kSeq;
+
+  RuntimeOptions options_stl;
+  options_stl.parallel = true;
+  options_stl.par_backend = ParBackend::kTbb;
+
+  ConvolutionalLayer p1(1, 1, 2, kernel, Tensor());
+  ConvolutionalLayer p2(1, 1, 2, kernel, Tensor());
+  double count1 = elapsed_time<double, std::milli>(test_func, p1, input, output,
+                                                   options_seq);
+  double count2 = elapsed_time<double, std::milli>(test_func, p2, input, output,
+                                                   options_stl);
   std::cout << count1 << " vs. " << count2 << " (parallel)\n";
 }
