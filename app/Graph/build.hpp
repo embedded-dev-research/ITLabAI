@@ -34,8 +34,6 @@
 #include "layers/TransposeLayer.hpp"
 #include "layers_oneDNN/EWLayer.hpp"
 
-using namespace it_lab_ai;
-
 extern std::unordered_map<std::string, std::string> model_paths;
 
 struct ParseResult {
@@ -55,14 +53,14 @@ struct ParseResult {
 
 void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                  it_lab_ai::Tensor& output, const std::string& json_path,
-                 RuntimeOptions options, bool comments);
+                 it_lab_ai::RuntimeOptions options, bool comments);
 void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
-                        it_lab_ai::Tensor& output, RuntimeOptions options,
+                        it_lab_ai::Tensor& output, it_lab_ai::RuntimeOptions options,
                         bool comments);
 std::unordered_map<int, std::string> load_class_names(
     const std::string& filename);
 
-ParseResult parse_json_model(RuntimeOptions options,
+ParseResult parse_json_model(it_lab_ai::RuntimeOptions options,
                              const std::string& json_path, bool comments);
 
 std::vector<int> get_input_shape_from_json(const std::string& json_path);
