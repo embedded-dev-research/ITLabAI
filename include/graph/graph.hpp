@@ -248,7 +248,13 @@ class Graph {
           if (it != branch_list_.rend()) {
             for (size_t f = 0; f < it->distribution.size(); ++f) {
               if (it->distribution[f].first == current_layer) {
-                inten_.push_back(it->give_for_all[it->distribution[f].second]);
+                bool last_use = (it->count_used_ten == 1);
+                auto& src = it->give_for_all[it->distribution[f].second];
+                if (last_use) {
+                  inten_.push_back(std::move(src));
+                } else {
+                  inten_.push_back(src);
+                }
               }
             }
           }
@@ -263,6 +269,9 @@ class Graph {
           }
         }
       }
+      if (outten_.empty()) {
+        outten_.resize(1);
+      }
       layers_[current_layer]->run(inten_, outten_, options);
 
 #ifdef ENABLE_STATISTIC_TENSORS
@@ -273,7 +282,7 @@ class Graph {
       weights_.push_back(layers_[current_layer]->get_weights());
 #endif
 
-      inten_ = outten_;
+      inten_.swap(outten_);
 
       if (layers_[current_layer]->postops.count > 0) {
         for (unsigned int j = 0; j < layers_[current_layer]->postops.count;
@@ -281,11 +290,11 @@ class Graph {
           layers_[current_layer]->postops.layers[j]->run(inten_, outten_,
                                                          options);
         }
-        inten_ = outten_;
+        inten_.swap(outten_);
       }
 
       BranchState new_branch;
-      new_branch.give_for_all = inten_;
+      new_branch.give_for_all = std::move(inten_);
       new_branch.count_used_ten = countinout[current_layer].second;
       new_branch.ind_layer = current_layer;
       new_branch.split = layers_[current_layer]->getName() == kSplit;
@@ -310,7 +319,12 @@ class Graph {
         }
         new_branch.distribution = dis;
       }
-      branch_list_.push_back(new_branch);
+      branch_list_.push_back(std::move(new_branch));
+      if (outtenres_ && current_layer == end_ &&
+          !branch_list_.back().give_for_all.empty() &&
+          countinout[current_layer].second == 0) {
+        *outtenres_ = std::move(branch_list_.back().give_for_all[0]);
+      }
 
 #ifdef ENABLE_STATISTIC_TIME
       auto end = std::chrono::high_resolution_clock::now();
@@ -319,10 +333,6 @@ class Graph {
       time_.push_back(static_cast<int>(elapsed.count()));
       time_layer_.push_back(layers_[current_layer]->getName());
 #endif
-    }
-
-    if (outtenres_ && !outten_.empty()) {
-      *outtenres_ = outten_[0];
     }
   }
 
