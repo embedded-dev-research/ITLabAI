@@ -171,13 +171,6 @@ bool ConvLayerOneDnn::is_depthwise_convolution() const {
 void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
                                              Type data_type) {
   try {
-    std::cout << "=== DEBUG: Conv Layer Parameters ===" << std::endl;
-    std::cout << "Input shape: " << input_shape << std::endl;
-    std::cout << "Kernel shape: " << kernel_.get_shape() << std::endl;
-    std::cout << "Stride: " << stride_ << ", Pads: " << pads_
-              << ", Dilations: " << dilations_ << ", Group: " << group_
-              << std::endl;
-
     engine_ = std::make_unique<dnnl::engine>(dnnl::engine::kind::cpu, 0);
     stream_ = std::make_unique<dnnl::stream>(*engine_);
 
@@ -260,8 +253,6 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
     if (!bias_.empty()) fill_memory_with_tensor(bias_memory_, bias_, data_type);
 
     conv_prim_ = std::make_unique<dnnl::convolution_forward>(conv_pd);
-
-    std::cout << "oneDNN convolution initialized successfully!" << std::endl;
     initialized_ = true;
 
   } catch (const dnnl::error& e) {
@@ -337,12 +328,6 @@ Shape ConvLayerOneDnn::get_output_shape(const Shape& input_shape) const {
 void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
                                               Type data_type) {
   try {
-    std::cout << "=== DEBUG: Special Conv Parameters ===" << std::endl;
-    std::cout << "Input shape: " << input_shape << std::endl;
-    std::cout << "Kernel shape: " << kernel_.get_shape() << std::endl;
-    std::cout << "Stride: " << stride_ << ", Pads: " << pads_
-              << ", Dilations: " << dilations_ << std::endl;
-
     engine_ = std::make_unique<dnnl::engine>(dnnl::engine::kind::cpu, 0);
     stream_ = std::make_unique<dnnl::stream>(*engine_);
 
@@ -351,8 +336,6 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
     Shape output_shape = get_output_shape(input_shape);
     dnnl::memory::dims dst_dims = shape_to_dims(output_shape);
 
-    std::cout << "Output shape: " << output_shape << std::endl;
-    std::cout << "Dst dims: ";
     for (auto d : dst_dims) std::cout << d << " ";
     std::cout << std::endl;
 
@@ -372,9 +355,6 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
         dnnl::memory::desc(dst_dims, dt, dnnl::memory::format_tag::nchw);
 
     const auto& k_shape = kernel_.get_shape();
-    std::cout << "Original kernel shape: H=" << k_shape[0]
-              << ", W=" << k_shape[1] << ", IC=" << k_shape[2]
-              << ", OC=" << k_shape[3] << std::endl;
 
     dnnl::memory::dims weights_dims = {
         static_cast<dnnl::memory::dim>(k_shape[3]),
@@ -382,14 +362,8 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
         static_cast<dnnl::memory::dim>(k_shape[0]),
         static_cast<dnnl::memory::dim>(k_shape[1])};
 
-    std::cout << "Weights dims for oneDNN (oihw): OC=" << weights_dims[0]
-              << ", IC=" << weights_dims[1] << ", KH=" << weights_dims[2]
-              << ", KW=" << weights_dims[3] << std::endl;
-
     auto weights_md =
         dnnl::memory::desc(weights_dims, dt, dnnl::memory::format_tag::oihw);
-
-    std::cout << "\nCreating convolution WITHOUT bias..." << std::endl;
 
     dnnl::convolution_forward::primitive_desc conv_pd =
         dnnl::convolution_forward::primitive_desc(
@@ -397,13 +371,9 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
             dnnl::algorithm::convolution_direct, src_md, weights_md,
             dnnl::memory::desc(), dst_md, strides, dilation, padding, padding);
 
-    std::cout << "SUCCESS: Convolution primitive created!" << std::endl;
-
     src_memory_ = dnnl::memory(conv_pd.src_desc(), *engine_);
     weights_memory_ = dnnl::memory(conv_pd.weights_desc(), *engine_);
     dst_memory_ = dnnl::memory(conv_pd.dst_desc(), *engine_);
-
-    std::cout << "Memory created successfully" << std::endl;
 
     if (data_type == Type::kFloat) {
       const std::vector<float>& kernel_data = *kernel_.as<float>();
@@ -426,11 +396,8 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
         }
       }
 
-      std::cout << "Reordered weights, copying to oneDNN memory..."
-                << std::endl;
       std::memcpy(weights_memory_.get_data_handle(), reordered.data(),
                   reordered.size() * sizeof(float));
-      std::cout << "Weights copied successfully" << std::endl;
 
     } else if (data_type == Type::kInt) {
       const std::vector<int>& kernel_data_int = *kernel_.as<int>();
@@ -458,36 +425,11 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
     }
 
     conv_prim_ = std::make_unique<dnnl::convolution_forward>(conv_pd);
-
-    std::cout << "Special oneDNN convolution initialized successfully!"
-              << std::endl;
     initialized_ = true;
 
   } catch (const dnnl::error& e) {
     std::cerr << "oneDNN error: " << e.what() << ", status: " << e.status
               << std::endl;
-
-    std::cerr << "\n=== DIAGNOSTICS ===" << std::endl;
-    std::cerr << "Input dims (nchw): 1, " << input_shape[1] << ", "
-              << input_shape[2] << ", " << input_shape[3] << std::endl;
-    std::cerr << "Kernel dims (hwio): " << kernel_.get_shape()[0] << ", "
-              << kernel_.get_shape()[1] << ", " << kernel_.get_shape()[2]
-              << ", " << kernel_.get_shape()[3] << std::endl;
-    std::cerr << "Stride: " << stride_ << std::endl;
-    std::cerr << "Padding: " << pads_ << std::endl;
-    std::cerr << "Dilation: " << dilations_ << std::endl;
-
-    size_t out_h = (input_shape[2] + 2 * pads_ -
-                    ((kernel_.get_shape()[0] - 1) * dilations_ + 1)) /
-                       stride_ +
-                   1;
-    size_t out_w = (input_shape[3] + 2 * pads_ -
-                    ((kernel_.get_shape()[1] - 1) * dilations_ + 1)) /
-                       stride_ +
-                   1;
-    std::cerr << "Calculated output H: " << out_h << ", W: " << out_w
-              << std::endl;
-
     throw;
   } catch (const std::exception& e) {
     std::cerr << "Special conv initialization failed: " << e.what()
