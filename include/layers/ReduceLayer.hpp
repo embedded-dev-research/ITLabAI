@@ -11,8 +11,8 @@ class ReduceLayer : public Layer {
  public:
   enum class Operation : uint8_t { kSum, kMean, kMult, kMax, kMin };
 
-  ReduceLayer(Operation op, int64_t keepdims = 0,
-              const std::vector<int64_t>& axes = {});
+  explicit ReduceLayer(Operation op, int64_t keepdims = 0,
+                       const std::vector<int64_t>& axes = {});
 
   explicit ReduceLayer(int64_t keepdims = 0,
                        const std::vector<int64_t>& axes = {})
@@ -32,8 +32,8 @@ class ReduceLayer : public Layer {
 
   static void normalize_axes(const Shape& input_shape,
                              std::vector<int64_t>& axes);
-  Shape calculate_output_shape(const Shape& input_shape,
-                               const std::vector<int64_t>& axes) const;
+  [[nodiscard]] Shape calculate_output_shape(
+      const Shape& input_shape, const std::vector<int64_t>& axes) const;
 
   template <typename T>
   void compute(const Tensor& input, const Shape& output_shape,

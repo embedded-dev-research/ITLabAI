@@ -4,8 +4,6 @@
 
 using namespace it_lab_ai;
 
-bool LayerFactory::onednn_ = false;
-
 std::unordered_map<std::string, std::string> model_paths = {
     {"alexnet_mnist", MODEL_PATH_H5},
     {"googlenet", MODEL_PATH_GOOGLENET_ONNX},
@@ -14,12 +12,13 @@ std::unordered_map<std::string, std::string> model_paths = {
     {"yolo", MODEL_PATH_YOLO11NET_ONNX}};
 
 void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
-                        it_lab_ai::Tensor& output, bool comments) {
+                        it_lab_ai::Tensor& output, RuntimeOptions options,
+                        bool comments) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
     }
-    std::cout << std::endl;
+    std::cout << '\n';
     if (input.get_shape().dims() == 4) {
       for (size_t n = 0; n < input.get_shape()[0]; n++) {
         for (size_t h = 0; h < input.get_shape()[2]; h++) {
@@ -28,10 +27,10 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
               std::cout << input.get<float>({n, c, h, w}) << ' ';
             }
           }
-          std::cerr << std::endl;
+          std::cerr << '\n';
         }
       }
-      std::cout << std::endl << std::endl;
+      std::cout << '\n' << '\n';
     }
   }
   std::vector<std::unique_ptr<it_lab_ai::Layer>> layers;
@@ -41,12 +40,13 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   std::string json_file = MODEL_PATH_H5;
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
 
-  if (comments) std::cout << "Loaded model data from JSON." << std::endl;
+  if (comments) std::cout << "Loaded model data from JSON." << '\n';
 
   for (const auto& layer_data : model_data) {
     std::string layer_type = layer_data["type"];
-    if (comments)
-      std::cout << "Processing layer of type: " << layer_type << std::endl;
+    if (comments) {
+      std::cout << "Processing layer of type: " << layer_type << '\n';
+    }
 
     it_lab_ai::Tensor tensor =
         it_lab_ai::create_tensor_from_json(layer_data, it_lab_ai::Type::kFloat);
@@ -76,7 +76,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
         for (size_t i = 0; i < shape.dims(); ++i) {
           std::cout << shape[i] << " ";
         }
-        std::cout << std::endl;
+        std::cout << '\n';
       }
 
       it_lab_ai::Tensor tmp_values = tensor;
@@ -86,15 +86,16 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       layer_ptrs.push_back(conv_layer.get());
       layers.push_back(std::move(conv_layer));
       layerpostop.push_back(false);
-      if (comments) std::cout << "ConvLayer added to layers." << std::endl;
+      if (comments) std::cout << "ConvLayer added to layers." << '\n';
     }
     if (layer_type.find("relu") != std::string::npos) {
-      auto ew_layer = LayerFactory::createEwLayer("relu");
+      auto ew_layer = LayerFactory::createEwLayer("relu", options);
       layer_ptrs.push_back(ew_layer.get());
       layers.push_back(std::move(ew_layer));
       layerpostop.push_back(true);
-      if (comments)
-        std::cout << "Element wise (relu) added to layers" << std::endl;
+      if (comments) {
+        std::cout << "Element wise (relu) added to layers" << '\n';
+      }
     }
     if (layer_type.find("Dense") != std::string::npos) {
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
@@ -102,7 +103,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       layer_ptrs.push_back(fc_layer.get());
       layers.push_back(std::move(fc_layer));
       layerpostop.push_back(false);
-      if (comments) std::cout << "DenseLayer added to layers." << std::endl;
+      if (comments) std::cout << "DenseLayer added to layers." << '\n';
     }
 
     if (layer_type.find("Pool") != std::string::npos) {
@@ -113,15 +114,16 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       } else {
         pooltype = "average";
       }
-      if (comments)
+      if (comments) {
         std::cout << "PoolingLayer shape: " << shape[0] << "x" << shape[1]
-                  << std::endl;
+                  << '\n';
+      }
       auto pool_layer =
-          std::make_unique<it_lab_ai::PoolingLayer>(shape, pooltype, kDefault);
+          std::make_unique<it_lab_ai::PoolingLayer>(shape, pooltype);
       layer_ptrs.push_back(pool_layer.get());
       layers.push_back(std::move(pool_layer));
       layerpostop.push_back(false);
-      if (comments) std::cout << "PoolingLayer added to layers." << std::endl;
+      if (comments) std::cout << "PoolingLayer added to layers." << '\n';
     }
 
     if (layer_type.find("Flatten") != std::string::npos) {
@@ -130,7 +132,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       layer_ptrs.push_back(flatten_layer.get());
       layers.push_back(std::move(flatten_layer));
       layerpostop.push_back(false);
-      if (comments) std::cout << "FlattenLayer added to layers." << std::endl;
+      if (comments) std::cout << "FlattenLayer added to layers." << '\n';
     }
 
     if (layer_type.find("Dropout") != std::string::npos) {
@@ -138,36 +140,39 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       layer_ptrs.push_back(dropout_layer.get());
       layers.push_back(std::move(dropout_layer));
       layerpostop.push_back(false);
-      if (comments)
+      if (comments) {
         std::cout
             << "DropOutLayer added to layers with probability 0.4 (turned "
                "off for inference)."
-            << std::endl;
+            << '\n';
+      }
     }
   }
-  if (comments)
-    std::cout << "number of layers - " << layers.size() + 1 << std::endl;
+  if (comments) {
+    std::cout << "number of layers - " << layers.size() + 1 << '\n';
+  }
   auto a1 = std::make_unique<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                     it_lab_ai::kNchw);
   Layer* a1_ptr = a1.get();
 
-  if (comments) std::cout << "InputLayer created." << std::endl;
+  if (comments) std::cout << "InputLayer created." << '\n';
 
   graph.setInput(a1_ptr, input);
-  if (comments) std::cout << "Input set in graph." << std::endl;
+  if (comments) std::cout << "Input set in graph." << '\n';
 
   graph.makeConnection(a1_ptr, layer_ptrs[0]);
-  if (comments)
-    std::cout << "Connection made between InputLayer and first layer."
-              << std::endl;
+  if (comments) {
+    std::cout << "Connection made between InputLayer and first layer." << '\n';
+  }
 
   for (size_t i = 0; i < layers.size() - 1; ++i) {
     if (layerpostop[i]) {
       layer_ptrs[i - 1]->postops.layers.push_back(layer_ptrs[i]);
       layer_ptrs[i - 1]->postops.count++;
       graph.makeConnection(layer_ptrs[i - 1], layer_ptrs[i + 1]);
-    } else if (!layerpostop[i + 1])
+    } else if (!layerpostop[i + 1]) {
       graph.makeConnection(layer_ptrs[i], layer_ptrs[i + 1]);
+    }
   }
 
   graph.setOutput(layer_ptrs.back(), output);
@@ -178,54 +183,19 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   }
 }
 
+namespace {
+
 std::string get_base_layer_name(const std::string& tensor_name) {
   static const auto kPattern = std::regex("(_output|_out|:)[_\\d]*$");
   return std::regex_replace(tensor_name, kPattern, "");
 }
 
-std::string layerTypeToString(it_lab_ai::LayerType type) {
-  switch (type) {
-    case it_lab_ai::kInput:
-      return "Input";
-    case it_lab_ai::kPooling:
-      return "Pooling";
-    case it_lab_ai::kElementWise:
-      return "ElementWise";
-    case it_lab_ai::kConvolution:
-      return "Convolution";
-    case it_lab_ai::kFullyConnected:
-      return "FullyConnected";
-    case it_lab_ai::kFlatten:
-      return "Flatten";
-    case it_lab_ai::kConcat:
-      return "Concat";
-    case it_lab_ai::kDropout:
-      return "Dropout";
-    case it_lab_ai::kSplit:
-      return "Split";
-    case it_lab_ai::kBinaryOp:
-      return "BinaryOp";
-    case it_lab_ai::kTranspose:
-      return "Transpose";
-    case it_lab_ai::kMatmul:
-      return "MatMul";
-    case it_lab_ai::kReshape:
-      return "Reshape";
-    case it_lab_ai::kSoftmax:
-      return "Softmax";
-    case it_lab_ai::kReduce:
-      return "Reduce";
-    case it_lab_ai::kBatchNormalization:
-      return "BatchNormalization";
-    default:
-      return "Unknown";
-  }
-}
+}  // namespace
 
 void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                  it_lab_ai::Tensor& output, const std::string& json_path,
-                 bool comments) {
-  auto parse_result = parse_json_model(json_path, comments);
+                 RuntimeOptions options, bool comments) {
+  auto parse_result = parse_json_model(options, json_path, comments);
 
   auto& layers = parse_result.layers;
   auto& name_to_layer_ptr = parse_result.name_to_layer_ptr;
@@ -265,7 +235,7 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                        name_to_layer_ptr[b.first]->getID();
               });
   } catch (const std::exception& e) {
-    std::cerr << "ERROR during sorting: " << e.what() << std::endl;
+    std::cerr << "ERROR during sorting: " << e.what() << '\n';
   }
 
   for (const auto& [source_name, target_name] : connection_list) {
@@ -301,7 +271,7 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                              name_to_layer_ptr[target_name]);
       } catch (const std::exception& e) {
         std::cerr << "Failed: " << source_name << " -> " << target_name << " : "
-                  << e.what() << std::endl;
+                  << e.what() << '\n';
       }
     }
   }
@@ -329,7 +299,8 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   }
 }
 
-ParseResult parse_json_model(const std::string& json_path, bool comments) {
+ParseResult parse_json_model(RuntimeOptions options,
+                             const std::string& json_path, bool comments) {
   ParseResult result;
 
   auto& layers = result.layers;
@@ -360,7 +331,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
     }
   }
 
-  if (comments) std::cout << "Loaded model data from JSON." << std::endl;
+  if (comments) std::cout << "Loaded model data from JSON." << '\n';
 
   int current_id = 0;
 
@@ -380,7 +351,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
       int layer_index = layer_data["index"];
       if (comments) {
         std::cout << "Processing layer " << layer_index << ": " << layer_name
-                  << " (" << layer_type << ")" << std::endl;
+                  << " (" << layer_type << ")" << '\n';
       }
 
       std::unique_ptr<it_lab_ai::Layer> layer;
@@ -444,9 +415,9 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         layer = std::move(conv_layer);
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {
-        layer = LayerFactory::createEwLayer("relu");
+        layer = LayerFactory::createEwLayer("relu", options);
       } else if (layer_type.find("Sigmoid") != std::string::npos) {
-        layer = LayerFactory::createEwLayer("sigmoid");
+        layer = LayerFactory::createEwLayer("sigmoid", options);
       } else if (layer_type.find("Dense") != std::string::npos ||
                  layer_type.find("FullyConnected") != std::string::npos) {
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
@@ -469,19 +440,20 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
       } else if (layer_type.find("Dropout") != std::string::npos) {
         auto dropout_layer = std::make_unique<it_lab_ai::DropOutLayer>(0.0);
         layer = std::move(dropout_layer);
-        if (comments)
+        if (comments) {
           std::cout
               << "DropOutLayer added to layers with probability 0.4 (turned "
                  "off for inference)."
-              << std::endl;
+              << '\n';
+        }
       } else if (layer_type == "GlobalAveragePool") {
         auto pool_layer = std::make_unique<it_lab_ai::PoolingLayer>(
-            it_lab_ai::Shape({0, 0}), "average", kDefault);
+            it_lab_ai::Shape({0, 0}), "average");
         layer = std::move(pool_layer);
         if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
                        "dimensions as kernel)"
-                    << std::endl;
+                    << '\n';
         }
       } else if ((layer_type == "MaxPool" || layer_type == "AveragePool")) {
         std::string pooltype =
@@ -537,8 +509,8 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
           }
         }
 
-        auto pool_layer = std::make_unique<it_lab_ai::PoolingLayer>(
-            shape, pooltype, kDefault);
+        auto pool_layer =
+            std::make_unique<it_lab_ai::PoolingLayer>(shape, pooltype);
 
         try {
           if (strides[0] != 2 || strides[1] != 2) {
@@ -558,7 +530,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
         } catch (const std::exception& e) {
           if (comments) {
             std::cout << "Warning: Some pooling parameters not supported: "
-                      << e.what() << std::endl;
+                      << e.what() << '\n';
           }
         }
         layer = std::move(pool_layer);
@@ -665,28 +637,38 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
 
           if (layer_type == "Mul") {
             ew_operation = "linear";
-            layer = LayerFactory::createEwLayer(ew_operation, value, 0.0F);
+            layer =
+                LayerFactory::createEwLayer(ew_operation, options, value, 0.0F);
           } else if (layer_type == "Add") {
             ew_operation = "linear";
-            layer = LayerFactory::createEwLayer(ew_operation, 1.0F, value);
+            layer =
+                LayerFactory::createEwLayer(ew_operation, options, 1.0F, value);
           } else if (layer_type == "Sub") {
             ew_operation = "linear";
-            layer = LayerFactory::createEwLayer(ew_operation, 1.0F, -value);
+            layer = LayerFactory::createEwLayer(ew_operation, options, 1.0F,
+                                                -value);
           } else {
             continue;
           }
         } else {
-          it_lab_ai::BinaryOpLayer::Operation op;
-          if (layer_type == "Add")
+          it_lab_ai::BinaryOpLayer::Operation op =
+              it_lab_ai::BinaryOpLayer::Operation::kAdd;
+          bool supported_type = true;
+
+          if (layer_type == "Add") {
             op = it_lab_ai::BinaryOpLayer::Operation::kAdd;
-          else if (layer_type == "Sub")
+          } else if (layer_type == "Sub") {
             op = it_lab_ai::BinaryOpLayer::Operation::kSub;
-          else if (layer_type == "Mul")
+          } else if (layer_type == "Mul") {
             op = it_lab_ai::BinaryOpLayer::Operation::kMul;
-          else if (layer_type == "Div")
+          } else if (layer_type == "Div") {
             op = it_lab_ai::BinaryOpLayer::Operation::kDiv;
-          else {
-            op = it_lab_ai::BinaryOpLayer::Operation::kAdd;
+          } else {
+            supported_type = false;
+          }
+
+          if (!supported_type) {
+            continue;
           }
 
           auto bin_layer = std::make_unique<it_lab_ai::BinaryOpLayer>(op);
@@ -731,7 +713,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             std::cout << "Weights transposed from [" << tensor.get_shape()[0]
                       << ", " << tensor.get_shape()[1] << "] to ["
                       << transposed_shape[0] << ", " << transposed_shape[1]
-                      << "]" << std::endl;
+                      << "]" << '\n';
           }
         }
 
@@ -777,7 +759,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
             std::cout << perm[i];
             if (i < perm.size() - 1) std::cout << ", ";
           }
-          std::cout << "]" << std::endl;
+          std::cout << "]" << '\n';
         }
       } else if (layer_type == "Reshape") {
         bool allowzero = false;
@@ -1047,7 +1029,7 @@ ParseResult parse_json_model(const std::string& json_path, bool comments) {
       }
     } catch (const std::exception& e) {
       std::cerr << "Error processing layer " << layer_data["index"] << " ("
-                << layer_data["name"] << "): " << e.what() << std::endl;
+                << layer_data["name"] << "): " << e.what() << '\n';
       throw;
     }
   }
@@ -1221,14 +1203,14 @@ it_lab_ai::Tensor prepare_mnist_image(const cv::Mat& image) {
 void print_time_stats(Graph& graph) {
 #ifdef ENABLE_STATISTIC_TIME
   std::vector<std::string> times = graph.getTimeInfo();
-  std::cout << "!INFERENCE TIME INFO START!" << std::endl;
+  std::cout << "!INFERENCE TIME INFO START!" << '\n';
   for (size_t i = 0; i < times.size(); i++) {
-    std::cout << times[i] << std::endl;
+    std::cout << times[i] << '\n';
   }
   std::vector<int> elps_time = graph.getTime();
   int sum = std::accumulate(elps_time.begin(), elps_time.end(), 0);
-  std::cout << "Elapsed inference time:" << sum << std::endl;
-  std::cout << "!INFERENCE TIME INFO END!" << std::endl;
+  std::cout << "Elapsed inference time:" << sum << '\n';
+  std::cout << "!INFERENCE TIME INFO END!" << '\n';
 #else
   (void)graph;
 #endif

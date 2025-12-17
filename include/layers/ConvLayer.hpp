@@ -38,8 +38,7 @@ class ConvolutionalLayer : public Layer {
   }
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
                      const Tensor& kernel, const Tensor& bias = Tensor(),
-                     ImplType implType = kDefault, size_t group = 1,
-                     bool useLegacyImpl = false)
+                     size_t group = 1, bool useLegacyImpl = false)
       : Layer(kConvolution) {
     stride_ = step;
     pads_ = pads;
@@ -47,12 +46,12 @@ class ConvolutionalLayer : public Layer {
     dilations_ = dilations;
     kernel_ = kernel;
     bias_ = bias;
-    implType_ = implType;
     useLegacyImpl_ = useLegacyImpl;
   }
-
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
+  void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
+           const RuntimeOptions& options) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return kernel_; }
 #endif
@@ -86,15 +85,17 @@ class ConvImpl : public LayerImpl<ValueType> {
 
   ConvImpl(const ConvImpl& c) = default;
 
-  std::vector<ValueType> run(
+  [[nodiscard]] std::vector<ValueType> run(
       const std::vector<ValueType>& input) const override {
     return input;
   }
 
-  std::vector<ValueType> run(std::vector<ValueType> startmatrix, int new_rows,
-                             int new_cols, std::vector<ValueType> startkernel,
-                             size_t start_kernel_size, size_t kernel_size,
-                             int center_distance) const {
+  [[nodiscard]] std::vector<ValueType> run(std::vector<ValueType> startmatrix,
+                                           int new_rows, int new_cols,
+                                           std::vector<ValueType> startkernel,
+                                           size_t start_kernel_size,
+                                           size_t kernel_size,
+                                           int center_distance) const {
     std::vector<ValueType> matrix(new_rows * new_cols * input_flow_, 0);
     for (int i = 0; i < input_height_; ++i) {
       for (int j = 0; j < input_width_; ++j) {
@@ -125,7 +126,11 @@ class ConvImpl : public LayerImpl<ValueType> {
             if (input_width_ == 0) {
               throw std::out_of_range("Input = 0");
             }
-            auto kercol = static_cast<size_t>(coloms / input_width_ + 1);
+            int kercol_index = coloms / input_width_ + 1;
+            if (kercol_index < 0) {
+              throw std::out_of_range("Kernel column index is negative");
+            }
+            auto kercol = static_cast<size_t>(kercol_index);
             color +=
                 matrix[(i + coloms + str) * input_flow_ + x] *
                 kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];

@@ -445,7 +445,7 @@ TEST(ConvolutionalLayerTest, DepthwiseIntegration) {
   std::vector<float> output_vec(32, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 1, 1, kernel, Tensor(), kDefault, 2);
+  ConvolutionalLayer layer(1, 1, 1, kernel, Tensor(), 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -569,7 +569,7 @@ TEST(ConvolutionalLayerTest, DepthwiseViaConvolutionalLayer) {
   std::vector<float> output_vec(8, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kDefault, 2);
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
   layer.run(in, out);
@@ -583,6 +583,11 @@ TEST(ConvolutionalLayerTest, DepthwiseViaConvolutionalLayer) {
 }
 
 TEST(ConvolutionalLayerTest, Conv4DSTLViaConvolutionalLayer) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.par_backend = ParBackend::kThreads;
+
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
   Tensor input = make_tensor(image, input_shape);
@@ -595,10 +600,10 @@ TEST(ConvolutionalLayerTest, Conv4DSTLViaConvolutionalLayer) {
   std::vector<float> output_vec(8, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kSTL);
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor());
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
-  layer.run(in, out);
+  layer.run(in, out, options);
 
   std::vector<float> result = *out[0].as<float>();
 
@@ -684,7 +689,7 @@ TEST(ConvolutionalLayerTest, Conv4DLegacyViaConvolutionalLayer) {
   std::vector<float> output_vec(8, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kDefault, 1, true);
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), 1, true);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -747,7 +752,7 @@ TEST(ConvolutionalLayerTest, DepthwiseConv4DIntPathCoverage) {
   std::vector<int> output_vec(6, 0);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, bias, kDefault, 2);
+  ConvolutionalLayer layer(1, 0, 1, kernel, bias, 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -776,7 +781,7 @@ TEST(ConvolutionalLayerTest, DepthwiseConv4DFloatPathCoverage) {
   std::vector<float> output_vec(2, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, bias, kDefault, 2);
+  ConvolutionalLayer layer(1, 0, 1, kernel, bias, 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -801,7 +806,7 @@ TEST(ConvolutionalLayerTest, DepthwiseConv4DNoBiasIntPathCoverage) {
   std::vector<int> output_vec(2, 0);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kDefault, 2);
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -827,7 +832,7 @@ TEST(ConvolutionalLayerTest, DepthwiseConv4DNoBiasFloatPathCoverage) {
   std::vector<float> output_vec(2, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), kDefault, 2);
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor(), 2);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
@@ -1033,4 +1038,137 @@ TEST(ConvolutionalLayerTest, Float4DKernelWorking) {
 
   std::vector<float> result = *out[0].as<float>();
   ASSERT_EQ(result.size(), 4);
+}
+
+TEST(ConvolutionalLayerTest, Conv4DWithParallelNoneBackend) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.par_backend = ParBackend::kSeq;
+
+  std::vector<float> image(48, 1.0f);
+  Shape input_shape({1, 3, 4, 4});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<float> kernelvec(54, 1.0f);
+  Shape kernel_shape({2, 3, 3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  Shape output_shape({1, 2, 2, 2});
+  std::vector<float> output_vec(8, 0.0f);
+  Tensor output = make_tensor(output_vec, output_shape);
+
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor());
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out, options);
+
+  std::vector<float> result = *out[0].as<float>();
+
+  float expected_value = 27.0f;
+  for (size_t i = 0; i < result.size(); ++i) {
+    ASSERT_NEAR(result[i], expected_value, 1e-5f);
+  }
+}
+
+TEST(ConvolutionalLayerTest, Conv4DWithParallelDefaultFallback) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+
+  std::vector<float> image(48, 1.0f);
+  Shape input_shape({1, 3, 4, 4});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<float> kernelvec(54, 1.0f);
+  Shape kernel_shape({2, 3, 3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  Shape output_shape({1, 2, 2, 2});
+  std::vector<float> output_vec(8, 0.0f);
+  Tensor output = make_tensor(output_vec, output_shape);
+
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor());
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out, options);
+
+  std::vector<float> result = *out[0].as<float>();
+
+  float expected_value = 27.0f;
+  for (size_t i = 0; i < result.size(); ++i) {
+    ASSERT_NEAR(result[i], expected_value, 1e-5f);
+  }
+}
+
+TEST(ConvolutionalLayerTest, Conv4DWithoutParallelFlag) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.par_backend = ParBackend::kThreads;
+
+  std::vector<float> image(48, 1.0f);
+  Shape input_shape({1, 3, 4, 4});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<float> kernelvec(54, 1.0f);
+  Shape kernel_shape({2, 3, 3, 3});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  Shape output_shape({1, 2, 2, 2});
+  std::vector<float> output_vec(8, 0.0f);
+  Tensor output = make_tensor(output_vec, output_shape);
+
+  ConvolutionalLayer layer(1, 0, 1, kernel, Tensor());
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+  layer.run(in, out, options);
+
+  std::vector<float> result = *out[0].as<float>();
+
+  float expected_value = 27.0f;
+  for (size_t i = 0; i < result.size(); ++i) {
+    ASSERT_NEAR(result[i], expected_value, 1e-5f);
+  }
+}
+
+TEST(ConvolutionalLayerTest, Conv4DLegacyFloatWithParallelNone) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.par_backend = ParBackend::kSeq;
+
+  std::vector<float> image(48, 1.0f);
+  Shape input_shape({1, 3, 4, 4});
+  Tensor input = make_tensor(image, input_shape);
+
+  std::vector<float> kernelvec(54, 1.0f);
+  Shape kernel_shape({3, 3, 3, 2});
+  Tensor kernel = make_tensor(kernelvec, kernel_shape);
+
+  std::vector<float> biasvec = {0.5f, 1.0f};
+  Tensor bias = make_tensor(biasvec, Shape({2}));
+
+  ConvolutionalLayer layer(1, 0, 1, kernel, bias, 1, true);
+  std::vector<Tensor> in{input};
+
+  size_t out_height = (4 + 2 * 0 - 1 * (3 - 1) - 1) / 1 + 1;
+  size_t out_width = (4 + 2 * 0 - 1 * (3 - 1) - 1) / 1 + 1;
+  Shape output_shape({1, 2, out_height, out_width});
+  std::vector<float> output_vec(8, 0.0f);
+  Tensor output = make_tensor(output_vec, output_shape);
+  std::vector<Tensor> out{output};
+
+  layer.run(in, out, options);
+
+  std::vector<float> result = *out[0].as<float>();
+
+  float expected_value_ch1 = 27.0f + 0.5f;
+  float expected_value_ch2 = 27.0f + 1.0f;
+
+  ASSERT_EQ(result.size(), 8);
+  ASSERT_NEAR(result[0], expected_value_ch1, 1e-5f);
+  ASSERT_NEAR(result[1], expected_value_ch1, 1e-5f);
+  ASSERT_NEAR(result[4], expected_value_ch2, 1e-5f);
+  ASSERT_NEAR(result[5], expected_value_ch2, 1e-5f);
 }

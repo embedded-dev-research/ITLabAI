@@ -4,6 +4,13 @@ namespace it_lab_ai {
 
 void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                              std::vector<Tensor>& output) {
+  RuntimeOptions default_options;
+  run(input, output, default_options);
+}
+
+void ConvolutionalLayer::run(const std::vector<Tensor>& input,
+                             std::vector<Tensor>& output,
+                             const RuntimeOptions& options) {
   if (input.size() != 1) {
     throw std::runtime_error("ConvolutionalLayer: Input tensors not 1");
   }
@@ -26,6 +33,17 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
               "Unsupported type for depthwise convolution");
       }
       return;
+    }
+  }
+  if (options.parallel) {
+    switch (options.par_backend) {
+      case ParBackend::kThreads:
+        implType_ = kSTL;
+        break;
+      case ParBackend::kSeq:
+      default:
+        implType_ = kDefault;
+        break;
     }
   }
   switch (input[0].get_type()) {
