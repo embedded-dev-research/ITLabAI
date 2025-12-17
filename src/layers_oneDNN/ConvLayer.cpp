@@ -1,10 +1,10 @@
 #include "layers_oneDNN/ConvLayer.hpp"
 
 #include <algorithm>
-#include <iostream>
-#include <stdexcept>
 #include <cmath>
 #include <cstring>
+#include <iostream>
+#include <stdexcept>
 
 namespace it_lab_ai {
 
