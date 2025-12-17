@@ -12,17 +12,11 @@ namespace it_lab_ai {
 class ConvLayerOneDnn : public Layer {
  public:
   ConvLayerOneDnn()
-      : Layer(kConvolution),
-        stride_(1),
-        pads_(0),
-        dilations_(1),
-        group_(1),
-        depthwise_(false) {}
+      : Layer(kConvolution), stride_(1), pads_(0), dilations_(1), group_(1) {}
 
   ConvLayerOneDnn(size_t stride, size_t pads, size_t dilations,
                   const Tensor& kernel, const Tensor& bias = Tensor(),
-                  size_t group = 1, bool use_legacy = false,
-                  bool depthwise = false)
+                  size_t group = 1, bool use_legacy = false)
       : Layer(kConvolution),
         stride_(stride),
         pads_(pads),
@@ -30,8 +24,7 @@ class ConvLayerOneDnn : public Layer {
         kernel_(kernel),
         bias_(bias),
         group_(group),
-        use_legacy_(use_legacy),
-        depthwise_(depthwise) {}
+        use_legacy_(use_legacy) {}
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
@@ -89,7 +82,6 @@ class ConvLayerOneDnn : public Layer {
   Tensor bias_;
   size_t group_;
   bool use_legacy_;
-  bool depthwise_;
 
   std::unique_ptr<dnnl::engine> engine_;
   std::unique_ptr<dnnl::stream> stream_;

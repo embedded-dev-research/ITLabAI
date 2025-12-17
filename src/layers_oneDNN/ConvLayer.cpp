@@ -160,12 +160,8 @@ void ConvLayerOneDnn::validate_depthwise_input(
 }
 
 bool ConvLayerOneDnn::is_depthwise_convolution() const {
-  if (depthwise_) {
-    return true;
-  }
-
   const Shape& kernel_shape = kernel_.get_shape();
-  return (group_ > 1 && kernel_shape[1] == 1);
+  return (group_ == kernel_shape[0]);
 }
 
 void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
