@@ -222,6 +222,7 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
         dnnl::memory::desc(kernel_dims, dnnl_data_type, weights_format);
 
     dnnl::memory::desc bias_md;
+    bool has_bias = !bias_.empty();
     if (!bias_.empty()) {
       size_t bias_size;
       if (is_depthwise) {
@@ -237,11 +238,15 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
                              dnnl_data_type, dnnl::memory::format_tag::any);
     }
 
-    dnnl::convolution_forward::primitive_desc conv_pd(
-        *engine_, dnnl::prop_kind::forward_inference,
-        dnnl::algorithm::convolution_direct, src_md, weights_md,
-        !bias_.empty() ? bias_md : dnnl::memory::desc(), dst_md, strides,
-        dilation, padding, padding);
+    dnnl::convolution_forward::primitive_desc conv_pd =
+        has_bias ? dnnl::convolution_forward::primitive_desc(
+                       *engine_, dnnl::prop_kind::forward_inference,
+                       dnnl::algorithm::convolution_direct, src_md, weights_md,
+                       bias_md, dst_md, strides, dilation, padding, padding)
+                 : dnnl::convolution_forward::primitive_desc(
+                       *engine_, dnnl::prop_kind::forward_inference,
+                       dnnl::algorithm::convolution_direct, src_md, weights_md,
+                       dst_md, strides, dilation, padding, padding);
 
     src_memory_ = dnnl::memory(conv_pd.src_desc(), *engine_);
     weights_memory_ = dnnl::memory(conv_pd.weights_desc(), *engine_);
@@ -336,9 +341,6 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
     Shape output_shape = get_output_shape(input_shape);
     dnnl::memory::dims dst_dims = shape_to_dims(output_shape);
 
-    for (auto d : dst_dims) std::cout << d << " ";
-    std::cout << std::endl;
-
     dnnl::memory::dims strides = {static_cast<dnnl::memory::dim>(stride_),
                                   static_cast<dnnl::memory::dim>(stride_)};
     dnnl::memory::dims padding = {static_cast<dnnl::memory::dim>(pads_),
@@ -365,15 +367,30 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
     auto weights_md =
         dnnl::memory::desc(weights_dims, dt, dnnl::memory::format_tag::oihw);
 
+    dnnl::memory::desc bias_md;
+    bool has_bias = !bias_.empty();
+    if (has_bias) {
+      bias_md = dnnl::memory::desc(
+          {static_cast<dnnl::memory::dim>(bias_.get_shape()[0])}, dt,
+          dnnl::memory::format_tag::any);
+    }
     dnnl::convolution_forward::primitive_desc conv_pd =
-        dnnl::convolution_forward::primitive_desc(
-            *engine_, dnnl::prop_kind::forward_inference,
-            dnnl::algorithm::convolution_direct, src_md, weights_md,
-            dnnl::memory::desc(), dst_md, strides, dilation, padding, padding);
+        has_bias ? dnnl::convolution_forward::primitive_desc(
+                       *engine_, dnnl::prop_kind::forward_inference,
+                       dnnl::algorithm::convolution_direct, src_md, weights_md,
+                       bias_md, dst_md, strides, dilation, padding, padding)
+                 : dnnl::convolution_forward::primitive_desc(
+                       *engine_, dnnl::prop_kind::forward_inference,
+                       dnnl::algorithm::convolution_direct, src_md, weights_md,
+                       dst_md, strides, dilation, padding, padding);
 
     src_memory_ = dnnl::memory(conv_pd.src_desc(), *engine_);
     weights_memory_ = dnnl::memory(conv_pd.weights_desc(), *engine_);
     dst_memory_ = dnnl::memory(conv_pd.dst_desc(), *engine_);
+
+    if (has_bias) {
+      bias_memory_ = dnnl::memory(conv_pd.bias_desc(), *engine_);
+    }
 
     if (data_type == Type::kFloat) {
       const std::vector<float>& kernel_data = *kernel_.as<float>();

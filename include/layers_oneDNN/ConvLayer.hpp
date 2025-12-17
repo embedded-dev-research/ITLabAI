@@ -15,7 +15,7 @@ class ConvLayerOneDnn : public Layer {
       : Layer(kConvolution),
         stride_(1),
         pads_(0),
-        dilations_(0),
+        dilations_(1),
         group_(1),
         depthwise_(false) {}
 

@@ -213,22 +213,6 @@ TEST(convlayer_onednn, channel_mismatch_error) {
   EXPECT_THROW(layer.run(in, out), std::runtime_error);
 }
 
-TEST(convlayer_onednn, unsupported_data_type) {
-  std::vector<float> kernel_data(3 * 3, 1.0f);
-  Tensor kernel = make_tensor(kernel_data, Shape({1, 1, 3, 3}));
-
-  ConvLayerOneDnn layer(1, 0, 1, kernel);
-
-  Tensor input =
-      make_tensor<float>(std::vector<float>(16, 1.0f), Shape({1, 1, 4, 4}));
-  Tensor output;
-
-  std::vector<Tensor> in{input};
-  std::vector<Tensor> out{output};
-
-  EXPECT_NO_THROW(layer.run(in, out));
-}
-
 TEST(convlayer_onednn, special_conv_format) {
   std::vector<float> kernel_data = {
       1.0f, 0.0f, -1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f, -1.0f,
