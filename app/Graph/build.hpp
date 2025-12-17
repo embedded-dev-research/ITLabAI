@@ -87,13 +87,11 @@ class LayerFactory {
     return std::make_unique<EWLayer>(function, alpha, beta);
   }
 
-  static std::unique_ptr<Layer> createConvLayer(size_t step, size_t pads,
-                                                size_t dilations,
-                                                const Tensor& kernel,
-                                                const Tensor& bias = Tensor(),
-                                                size_t group = 1,
-                                                bool useLegacyImpl = false) {
-    if (onednn_) {
+  static std::unique_ptr<Layer> createConvLayer(
+      size_t step, size_t pads, size_t dilations, const Tensor& kernel,
+      const Tensor& bias = Tensor(), size_t group = 1,
+      const RuntimeOptions& options, bool useLegacyImpl = false) {
+    if (options.backend == Backend::kOneDnn) {
       return std::make_unique<ConvLayerOneDnn>(step, pads, dilations, kernel,
                                                bias, group, useLegacyImpl);
     } else {
