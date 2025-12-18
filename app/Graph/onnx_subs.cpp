@@ -92,7 +92,8 @@ int main() {
     std::cerr << "Time for path5:" << time << std::endl;
   } else if (type == 2) {
     Graph graph1;
-    build_graph(graph1, input, input, MODEL_PATH_GOOGLENET_ONNX, options, false);
+    build_graph(graph1, input, input, MODEL_PATH_GOOGLENET_ONNX, options,
+                false);
 
     Graph subgraph;
     Shape shape(2);
