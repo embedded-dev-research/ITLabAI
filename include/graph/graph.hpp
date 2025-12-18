@@ -199,7 +199,7 @@ class Graph {
     in_edges_[layNext->getID()].push_back(layPrev->getID());
   }
 
-    void removeConnection(int idPrev, int idNext) {
+  void removeConnection(int idPrev, int idNext) {
     if (idPrev >= V_ || idNext >= V_ || idPrev < 0 || idNext < 0) {
       throw std::out_of_range("Layer ID out of range");
     }
