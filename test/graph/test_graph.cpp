@@ -418,7 +418,7 @@ TEST(graph, get_layer_out_of_range) {
   graph.makeConnection(fcLayer2, fcLayer3);
   graph.makeConnection(fcLayer, fcLayer4);
   graph.setOutput(fcLayer4, output);
-  ASSERT_ANY_THROW(graph.getLayerFromID(999));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getLayerFromID(999)));
 }
 
 TEST(graph, get_in_layers_out_of_range) {
