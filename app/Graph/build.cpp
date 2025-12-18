@@ -127,8 +127,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       }
     }
   }
-  if (comments)
-    std::cout << "number of layers - " << layers.size() + 1 << '\n';
+  if (comments) std::cout << "number of layers - " << layers.size() + 1 << '\n';
   auto a1 = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                     it_lab_ai::kNchw);
 
@@ -472,7 +471,7 @@ ParseResult parse_json_model(RuntimeOptions options,
         }
 
         auto pool_layer =
-		    std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype);
+            std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype);
 
         try {
           if (strides[0] != 2 || strides[1] != 2) {
