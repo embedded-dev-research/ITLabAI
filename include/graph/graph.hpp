@@ -199,7 +199,7 @@ class Graph {
     in_edges_[layNext->getID()].push_back(layPrev->getID());
   }
 
-  void removeConnection(int idPrev, int idNext) {
+    void removeConnection(int idPrev, int idNext) {
     if (idPrev >= V_ || idNext >= V_ || idPrev < 0 || idNext < 0) {
       throw std::out_of_range("Layer ID out of range");
     }
@@ -237,19 +237,24 @@ class Graph {
         }
       }
     }
-    in_edges_.erase(in_edges_.begin() + id);
     // remove outputs
-    arrayE_.erase(arrayE_.begin() + arrayV_[id],
-                  arrayE_.begin() + arrayV_[id + 1]);
     int amount_connected = arrayV_[id + 1] - arrayV_[id];
-    // remove vertex
-    arrayV_.erase(arrayV_.begin() + id);
-    for (size_t i = id; i < arrayV_.size(); i++) {
-      arrayV_[i] -= amount_connected;
+    for (int i = 0; i < amount_connected; i++) {
+      removeConnection(id, arrayE_[arrayV_[id] + i]);
     }
+    // remove vertex
+    in_edges_.erase(in_edges_.begin() + id);
+    arrayV_.erase(arrayV_.begin() + id);
     for (int& i : arrayE_) {
       if (i > id) {
         i -= 1;
+      }
+    }
+    for (std::vector<int>& i : in_edges_) {
+      for (int& j : i) {
+        if (j > id) {
+          j--;
+        }
       }
     }
     for (size_t i = id + 1; i < layers_.size(); i++) {
