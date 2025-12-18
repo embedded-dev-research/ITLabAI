@@ -439,7 +439,7 @@ TEST(graph, get_in_layers_out_of_range) {
   graph.makeConnection(fcLayer2, fcLayer3);
   graph.makeConnection(fcLayer, fcLayer4);
   graph.setOutput(fcLayer4, output);
-  ASSERT_ANY_THROW(graph.getInLayers(999));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getInLayers(999)));
 }
 
 TEST(graph, get_in_layers) {
@@ -460,7 +460,7 @@ TEST(graph, get_in_layers) {
   graph.makeConnection(fcLayer2, fcLayer3);
   graph.makeConnection(fcLayer, fcLayer4);
   graph.setOutput(fcLayer4, output);
-  ASSERT_NO_THROW(graph.getInLayers(0));
+  ASSERT_NO_THROW(static_cast<void>(graph.getInLayers(0)));
 }
 
 TEST(graph_transformations, check_subgraphs_search) {
