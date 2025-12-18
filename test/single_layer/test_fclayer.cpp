@@ -94,8 +94,8 @@ TEST(fclayer, set_get_weight_throws_when_out_of_range) {
   Shape wshape({3, 3});
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayerImpl<double> layer(a1, wshape, bias);
-  ASSERT_ANY_THROW(layer.get_weight(4, 0));
-  ASSERT_ANY_THROW(layer.get_weight(0, 4));
+  ASSERT_ANY_THROW(static_cast<void>(layer.get_weight(4, 0)));
+  ASSERT_ANY_THROW(static_cast<void>(layer.get_weight(0, 4)));
   ASSERT_ANY_THROW(layer.set_weight(4, 0, 1.3));
   ASSERT_ANY_THROW(layer.set_weight(0, 4, 1.3));
 }
@@ -104,7 +104,7 @@ TEST(fclayer, set_get_bias_throws_when_out_of_range) {
   Shape wshape({3, 3});
   std::vector<double> bias = {0.5, 0.5, 1.0};
   FCLayerImpl<double> layer(a1, wshape, bias);
-  ASSERT_ANY_THROW(layer.get_bias(4));
+  ASSERT_ANY_THROW(static_cast<void>(layer.get_bias(4)));
   ASSERT_ANY_THROW(layer.set_bias(4, 1.3));
 }
 

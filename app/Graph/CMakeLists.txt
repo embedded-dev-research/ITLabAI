@@ -27,18 +27,6 @@ target_link_libraries(onnx_subs BuildGraph)
 target_link_libraries(onnx_subs OpenMP::OpenMP_CXX)
 target_link_libraries(onnx_subs graphT_lib)
 
-if (WIN32)
-    add_custom_command(TARGET Graph_Build POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${OPENCV_BUILD_DIR}/bin/."
-            "${CMAKE_BINARY_DIR}/bin/")
-
-    add_custom_command(TARGET ACC POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${OPENCV_BUILD_DIR}/bin/."
-            "${CMAKE_BINARY_DIR}/bin/")
-endif()
-
 file(DOWNLOAD
     "https://raw.githubusercontent.com/DeepTrackAI/MNIST_dataset/main/mnist/test/1_000008.png"
     "${CMAKE_SOURCE_DIR}/docs/input/28/test1.png"

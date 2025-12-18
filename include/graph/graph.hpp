@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "layers/Layer.hpp"
+#include "runtime_options.hpp"
 
 namespace it_lab_ai {
 
@@ -76,21 +77,21 @@ class Graph {
     split_distribution_ = std::move(split_dist);
   }
 
-  int getVertexValue(size_t layerID) const {
+  [[nodiscard]] int getVertexValue(size_t layerID) const {
     if (layerID >= arrayV_.size()) {
       throw std::invalid_argument("ArrayV does not contain this ID.");
     }
     return arrayV_[layerID];
   }
 
-  int getEdgeValue(size_t pos) const {
+  [[nodiscard]] int getEdgeValue(size_t pos) const {
     if (pos >= arrayE_.size()) {
       throw std::invalid_argument("ArrayE does not contain this.");
     }
     return arrayE_[pos];
   }
 
-  size_t getInputsSize(size_t layerID) const {
+  [[nodiscard]] size_t getInputsSize(size_t layerID) const {
     if (layerID >= in_edges_.size()) {
       throw std::invalid_argument("Input edges array do not contain this ID.");
     }
@@ -104,9 +105,9 @@ class Graph {
     return in_edges_[layerID];
   }
 
-  int getLayersCount() const { return V_; }
+  [[nodiscard]] int getLayersCount() const { return V_; }
 
-  std::shared_ptr<Layer> getLayerFromID(size_t layerID) const {
+  [[nodiscard]] std::shared_ptr<Layer> getLayerFromID(size_t layerID) const {
     if (layerID >= layers_.size()) {
       throw std::invalid_argument("Layers do not contain this ID.");
     }
@@ -275,7 +276,7 @@ class Graph {
     return false;
   }
 
-  void inference() {
+  void inference(const RuntimeOptions& options) {
     std::vector<std::pair<int, int>> countinout = getInOutDegrees();
     std::vector<int> traversal = getTraversalOrder();
     count_used_split_distribution_ = 0;
@@ -298,7 +299,13 @@ class Graph {
           if (it != branch_list_.rend()) {
             for (size_t f = 0; f < it->distribution.size(); ++f) {
               if (it->distribution[f].first == current_layer) {
-                inten_.push_back(it->give_for_all[it->distribution[f].second]);
+                bool last_use = (it->count_used_ten == 1);
+                auto& src = it->give_for_all[it->distribution[f].second];
+                if (last_use) {
+                  inten_.push_back(std::move(src));
+                } else {
+                  inten_.push_back(src);
+                }
               }
             }
           }
@@ -313,7 +320,10 @@ class Graph {
           }
         }
       }
-      layers_[current_layer]->run(inten_, outten_);
+      if (outten_.empty()) {
+        outten_.resize(1);
+      }
+      layers_[current_layer]->run(inten_, outten_, options);
 
 #ifdef ENABLE_STATISTIC_TENSORS
       tensors_.push_back(inten_[0]);
@@ -323,18 +333,19 @@ class Graph {
       weights_.push_back(layers_[current_layer]->get_weights());
 #endif
 
-      inten_ = outten_;
+      inten_.swap(outten_);
 
       if (layers_[current_layer]->postops.count > 0) {
         for (unsigned int j = 0; j < layers_[current_layer]->postops.count;
              j++) {
-          layers_[current_layer]->postops.layers[j]->run(inten_, outten_);
+          layers_[current_layer]->postops.layers[j]->run(inten_, outten_,
+                                                         options);
         }
-        inten_ = outten_;
+        inten_.swap(outten_);
       }
 
       BranchState new_branch;
-      new_branch.give_for_all = inten_;
+      new_branch.give_for_all = std::move(inten_);
       new_branch.count_used_ten = countinout[current_layer].second;
       new_branch.ind_layer = current_layer;
       new_branch.split = layers_[current_layer]->getName() == kSplit;
@@ -359,7 +370,12 @@ class Graph {
         }
         new_branch.distribution = dis;
       }
-      branch_list_.push_back(new_branch);
+      branch_list_.push_back(std::move(new_branch));
+      if (outtenres_ && current_layer == end_ &&
+          !branch_list_.back().give_for_all.empty() &&
+          countinout[current_layer].second == 0) {
+        *outtenres_ = std::move(branch_list_.back().give_for_all[0]);
+      }
 
 #ifdef ENABLE_STATISTIC_TIME
       auto end = std::chrono::high_resolution_clock::now();
@@ -368,10 +384,6 @@ class Graph {
       time_.push_back(static_cast<int>(elapsed.count()));
       time_layer_.push_back(layers_[current_layer]->getName());
 #endif
-    }
-
-    if (outtenres_ && !outten_.empty()) {
-      *outtenres_ = outten_[0];
     }
   }
 
@@ -426,7 +438,7 @@ class Graph {
   std::vector<Tensor> getWEIGHTS() { return weights_; }
 #endif
 
-  std::vector<std::pair<int, int>> getInOutDegrees() const {
+  [[nodiscard]] std::vector<std::pair<int, int>> getInOutDegrees() const {
     std::vector<int> in_degree(V_, 0);
 
     for (int i = 0; i < V_; ++i) {
@@ -447,7 +459,7 @@ class Graph {
     return result;
   }
 
-  std::vector<int> getTraversalOrder() const {
+  [[nodiscard]] std::vector<int> getTraversalOrder() const {
     auto in_out_degrees = getInOutDegrees();
     std::vector<int> in_degree(V_);
     for (int i = 0; i < V_; ++i) {

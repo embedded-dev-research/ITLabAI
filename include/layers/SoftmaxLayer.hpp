@@ -21,7 +21,7 @@ class SoftmaxLayer : public Layer {
 #endif
 
   void set_axis(int axis) { axis_ = axis; }
-  int get_axis() const { return axis_; }
+  [[nodiscard]] int get_axis() const { return axis_; }
 
  private:
   int axis_;

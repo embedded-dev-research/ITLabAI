@@ -26,6 +26,16 @@ set(CMAKE_CXX_STANDARD 17)
 
 enable_testing()
 
+find_package(OpenMP REQUIRED)
+
+if(OpenMP_FOUND)
+    message(STATUS "OpenMP found - enabling parallel support")
+    add_definitions(-DHAS_OPENMP)
+    link_libraries(OpenMP::OpenMP_CXX)
+else()
+    message(STATUS "OpenMP not found - parallel features disabled")
+endif()
+
 include_directories("include")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -33,8 +43,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 add_subdirectory(3rdparty)
 
 include(cmake/opencv_config.cmake)
-
-find_package(OpenMP REQUIRED)
 
 if (NOT WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")

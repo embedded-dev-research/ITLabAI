@@ -282,22 +282,26 @@ TEST(graph, set_output_null_layer) {
 
 TEST(graph, get_vertex_value_invalid_id) {
   Graph graph;
-  EXPECT_THROW(graph.getVertexValue(1000), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(graph.getVertexValue(1000)),
+               std::invalid_argument);
 }
 
 TEST(graph, get_edge_value_invalid_pos) {
   Graph graph;
-  EXPECT_THROW(graph.getEdgeValue(1000), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(graph.getEdgeValue(1000)),
+               std::invalid_argument);
 }
 
 TEST(graph, get_inputs_size_invalid_id) {
   Graph graph;
-  EXPECT_THROW(graph.getInputsSize(1000), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(graph.getInputsSize(1000)),
+               std::invalid_argument);
 }
 
 TEST(graph, get_layer_from_id_invalid_id) {
   Graph graph;
-  EXPECT_THROW(graph.getLayerFromID(1000), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(graph.getLayerFromID(1000)),
+               std::invalid_argument);
 }
 
 TEST(graph, complex_graph_with_split_distribution) {

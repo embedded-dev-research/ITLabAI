@@ -10,6 +10,10 @@
 using namespace it_lab_ai;
 
 int main() {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.threads = 4;
+  options.parallel = true;
   std::string image_path = IMAGE1_PATH;
   cv::Mat image = cv::imread(image_path);
   if (image.empty()) {
@@ -60,7 +64,7 @@ int main() {
   graph.makeConnection(a4, a5);
   graph.makeConnection(a5, a6);
   graph.setOutput(a5, output);
-  graph.inference();
+  graph.inference(options);
   std::vector<float> tmp = *output.as<float>();
   std::vector<float> tmp_output = softmax<float>(*output.as<float>());
   for (float i : tmp) {

@@ -18,6 +18,11 @@
 using namespace it_lab_ai;
 
 TEST(bfs, check_struct_graph) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.threads = 4;
+
   Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<int> vec;
@@ -82,13 +87,18 @@ TEST(bfs, check_struct_graph) {
   graph.makeConnection(a11_1, a12);
   graph.makeConnection(a10, a12);
   graph.setOutput(a12, output);
-  graph.inference();
+  graph.inference(options);
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(36, 81);
   ASSERT_EQ(tmp, res);
 }
 
 TEST(bfs, check_struct_graph_not_used_yolo) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.threads = 4;
+
   Graph graph;
   Shape sh1({1, 4, 2, 2});
   std::vector<int> vec;
@@ -131,13 +141,18 @@ TEST(bfs, check_struct_graph_not_used_yolo) {
   graph.makeConnection(a3_3_4, a3_2);
 
   graph.setOutput(a4, output);
-  graph.inference();
+  graph.inference(options);
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(16, 3);
   ASSERT_EQ(tmp, res);
 }
 
 TEST(bfs, check_struct_graph_resnet1) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.threads = 4;
+
   Graph graph;
   Shape sh1({1, 2, 2, 2});
   std::vector<int> vec;
@@ -172,13 +187,18 @@ TEST(bfs, check_struct_graph_resnet1) {
   graph.makeConnection(a2_2, a3);
   graph.makeConnection(a3, a4);
   graph.setOutput(a4, output);
-  graph.inference();
+  graph.inference(options);
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(4, 12);
   ASSERT_EQ(tmp, res);
 }
 
 TEST(bfs, check_struct_graph_resnet2) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.threads = 4;
+
   Graph graph;
   Shape sh1({1, 2, 2, 2});
   std::vector<int> vec;
@@ -211,13 +231,18 @@ TEST(bfs, check_struct_graph_resnet2) {
   graph.makeConnection(a2, a3);
   graph.makeConnection(a3, a4);
   graph.setOutput(a4, output);
-  graph.inference();
+  graph.inference(options);
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(4, 12);
   ASSERT_EQ(tmp, res);
 }
 
 TEST(bfs, check_struct_graph_google1) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.threads = 4;
+
   Graph graph;
   Shape sh1({1, 2, 2, 2});
   std::vector<int> vec;
@@ -249,7 +274,7 @@ TEST(bfs, check_struct_graph_google1) {
   graph.makeConnection(a2_2_1, a3);
   graph.makeConnection(a2_1, a3);
   graph.setOutput(a3, output);
-  graph.inference();
+  graph.inference(options);
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(32, 3);
   for (int c = 8; c < 24; c++) {
@@ -259,6 +284,11 @@ TEST(bfs, check_struct_graph_google1) {
 }
 
 TEST(bfs, check_result_vec) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.threads = 4;
+
   Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<int> vec;
@@ -281,7 +311,7 @@ TEST(bfs, check_result_vec) {
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a4);
   graph.setOutput(a4, output);
-  graph.inference();
+  graph.inference(options);
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res = {81, 81, 81};
 #ifdef ENABLE_STATISTIC_TENSORS
@@ -332,6 +362,11 @@ TEST(bfs, check_result_vec) {
   ASSERT_EQ(tmp, res);
 }
 TEST(bfs, check_end_to_end) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.threads = 4;
+
   Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<float> vec;
@@ -363,7 +398,7 @@ TEST(bfs, check_end_to_end) {
   graph.makeConnection(a3, a4);
   graph.makeConnection(a4, a5);
   graph.setOutput(a5, output);
-  graph.inference();
+  graph.inference(options);
 
   std::vector<float> tmp = *output.as<float>();
   ASSERT_GT(tmp.size(), 0);
@@ -373,6 +408,11 @@ TEST(bfs, check_end_to_end) {
 }
 
 TEST(bfs, check_struct_layer) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.threads = 4;
+
   Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<int> vec;
@@ -394,13 +434,18 @@ TEST(bfs, check_struct_layer) {
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
   graph.setOutput(a3, output);
-  graph.inference();
+  graph.inference(options);
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res = {81, 81, 81};
   ASSERT_EQ(tmp, res);
 }
 
 TEST(bfs, check_struct_layer_added) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.threads = 4;
+
   Graph graph;
   Shape sh1({1, 5, 5, 3});
   std::vector<int> vec;
@@ -425,13 +470,18 @@ TEST(bfs, check_struct_layer_added) {
   graph.makeConnection(a1, a2);
   graph.makeConnection(a2, a3);
   graph.setOutput(a3, output);
-  graph.inference();
+  graph.inference(options);
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res = {189, 189, 189};
   ASSERT_EQ(tmp, res);
 }
 
 FLAKY_TEST(bfs, check_struct_graph_split) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.threads = 4;
+
   std::vector<std::vector<std::pair<int, int>>> split = {
       {{12, 0}, {13, 0}, {14, 0}}};
   Graph graph(151, split);
@@ -491,7 +541,7 @@ FLAKY_TEST(bfs, check_struct_graph_split) {
   graph.makeConnection(a11_1, a12);
   graph.makeConnection(a10, a12);
   graph.setOutput(a12, output);
-  graph.inference();
+  graph.inference(options);
   std::vector<int> tmp = *output.as<int>();
   std::vector<int> res(36, 81);
   ASSERT_EQ(tmp, res);

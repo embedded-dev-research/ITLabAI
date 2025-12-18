@@ -2,10 +2,14 @@
 
 namespace it_lab_ai {
 
+namespace {
+
 bool layer_conditions(const std::shared_ptr<Layer>& layer,
                       const std::shared_ptr<Layer>& layer_sub) {
   return layer->getName() == layer_sub->getName();
 }
+
+}  // namespace
 
 std::vector<std::vector<int>> find_subgraphs(const Graph& graph,
                                              const Graph& subgraph) {

@@ -42,25 +42,25 @@ void runFlakyTest(const char* test_name, TestFunc test_func) {
     try {
       if (attempt > 1) {
         std::cout << "[FLAKY RETRY " << attempt << "/" << max_retries << "] "
-                  << test_name << std::endl;
+                  << test_name << '\n';
       }
 
       test_func();
 
       if (attempt > 1) {
         std::cout << "[FLAKY SUCCESS] " << test_name << " passed on attempt "
-                  << attempt << std::endl;
+                  << attempt << '\n';
       }
       return;
 
     } catch (...) {
       if (attempt == max_retries) {
         std::cout << "[FLAKY EXHAUSTED] " << test_name << " failed after "
-                  << max_retries << " attempts" << std::endl;
+                  << max_retries << " attempts" << '\n';
         throw;
       } else if (attempt == 1) {
         std::cout << "[FLAKY FAILED] " << test_name << " failed on attempt "
-                  << attempt << ", retrying..." << std::endl;
+                  << attempt << ", retrying..." << '\n';
       }
     }
   }
