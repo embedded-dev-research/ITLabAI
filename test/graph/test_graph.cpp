@@ -71,6 +71,23 @@ TEST(graph, check_connection_remove_out_of_range) {
   ASSERT_ANY_THROW(graph.removeConnection(999, -1));
 }
 
+TEST(graph, check_connection_remove_no_edge) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  Graph graph;
+  auto fcLayer = std::make_shared<FCLayer>(weights, bias);
+  auto inputLayer = std::make_shared<InputLayer>();
+  auto ewLayer = std::make_shared<EWLayer>();
+
+  graph.setInput(inputLayer, input);
+  graph.makeConnection(inputLayer, fcLayer);
+  graph.makeConnection(fcLayer, ewLayer);
+  ASSERT_ANY_THROW(graph.removeConnection(0, 2));
+}
+
 TEST(graph, check_connection_double_remove_throw) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
@@ -419,6 +436,27 @@ TEST(graph, get_in_layers_out_of_range) {
   graph.makeConnection(fcLayer, fcLayer4);
   graph.setOutput(fcLayer4, output);
   ASSERT_ANY_THROW(graph.getInLayers(999));
+}
+
+TEST(graph, get_in_layers) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  auto fcLayer = std::make_shared<FCLayer>(weights, bias);
+  auto fcLayer2 = std::make_shared<FCLayer>(weights, bias);
+  auto fcLayer3 = std::make_shared<FCLayer>(weights, bias);
+  auto fcLayer4 = std::make_shared<FCLayer>(weights, bias);
+
+  graph.setInput(fcLayer, input);
+  graph.makeConnection(fcLayer, fcLayer2);
+  graph.makeConnection(fcLayer2, fcLayer3);
+  graph.makeConnection(fcLayer, fcLayer4);
+  graph.setOutput(fcLayer4, output);
+  ASSERT_ANY_THROW(graph.getInLayers(0));
 }
 
 TEST(graph_transformations, check_subgraphs_search) {

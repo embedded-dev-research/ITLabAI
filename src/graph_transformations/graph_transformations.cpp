@@ -96,4 +96,5 @@ bool run_search(const Graph& graph, const Graph& subgraph,
   }
   return false;
 }
+
 }  // namespace it_lab_ai

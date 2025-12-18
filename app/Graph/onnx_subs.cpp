@@ -13,10 +13,10 @@ using namespace it_lab_ai;
 
 int main() {
   int type = 2;
-  Tensor aaaa = make_tensor(std::vector<int>({0}));
+  Tensor input = make_tensor(std::vector<int>({0}));
   if (type == 0) {
     Graph graph1;
-    build_graph(graph1, aaaa, aaaa, MODEL_PATH_DENSENET_ONNX, false);
+    build_graph(graph1, input, input, MODEL_PATH_DENSENET_ONNX, false);
 
     Graph subgraph;
     Tensor scale = make_tensor(std::vector<float>({1.0}));
@@ -26,7 +26,7 @@ int main() {
     std::shared_ptr<Layer> layer_2 = std::make_shared<ConvolutionalLayer>();
     std::shared_ptr<Layer> layer_3 = std::make_shared<EWLayer>("relu");
     std::shared_ptr<Layer> layer_4 = std::make_shared<ConvolutionalLayer>();
-    subgraph.setInput(layer_0, aaaa);
+    subgraph.setInput(layer_0, input);
     subgraph.makeConnection(layer_0, layer_1);
     subgraph.makeConnection(layer_1, layer_2);
     subgraph.makeConnection(layer_2, layer_3);
@@ -37,7 +37,7 @@ int main() {
     std::shared_ptr<Layer> layer_6 =
         std::make_shared<PoolingLayer>(Shape({1, 1, 1}), "max");
     std::shared_ptr<Layer> layer_7 = std::make_shared<ConvolutionalLayer>();
-    subgraph2.setInput(layer_6, aaaa);
+    subgraph2.setInput(layer_6, input);
     subgraph2.makeConnection(layer_6, layer_5);
     subgraph2.addSingleLayer(layer_7);
     subgraph2.makeConnection(layer_7, layer_5);
@@ -48,25 +48,24 @@ int main() {
                                                      subgraph);
     auto time2 = elapsed_time_avg<double, std::milli>(10, find_subgraphs,
                                                       graph1, subgraph2);
-    for (size_t i = 0; i < vec.size(); i++) {
-      for (size_t j = 0; j < vec[i].size(); j++) {
-        std::cerr << vec[i][j] << ' ';
+    for (auto& i : vec) {
+      for (size_t j = 0; j < i.size(); j++) {
+        std::cerr << i[j] << ' ';
       }
       std::cerr << '\n';
     }
     std::cerr << "Time for path5:" << time << std::endl;
 
-    for (size_t i = 0; i < vec2.size(); i++) {
-      for (size_t j = 0; j < vec2[i].size(); j++) {
-        std::cerr << vec2[i][j] << ' ';
+    for (auto& i : vec2) {
+      for (size_t j = 0; j < i.size(); j++) {
+        std::cerr << i[j] << ' ';
       }
       std::cerr << '\n';
     }
     std::cerr << "Time for concat:" << time2 << std::endl;
-    return 0;
   } else if (type == 1) {
     Graph graph1;
-    build_graph(graph1, aaaa, aaaa, MODEL_PATH_RESNET_ONNX, false);
+    build_graph(graph1, input, input, MODEL_PATH_RESNET_ONNX, false);
 
     Graph subgraph;
     std::shared_ptr<Layer> layer_0 = std::make_shared<TransposeLayer>();
@@ -74,7 +73,7 @@ int main() {
     std::shared_ptr<Layer> layer_2 = std::make_shared<ReshapeLayer>();
     std::shared_ptr<Layer> layer_3 = std::make_shared<ReshapeLayer>();
     std::shared_ptr<Layer> layer_4 = std::make_shared<ReshapeLayer>();
-    subgraph.setInput(layer_0, aaaa);
+    subgraph.setInput(layer_0, input);
     subgraph.makeConnection(layer_0, layer_1);
     subgraph.makeConnection(layer_1, layer_2);
     subgraph.makeConnection(layer_2, layer_3);
@@ -83,17 +82,16 @@ int main() {
     auto vec = find_subgraphs(graph1, subgraph);
     auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
                                                      subgraph);
-    for (size_t i = 0; i < vec.size(); i++) {
-      for (size_t j = 0; j < vec[i].size(); j++) {
-        std::cerr << vec[i][j] << ' ';
+    for (auto& i : vec) {
+      for (size_t j = 0; j < i.size(); j++) {
+        std::cerr << i[j] << ' ';
       }
       std::cerr << '\n';
     }
     std::cerr << "Time for path5:" << time << std::endl;
-    return 0;
   } else if (type == 2) {
     Graph graph1;
-    build_graph(graph1, aaaa, aaaa, MODEL_PATH_GOOGLENET_ONNX, false);
+    build_graph(graph1, input, input, MODEL_PATH_GOOGLENET_ONNX, false);
 
     Graph subgraph;
     Shape shape(2);
@@ -105,7 +103,7 @@ int main() {
     std::shared_ptr<Layer> layer_5 = std::make_shared<ConvolutionalLayer>();
     std::shared_ptr<Layer> layer_6 =
         std::make_shared<PoolingLayer>(shape, "max");
-    subgraph.setInput(layer_0, aaaa);
+    subgraph.setInput(layer_0, input);
     subgraph.makeConnection(layer_0, layer_1);
     subgraph.makeConnection(layer_0, layer_4);
     subgraph.makeConnection(layer_0, layer_5);
@@ -116,13 +114,13 @@ int main() {
     auto vec = find_subgraphs(graph1, subgraph);
     auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
                                                      subgraph);
-    for (size_t i = 0; i < vec.size(); i++) {
-      for (size_t j = 0; j < vec[i].size(); j++) {
-        std::cerr << vec[i][j] << ' ';
+    for (auto& i : vec) {
+      for (size_t j = 0; j < i.size(); j++) {
+        std::cerr << i[j] << ' ';
       }
       std::cerr << '\n';
     }
     std::cerr << "Time for concat:" << time << std::endl;
-    return 0;
   }
+  return 0;
 }
