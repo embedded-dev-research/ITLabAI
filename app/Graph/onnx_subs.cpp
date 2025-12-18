@@ -14,9 +14,10 @@ using namespace it_lab_ai;
 int main() {
   int type = 2;
   Tensor input = make_tensor(std::vector<int>({0}));
+  RuntimeOptions options;
   if (type == 0) {
     Graph graph1;
-    build_graph(graph1, input, input, MODEL_PATH_DENSENET_ONNX, false);
+    build_graph(graph1, input, input, MODEL_PATH_DENSENET_ONNX, options, false);
 
     Graph subgraph;
     Tensor scale = make_tensor(std::vector<float>({1.0}));
@@ -65,7 +66,7 @@ int main() {
     std::cerr << "Time for concat:" << time2 << std::endl;
   } else if (type == 1) {
     Graph graph1;
-    build_graph(graph1, input, input, MODEL_PATH_RESNET_ONNX, false);
+    build_graph(graph1, input, input, MODEL_PATH_RESNET_ONNX, options, false);
 
     Graph subgraph;
     std::shared_ptr<Layer> layer_0 = std::make_shared<TransposeLayer>();
@@ -91,7 +92,7 @@ int main() {
     std::cerr << "Time for path5:" << time << std::endl;
   } else if (type == 2) {
     Graph graph1;
-    build_graph(graph1, input, input, MODEL_PATH_GOOGLENET_ONNX, false);
+    build_graph(graph1, input, input, MODEL_PATH_GOOGLENET_ONNX, options, false);
 
     Graph subgraph;
     Shape shape(2);
