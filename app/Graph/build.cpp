@@ -407,7 +407,7 @@ ParseResult parse_json_model(RuntimeOptions options,
           }
         }
 
-        it_lab_ai::Tensor tmp_tensor = tensor;
+        const it_lab_ai::Tensor& tmp_tensor = tensor;
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
 
         auto conv_layer = it_lab_ai::LayerFactory::createConvLayer(
