@@ -98,7 +98,7 @@ class Graph {
     return in_edges_[layerID].size();
   }
 
-  std::vector<int> getInLayers(size_t layerID) const {
+  [[nodiscard]] std::vector<int> getInLayers(size_t layerID) const {
     if (layerID >= in_edges_.size()) {
       throw std::invalid_argument("Input edges array do not contain this ID.");
     }
