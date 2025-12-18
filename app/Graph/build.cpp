@@ -402,7 +402,7 @@ ParseResult parse_json_model(RuntimeOptions options,
       } else if (layer_type.find("Dropout") != std::string::npos) {
         auto dropout_layer = std::make_shared<it_lab_ai::DropOutLayer>(0.0);
         layer = dropout_layer;
-        if (comments)
+        if (comments) {
           std::cout
               << "DropOutLayer added to layers with probability 0.4 (turned "
                  "off for inference)."
