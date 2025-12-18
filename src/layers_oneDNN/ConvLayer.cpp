@@ -60,8 +60,7 @@ void ConvLayerOneDnn::run(const std::vector<Tensor>& input,
     create_output_tensor(output[0], output_shape, data_type, dst_memory_);
 
   } catch (const std::exception& e) {
-    std::cerr << "oneDNN convolution execution failed: " << e.what()
-              << std::endl;
+    std::cerr << "oneDNN convolution execution failed: " << e.what() << '\n';
     throw;
   }
 }
@@ -223,12 +222,10 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
     bool has_bias = !bias_.empty();
     if (!bias_.empty()) {
       size_t bias_size;
-      if (is_depthwise) {
+      if (is_depthwise || group_ == 1) {
         bias_size = kernel_dims[0];
-      } else if (group_ > 1) {
-        bias_size = kernel_.get_shape()[0];
       } else {
-        bias_size = kernel_dims[0];
+        bias_size = kernel_.get_shape()[0];
       }
 
       bias_md =
@@ -260,11 +257,11 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
 
   } catch (const dnnl::error& e) {
     std::cerr << "oneDNN specific error: " << e.what()
-              << ", status: " << e.status << std::endl;
+              << ", status: " << e.status << '\n';
     throw;
   } catch (const std::exception& e) {
     std::cerr << "oneDNN convolution initialization failed: " << e.what()
-              << std::endl;
+              << '\n';
     throw;
   }
 }
@@ -300,7 +297,9 @@ dnnl::memory::dims ConvLayerOneDnn::get_kernel_dims() const {
 Shape ConvLayerOneDnn::get_output_shape(const Shape& input_shape) const {
   const Shape& kernel_shape = kernel_.get_shape();
 
-  size_t kernel_out_channels, kernel_height, kernel_width;
+  size_t kernel_out_channels;
+  size_t kernel_height;
+  size_t kernel_width;
 
   if (use_legacy_ ||
       (kernel_shape.dims() == 4 && kernel_shape[3] > kernel_shape[2])) {
@@ -392,19 +391,19 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
 
     if (data_type == Type::kFloat) {
       const std::vector<float>& kernel_data = *kernel_.as<float>();
-      size_t KH = k_shape[0];
-      size_t KW = k_shape[1];
-      size_t IC = k_shape[2];
-      size_t OC = k_shape[3];
+      size_t kh = k_shape[0];
+      size_t kw = k_shape[1];
+      size_t kic = k_shape[2];
+      size_t koc = k_shape[3];
 
-      std::vector<float> reordered(OC * IC * KH * KW);
+      std::vector<float> reordered(koc * kic * kh * kw);
       size_t idx = 0;
 
-      for (size_t oc = 0; oc < OC; oc++) {
-        for (size_t ic = 0; ic < IC; ic++) {
-          for (size_t h = 0; h < KH; h++) {
-            for (size_t w = 0; w < KW; w++) {
-              size_t src_idx = ((h * KW + w) * IC + ic) * OC + oc;
+      for (size_t oc = 0; oc < koc; oc++) {
+        for (size_t ic = 0; ic < kic; ic++) {
+          for (size_t h = 0; h < kh; h++) {
+            for (size_t w = 0; w < kw; w++) {
+              size_t src_idx = ((h * kw + w) * kic + ic) * koc + oc;
               reordered[idx++] = kernel_data[src_idx];
             }
           }
@@ -416,19 +415,19 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
 
     } else if (data_type == Type::kInt) {
       const std::vector<int>& kernel_data_int = *kernel_.as<int>();
-      size_t KH = k_shape[0];
-      size_t KW = k_shape[1];
-      size_t IC = k_shape[2];
-      size_t OC = k_shape[3];
+      size_t kh = k_shape[0];
+      size_t kw = k_shape[1];
+      size_t kic = k_shape[2];
+      size_t koc = k_shape[3];
 
-      std::vector<float> reordered(OC * IC * KH * KW);
+      std::vector<float> reordered(koc * kic * kh * kw);
       size_t idx = 0;
 
-      for (size_t oc = 0; oc < OC; oc++) {
-        for (size_t ic = 0; ic < IC; ic++) {
-          for (size_t h = 0; h < KH; h++) {
-            for (size_t w = 0; w < KW; w++) {
-              size_t src_idx = ((h * KW + w) * IC + ic) * OC + oc;
+      for (size_t oc = 0; oc < koc; oc++) {
+        for (size_t ic = 0; ic < kic; ic++) {
+          for (size_t h = 0; h < kh; h++) {
+            for (size_t w = 0; w < kw; w++) {
+              size_t src_idx = ((h * kw + w) * kic + ic) * koc + oc;
               reordered[idx++] = static_cast<float>(kernel_data_int[src_idx]);
             }
           }
@@ -444,11 +443,10 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
 
   } catch (const dnnl::error& e) {
     std::cerr << "oneDNN error: " << e.what() << ", status: " << e.status
-              << std::endl;
+              << '\n';
     throw;
   } catch (const std::exception& e) {
-    std::cerr << "Special conv initialization failed: " << e.what()
-              << std::endl;
+    std::cerr << "Special conv initialization failed: " << e.what() << '\n';
     throw;
   }
 }
@@ -514,18 +512,18 @@ void ConvLayerOneDnn::run_special_conv(const std::vector<Tensor>& input,
 
 template <typename T>
 std::vector<T> ConvLayerOneDnn::reorder_hwio_to_oihw(const Tensor& kernel) {
-  size_t KH = kernel.get_shape()[0];
-  size_t KW = kernel.get_shape()[1];
-  size_t IC = kernel.get_shape()[2];
-  size_t OC = kernel.get_shape()[3];
+  size_t kh = kernel.get_shape()[0];
+  size_t kw = kernel.get_shape()[1];
+  size_t kic = kernel.get_shape()[2];
+  size_t koc = kernel.get_shape()[3];
 
-  std::vector<T> result(OC * IC * KH * KW);
+  std::vector<T> result(koc * kic * kh * kw);
 
   size_t idx = 0;
-  for (size_t oc = 0; oc < OC; oc++) {
-    for (size_t ic = 0; ic < IC; ic++) {
-      for (size_t h = 0; h < KH; h++) {
-        for (size_t w = 0; w < KW; w++) {
+  for (size_t oc = 0; oc < koc; oc++) {
+    for (size_t ic = 0; ic < kic; ic++) {
+      for (size_t h = 0; h < kh; h++) {
+        for (size_t w = 0; w < kw; w++) {
           result[idx++] = kernel.get<T>({h, w, ic, oc});
         }
       }

@@ -37,16 +37,17 @@ class ConvLayerOneDnn : public Layer {
   void initialize_convolution(const Shape& input_shape, Type data_type);
   void validate_input(const std::vector<Tensor>& input) const;
   void validate_depthwise_input(const std::vector<Tensor>& input) const;
-  void create_output_tensor(Tensor& output_tensor, const Shape& output_shape,
-                            Type data_type, dnnl::memory& dst_memory);
-  void fill_memory_with_tensor(dnnl::memory& memory, const Tensor& tensor,
-                               Type data_type);
+  static void create_output_tensor(Tensor& output_tensor,
+                                   const Shape& output_shape, Type data_type,
+                                   dnnl::memory& dst_memory);
+  static void fill_memory_with_tensor(dnnl::memory& memory,
+                                      const Tensor& tensor, Type data_type);
   void initialize_special_conv(const Shape& input_shape, Type data_type);
 
   void run_special_conv(const std::vector<Tensor>& input,
                         std::vector<Tensor>& output);
 
-  dnnl::memory::dims shape_to_dims(const Shape& shape) const {
+  [[nodiscard]] static dnnl::memory::dims shape_to_dims(const Shape& shape) {
     dnnl::memory::dims dims;
     for (size_t i = 0; i < shape.dims(); ++i) {
       dims.push_back(static_cast<dnnl::memory::dim>(shape[i]));
@@ -54,7 +55,7 @@ class ConvLayerOneDnn : public Layer {
     return dims;
   }
 
-  Shape dims_to_shape(const dnnl::memory::dims& dims) const {
+  [[nodiscard]] static Shape dims_to_shape(const dnnl::memory::dims& dims) {
     std::vector<size_t> shape_vec;
     for (auto dim : dims) {
       shape_vec.push_back(static_cast<size_t>(dim));
@@ -65,15 +66,16 @@ class ConvLayerOneDnn : public Layer {
   template <typename T>
   std::vector<T> reorder_hwio_to_oihw(const Tensor& kernel);
 
-  Shape get_output_shape(const Shape& input_shape) const;
+  [[nodiscard]] Shape get_output_shape(const Shape& input_shape) const;
 
-  dnnl::memory::dims get_output_dims(const Shape& input_shape) const {
+  [[nodiscard]] dnnl::memory::dims get_output_dims(
+      const Shape& input_shape) const {
     return shape_to_dims(get_output_shape(input_shape));
   }
 
-  dnnl::memory::dims get_kernel_dims() const;
+  [[nodiscard]] dnnl::memory::dims get_kernel_dims() const;
 
-  bool is_depthwise_convolution() const;
+  [[nodiscard]] bool is_depthwise_convolution() const;
 
   size_t stride_;
   size_t pads_;

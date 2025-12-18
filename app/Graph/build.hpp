@@ -94,10 +94,9 @@ class LayerFactory {
     if (options.backend == Backend::kOneDnn) {
       return std::make_unique<ConvLayerOneDnn>(step, pads, dilations, kernel,
                                                bias, group, useLegacyImpl);
-    } else {
-      return std::make_unique<ConvolutionalLayer>(step, pads, dilations, kernel,
-                                                  bias, group, useLegacyImpl);
     }
+    return std::make_unique<ConvolutionalLayer>(step, pads, dilations, kernel,
+                                                bias, group, useLegacyImpl);
   }
 };
 
