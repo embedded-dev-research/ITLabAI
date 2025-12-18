@@ -374,7 +374,7 @@ TEST(graph, edges_out_of_range) {
   graph.makeConnection(fcLayer2, fcLayer3);
   graph.makeConnection(fcLayer, fcLayer4);
   graph.setOutput(fcLayer4, output);
-  ASSERT_ANY_THROW(graph.getEdgeValue(999));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getEdgeValue(999)));
 }
 
 TEST(graph, inputs_out_of_range) {
