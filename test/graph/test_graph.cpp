@@ -352,7 +352,7 @@ TEST(graph, vertex_out_of_range) {
   graph.makeConnection(fcLayer2, fcLayer3);
   graph.makeConnection(fcLayer, fcLayer4);
   graph.setOutput(fcLayer4, output);
-  ASSERT_ANY_THROW(graph.getVertexValue(5));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getVertexValue(5)));
 }
 
 TEST(graph, edges_out_of_range) {
@@ -396,7 +396,7 @@ TEST(graph, inputs_out_of_range) {
   graph.makeConnection(fcLayer2, fcLayer3);
   graph.makeConnection(fcLayer, fcLayer4);
   graph.setOutput(fcLayer4, output);
-  ASSERT_ANY_THROW(graph.getInputsSize(999));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getInputsSize(999)));
 }
 
 TEST(graph, get_layer_out_of_range) {
