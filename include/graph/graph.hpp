@@ -272,7 +272,6 @@ class Graph {
       if (outten_.empty()) {
         outten_.resize(1);
       }
-
       layers_[current_layer]->run(inten_, outten_, options);
 
 #ifdef ENABLE_STATISTIC_TENSORS
