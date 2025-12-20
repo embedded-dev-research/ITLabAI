@@ -21,3 +21,10 @@ execute_process(
     COMMAND ${CMAKE_COMMAND} --build "${OPENCV_BUILD_DIR}" --config "${CMAKE_BUILD_TYPE}"
     WORKING_DIRECTORY "${OPENCV_BUILD_DIR}"
 )
+
+if(WIN32)
+    file(GLOB OPENCV_DLLS "${OPENCV_BUILD_DIR}/bin/*.dll")
+    if(OPENCV_DLLS)
+        file(COPY ${OPENCV_DLLS} DESTINATION "${CMAKE_BINARY_DIR}/bin")
+    endif()
+endif()

@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "graph/runtime_options.hpp"
 #include "layers/Shape.hpp"
 #include "layers/Tensor.hpp"
 #include "parallel/parallel.hpp"
@@ -54,13 +55,14 @@ class Layer {
   PostOperations postops;
   [[nodiscard]] int getID() const { return id_; }
   void setID(int id) { id_ = id; }
-  void setParallelBackend(ParBackend backend) { parallel_backend_ = backend; }
-  [[nodiscard]] ParBackend getParallelBackend() const {
-    return parallel_backend_;
-  }
   [[nodiscard]] LayerType getName() const { return type_; }
   virtual void run(const std::vector<Tensor>& input,
                    std::vector<Tensor>& output) = 0;
+  virtual void run(const std::vector<Tensor>& input,
+                   std::vector<Tensor>& output,
+                   [[maybe_unused]] const RuntimeOptions& options) {
+    run(input, output);
+  }
 #ifdef ENABLE_STATISTIC_WEIGHTS
   virtual Tensor get_weights() = 0;
 #endif
@@ -68,7 +70,6 @@ class Layer {
  protected:
   int id_ = 0;
   LayerType type_;
-  ParBackend parallel_backend_ = ParBackend::kSeq;
 };
 
 template <typename ValueType>

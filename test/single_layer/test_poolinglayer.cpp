@@ -284,10 +284,13 @@ TEST(poolinglayer, new_pooling_layer_can_run_int_avg) {
 }
 
 TEST(poolinglayer, new_pooling_layer_can_run_int_avg_tbb) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.par_backend = ParBackend::kTbb;
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};
-  PoolingLayer a(poolshape, {2, 2}, {0, 0, 0, 0}, {1, 1}, false, "average",
-                 it_lab_ai::kTBB);
+  PoolingLayer a(poolshape, {2, 2}, {0, 0, 0, 0}, {1, 1}, false, "average");
   std::vector<int> input({9, 8, 7, 6, 5, 4, 3, 2, 2, 3, 4, 5, 6, 7, 8, 9});
 
   PoolingLayerImplTBB<int> impl(inpshape, poolshape, {2, 2}, {0, 0, 0, 0},
@@ -300,7 +303,7 @@ TEST(poolinglayer, new_pooling_layer_can_run_int_avg_tbb) {
   std::vector<Tensor> in{make_tensor(input, inpshape)};
   std::vector<Tensor> out{output};
 
-  a.run(in, out);
+  a.run(in, out, options);
 
   std::vector<int> true_output = {6, 4, 4, 6};
   for (size_t i = 0; i < true_output.size(); i++) {
@@ -324,14 +327,18 @@ TEST(poolinglayer, new_pooling_layer_can_run_1d_pooling_float) {
 }
 
 TEST(poolinglayer, new_pooling_layer_tbb_can_run_1d_pooling_float) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.par_backend = ParBackend::kTbb;
   Shape inpshape = {8};
   Shape poolshape = {3};
-  PoolingLayer a(poolshape, "average", it_lab_ai::kTBB);
+  PoolingLayer a(poolshape, "average");
   std::vector<float> input({9.0F, 8.0F, 7.0F, 6.0F, 5.0F, 4.0F, 3.0F, 2.0F});
   Tensor output = make_tensor<float>({0});
   std::vector<Tensor> in{make_tensor(input, inpshape)};
   std::vector<Tensor> out{output};
-  a.run(in, out);
+  a.run(in, out, options);
   std::vector<float> true_output = {8.0F, 6.0F, 4.0F};
   for (size_t i = 0; i < true_output.size(); i++) {
     EXPECT_NEAR((*out[0].as<float>())[i], true_output[i], 1e-5);
@@ -430,5 +437,81 @@ TEST(poolinglayer, maxpool_onnx_with_pooling_layer) {
   for (float val : output_data) {
     EXPECT_GE(val, 0.0f);
     EXPECT_LE(val, 10.0f);
+  }
+}
+
+TEST(poolinglayer, new_pooling_layer_with_parallel_none) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.par_backend = ParBackend::kSeq;
+
+  Shape inpshape = {4, 4};
+  Shape poolshape = {2, 2};
+  PoolingLayer a(poolshape, {1, 1}, {1, 1, 1, 1}, {1, 1}, false, "average");
+  std::vector<float> input({9.0F, 8.0F, 7.0F, 6.0F, 5.0F, 4.0F, 3.0F, 2.0F,
+                            2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F, 9.0F});
+  Tensor output = make_tensor<float>({0});
+  std::vector<Tensor> in{make_tensor(input, inpshape)};
+  std::vector<Tensor> out{output};
+  a.run(in, out, options);
+  EXPECT_EQ(out[0].get_shape().count(), 25);
+}
+
+TEST(poolinglayer, new_pooling_layer_int_avg_with_parallel_none) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.par_backend = ParBackend::kSeq;
+
+  Shape inpshape = {4, 4};
+  Shape poolshape = {2, 2};
+  PoolingLayer a(poolshape, {2, 2}, {0, 0, 0, 0}, {1, 1}, false, "average");
+  std::vector<int> input({9, 8, 7, 6, 5, 4, 3, 2, 2, 3, 4, 5, 6, 7, 8, 9});
+
+  PoolingLayerImpl<int> impl(inpshape, poolshape, {2, 2}, {0, 0, 0, 0}, {1, 1},
+                             false, "average");
+  Shape output_shape = impl.get_output_shape();
+
+  std::vector<int> zeros(output_shape.count(), 0);
+  Tensor output = make_tensor(zeros, output_shape);
+
+  std::vector<Tensor> in{make_tensor(input, inpshape)};
+  std::vector<Tensor> out{output};
+
+  a.run(in, out, options);
+
+  std::vector<int> true_output = {6, 4, 4, 6};
+  for (size_t i = 0; i < true_output.size(); i++) {
+    EXPECT_NEAR((*out[0].as<int>())[i], true_output[i], 1e-5);
+  }
+}
+
+TEST(poolinglayer, new_pooling_layer_int_avg_without_parallel_flag) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.par_backend = ParBackend::kTbb;
+
+  Shape inpshape = {4, 4};
+  Shape poolshape = {2, 2};
+  PoolingLayer a(poolshape, {2, 2}, {0, 0, 0, 0}, {1, 1}, false, "average");
+  std::vector<int> input({9, 8, 7, 6, 5, 4, 3, 2, 2, 3, 4, 5, 6, 7, 8, 9});
+
+  PoolingLayerImpl<int> impl(inpshape, poolshape, {2, 2}, {0, 0, 0, 0}, {1, 1},
+                             false, "average");
+  Shape output_shape = impl.get_output_shape();
+
+  std::vector<int> zeros(output_shape.count(), 0);
+  Tensor output = make_tensor(zeros, output_shape);
+
+  std::vector<Tensor> in{make_tensor(input, inpshape)};
+  std::vector<Tensor> out{output};
+
+  a.run(in, out, options);
+
+  std::vector<int> true_output = {6, 4, 4, 6};
+  for (size_t i = 0; i < true_output.size(); i++) {
+    EXPECT_NEAR((*out[0].as<int>())[i], true_output[i], 1e-5);
   }
 }

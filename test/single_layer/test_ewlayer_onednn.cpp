@@ -38,7 +38,7 @@ TEST(ewlayer_onednn, relu_float) {
   }
 }
 
-TEST(ewlayer_onednn, DISABLED_relu_int) {
+TEST(ewlayer_onednn, relu_int) {
   EwLayerOneDnn layer("relu");
 
   Tensor input = make_tensor<int>({1, -1, 2, -2, 0, -5});
@@ -74,7 +74,7 @@ TEST(ewlayer_onednn, linear_float) {
   }
 }
 
-TEST(ewlayer_onednn, DISABLED_linear_int) {
+TEST(ewlayer_onednn, linear_int) {
   EwLayerOneDnn layer("linear", 2.0f, 1.0f);
 
   Tensor input = make_tensor<int>({1, -1, 2, -5, 0});
@@ -182,7 +182,7 @@ TEST(ewlayer_onednn, multidim_tensor_relu) {
   }
 }
 
-TEST(ewlayer_onednn, DISABLED_multidim_tensor_relu_int) {
+TEST(ewlayer_onednn, multidim_tensor_relu_int) {
   Shape shape({2, 2, 2});
 
   EwLayerOneDnn layer("relu");
@@ -246,7 +246,7 @@ TEST(ewlayer_onednn, multiple_input_tensors) {
   EXPECT_THROW({ layer.run(in, out); }, std::runtime_error);
 }
 
-TEST(ewlayer_onednn, unsupported_tensor_dimensionality) {
+TEST(ewlayer_onednn, unsupported_tensor_dimensionality1) {
   EwLayerOneDnn layer("relu");
 
   Shape shape_6d({2, 3, 4, 5, 6, 7});
@@ -302,5 +302,280 @@ TEST(ewlayer_onednn, initialization_failure_propagation) {
     EXPECT_NE(std::string(e.what()).find("dimensionality"), std::string::npos);
   } catch (...) {
     FAIL() << "Expected std::invalid_argument exception";
+  }
+}
+
+TEST(ewlayer_onednn, various_dimensions) {
+  {
+    EwLayerOneDnn layer("relu");
+    Tensor input = make_tensor<float>({1.0F, -1.0F, 0.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto result = *out[0].as<float>();
+    EXPECT_EQ(result.size(), 3);
+  }
+
+  {
+    EwLayerOneDnn layer("relu");
+    Shape shape2d({2, 3});
+    std::vector<float> data2d = {1, -1, 2, -2, 0, 3};
+    Tensor input = make_tensor(data2d, shape2d);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+  }
+
+  {
+    EwLayerOneDnn layer("relu");
+    Shape shape3d({2, 2, 2});
+    std::vector<float> data3d(8, 1.0f);
+    Tensor input = make_tensor(data3d, shape3d);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+  }
+
+  {
+    EwLayerOneDnn layer("relu");
+    Shape shape4d({1, 2, 2, 2});
+    std::vector<float> data4d(8, -1.0f);
+    Tensor input = make_tensor(data4d, shape4d);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto result = *out[0].as<float>();
+    for (auto val : result) {
+      EXPECT_EQ(val, 0.0f);
+    }
+  }
+
+  {
+    EwLayerOneDnn layer("relu");
+    Shape shape5d({1, 1, 2, 2, 2});
+    std::vector<float> data5d(8, 2.0f);
+    Tensor input = make_tensor(data5d, shape5d);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+  }
+}
+
+TEST(ewlayer_onednn, linear_various_alpha_beta) {
+  {
+    EwLayerOneDnn layer("linear", 0.0f, 0.0f);
+    Tensor input = make_tensor<float>({1.0F, 2.0F, -1.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto result = *out[0].as<float>();
+    for (auto val : result) {
+      EXPECT_NEAR(val, 0.0f, 1e-5);
+    }
+  }
+
+  {
+    EwLayerOneDnn layer("linear", 1.0f, 0.0f);
+    Tensor input = make_tensor<float>({1.0F, 2.0F, -1.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto result = *out[0].as<float>();
+    auto input_data = *input.as<float>();
+    for (size_t i = 0; i < result.size(); i++) {
+      EXPECT_NEAR(result[i], input_data[i], 1e-5);
+    }
+  }
+
+  {
+    EwLayerOneDnn layer("linear", 0.0f, 5.0f);
+    Tensor input = make_tensor<float>({1.0F, 2.0F, -1.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto result = *out[0].as<float>();
+    for (auto val : result) {
+      EXPECT_NEAR(val, 5.0f, 1e-5);
+    }
+  }
+
+  {
+    EwLayerOneDnn layer("linear", -2.0f, 3.0f);
+    Tensor input = make_tensor<float>({1.0F, 2.0F, -1.0F});
+    Tensor output;
+    std::vector<float> expected = {1.0f, -1.0f, 5.0f};
+
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto result = *out[0].as<float>();
+    for (size_t i = 0; i < result.size(); i++) {
+      EXPECT_NEAR(result[i], expected[i], 1e-5);
+    }
+  }
+}
+
+TEST(ewlayer_onednn, reinitialization_for_int) {
+  EwLayerOneDnn layer("relu");
+
+  {
+    Tensor input = make_tensor<float>({1.0F, -1.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto float_result = *out[0].as<float>();
+    EXPECT_NEAR(float_result[0], 1.0f, 1e-5);
+    EXPECT_NEAR(float_result[1], 0.0f, 1e-5);
+  }
+
+  {
+    Tensor input = make_tensor<int>({1, -1});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto int_result = *out[0].as<int>();
+    EXPECT_EQ(int_result[0], 1);
+    EXPECT_EQ(int_result[1], 0);
+  }
+
+  {
+    Tensor input = make_tensor<float>({2.0F, -2.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto float_result = *out[0].as<float>();
+    EXPECT_NEAR(float_result[0], 2.0f, 1e-5);
+    EXPECT_NEAR(float_result[1], 0.0f, 1e-5);
+  }
+}
+
+TEST(ewlayer_onednn, edge_case_dimensions) {
+  {
+    EwLayerOneDnn layer("relu");
+    Shape large_shape({1000});
+    std::vector<float> large_data(1000);
+    for (size_t i = 0; i < large_data.size(); i++) {
+      large_data[i] = static_cast<float>(i) - 500.0f;
+    }
+
+    Tensor input = make_tensor(large_data, large_shape);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto result = *out[0].as<float>();
+    EXPECT_EQ(result.size(), 1000);
+  }
+
+  {
+    EwLayerOneDnn layer("relu");
+    Tensor input = make_tensor<float>({5.0F});
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto result = *out[0].as<float>();
+    EXPECT_EQ(result.size(), 1);
+    EXPECT_NEAR(result[0], 5.0f, 1e-5);
+  }
+}
+
+TEST(ewlayer_onednn, all_functions_int) {
+  std::vector<std::pair<std::string, std::vector<int>>> test_cases = {
+      {"relu", {1, 0, 2, 0}},
+      {"linear", {3, -1, 5, -9}},
+  };
+
+  for (const auto& [func, expected] : test_cases) {
+    EwLayerOneDnn layer(func, 2.0f, 1.0f);
+
+    std::vector<int> input_data;
+    if (func == "relu") {
+      input_data = {1, -1, 2, -2};
+    } else if (func == "linear") {
+      input_data = {1, -1, 2, -5};
+    }
+
+    Tensor input = make_tensor<int>(input_data);
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto result = *out[0].as<int>();
+
+    ASSERT_EQ(result.size(), expected.size());
+    for (size_t i = 0; i < result.size(); i++) {
+      EXPECT_EQ(result[i], expected[i])
+          << "Function: " << func << ", index: " << i;
+    }
+  }
+}
+
+TEST(ewlayer_onednn, unsupported_tensor_dimensionality) {
+  EwLayerOneDnn layer("relu");
+  Shape shape6d({2, 2, 2, 2, 2, 2});
+  std::vector<float> data6d(64, 1.0f);
+  Tensor input = make_tensor(data6d, shape6d);
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(layer.run(in, out), std::invalid_argument);
+
+  try {
+    layer.run(in, out);
+    FAIL() << "Expected std::invalid_argument exception";
+  } catch (const std::invalid_argument& e) {
+    EXPECT_NE(std::string(e.what()).find("Unsupported tensor dimensionality"),
+              std::string::npos);
+    EXPECT_NE(std::string(e.what()).find("6"), std::string::npos);
+  }
+}
+
+TEST(ewlayer_onednn, unsupported_function_algorithm) {
+  EwLayerOneDnn layer("relu");
+  EwLayerOneDnn invalid_layer("invalid_func_123", 1.0f, 0.0f);
+
+  Tensor input = make_tensor<float>({1.0F});
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_THROW(invalid_layer.run(in, out), std::invalid_argument);
+
+  try {
+    invalid_layer.run(in, out);
+    FAIL() << "Expected std::invalid_argument";
+  } catch (const std::invalid_argument& e) {
+    EXPECT_NE(std::string(e.what()).find("Unsupported function for oneDNN"),
+              std::string::npos);
+    EXPECT_NE(std::string(e.what()).find("invalid_func_123"),
+              std::string::npos);
   }
 }

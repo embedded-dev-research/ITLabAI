@@ -38,8 +38,7 @@ class ConvolutionalLayer : public Layer {
   }
   ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
                      const Tensor& kernel, const Tensor& bias = Tensor(),
-                     ImplType implType = kDefault, size_t group = 1,
-                     bool useLegacyImpl = false)
+                     size_t group = 1, bool useLegacyImpl = false)
       : Layer(kConvolution) {
     stride_ = step;
     pads_ = pads;
@@ -47,12 +46,12 @@ class ConvolutionalLayer : public Layer {
     dilations_ = dilations;
     kernel_ = kernel;
     bias_ = bias;
-    implType_ = implType;
     useLegacyImpl_ = useLegacyImpl;
   }
-
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
+  void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
+           const RuntimeOptions& options) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return kernel_; }
 #endif
