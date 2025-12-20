@@ -155,6 +155,3 @@ inline void impl_kokkos(std::size_t count,
 
 }  // namespace parallel
 }  // namespace it_lab_ai
-
-
-
