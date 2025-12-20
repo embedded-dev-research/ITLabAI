@@ -3,7 +3,9 @@
 #include <oneapi/tbb/info.h>
 #include <oneapi/tbb/parallel_for.h>
 
+// NOLINTNEXTLINE
 #include <Kokkos_Core.hpp>
+
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -154,3 +156,4 @@ inline void impl_kokkos(std::size_t count,
 
 }  // namespace parallel
 }  // namespace it_lab_ai
+
