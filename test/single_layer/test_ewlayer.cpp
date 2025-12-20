@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <iostream>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -380,6 +381,7 @@ TEST(ewlayer, parallel_for_notmatrix) {
   auto end = std::chrono::high_resolution_clock::now();
   auto total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::cout << total_duration << std::endl;
 
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 
@@ -390,6 +392,7 @@ TEST(ewlayer, parallel_for_notmatrix) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::cout << total_duration << std::endl;
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 
   start = std::chrono::high_resolution_clock::now();
@@ -399,6 +402,7 @@ TEST(ewlayer, parallel_for_notmatrix) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::cout << total_duration << std::endl;
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 
   start = std::chrono::high_resolution_clock::now();
@@ -408,5 +412,16 @@ TEST(ewlayer, parallel_for_notmatrix) {
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::cout << total_duration << std::endl;
+  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+
+  start = std::chrono::high_resolution_clock::now();
+  parallel::parallel_for(
+      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + 1; },
+      ParBackend::kKokkos);
+  end = std::chrono::high_resolution_clock::now();
+  total_duration =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::cout << total_duration << std::endl;
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 }

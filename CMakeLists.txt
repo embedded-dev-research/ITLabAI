@@ -22,7 +22,7 @@ if(ENABLE_STATISTIC_WEIGHTS)
     add_definitions(-DENABLE_STATISTIC_WEIGHTS)
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 enable_testing()
 
@@ -43,6 +43,18 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 add_subdirectory(3rdparty)
 
 include(cmake/opencv_config.cmake)
+include(cmake/kokkos_config.cmake)
+
+set(Kokkos_DIR "${KOKKOS_BUILD_DIR}/install/lib/cmake/Kokkos")
+find_package(Kokkos REQUIRED CONFIG)
+
+if(Kokkos_FOUND)
+    include_directories(${KOKKOS_BUILD_DIR}/install/include)
+endif()
+
+if(MSVC)
+    add_compile_options(/wd4267 /wd4244 /wd4127)
+endif()
 
 if (NOT WIN32)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")

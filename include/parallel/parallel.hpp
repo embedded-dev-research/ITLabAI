@@ -19,7 +19,7 @@ inline Backend resolve_default_backend(std::size_t n, const Options& opt) {
 #ifdef HAS_OPENMP
   return Backend::kOmp;
 #else
-  return Backend::kTbb;
+  return Backend::kSeq;
 #endif
 }
 
@@ -55,6 +55,9 @@ inline void parallel_for(std::size_t count, Func&& func,
       break;
     case Backend::kOmp:
       impl_omp(count, std::forward<Func>(func), opt);
+      break;
+    case Backend::kKokkos:
+      impl_kokkos(count, std::forward<Func>(func), opt);
       break;
   }
 }
