@@ -12,7 +12,12 @@ namespace it_lab_ai {
 class ConvLayerOneDnn : public Layer {
  public:
   ConvLayerOneDnn()
-      : Layer(kConvolution), stride_(1), pads_(0), dilations_(1), group_(1) {}
+      : Layer(kConvolution),
+        stride_(1),
+        pads_(0),
+        dilations_(1),
+        group_(1),
+        use_legacy_(false) {}
 
   ConvLayerOneDnn(size_t stride, size_t pads, size_t dilations,
                   const Tensor& kernel, const Tensor& bias = Tensor(),
