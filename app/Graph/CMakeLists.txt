@@ -22,10 +22,10 @@ target_link_libraries(Graph_Build BuildGraph)
 add_executable(ACC acc_check.cpp)
 target_link_libraries(ACC BuildGraph)
 
-add_executable(onnx_subs onnx_subs.cpp)
-target_link_libraries(onnx_subs BuildGraph)
-target_link_libraries(onnx_subs OpenMP::OpenMP_CXX)
-target_link_libraries(onnx_subs graphT_lib)
+add_executable(onnx_subgraphs onnx_subgraphs.cpp)
+target_link_libraries(onnx_subgraphs BuildGraph)
+target_link_libraries(onnx_subgraphs OpenMP::OpenMP_CXX)
+target_link_libraries(onnx_subgraphs graphT_lib)
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/DeepTrackAI/MNIST_dataset/main/mnist/test/1_000008.png"

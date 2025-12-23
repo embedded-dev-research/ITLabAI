@@ -49,21 +49,6 @@ int main() {
                                                      subgraph);
     auto time2 = elapsed_time_avg<double, std::milli>(10, find_subgraphs,
                                                       graph1, subgraph2);
-    for (auto& i : vec) {
-      for (int j : i) {
-        std::cerr << j << ' ';
-      }
-      std::cerr << '\n';
-    }
-    std::cerr << "Time for path5:" << time << '\n';
-
-    for (auto& i : vec2) {
-      for (int j : i) {
-        std::cerr << j << ' ';
-      }
-      std::cerr << '\n';
-    }
-    std::cerr << "Time for concat:" << time2 << '\n';
   } else if (type == 1) {
     Graph graph1;
     build_graph(graph1, input, input, MODEL_PATH_RESNET_ONNX, options, false);
@@ -83,13 +68,6 @@ int main() {
     auto vec = find_subgraphs(graph1, subgraph);
     auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
                                                      subgraph);
-    for (auto& i : vec) {
-      for (int j : i) {
-        std::cerr << j << ' ';
-      }
-      std::cerr << '\n';
-    }
-    std::cerr << "Time for path5:" << time << '\n';
   } else if (type == 2) {
     Graph graph1;
     build_graph(graph1, input, input, MODEL_PATH_GOOGLENET_ONNX, options,
@@ -116,13 +94,6 @@ int main() {
     auto vec = find_subgraphs(graph1, subgraph);
     auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
                                                      subgraph);
-    for (auto& i : vec) {
-      for (int j : i) {
-        std::cerr << j << ' ';
-      }
-      std::cerr << '\n';
-    }
-    std::cerr << "Time for concat:" << time << '\n';
   }
   return 0;
 }
