@@ -45,10 +45,6 @@ int main() {
 
     auto vec = find_subgraphs(graph1, subgraph);
     auto vec2 = find_subgraphs(graph1, subgraph2);
-    auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
-                                                     subgraph);
-    auto time2 = elapsed_time_avg<double, std::milli>(10, find_subgraphs,
-                                                      graph1, subgraph2);
   } else if (type == 1) {
     Graph graph1;
     build_graph(graph1, input, input, MODEL_PATH_RESNET_ONNX, options, false);
@@ -66,8 +62,6 @@ int main() {
     subgraph.makeConnection(layer_3, layer_4);
 
     auto vec = find_subgraphs(graph1, subgraph);
-    auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
-                                                     subgraph);
   } else if (type == 2) {
     Graph graph1;
     build_graph(graph1, input, input, MODEL_PATH_GOOGLENET_ONNX, options,
@@ -92,8 +86,6 @@ int main() {
     subgraph.makeConnection(layer_5, layer_3);
 
     auto vec = find_subgraphs(graph1, subgraph);
-    auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
-                                                     subgraph);
   }
   return 0;
 }
