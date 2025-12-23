@@ -43,7 +43,7 @@ using ParBackend = parallel::Backend;
 class Layer;
 
 struct PostOperations {
-  std::vector<Layer*> layers;
+  std::vector<std::shared_ptr<Layer>> layers;
   unsigned int count = 0;
 };
 
