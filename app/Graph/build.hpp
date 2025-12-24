@@ -38,14 +38,15 @@
 extern std::unordered_map<std::string, std::string> model_paths;
 
 struct ParseResult {
-  std::vector<std::unique_ptr<it_lab_ai::Layer>> layers;
-  std::unordered_map<std::string, it_lab_ai::Layer*> name_to_layer_ptr;
+  std::vector<std::shared_ptr<it_lab_ai::Layer>> layers;
+  std::unordered_map<std::string, std::shared_ptr<it_lab_ai::Layer>>
+      name_to_layer;
   std::unordered_map<std::string, std::vector<std::string>> connections;
   std::unordered_map<std::string, std::vector<std::string>> concat_connections;
   std::unordered_map<std::string, std::vector<int>> concat_orders;
   std::unordered_map<std::string, std::unordered_set<std::string>>
       concat_connected_inputs;
-  std::unordered_map<std::string, std::unique_ptr<it_lab_ai::SplitLayer>>
+  std::unordered_map<std::string, std::shared_ptr<it_lab_ai::SplitLayer>>
       split_layers;
   std::unordered_map<std::string, int> split_name_to_index;
   std::vector<std::vector<std::pair<int, int>>> split_distribution;
@@ -76,26 +77,26 @@ void print_time_stats(it_lab_ai::Graph& graph);
 namespace it_lab_ai {
 class LayerFactory {
  public:
-  static std::unique_ptr<Layer> createEwLayer(const std::string& function,
+  static std::shared_ptr<Layer> createEwLayer(const std::string& function,
                                               const RuntimeOptions& options,
                                               float alpha = 1.0F,
                                               float beta = 0.0F) {
     if (options.backend == Backend::kOneDnn &&
         EwLayerOneDnn::is_function_supported(function)) {
-      return std::make_unique<EwLayerOneDnn>(function, alpha, beta);
+      return std::make_shared<EwLayerOneDnn>(function, alpha, beta);
     }
-    return std::make_unique<EWLayer>(function, alpha, beta);
+    return std::make_shared<EWLayer>(function, alpha, beta);
   }
 
-  static std::unique_ptr<Layer> createConvLayer(
+  static std::shared_ptr<Layer> createConvLayer(
       const RuntimeOptions& options, size_t step, size_t pads, size_t dilations,
       const Tensor& kernel, const Tensor& bias = Tensor(), size_t group = 1,
       bool useLegacyImpl = false) {
     if (options.backend == Backend::kOneDnn) {
-      return std::make_unique<ConvLayerOneDnn>(step, pads, dilations, kernel,
+      return std::make_shared<ConvLayerOneDnn>(step, pads, dilations, kernel,
                                                bias, group, useLegacyImpl);
     }
-    return std::make_unique<ConvolutionalLayer>(step, pads, dilations, kernel,
+    return std::make_shared<ConvolutionalLayer>(step, pads, dilations, kernel,
                                                 bias, group, useLegacyImpl);
   }
 };
