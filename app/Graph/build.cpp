@@ -66,8 +66,8 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
 
       it_lab_ai::Tensor tmp_values = tensor;
       it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
-      auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-          1, pads, 1, tmp_values, tmp_bias, 1, true);
+      auto conv_layer = it_lab_ai::LayerFactory::createConvLayer(
+          options, 1, pads, 1, tmp_values, tmp_bias, 1, true);
       layers.push_back(conv_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "ConvLayer added to layers." << '\n';
@@ -367,12 +367,10 @@ ParseResult parse_json_model(RuntimeOptions options,
           }
         }
 
-        it_lab_ai::Tensor tmp_tensor = tensor;
-
+        it_lab_ai::Tensor& tmp_tensor = tensor;
         it_lab_ai::Tensor tmp_bias = it_lab_ai::make_tensor(tensor.get_bias());
-
-        auto conv_layer = std::make_shared<it_lab_ai::ConvolutionalLayer>(
-            stride, pads, dilations, tmp_tensor, tmp_bias, group);
+        auto conv_layer = it_lab_ai::LayerFactory::createConvLayer(
+            options, stride, pads, dilations, tmp_tensor, tmp_bias, group);
         layer = conv_layer;
       } else if (layer_type.find("Relu") != std::string::npos ||
                  layer_type.find("relu") != std::string::npos) {

@@ -32,6 +32,7 @@
 #include "layers/SplitLayer.hpp"
 #include "layers/Tensor.hpp"
 #include "layers/TransposeLayer.hpp"
+#include "layers_oneDNN/ConvLayer.hpp"
 #include "layers_oneDNN/EWLayer.hpp"
 
 extern std::unordered_map<std::string, std::string> model_paths;
@@ -85,6 +86,18 @@ class LayerFactory {
       return std::make_shared<EwLayerOneDnn>(function, alpha, beta);
     }
     return std::make_shared<EWLayer>(function, alpha, beta);
+  }
+
+  static std::shared_ptr<Layer> createConvLayer(
+      const RuntimeOptions& options, size_t step, size_t pads, size_t dilations,
+      const Tensor& kernel, const Tensor& bias = Tensor(), size_t group = 1,
+      bool useLegacyImpl = false) {
+    if (options.backend == Backend::kOneDnn) {
+      return std::make_shared<ConvLayerOneDnn>(step, pads, dilations, kernel,
+                                               bias, group, useLegacyImpl);
+    }
+    return std::make_shared<ConvolutionalLayer>(step, pads, dilations, kernel,
+                                                bias, group, useLegacyImpl);
   }
 };
 
