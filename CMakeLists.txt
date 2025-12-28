@@ -45,15 +45,27 @@ add_subdirectory(3rdparty)
 include(cmake/opencv_config.cmake)
 include(cmake/kokkos_config.cmake)
 
-set(Kokkos_DIR "${KOKKOS_BUILD_DIR}/install/lib/cmake/Kokkos")
-find_package(Kokkos REQUIRED CONFIG)
+include_directories("${KOKKOS_INSTALL_DIR}/include")
 
-if(Kokkos_FOUND)
-    include_directories(${KOKKOS_BUILD_DIR}/install/include)
+add_library(Kokkos_imported INTERFACE)
+add_dependencies(Kokkos_imported kokkos_external)
+
+target_include_directories(Kokkos_imported INTERFACE 
+    "${KOKKOS_INSTALL_DIR}/include"
+)
+
+target_link_directories(Kokkos_imported INTERFACE 
+    "${KOKKOS_INSTALL_DIR}/lib"
+)
+
+if(WIN32)
+    target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
+else()
+    target_link_libraries(Kokkos_imported INTERFACE kokkos)
 endif()
 
 if(MSVC)
-    add_compile_options(/wd4267 /wd4244 /wd4127)
+    add_compile_options(/wd4267 /wd4244 /wd4127 /wd4324)
 endif()
 
 if (NOT WIN32)

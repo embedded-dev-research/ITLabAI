@@ -19,7 +19,7 @@ inline Backend resolve_default_backend(std::size_t n, const Options& opt) {
 #ifdef HAS_OPENMP
   return Backend::kOmp;
 #else
-  return Backend::kSeq;
+  return Backend::kTbb;
 #endif
 }
 
@@ -29,7 +29,8 @@ inline Backend select_backend(const Options& opt, std::size_t n) {
   }
 
   if (opt.backend == Backend::kSeq || opt.backend == Backend::kThreads ||
-      opt.backend == Backend::kTbb || opt.backend == Backend::kOmp) {
+      opt.backend == Backend::kTbb || opt.backend == Backend::kOmp ||
+      opt.backend == Backend::kKokkos) {
     return opt.backend;
   }
 

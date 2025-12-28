@@ -1,17 +1,23 @@
-set(KOKKOS_BUILD_DIR "${CMAKE_BINARY_DIR}/3rdparty/kokkos_build")
-file(MAKE_DIRECTORY "${KOKKOS_BUILD_DIR}")
+include(ExternalProject)
 
-execute_process(
-    COMMAND ${CMAKE_COMMAND} 
-        -S "${CMAKE_SOURCE_DIR}/3rdparty/kokkos" 
-        -B "${KOKKOS_BUILD_DIR}"
+set(KOKKOS_BUILD_DIR "${CMAKE_BINARY_DIR}/3rdparty/kokkos_build")
+set(KOKKOS_INSTALL_DIR "${CMAKE_BINARY_DIR}/3rdparty/kokkos_install")
+
+ExternalProject_Add(
+    kokkos_external
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/kokkos"
+    BINARY_DIR "${KOKKOS_BUILD_DIR}"
+    INSTALL_DIR "${KOKKOS_INSTALL_DIR}"
+    
+    CMAKE_ARGS
         -G "${CMAKE_GENERATOR}"
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_INSTALL_PREFIX=${KOKKOS_BUILD_DIR}/install
+        -DCMAKE_INSTALL_PREFIX=${KOKKOS_INSTALL_DIR}
         
         -DKokkos_ENABLE_SERIAL=ON
         -DKokkos_ARCH_NATIVE=OFF
         -DKokkos_ENABLE_OPENMP=OFF
+        -DKokkos_ENABLE_THREADS=ON
         -DKokkos_ENABLE_CUDA=OFF
         -DKokkos_ENABLE_HIP=OFF
         -DKokkos_ENABLE_TESTS=OFF
@@ -19,25 +25,15 @@ execute_process(
         
         -DKokkos_ENABLE_AGGRESSIVE_VECTORIZATION=ON
         -DKokkos_ENABLE_LIBDL=OFF
-    WORKING_DIRECTORY "${KOKKOS_BUILD_DIR}"
-    RESULT_VARIABLE config_result
+    
+    BUILD_COMMAND ${CMAKE_COMMAND} --build "${KOKKOS_BUILD_DIR}" --config ${CMAKE_BUILD_TYPE} -j${NPROC}
+    
+    INSTALL_COMMAND ${CMAKE_COMMAND} --install "${KOKKOS_BUILD_DIR}" --config ${CMAKE_BUILD_TYPE}
+    
+    BUILD_ALWAYS OFF
+    LOG_CONFIGURE ON
+    LOG_BUILD ON
+    LOG_INSTALL ON
 )
 
-if(NOT config_result EQUAL 0)
-    message(FATAL_ERROR "Failed to configure Kokkos")
-endif()
-
-execute_process(
-    COMMAND ${CMAKE_COMMAND} --build "${KOKKOS_BUILD_DIR}" --config ${CMAKE_BUILD_TYPE} -j${NPROC}
-    RESULT_VARIABLE build_result
-    WORKING_DIRECTORY "${KOKKOS_BUILD_DIR}"
-)
-
-if(NOT build_result EQUAL 0)
-    message(FATAL_ERROR "Failed to build Kokkos")
-endif()
-
-execute_process(
-    COMMAND ${CMAKE_COMMAND} --install "${KOKKOS_BUILD_DIR}" --config ${CMAKE_BUILD_TYPE}
-    WORKING_DIRECTORY "${KOKKOS_BUILD_DIR}"
-)
+set(Kokkos_DIR "${KOKKOS_INSTALL_DIR}/lib/cmake/Kokkos" CACHE PATH "Path to Kokkos CMake config")
