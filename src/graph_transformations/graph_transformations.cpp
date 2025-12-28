@@ -4,8 +4,9 @@ namespace it_lab_ai {
 
 namespace {
 
-bool layer_conditions(const Layer& layer, const Layer& layer_sub) {
-  return layer.getName() == layer_sub.getName();
+bool layer_conditions(const std::shared_ptr<Layer>& layer,
+                      const std::shared_ptr<Layer>& layer_sub) {
+  return layer->getName() == layer_sub->getName();
 }
 
 }  // namespace
@@ -44,13 +45,12 @@ bool run_search(const Graph& graph, const Graph& subgraph,
                 std::vector<int>& assignments,
                 std::vector<std::vector<int>>& results) {
   size_t cur_size = assignments.size();
-  for (int prev_id = 0; prev_id < subgraph.getLayersCount(); prev_id++) {
+  for (int prev_id = 0; prev_id < static_cast<int>(cur_size); prev_id++) {
     int amount_connected_s =
         subgraph.getVertexValue(prev_id + 1) - subgraph.getVertexValue(prev_id);
     for (int j = 0; j < amount_connected_s; j++) {
       int next_id = subgraph.getEdgeValue(subgraph.getVertexValue(prev_id) + j);
-      if (prev_id < static_cast<int>(cur_size) &&
-          next_id < static_cast<int>(cur_size)) {
+      if (next_id < static_cast<int>(cur_size)) {
         if (!has_edge(graph, assignments[prev_id], assignments[next_id])) {
           return false;
         }
