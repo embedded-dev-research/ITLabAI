@@ -59,9 +59,15 @@ target_link_directories(Kokkos_imported INTERFACE
 )
 
 if(WIN32)
-    target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
+    target_link_libraries(Kokkos_imported INTERFACE 
+        "${KOKKOS_INSTALL_DIR}/lib/kokkoscore.lib"
+        "${KOKKOS_INSTALL_DIR}/lib/kokkoscontainers.lib"
+    )
 else()
-    target_link_libraries(Kokkos_imported INTERFACE kokkos)
+    target_link_libraries(Kokkos_imported INTERFACE 
+        "${KOKKOS_INSTALL_DIR}/lib/libkokkoscore.a"
+        "${KOKKOS_INSTALL_DIR}/lib/libkokkoscontainers.a"
+    )
 endif()
 
 if(MSVC)
