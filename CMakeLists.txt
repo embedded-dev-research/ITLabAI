@@ -50,8 +50,6 @@ include_directories("${KOKKOS_INSTALL_DIR}/include")
 add_library(Kokkos_imported INTERFACE)
 add_dependencies(Kokkos_imported kokkos_external)
 
-find_package(Kokkos REQUIRED PATHS "${KOKKOS_INSTALL_DIR}" NO_DEFAULT_PATH)
-
 target_include_directories(Kokkos_imported INTERFACE 
     "${KOKKOS_INSTALL_DIR}/include"
 )
@@ -59,6 +57,18 @@ target_include_directories(Kokkos_imported INTERFACE
 target_link_directories(Kokkos_imported INTERFACE 
     "${KOKKOS_INSTALL_DIR}/lib"
 )
+
+if(WIN32)
+    target_link_libraries(Kokkos_imported INTERFACE 
+        "${KOKKOS_INSTALL_DIR}/lib/kokkoscore.lib"
+        "${KOKKOS_INSTALL_DIR}/lib/kokkoscontainers.lib"
+    )
+else()
+    target_link_libraries(Kokkos_imported INTERFACE 
+        "${KOKKOS_INSTALL_DIR}/lib/libkokkoscore.a"
+        "${KOKKOS_INSTALL_DIR}/lib/libkokkoscontainers.a"
+    )
+endif()
 
 target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
 
