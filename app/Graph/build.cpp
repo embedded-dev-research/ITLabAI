@@ -196,12 +196,12 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   try {
     std::sort(connection_list.begin(), connection_list.end(),
               [&](const auto& a, const auto& b) {
-                if (!name_to_layer_ptr.contains(a.first) ||
-                    !name_to_layer_ptr.contains(b.first)) {
+                if (!name_to_layer.contains(a.first) ||
+                    !name_to_layer.contains(b.first)) {
                   return false;
                 }
-                return name_to_layer_ptr[a.first]->getID() <
-                       name_to_layer_ptr[b.first]->getID();
+                return name_to_layer[a.first]->getID() <
+                       name_to_layer[b.first]->getID();
               });
 
   } catch (const std::exception& e) {
@@ -209,8 +209,8 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   }
 
   for (const auto& [source_name, target_name] : connection_list) {
-    if (name_to_layer_ptr.contains(source_name) &&
-        name_to_layer_ptr.contains(target_name)) {
+    if (name_to_layer.contains(source_name) &&
+        name_to_layer.contains(target_name)) {
       if (target_name.find("Concat") != std::string::npos ||
           name_to_layer[target_name]->getName() == it_lab_ai::kConcat) {
         if (concat_connections.find(target_name) != concat_connections.end()) {
