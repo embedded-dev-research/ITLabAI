@@ -34,6 +34,10 @@ ExternalProject_Add(
     LOG_CONFIGURE ON
     LOG_BUILD ON
     LOG_INSTALL ON
+    BUILD_BYPRODUCTS
+        "${KOKKOS_INSTALL_DIR}/lib/libkokkoscore.a"
+        "${KOKKOS_INSTALL_DIR}/lib/libkokkoscontainers.a"
+        "${KOKKOS_INSTALL_DIR}/lib/libkokkos.a"
 )
 
 set(Kokkos_DIR "${KOKKOS_INSTALL_DIR}/lib/cmake/Kokkos" CACHE PATH "Path to Kokkos CMake config")
