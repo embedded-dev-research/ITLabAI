@@ -64,6 +64,10 @@ else()
     target_link_libraries(Kokkos_imported INTERFACE kokkos)
 endif()
 
+target_link_libraries(Kokkos_imported INTERFACE 
+    $<BUILD_INTERFACE:${KOKKOS_INSTALL_DIR}/include>
+)
+
 if(MSVC)
     add_compile_options(/wd4267 /wd4244 /wd4127 /wd4324)
 endif()
