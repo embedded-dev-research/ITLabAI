@@ -61,7 +61,7 @@ target_link_directories(Kokkos_imported INTERFACE
 if(WIN32)
     target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
 else()
-    target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
+    target_link_libraries(Kokkos_imported INTERFACE kokkos)
 endif()
 
 if(MSVC)
