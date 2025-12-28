@@ -10,10 +10,10 @@ target_link_libraries( ACCLib ${OpenCV_LIBS} )
 target_link_libraries( ACCLib TBB_unified)
 target_link_libraries( ACCLib layers_lib)
 target_link_libraries( ACCLib gtest_main)
+target_link_libraries( ACCLib Kokkos_imported)
 
 add_executable(Accuracy_Check accuracy_check.cpp)
 target_link_libraries(Accuracy_Check ACCLib)
-target_link_libraries(Accuracy_Check PUBLIC Kokkos_imported)
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
