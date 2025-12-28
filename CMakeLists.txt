@@ -58,7 +58,11 @@ target_link_directories(Kokkos_imported INTERFACE
     "${KOKKOS_INSTALL_DIR}/lib"
 )
 
-target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
+if(WIN32)
+    target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
+else()
+    target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
+endif()
 
 if(MSVC)
     add_compile_options(/wd4267 /wd4244 /wd4127 /wd4324)
