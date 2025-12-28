@@ -45,8 +45,6 @@ add_subdirectory(3rdparty)
 include(cmake/opencv_config.cmake)
 include(cmake/kokkos_config.cmake)
 
-include_directories("${KOKKOS_INSTALL_DIR}/include")
-
 add_library(Kokkos_imported INTERFACE)
 add_dependencies(Kokkos_imported kokkos_external)
 
