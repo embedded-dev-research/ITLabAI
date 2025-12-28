@@ -13,6 +13,7 @@ target_link_libraries( ACCLib gtest_main)
 
 add_executable(Accuracy_Check accuracy_check.cpp)
 target_link_libraries(Accuracy_Check ACCLib)
+target_link_libraries(Accuracy_Check PUBLIC Kokkos_imported)
 
 file(DOWNLOAD
     "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
