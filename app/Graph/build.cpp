@@ -211,7 +211,6 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   for (const auto& [source_name, target_name] : connection_list) {
     if (name_to_layer_ptr.contains(source_name) &&
         name_to_layer_ptr.contains(target_name)) {
-
       if (target_name.find("Concat") != std::string::npos ||
           name_to_layer[target_name]->getName() == it_lab_ai::kConcat) {
         if (concat_connections.find(target_name) != concat_connections.end()) {
