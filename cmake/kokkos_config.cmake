@@ -29,6 +29,8 @@ ExternalProject_Add(
     BUILD_COMMAND ${CMAKE_COMMAND} --build "${KOKKOS_BUILD_DIR}" --config ${CMAKE_BUILD_TYPE} -j${NPROC}
     
     INSTALL_COMMAND ${CMAKE_COMMAND} --install "${KOKKOS_BUILD_DIR}" --config ${CMAKE_BUILD_TYPE}
+    COMMAND ${CMAKE_COMMAND} -E echo "Kokkos installed. Contents of lib dir:"
+    COMMAND ${CMAKE_COMMAND} -E ls "${KOKKOS_INSTALL_DIR}/lib"
     
     BUILD_ALWAYS OFF
     LOG_CONFIGURE ON
@@ -37,7 +39,3 @@ ExternalProject_Add(
 )
 
 set(Kokkos_DIR "${KOKKOS_INSTALL_DIR}/lib/cmake/Kokkos" CACHE PATH "Path to Kokkos CMake config")
-
-INSTALL_COMMAND ${CMAKE_COMMAND} --install "${KOKKOS_BUILD_DIR}" --config ${CMAKE_BUILD_TYPE}
-    COMMAND ${CMAKE_COMMAND} -E echo "Kokkos installed. Contents of lib dir:"
-    COMMAND ${CMAKE_COMMAND} -E ls "${KOKKOS_INSTALL_DIR}/lib"
