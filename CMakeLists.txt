@@ -50,6 +50,8 @@ include_directories("${KOKKOS_INSTALL_DIR}/include")
 add_library(Kokkos_imported INTERFACE)
 add_dependencies(Kokkos_imported kokkos_external)
 
+find_package(Kokkos REQUIRED PATHS "${KOKKOS_INSTALL_DIR}" NO_DEFAULT_PATH)
+
 target_include_directories(Kokkos_imported INTERFACE 
     "${KOKKOS_INSTALL_DIR}/include"
 )
@@ -58,11 +60,7 @@ target_link_directories(Kokkos_imported INTERFACE
     "${KOKKOS_INSTALL_DIR}/lib"
 )
 
-if(WIN32)
-    target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
-else()
-    target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
-endif()
+target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
 
 if(MSVC)
     add_compile_options(/wd4267 /wd4244 /wd4127 /wd4324)
