@@ -40,6 +40,9 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
       case ParBackend::kThreads:
         implType_ = kSTL;
         break;
+      case ParBackend::kTbb:
+        implType_ = kTBB;
+        break;
       case ParBackend::kSeq:
       default:
         implType_ = kDefault;
@@ -161,12 +164,28 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
             sh);
       } else {
         if (useLegacyImpl_) {
-          Conv4D_Legacy<float>(input[0], kernel_, bias_, output[0], stride_,
-                               pads_, dilations_);
+          switch (implType_) {
+            case kTBB: {
+              Conv4D_Legacy_TBB<float>(input[0], kernel_, bias_, output[0], stride_,
+                                   pads_, dilations_);
+              break;
+            }
+            default: {
+              Conv4D_Legacy<float>(input[0], kernel_, bias_, output[0], stride_,
+                                   pads_, dilations_);
+              break;
+            }
+          }
+          
         } else {
           switch (implType_) {
             case kSTL: {
               Conv4DSTL<float>(input[0], kernel_, bias_, output[0], stride_,
+                               pads_, group_, dilations_);
+              break;
+            }
+            case kTBB: {
+              Conv4D_TBB<float>(input[0], kernel_, bias_, output[0], stride_,
                                pads_, group_, dilations_);
               break;
             }

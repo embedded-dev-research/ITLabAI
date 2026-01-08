@@ -1,4 +1,10 @@
 #pragma once
+#include <tbb/blocked_range.h>
+#include <tbb/blocked_range2d.h>
+#include <tbb/blocked_range3d.h>
+#include <tbb/parallel_for.h>
+#include <tbb/task_group.h>
+
 #include <cmath>
 #include <stdexcept>
 #include <thread>
@@ -460,6 +466,152 @@ void Conv4DSTL(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
 }
 
 template <typename ValueType>
+void Conv4D_TBB(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
+                Tensor& output, size_t stride_, size_t pads_, size_t group_,
+                size_t dilations_) {
+  size_t batch_size = input.get_shape()[0];
+  size_t in_channels = input.get_shape()[1];
+  size_t in_height = input.get_shape()[2];
+  size_t in_width = input.get_shape()[3];
+
+  size_t kernel_out_channels = kernel_.get_shape()[0];
+  size_t kernel_in_channels = kernel_.get_shape()[1];
+  size_t kernel_height = kernel_.get_shape()[2];
+  size_t kernel_width = kernel_.get_shape()[3];
+
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> padded_input(
+      batch_size,
+      std::vector<std::vector<std::vector<ValueType>>>(
+          in_height + 2 * pads_,
+          std::vector<std::vector<ValueType>>(
+              in_width + 2 * pads_, std::vector<ValueType>(in_channels, 0))));
+
+  tbb::parallel_for(tbb::blocked_range<size_t>(0, batch_size),
+                    [&](const tbb::blocked_range<size_t>& range) {
+                      for (size_t b = range.begin(); b != range.end(); ++b) {
+                        for (size_t h = 0; h < in_height; ++h) {
+                          for (size_t w = 0; w < in_width; ++w) {
+                            for (size_t c = 0; c < in_channels; ++c) {
+                              padded_input[b][h + pads_][w + pads_][c] =
+                                  input.get<ValueType>({b, c, h, w});
+                            }
+                          }
+                        }
+                      }
+                    });
+
+  size_t dilated_kernel_height = kernel_height * dilations_ + 1 - dilations_;
+  size_t dilated_kernel_width = kernel_width * dilations_ + 1 - dilations_;
+
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> dil_kernel(
+      dilated_kernel_height,
+      std::vector<std::vector<std::vector<ValueType>>>(
+          dilated_kernel_width,
+          std::vector<std::vector<ValueType>>(
+              kernel_in_channels,
+              std::vector<ValueType>(kernel_out_channels, 0))));
+
+  tbb::parallel_for(
+      tbb::blocked_range<size_t>(0, kernel_out_channels),
+      [&](const tbb::blocked_range<size_t>& range) {
+        for (size_t oc = range.begin(); oc != range.end(); ++oc) {
+          for (size_t h = 0; h < kernel_height; ++h) {
+            for (size_t w = 0; w < kernel_width; ++w) {
+              for (size_t ic = 0; ic < kernel_in_channels; ++ic) {
+                dil_kernel[h * dilations_][w * dilations_][ic][oc] =
+                    kernel_.get<ValueType>({oc, ic, h, w});
+              }
+            }
+          }
+        }
+      });
+
+  auto ComputeConvOutputDim = [](size_t input_dim, size_t kernel_dim,
+                                 size_t stride, size_t pad, size_t dilation) {
+    size_t effective_kernel = (kernel_dim - 1) * dilation + 1;
+    return (input_dim + 2 * pad - effective_kernel) / stride + 1;
+  };
+
+  size_t out_height = ComputeConvOutputDim(in_height, kernel_height, stride_,
+                                           pads_, dilations_);
+  size_t out_width =
+      ComputeConvOutputDim(in_width, kernel_width, stride_, pads_, dilations_);
+
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> output_tensor(
+      batch_size, std::vector<std::vector<std::vector<ValueType>>>(
+                      kernel_out_channels,
+                      std::vector<std::vector<ValueType>>(
+                          out_height, std::vector<ValueType>(out_width, 0))));
+
+  tbb::parallel_for(
+      tbb::blocked_range2d<size_t>(0, batch_size, 0, kernel_out_channels),
+      [&](const tbb::blocked_range2d<size_t>& range) {
+        for (size_t b = range.rows().begin(); b != range.rows().end(); ++b) {
+          for (size_t oc = range.cols().begin(); oc != range.cols().end();
+               ++oc) {
+            size_t group =
+                (group_ > 1) ? oc / (kernel_out_channels / group_) : 0;
+            size_t group_start_channel = group * (in_channels / group_);
+            size_t group_end_channel = (group + 1) * (in_channels / group_);
+
+            for (size_t oh = 0; oh < out_height; ++oh) {
+              for (size_t ow = 0; ow < out_width; ++ow) {
+                ValueType value = 0;
+
+                for (size_t ic = group_start_channel; ic < group_end_channel;
+                     ++ic) {
+                  size_t kernel_ic = ic - group_start_channel;
+
+                  for (size_t kh = 0; kh < dilated_kernel_height; ++kh) {
+                    for (size_t kw = 0; kw < dilated_kernel_width; ++kw) {
+                      size_t h_index = oh * stride_ + kh;
+                      size_t w_index = ow * stride_ + kw;
+
+                      if (h_index < padded_input[b].size() &&
+                          w_index < padded_input[b][h_index].size()) {
+                        value += padded_input[b][h_index][w_index][ic] *
+                                 dil_kernel[kh][kw][kernel_ic][oc];
+                      }
+                    }
+                  }
+                }
+                if (!bias_.empty()) {
+                  value += (*bias_.as<ValueType>())[oc];
+                }
+
+                output_tensor[b][oc][oh][ow] = value;
+              }
+            }
+          }
+        }
+      });
+
+  size_t total_elements =
+      batch_size * kernel_out_channels * out_height * out_width;
+  std::vector<ValueType> one_d_vector(total_elements);
+
+  tbb::parallel_for(
+      tbb::blocked_range<size_t>(0, batch_size),
+      [&](const tbb::blocked_range<size_t>& range) {
+        for (size_t b = range.begin(); b != range.end(); ++b) {
+          size_t base_index = b * kernel_out_channels * out_height * out_width;
+          for (size_t oc = 0; oc < kernel_out_channels; ++oc) {
+            for (size_t oh = 0; oh < out_height; ++oh) {
+              for (size_t ow = 0; ow < out_width; ++ow) {
+                size_t idx = base_index + oc * out_height * out_width +
+                             oh * out_width + ow;
+                one_d_vector[idx] = output_tensor[b][oc][oh][ow];
+              }
+            }
+          }
+        }
+      });
+
+  Shape sh({batch_size, kernel_out_channels, out_height, out_width});
+  output = make_tensor<ValueType>(one_d_vector, sh);
+}
+
+template <typename ValueType>
 void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
                      const Tensor& bias_, Tensor& output, size_t stride_,
                      size_t pads_, size_t dilations_) {
@@ -617,6 +769,137 @@ void Conv4D_Legacy(const Tensor& input, const Tensor& kernel_,
       }
     }
   }
+  output = make_tensor<ValueType>(one_d_vector, sh);
+}
+
+template <typename ValueType>
+void Conv4D_Legacy_TBB(const Tensor& input, const Tensor& kernel_,
+                       const Tensor& bias_, Tensor& output, size_t stride_,
+                       size_t pads_, size_t dilations_) {
+  size_t batch_size = input.get_shape()[0];
+  size_t in_height = input.get_shape()[2];
+  size_t in_width = input.get_shape()[3];
+  size_t in_channels = input.get_shape()[1];
+
+  size_t kernel_height = kernel_.get_shape()[0];
+  size_t kernel_width = kernel_.get_shape()[1];
+  size_t kernel_in_channels = kernel_.get_shape()[2];
+  size_t kernel_out_channels = kernel_.get_shape()[3];
+
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> padded_input(
+      batch_size,
+      std::vector<std::vector<std::vector<ValueType>>>(
+          in_height + 2 * pads_,
+          std::vector<std::vector<ValueType>>(
+              in_width + 2 * pads_, std::vector<ValueType>(in_channels, 0))));
+
+  tbb::parallel_for(tbb::blocked_range<size_t>(0, batch_size),
+                    [&](const tbb::blocked_range<size_t>& range) {
+                      for (size_t b = range.begin(); b != range.end(); ++b) {
+                        for (size_t h = 0; h < in_height; ++h) {
+                          for (size_t w = 0; w < in_width; ++w) {
+                            for (size_t c = 0; c < in_channels; ++c) {
+                              padded_input[b][h + pads_][w + pads_][c] =
+                                  input.get<ValueType>({b, c, h, w});
+                            }
+                          }
+                        }
+                      }
+                    });
+
+  size_t dilated_kernel_height = kernel_height * dilations_ + 1 - dilations_;
+  size_t dilated_kernel_width = kernel_width * dilations_ + 1 - dilations_;
+
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> dil_kernel(
+      dilated_kernel_height,
+      std::vector<std::vector<std::vector<ValueType>>>(
+          dilated_kernel_width,
+          std::vector<std::vector<ValueType>>(
+              kernel_in_channels,
+              std::vector<ValueType>(kernel_out_channels, 0))));
+
+  tbb::parallel_for(
+      tbb::blocked_range<size_t>(0, kernel_out_channels),
+      [&](const tbb::blocked_range<size_t>& range) {
+        for (size_t oc = range.begin(); oc != range.end(); ++oc) {
+          for (size_t h = 0; h < kernel_height; ++h) {
+            for (size_t w = 0; w < kernel_width; ++w) {
+              for (size_t ic = 0; ic < kernel_in_channels; ++ic) {
+                dil_kernel[h * dilations_][w * dilations_][ic][oc] =
+                    kernel_.get<ValueType>({h, w, ic, oc});
+              }
+            }
+          }
+        }
+      });
+
+  size_t out_height = ComputeConvOutputDim(in_height, kernel_height, stride_,
+                                           pads_, dilations_);
+  size_t out_width =
+      ComputeConvOutputDim(in_width, kernel_width, stride_, pads_, dilations_);
+
+  std::vector<std::vector<std::vector<std::vector<ValueType>>>> output_tensor(
+      batch_size, std::vector<std::vector<std::vector<ValueType>>>(
+                      kernel_out_channels,
+                      std::vector<std::vector<ValueType>>(
+                          out_height, std::vector<ValueType>(out_width, 0))));
+
+  tbb::parallel_for(
+      tbb::blocked_range2d<size_t>(0, batch_size, 0, kernel_out_channels),
+      [&](const tbb::blocked_range2d<size_t>& range) {
+        for (size_t b = range.rows().begin(); b < range.rows().end(); ++b) {
+          for (size_t oc = range.cols().begin(); oc < range.cols().end();
+               ++oc) {
+            for (size_t i = 0; i < out_height; i += stride_) {
+              for (size_t j = 0; j < out_width; j += stride_) {
+                ValueType value = 0;
+
+                for (size_t ic = 0; ic < in_channels; ++ic) {
+                  if (ic < kernel_in_channels) {
+                    for (size_t h = 0; h < dilated_kernel_height; ++h) {
+                      for (size_t w = 0; w < dilated_kernel_width; ++w) {
+                        if (i + h < padded_input[b].size() &&
+                            j + w < padded_input[b][i + h].size()) {
+                          value += padded_input[b][i + h][j + w][ic] *
+                                   dil_kernel[h][w][ic][oc];
+                        }
+                      }
+                    }
+                  }
+                }
+
+                if (!bias_.empty()) {
+                  output_tensor[b][oc][i][j] =
+                      value + (*bias_.as<ValueType>())[oc];
+                } else {
+                  output_tensor[b][oc][i][j] = value;
+                }
+              }
+            }
+          }
+        }
+      });
+
+  Shape sh({batch_size, kernel_out_channels, out_height, out_width});
+  std::vector<ValueType> one_d_vector(batch_size * out_height * out_width *
+                                      kernel_out_channels);
+
+  tbb::parallel_for(tbb::blocked_range<size_t>(0, batch_size),
+                    [&](const tbb::blocked_range<size_t>& range) {
+                      size_t index_1d = range.begin() * kernel_out_channels *
+                                        out_height * out_width;
+                      for (size_t b = range.begin(); b != range.end(); ++b) {
+                        for (size_t oc = 0; oc < kernel_out_channels; ++oc) {
+                          for (size_t h = 0; h < out_height; ++h) {
+                            for (size_t w = 0; w < out_width; ++w) {
+                              one_d_vector[index_1d++] =
+                                  output_tensor[b][oc][h][w];
+                            }
+                          }
+                        }
+                      }
+                    });
+
   output = make_tensor<ValueType>(one_d_vector, sh);
 }
 }  // namespace it_lab_ai
