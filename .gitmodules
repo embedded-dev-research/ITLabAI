@@ -13,3 +13,7 @@
 [submodule "3rdparty/oneDNN"]
 	path = 3rdparty/oneDNN
 	url = https://github.com/uxlfoundation/oneDNN
+[submodule "3rdparty/kokkos"]
+	path = 3rdparty/kokkos
+	url = https://github.com/kokkos/kokkos.git
+	branch = release-candidate-5.0.1
