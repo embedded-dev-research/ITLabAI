@@ -3,10 +3,13 @@
 #include <cmath>
 #include <vector>
 
+#include "fixture.hpp"
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
 
 using namespace it_lab_ai;
+
+class EWLayerTest_F : public BaseTestFixture {};
 
 class EWTestsParameterized
     : public ::testing::TestWithParam<
@@ -217,7 +220,7 @@ TEST(ewlayer, new_ewlayer_can_sigmoid_float_extreme_values) {
   }
 }
 
-TEST(ewlayer, parallel_for_ew) {
+TEST_F(EWLayerTest_F, parallel_for_ew) {
   EWLayer layer("relu");
 
   std::vector<int> vec(8000000, -1);
@@ -230,8 +233,8 @@ TEST(ewlayer, parallel_for_ew) {
                                       ParBackend::kTbb, ParBackend::kOmp};
 
   for (auto backend : backends) {
-    RuntimeOptions options;
-    options.setParallelBackend(backend);
+    auto options = createOptionsWithBackend(backend);
+
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);

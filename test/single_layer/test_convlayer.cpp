@@ -1,7 +1,7 @@
 ﻿#include <gtest/gtest.h>
 
-#include "layers/ConvLayer.hpp"
 #include "fixture.hpp"
+#include "layers/ConvLayer.hpp"
 
 using namespace it_lab_ai;
 

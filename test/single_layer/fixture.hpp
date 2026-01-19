@@ -40,6 +40,15 @@ class BaseTestFixture : public ::testing::Test {
     return options;
   }
 
+  RuntimeOptions createOptionsWithBackend(ParBackend backend) const {
+    RuntimeOptions options;
+    options.backend = Backend::kNaive;
+    options.parallel =
+        (backend != ParBackend::kSeq);
+    options.par_backend = backend;
+    return options;
+  }
+
  protected:
   RuntimeOptions defaultOptions;
 };
