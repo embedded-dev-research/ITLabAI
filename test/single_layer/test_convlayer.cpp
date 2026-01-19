@@ -1,8 +1,11 @@
 ﻿#include <gtest/gtest.h>
 
 #include "layers/ConvLayer.hpp"
+#include "fixture.hpp"
 
 using namespace it_lab_ai;
+
+class ConvolutionalLayerTest_F : public BaseTestFixture {};
 
 TEST(ConvolutionalLayerTest, IncompatibleInput) {
   int step = 2;
@@ -582,11 +585,8 @@ TEST(ConvolutionalLayerTest, DepthwiseViaConvolutionalLayer) {
   }
 }
 
-TEST(ConvolutionalLayerTest, Conv4DSTLViaConvolutionalLayer) {
-  RuntimeOptions options;
-  options.backend = Backend::kNaive;
-  options.parallel = true;
-  options.par_backend = ParBackend::kThreads;
+TEST_F(ConvolutionalLayerTest_F, Conv4DSTLViaConvolutionalLayer) {
+  auto options = setSTLOptions();
 
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
@@ -1040,12 +1040,7 @@ TEST(ConvolutionalLayerTest, Float4DKernelWorking) {
   ASSERT_EQ(result.size(), 4);
 }
 
-TEST(ConvolutionalLayerTest, Conv4DWithParallelNoneBackend) {
-  RuntimeOptions options;
-  options.backend = Backend::kNaive;
-  options.parallel = true;
-  options.par_backend = ParBackend::kSeq;
-
+TEST_F(ConvolutionalLayerTest_F, Conv4DWithParallelNoneBackend) {
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
   Tensor input = make_tensor(image, input_shape);
@@ -1061,7 +1056,7 @@ TEST(ConvolutionalLayerTest, Conv4DWithParallelNoneBackend) {
   ConvolutionalLayer layer(1, 0, 1, kernel, Tensor());
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
-  layer.run(in, out, options);
+  layer.run(in, out, defaultOptions);
 
   std::vector<float> result = *out[0].as<float>();
 
@@ -1101,11 +1096,8 @@ TEST(ConvolutionalLayerTest, Conv4DWithParallelDefaultFallback) {
   }
 }
 
-TEST(ConvolutionalLayerTest, Conv4DWithoutParallelFlag) {
-  RuntimeOptions options;
-  options.backend = Backend::kNaive;
-  options.parallel = false;
-  options.par_backend = ParBackend::kThreads;
+TEST_F(ConvolutionalLayerTest_F, Conv4DWithoutParallelFlag) {
+  auto options = setSTLOptions();
 
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
@@ -1132,12 +1124,7 @@ TEST(ConvolutionalLayerTest, Conv4DWithoutParallelFlag) {
   }
 }
 
-TEST(ConvolutionalLayerTest, Conv4DLegacyFloatWithParallelNone) {
-  RuntimeOptions options;
-  options.backend = Backend::kNaive;
-  options.parallel = true;
-  options.par_backend = ParBackend::kSeq;
-
+TEST_F(ConvolutionalLayerTest_F, Conv4DLegacyFloatWithParallelNone) {
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
   Tensor input = make_tensor(image, input_shape);
@@ -1159,7 +1146,7 @@ TEST(ConvolutionalLayerTest, Conv4DLegacyFloatWithParallelNone) {
   Tensor output = make_tensor(output_vec, output_shape);
   std::vector<Tensor> out{output};
 
-  layer.run(in, out, options);
+  layer.run(in, out, defaultOptions);
 
   std::vector<float> result = *out[0].as<float>();
 

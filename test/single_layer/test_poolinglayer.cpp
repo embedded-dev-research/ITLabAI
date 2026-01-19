@@ -2,11 +2,14 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "fixture.hpp"
 #include "layers/PoolingLayer.hpp"
 
 using namespace it_lab_ai;
 
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(PoolingTestsParameterized);
+
+class PoolingLayerTest : public BaseTestFixture {};
 
 TEST(poolinglayer, empty_inputs1) {
   Shape inpshape = {8};
@@ -283,11 +286,8 @@ TEST(poolinglayer, new_pooling_layer_can_run_int_avg) {
   }
 }
 
-TEST(poolinglayer, new_pooling_layer_can_run_int_avg_tbb) {
-  RuntimeOptions options;
-  options.backend = Backend::kNaive;
-  options.parallel = true;
-  options.par_backend = ParBackend::kTbb;
+TEST_F(PoolingLayerTest, new_pooling_layer_can_run_int_avg_tbb) {
+  auto options = setTBBOptions();
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};
   PoolingLayer a(poolshape, {2, 2}, {0, 0, 0, 0}, {1, 1}, false, "average");
@@ -326,11 +326,8 @@ TEST(poolinglayer, new_pooling_layer_can_run_1d_pooling_float) {
   }
 }
 
-TEST(poolinglayer, new_pooling_layer_tbb_can_run_1d_pooling_float) {
-  RuntimeOptions options;
-  options.backend = Backend::kNaive;
-  options.parallel = true;
-  options.par_backend = ParBackend::kTbb;
+TEST_F(PoolingLayerTest, new_pooling_layer_tbb_can_run_1d_pooling_float) {
+  auto options = setTBBOptions();
   Shape inpshape = {8};
   Shape poolshape = {3};
   PoolingLayer a(poolshape, "average");
@@ -440,12 +437,7 @@ TEST(poolinglayer, maxpool_onnx_with_pooling_layer) {
   }
 }
 
-TEST(poolinglayer, new_pooling_layer_with_parallel_none) {
-  RuntimeOptions options;
-  options.backend = Backend::kNaive;
-  options.parallel = true;
-  options.par_backend = ParBackend::kSeq;
-
+TEST_F(PoolingLayerTest, new_pooling_layer_with_parallel_none) {
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};
   PoolingLayer a(poolshape, {1, 1}, {1, 1, 1, 1}, {1, 1}, false, "average");
@@ -454,16 +446,11 @@ TEST(poolinglayer, new_pooling_layer_with_parallel_none) {
   Tensor output = make_tensor<float>({0});
   std::vector<Tensor> in{make_tensor(input, inpshape)};
   std::vector<Tensor> out{output};
-  a.run(in, out, options);
+  a.run(in, out, defaultOptions);
   EXPECT_EQ(out[0].get_shape().count(), 25);
 }
 
-TEST(poolinglayer, new_pooling_layer_int_avg_with_parallel_none) {
-  RuntimeOptions options;
-  options.backend = Backend::kNaive;
-  options.parallel = true;
-  options.par_backend = ParBackend::kSeq;
-
+TEST_F(PoolingLayerTest, new_pooling_layer_int_avg_with_parallel_none) {
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};
   PoolingLayer a(poolshape, {2, 2}, {0, 0, 0, 0}, {1, 1}, false, "average");
@@ -479,7 +466,7 @@ TEST(poolinglayer, new_pooling_layer_int_avg_with_parallel_none) {
   std::vector<Tensor> in{make_tensor(input, inpshape)};
   std::vector<Tensor> out{output};
 
-  a.run(in, out, options);
+  a.run(in, out, defaultOptions);
 
   std::vector<int> true_output = {6, 4, 4, 6};
   for (size_t i = 0; i < true_output.size(); i++) {
@@ -487,11 +474,8 @@ TEST(poolinglayer, new_pooling_layer_int_avg_with_parallel_none) {
   }
 }
 
-TEST(poolinglayer, new_pooling_layer_int_avg_without_parallel_flag) {
-  RuntimeOptions options;
-  options.backend = Backend::kNaive;
-  options.parallel = false;
-  options.par_backend = ParBackend::kTbb;
+TEST_F(PoolingLayerTest, new_pooling_layer_int_avg_without_parallel_flag) {
+  auto options = setTBBOptions();
 
   Shape inpshape = {4, 4};
   Shape poolshape = {2, 2};
