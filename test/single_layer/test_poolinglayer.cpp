@@ -499,3 +499,114 @@ TEST_F(PoolingLayerTest, new_pooling_layer_int_avg_without_parallel_flag) {
     EXPECT_NEAR((*out[0].as<int>())[i], true_output[i], 1e-5);
   }
 }
+
+struct PoolingTestParams {
+  std::vector<float> input;
+  Shape input_shape;
+  Shape pool_shape;
+  Shape strides;
+  Shape pads;
+  Shape dilations;
+  bool ceil_mode;
+  std::string pooling_type;
+  std::vector<float> expected_output;
+  std::string description;
+};
+
+class PoolingWithTBBTest
+    : public BaseTestFixture,
+      public ::testing::WithParamInterface<PoolingTestParams> {};
+
+TEST_P(PoolingWithTBBTest, test_pooling_with_tbb) {
+  auto params = GetParam();
+  auto tbb_options = setTBBOptions();
+
+  PoolingLayer layer(params.pool_shape, params.strides, params.pads,
+                     params.dilations, params.ceil_mode, params.pooling_type);
+
+  Tensor input = make_tensor<float>(params.input, params.input_shape);
+
+  PoolingLayerImpl<float> impl(params.input_shape, params.pool_shape,
+                               params.strides, params.pads, params.dilations,
+                               params.ceil_mode, params.pooling_type);
+  Shape output_shape = impl.get_output_shape();
+
+  std::vector<float> zeros(output_shape.count(), 0.0f);
+  Tensor output = make_tensor<float>(zeros, output_shape);
+
+  std::vector<Tensor> inputs{input};
+  std::vector<Tensor> outputs{output};
+
+  layer.run(inputs, outputs, tbb_options);
+
+  auto output_data = *outputs[0].as<float>();
+  expectVectorsNear(output_data, params.expected_output, 1e-5f);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    PoolingTBBTests, PoolingWithTBBTest,
+    ::testing::Values(
+        PoolingTestParams{BaseTestFixture::basic1DData(),
+                          BaseTestFixture::basic1DShape(),
+                          {3},
+                          {2},
+                          {0, 0, 0, 0},
+                          {1, 1},
+                          false,
+                          "average",
+                          BaseTestFixture::get1DAverageExpected(),
+                          "1D_Avg_Stride2_TBB"},
+        PoolingTestParams{BaseTestFixture::basic1DData(),
+                          BaseTestFixture::basic1DShape(),
+                          {3},
+                          {1},
+                          {1, 1, 0, 0},
+                          {1, 1},
+                          false,
+                          "average",
+                          {8.5f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.5f},
+                          "1D_Avg_Stride1_Padding_TBB"},
+        PoolingTestParams{BaseTestFixture::basic1DData(),
+                          BaseTestFixture::basic1DShape(),
+                          {3},
+                          {2},
+                          {0, 0, 0, 0},
+                          {1, 1},
+                          false,
+                          "max",
+                          {9.0f, 7.0f, 5.0f},
+                          "1D_Max_Stride2_TBB"},
+
+        PoolingTestParams{BaseTestFixture::basic2DData4x4(),
+                          BaseTestFixture::basic2DShape4x4(),
+                          {2, 2},
+                          {1, 1},
+                          {0, 0, 0, 0},
+                          {1, 1},
+                          false,
+                          "average",
+                          BaseTestFixture::get2DAverageStride1Expected(),
+                          "2D_Avg_Stride1_TBB"},
+        PoolingTestParams{BaseTestFixture::basic2DData4x4(),
+                          BaseTestFixture::basic2DShape4x4(),
+                          {2, 2},
+                          {2, 2},
+                          {0, 0, 0, 0},
+                          {1, 1},
+                          false,
+                          "average",
+                          {6.5f, 4.5f, 4.5f, 6.5f},
+                          "2D_Avg_Stride2_TBB"},
+        PoolingTestParams{BaseTestFixture::basic2DData3x3(),
+                          BaseTestFixture::basic2DShape3x3(),
+                          {2, 2},
+                          {1, 1},
+                          {0, 0, 0, 0},
+                          {1, 1},
+                          false,
+                          "max",
+                          {9.0f, 8.0f, 5.0f, 4.0f},
+                          "2D_Max_Stride1_TBB"}),
+    [](const ::testing::TestParamInfo<PoolingTestParams>& info) {
+      return info.param.description;
+    });

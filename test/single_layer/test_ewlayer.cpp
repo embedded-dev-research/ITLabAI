@@ -235,7 +235,6 @@ TEST_F(EWLayerTest_F, parallel_for_ew) {
   for (auto backend : backends) {
     auto options = createOptionsWithBackend(backend);
 
-
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);
     auto end = std::chrono::high_resolution_clock::now();
