@@ -17,16 +17,19 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
   if (input[0].get_shape().dims() != 4) {
     throw std::out_of_range("input must be 4-dimensional");
   }
+
+  ParBackend backend = options.getEffectiveParBackend();
+
   if (group_ > 1) {
     if (group_ == input[0].get_shape()[1] && group_ == kernel_.get_shape()[0]) {
       switch (input[0].get_type()) {
         case Type::kFloat:
           DepthwiseConv4D<float>(input[0], kernel_, bias_, output[0], stride_,
-                                 pads_, dilations_);
+                                 pads_, dilations_, backend);
           break;
         case Type::kInt:
           DepthwiseConv4D<int>(input[0], kernel_, bias_, output[0], stride_,
-                               pads_, dilations_);
+                               pads_, dilations_, backend);
           break;
         default:
           throw std::runtime_error(
@@ -35,17 +38,7 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
       return;
     }
   }
-  if (options.parallel) {
-    switch (options.par_backend) {
-      case ParBackend::kThreads:
-        implType_ = kSTL;
-        break;
-      case ParBackend::kSeq:
-      default:
-        implType_ = kDefault;
-        break;
-    }
-  }
+
   switch (input[0].get_type()) {
     case Type::kInt: {
       if (kernel_.get_shape().dims() == 2) {
@@ -96,18 +89,8 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                     2)),
             sh);
       } else {
-        switch (implType_) {
-          case kSTL: {
-            Conv4DSTL<int>(input[0], kernel_, bias_, output[0], stride_, pads_,
-                           group_, dilations_);
-            break;
-          }
-          default: {
-            Conv4D<int>(input[0], kernel_, bias_, output[0], stride_, pads_,
-                        group_, dilations_);
-            break;
-          }
-        }
+        Conv4D<int>(input[0], kernel_, bias_, output[0], stride_, pads_, group_,
+                    dilations_, backend);
       }
       break;
     }
@@ -162,26 +145,16 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
       } else {
         if (useLegacyImpl_) {
           Conv4D_Legacy<float>(input[0], kernel_, bias_, output[0], stride_,
-                               pads_, dilations_);
+                               pads_, dilations_, backend);
         } else {
-          switch (implType_) {
-            case kSTL: {
-              Conv4DSTL<float>(input[0], kernel_, bias_, output[0], stride_,
-                               pads_, group_, dilations_);
-              break;
-            }
-            default: {
-              Conv4D<float>(input[0], kernel_, bias_, output[0], stride_, pads_,
-                            group_, dilations_);
-              break;
-            }
-          }
+          Conv4D<float>(input[0], kernel_, bias_, output[0], stride_, pads_,
+                        group_, dilations_, backend);
         }
-        break;
       }
-      default: {
-        throw std::runtime_error("Unsupported tensor type");
-      }
+      break;
+    }
+    default: {
+      throw std::runtime_error("Unsupported tensor type");
     }
   }
 }

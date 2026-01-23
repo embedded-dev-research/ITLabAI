@@ -391,7 +391,8 @@ TEST(ConvolutionalLayerTest, Conv4DSTLFloatWithGroups) {
   std::vector<float> output_vec(16, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  Conv4DSTL<float>(input, kernel, Tensor(), output, 1, 0, 2, 1);
+  Conv4D<float>(input, kernel, Tensor(), output, 1, 0, 2, 1,
+                ParBackend::kThreads);
 
   std::vector<float> result = *output.as<float>();
 
@@ -426,7 +427,7 @@ TEST(ConvolutionalLayerTest, Conv4DSTLFloatComplex) {
   std::vector<float> output_vec(8, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  Conv4DSTL<float>(input, kernel, bias, output, 1, 0, 1, 1);
+  Conv4D<float>(input, kernel, bias, output, 1, 0, 1, 1, ParBackend::kThreads);
 
   std::vector<float> result = *output.as<float>();
 
@@ -498,7 +499,7 @@ TEST(ConvolutionalLayerTest, Conv4DSTLFloatBasic) {
   std::vector<float> output_vec(8, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  Conv4DSTL<float>(input, kernel, bias, output, 1, 0, 1, 1);
+  Conv4D<float>(input, kernel, bias, output, 1, 0, 1, 1, ParBackend::kThreads);
 
   std::vector<float> result = *output.as<float>();
 
@@ -526,7 +527,8 @@ TEST(ConvolutionalLayerTest, Conv4DSTLFloatWithPaddingAndStride) {
       0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  Conv4DSTL<float>(input, kernel, Tensor(), output, 2, 1, 1, 1);
+  Conv4D<float>(input, kernel, Tensor(), output, 2, 1, 1, 1,
+                ParBackend::kThreads);
 
   std::vector<float> result = *output.as<float>();
 
@@ -550,7 +552,8 @@ TEST(ConvolutionalLayerTest, Conv4DSTLFloatCompareWithConv4D) {
   Shape output_shape2({1, 1, 1, 1});
   std::vector<float> output_vec2(1, 0.0f);
   Tensor output2 = make_tensor(output_vec2, output_shape2);
-  Conv4DSTL<float>(input, kernel, Tensor(), output2, 1, 0, 1, 1);
+  Conv4D<float>(input, kernel, Tensor(), output2, 1, 0, 1, 1,
+                ParBackend::kThreads);
 
   float result1 = (*output1.as<float>())[0];
   float result2 = (*output2.as<float>())[0];

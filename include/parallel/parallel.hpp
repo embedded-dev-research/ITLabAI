@@ -29,7 +29,8 @@ inline Backend select_backend(const Options& opt, std::size_t n) {
   }
 
   if (opt.backend == Backend::kSeq || opt.backend == Backend::kThreads ||
-      opt.backend == Backend::kTbb || opt.backend == Backend::kOmp) {
+      opt.backend == Backend::kTbb || opt.backend == Backend::kOmp ||
+      opt.backend == Backend::kKokkos) {
     return opt.backend;
   }
 
@@ -55,6 +56,9 @@ inline void parallel_for(std::size_t count, Func&& func,
       break;
     case Backend::kOmp:
       impl_omp(count, std::forward<Func>(func), opt);
+      break;
+    case Backend::kKokkos:
+      impl_kokkos(count, std::forward<Func>(func), opt);
       break;
   }
 }
