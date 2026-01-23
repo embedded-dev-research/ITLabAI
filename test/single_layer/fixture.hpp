@@ -1,27 +1,24 @@
 ﻿#pragma once
 #include <gtest/gtest.h>
 
-#include <algorithm>  // для std::replace
+#include <algorithm>
 #include <random>
-#include <string>  // добавьте это
+#include <string>
 #include <vector>
 
-#include "layers/ConvLayer.hpp"
+#include "layers/Layer.hpp"
 
-// ТОЛЬКО ПОСЛЕ включения всех заголовков
 using namespace it_lab_ai;
 
 class BaseTestFixture : public ::testing::Test {
- protected:
+ public:
   void SetUp() override {
     defaultOptions.backend = Backend::kNaive;
     defaultOptions.parallel = false;
     defaultOptions.par_backend = ParBackend::kSeq;
-
-    rng.seed(42);
   }
 
-  RuntimeOptions setTBBOptions() const {
+  static RuntimeOptions setTBBOptions() {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
     options.parallel = true;
@@ -29,7 +26,7 @@ class BaseTestFixture : public ::testing::Test {
     return options;
   }
 
-  RuntimeOptions setSeqOptions() const {
+  static RuntimeOptions setSeqOptions() {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
     options.parallel = true;
@@ -37,7 +34,7 @@ class BaseTestFixture : public ::testing::Test {
     return options;
   }
 
-  RuntimeOptions setSTLOptions() const {
+  static RuntimeOptions setSTLOptions() {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
     options.parallel = true;
@@ -45,7 +42,7 @@ class BaseTestFixture : public ::testing::Test {
     return options;
   }
 
-  RuntimeOptions createOptionsWithBackend(ParBackend backend) const {
+  static RuntimeOptions createOptionsWithBackend(ParBackend backend) {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
     options.parallel = (backend != ParBackend::kSeq);
@@ -53,7 +50,6 @@ class BaseTestFixture : public ::testing::Test {
     return options;
   }
 
- public:
   static std::vector<float> basic1DData() {
     return {9.0f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f};
   }
@@ -93,23 +89,45 @@ class BaseTestFixture : public ::testing::Test {
     return {6.5f, 5.5f, 4.5f, 3.5f, 3.5f, 3.5f, 4.5f, 5.5f, 6.5f};
   }
 
-  template <typename T>
-  std::vector<T> generateRandomVector(size_t size, T min, T max) {
-    std::uniform_real_distribution<T> dist(min, max);
-    std::vector<T> result(size);
-    for (size_t i = 0; i < size; ++i) {
-      result[i] = dist(rng);
-    }
-    return result;
+  static std::vector<float> ascending1DData() {
+    return {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f};
   }
 
-  template <typename T>
-  Tensor generateRandomTensor(const Shape& shape, T min, T max) {
-    auto data = generateRandomVector<T>(shape.count(), min, max);
-    return make_tensor(data, shape);
+  static Shape ascending1DShape() { return {10}; }
+
+  static std::vector<float> descending1DData() {
+    return {10.0f, 9.0f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f};
   }
 
-  void resetRNG() { rng.seed(42); }
+  static std::vector<float> mixed1DData() {
+    return {-5.0f, -3.0f, 0.0f, 2.0f, 4.0f, -1.0f, 3.0f, 1.0f, -2.0f, 5.0f};
+  }
+
+  static std::vector<float> small2DData2x2() {
+    return {1.0f, 2.0f, 3.0f, 4.0f};
+  }
+
+  static Shape small2DShape2x2() { return {2, 2}; }
+
+  static std::vector<float> medium2DData5x5() {
+    return {1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f,  8.0f,  9.0f,
+            10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f,
+            19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 25.0f};
+  }
+
+  static Shape medium2DShape5x5() { return {5, 5}; }
+
+  static std::vector<float> zero2DData3x3() {
+    return {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+  }
+
+  static Shape zero2DShape3x3() { return {3, 3}; }
+
+  static std::vector<float> constant2DData4x4(float value = 5.0f) {
+    return std::vector<float>(16, value);
+  }
+
+  static Shape constant2DShape4x4() { return {4, 4}; }
 
   template <typename T>
   static void expectVectorsNear(const std::vector<T>& actual,
@@ -123,10 +141,4 @@ class BaseTestFixture : public ::testing::Test {
 
  protected:
   RuntimeOptions defaultOptions;
-  mutable std::mt19937 rng;
-
-  static constexpr size_t SMALL_SIZE = 1000;
-  static constexpr size_t MEDIUM_SIZE = 10000;
-  static constexpr size_t LARGE_SIZE = 100000;
-  static constexpr size_t PERFORMANCE_TEST_SIZE = 8000000;
 };

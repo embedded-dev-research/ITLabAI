@@ -396,3 +396,123 @@ TEST(ewlayer, parallel_for_notmatrix) {
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
 }
+
+struct EWLayerTestParams {
+  std::string activation_type;
+  float alpha;
+  float beta;
+  std::vector<float> input;
+  Shape input_shape;
+  std::vector<float> expected_output;
+  std::string description;
+};
+
+class EWLayerParametrizedTest
+    : public BaseTestFixture,
+      public ::testing::WithParamInterface<
+          std::tuple<EWLayerTestParams, RuntimeOptions>> {};
+
+TEST_P(EWLayerParametrizedTest, test_activation_with_different_backends) {
+  auto [params, runtime_options] = GetParam();
+
+  EWLayer layer(params.activation_type, params.alpha, params.beta);
+
+  Tensor input = make_tensor<float>(params.input, params.input_shape);
+  Tensor output;
+
+  std::vector<Tensor> inputs{input};
+  std::vector<Tensor> outputs{output};
+
+  layer.run(inputs, outputs, runtime_options);
+
+  auto output_data = *outputs[0].as<float>();
+  expectVectorsNear(output_data, params.expected_output, 1e-4f);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EWLayerTests, EWLayerParametrizedTest,
+    ::testing::Combine(
+        ::testing::Values(
+            EWLayerTestParams{"relu", 1.0f, 0.0f,
+                              BaseTestFixture::activationTestData(), Shape{7},
+                              BaseTestFixture::reluExpected(), "ReLU"},
+            EWLayerTestParams{"sigmoid", 1.0f, 0.0f,
+                              BaseTestFixture::activationTestData(), Shape{7},
+                              BaseTestFixture::sigmoidExpected(), "Sigmoid"},
+            EWLayerTestParams{"linear",
+                              2.0f,
+                              3.0f,
+                              {1.0f, -1.0f, 2.0f, -2.0f, 0.0f},
+                              Shape{5},
+                              {5.0f, 1.0f, 7.0f, -1.0f, 3.0f},
+                              "Linear_2x_plus_3"},
+            EWLayerTestParams{"linear", 1.0f, 0.0f,
+                              BaseTestFixture::basic1DData(),
+                              BaseTestFixture::basic1DShape(),
+                              BaseTestFixture::basic1DData(), "Linear_x"},
+            EWLayerTestParams{
+                "tanh",
+                1.0f,
+                0.0f,
+                {-2.0f, -1.0f, 0.0f, 1.0f, 2.0f},
+                Shape{5},
+                {std::tanh(-2.0f), std::tanh(-1.0f), std::tanh(0.0f),
+                 std::tanh(1.0f), std::tanh(2.0f)},
+                "Tanh"},
+            EWLayerTestParams{"relu", 1.0f, 0.0f,
+                              BaseTestFixture::ascending1DData(),
+                              BaseTestFixture::ascending1DShape(),
+                              BaseTestFixture::ascending1DData(),
+                              "ReLU_Ascending"},
+            EWLayerTestParams{
+                "relu",
+                1.0f,
+                0.0f,
+                BaseTestFixture::mixed1DData(),
+                BaseTestFixture::ascending1DShape(),
+                {0.0f, 0.0f, 0.0f, 2.0f, 4.0f, 0.0f, 3.0f, 1.0f, 0.0f, 5.0f},
+                "ReLU_Mixed"},
+            EWLayerTestParams{"relu", 1.0f, 0.0f, std::vector<float>(10, 0.0f),
+                              Shape{10}, std::vector<float>(10, 0.0f),
+                              "ReLU_All_Zeros"},
+            EWLayerTestParams{"relu", 1.0f, 0.0f,
+                              BaseTestFixture::basic2DData4x4(),
+                              BaseTestFixture::basic2DShape4x4(),
+                              BaseTestFixture::basic2DData4x4(), "ReLU_2D"},
+            EWLayerTestParams{
+                "relu",
+                1.0f,
+                0.0f,
+                {9.0f, -8.0f, 7.0f, -6.0f, -5.0f, 4.0f, -3.0f, 2.0f, 2.0f,
+                 -3.0f, 4.0f, -5.0f, 6.0f, -7.0f, 8.0f, -9.0f},
+                Shape{4, 4},
+                {9.0f, 0.0f, 7.0f, 0.0f, 0.0f, 4.0f, 0.0f, 2.0f, 2.0f, 0.0f,
+                 4.0f, 0.0f, 6.0f, 0.0f, 8.0f, 0.0f},
+                "ReLU_2D_Mixed"}),
+        ::testing::Values(BaseTestFixture::setTBBOptions(),
+                          BaseTestFixture::setSeqOptions(),
+                          BaseTestFixture::setSTLOptions())),
+    [](const ::testing::TestParamInfo<
+        std::tuple<EWLayerTestParams, RuntimeOptions>>& info) {
+      const auto& params = std::get<0>(info.param);
+      const auto& options = std::get<1>(info.param);
+
+      std::string name = params.description + "_";
+
+      if (options.parallel) {
+        if (options.par_backend == ParBackend::kTbb) {
+          name += "TBB";
+        } else if (options.par_backend == ParBackend::kThreads) {
+          name += "STL";
+        } else {
+          name += "Seq";
+        }
+      } else {
+        name += "NoParallel";
+      }
+
+      std::replace(name.begin(), name.end(), ' ', '_');
+      std::replace(name.begin(), name.end(), '-', '_');
+      std::replace(name.begin(), name.end(), '.', '_');
+      return name;
+    });
