@@ -459,11 +459,10 @@ INSTANTIATE_TEST_SUITE_P(
                 {std::tanh(-2.0f), std::tanh(-1.0f), std::tanh(0.0f),
                  std::tanh(1.0f), std::tanh(2.0f)},
                 "Tanh"},
-            EWLayerTestParams{"relu", 1.0f, 0.0f,
-                              BaseTestFixture::ascending1DData(),
-                              BaseTestFixture::ascending1DShape(),
-                              BaseTestFixture::ascending1DData(),
-                              "ReLU_Ascending"},
+            EWLayerTestParams{
+                "relu", 1.0f, 0.0f, BaseTestFixture::ascending1DData(),
+                BaseTestFixture::ascending1DShape(),
+                BaseTestFixture::ascending1DData(), "ReLU_Ascending"},
             EWLayerTestParams{
                 "relu",
                 1.0f,
