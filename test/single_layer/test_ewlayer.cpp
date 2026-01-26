@@ -491,6 +491,8 @@ INSTANTIATE_TEST_SUITE_P(
                 "ReLU_2D_Mixed"}),
         ::testing::Values(BaseTestFixture::setTBBOptions(),
                           BaseTestFixture::setSeqOptions(),
+                          BaseTestFixture::setOmpOptions(),
+                          BaseTestFixture::setKokkosOptions(),
                           BaseTestFixture::setSTLOptions())),
     [](const ::testing::TestParamInfo<
         std::tuple<EWLayerTestParams, RuntimeOptions>>& info) {
@@ -504,6 +506,10 @@ INSTANTIATE_TEST_SUITE_P(
           name += "TBB";
         } else if (options.par_backend == ParBackend::kThreads) {
           name += "STL";
+        } else if (options.par_backend == ParBackend::kOmp) {
+          name += "OMP";
+        } else if (options.par_backend == ParBackend::kKokkos) {
+          name += "Kokkos";
         } else {
           name += "Seq";
         }
