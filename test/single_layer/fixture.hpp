@@ -42,6 +42,22 @@ class BaseTestFixture : public ::testing::Test {
     return options;
   }
 
+  static RuntimeOptions setKokkosOptions() {
+    RuntimeOptions options;
+    options.backend = Backend::kNaive;
+    options.parallel = true;
+    options.par_backend = ParBackend::kKokkos;
+    return options;
+  }
+
+  static RuntimeOptions setOmpOptions() {
+    RuntimeOptions options;
+    options.backend = Backend::kNaive;
+    options.parallel = true;
+    options.par_backend = ParBackend::kOmp;
+    return options;
+  }
+
   static RuntimeOptions createOptionsWithBackend(ParBackend backend) {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
