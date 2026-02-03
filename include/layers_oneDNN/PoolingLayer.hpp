@@ -24,7 +24,6 @@ class PoolingLayerOneDnn : public Layer {
         dilations_(dilations),
         ceil_mode_(ceil_mode),
         poolingType_(std::move(pooling_type)),
-        initialized_(false),
         engine_(std::make_unique<dnnl::engine>(dnnl::engine::kind::cpu, 0)),
         stream_(std::make_unique<dnnl::stream>(*engine_)) {}
 
@@ -62,7 +61,7 @@ class PoolingLayerOneDnn : public Layer {
  private:
   void initialize_onednn(const Shape& shape, Type data_type);
   [[nodiscard]] dnnl::algorithm get_PoolType() const;
-  void validate_input(const std::vector<Tensor>& input) const;
+  static void validate_input(const std::vector<Tensor>& input);
   [[nodiscard]] static dnnl::memory::data_type get_dnnl_data_type(Type type);
   [[nodiscard]] Shape calculate_output_shape(const Shape& input_shape) const;
 

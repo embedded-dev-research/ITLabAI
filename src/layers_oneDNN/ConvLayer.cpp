@@ -444,10 +444,6 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
         const std::vector<float>& bias_data = *bias_.as<float>();
         std::memcpy(bias_memory_.get_data_handle(), bias_data.data(),
                     bias_data.size() * sizeof(float));
-        for (size_t i = 0; i < std::min<size_t>(10, bias_data.size()); ++i) {
-          std::cout << bias_data[i] << " ";
-        }
-        std::cout << std::endl;
       } else if (data_type == Type::kInt) {
         const std::vector<int>& bias_data_int = *bias_.as<int>();
         std::vector<float> float_bias(bias_data_int.size());

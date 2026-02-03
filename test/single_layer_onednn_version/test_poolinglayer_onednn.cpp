@@ -1,4 +1,4 @@
-#include <algorithm>
+﻿#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <vector>
@@ -376,5 +376,103 @@ TEST(poolinglayer_onednn, edge_cases) {
 
     EXPECT_EQ(output_shape, Shape({2, 1, 1, 1}));
     EXPECT_EQ(result.size(), 2);
+  }
+}
+
+TEST(poolinglayer_onednn, different_input_dimensions) {
+  {
+    PoolingLayerOneDnn layer({2, 2}, {2, 2}, {0, 0, 0, 0}, {1, 1}, false,
+                             "max");
+
+    std::vector<float> input_data(1 * 3 * 4 * 4);
+    for (size_t i = 0; i < input_data.size(); i++) {
+      input_data[i] = static_cast<float>(i);
+    }
+
+    Tensor input = make_tensor(input_data, Shape({1, 3, 4, 4}));
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto output_shape = out[0].get_shape();
+    EXPECT_EQ(output_shape, Shape({1, 3, 2, 2}));
+  }
+
+  {
+    PoolingLayerOneDnn layer({2, 2}, {2, 2}, {0, 0, 0, 0}, {1, 1}, false,
+                             "max");
+
+    std::vector<float> input_data(3 * 4 * 4);
+    for (size_t i = 0; i < input_data.size(); i++) {
+      input_data[i] = static_cast<float>(i);
+    }
+
+    Tensor input = make_tensor(input_data, Shape({3, 4, 4}));
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto output_shape = out[0].get_shape();
+    EXPECT_EQ(output_shape, Shape({3, 2, 2}));
+  }
+
+  {
+    PoolingLayerOneDnn layer({2, 2}, {2, 2}, {0, 0, 0, 0}, {1, 1}, false,
+                             "average");
+
+    std::vector<float> input_data(4 * 4);
+    for (size_t i = 0; i < input_data.size(); i++) {
+      input_data[i] = static_cast<float>(i);
+    }
+
+    Tensor input = make_tensor(input_data, Shape({4, 4}));
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_NO_THROW(layer.run(in, out));
+    auto output_shape = out[0].get_shape();
+    EXPECT_EQ(output_shape, Shape({2, 2}));
+  }
+}
+
+TEST(poolinglayer_onednn, invalid_dimensions) {
+  PoolingLayerOneDnn layer({2, 2}, {2, 2}, {0, 0, 0, 0}, {1, 1}, false, "max");
+  {
+    std::vector<float> input_data(2 * 3 * 4 * 5 * 6);
+    Tensor input = make_tensor(input_data, Shape({2, 3, 4, 5, 6}));
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_THROW(layer.run(in, out), std::runtime_error);
+  }
+
+  {
+    std::vector<float> input_data(1);
+    Tensor input = make_tensor(input_data, Shape({1}));
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    EXPECT_THROW(layer.run(in, out), std::runtime_error);
+  }
+}
+
+TEST(poolinglayer_onednn, ceil_mode_with_padding_adjustment) {
+  {
+    PoolingLayerOneDnn layer({3, 3}, {2, 2}, {0, 0, 0, 0}, {1, 1}, true, "max");
+
+    std::vector<float> input_data(1 * 1 * 5 * 5);
+    Tensor input = make_tensor(input_data, Shape({1, 1, 5, 5}));
+    Tensor output;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output};
+
+    layer.run(in, out);
+    auto output_shape = out[0].get_shape();
+    EXPECT_EQ(output_shape, Shape({1, 1, 2, 2}));
   }
 }

@@ -49,8 +49,7 @@ void PoolingLayerOneDnn::run(const std::vector<Tensor>& input,
   }
 }
 
-void PoolingLayerOneDnn::validate_input(
-    const std::vector<Tensor>& input) const {
+void PoolingLayerOneDnn::validate_input(const std::vector<Tensor>& input) {
   if (input.size() != 1) {
     throw std::runtime_error(
         "PoolingLayerOneDnn: Expected exactly 1 input tensor");
@@ -97,9 +96,17 @@ Shape PoolingLayerOneDnn::calculate_output_shape(
 
     size_t output_size;
     if (ceil_mode_) {
-      output_size = static_cast<size_t>(std::ceil(raw)) + 1;
+      output_size = static_cast<size_t>(std::ceil(
+                        static_cast<float>(input_size + pad_front + pad_back -
+                                           effective_kernel_size) /
+                        static_cast<float>(stride))) +
+                    1;
     } else {
-      output_size = static_cast<size_t>(std::floor(raw)) + 1;
+      output_size = static_cast<size_t>(std::floor(
+                        static_cast<float>(input_size + pad_front + pad_back -
+                                           effective_kernel_size) /
+                        static_cast<float>(stride))) +
+                    1;
     }
 
     output_shape[input_idx] = output_size;
@@ -133,9 +140,6 @@ void PoolingLayerOneDnn::initialize_onednn(const Shape& shape, Type data_type) {
                 static_cast<dnnl::memory::dim>(shape[1])};
     dst_dims = {1, 1, static_cast<dnnl::memory::dim>(output_shape_[0]),
                 static_cast<dnnl::memory::dim>(output_shape_[1])};
-  } else if (shape.dims() == 1) {
-    src_dims = {1, 1, 1, static_cast<dnnl::memory::dim>(shape[0])};
-    dst_dims = {1, 1, 1, static_cast<dnnl::memory::dim>(output_shape_[0])};
   } else {
     throw std::runtime_error("Unsupported shape dimensions for pooling: " +
                              std::to_string(shape.dims()));
@@ -175,14 +179,14 @@ void PoolingLayerOneDnn::initialize_onednn(const Shape& shape, Type data_type) {
 
   if (ceil_mode_ && !is_global_pool) {
     for (size_t i = 0; i < 2; ++i) {
-      size_t input_size = static_cast<size_t>(src_dims[2 + i]);
-      size_t kernel_size = static_cast<size_t>(kernel[i]);
-      size_t stride = static_cast<size_t>(strides[i]);
+      auto input_size = static_cast<size_t>(src_dims[2 + i]);
+      auto kernel_size = static_cast<size_t>(kernel[i]);
+      auto stride = static_cast<size_t>(strides[i]);
       size_t dilation = static_cast<size_t>(dilations[i]) + 1;
-      size_t pad_front = static_cast<size_t>(padding_l[i]);
-      size_t pad_back = static_cast<size_t>(padding_r[i]);
+      auto pad_front = static_cast<size_t>(padding_l[i]);
+      auto pad_back = static_cast<size_t>(padding_r[i]);
       size_t effective_kernel = (kernel_size - 1) * dilation + 1;
-      size_t output_size = static_cast<size_t>(dst_dims[2 + i]);
+      auto output_size = static_cast<size_t>(dst_dims[2 + i]);
       size_t needed_pad_back = (output_size - 1) * stride + effective_kernel -
                                input_size - pad_front;
 
@@ -200,7 +204,7 @@ void PoolingLayerOneDnn::initialize_onednn(const Shape& shape, Type data_type) {
 
     pool_prim_ = std::make_unique<dnnl::pooling_forward>(pool_pd);
   } catch (const dnnl::error& e) {
-    std::cerr << "Error creating pooling primitive: " << e.what() << std::endl;
+    std::cerr << "Error creating pooling primitive: " << e.what() << '\n';
     throw std::runtime_error("Failed to create pooling primitive: " +
                              std::string(e.what()));
   }
