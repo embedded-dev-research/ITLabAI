@@ -91,9 +91,6 @@ Shape PoolingLayerOneDnn::calculate_output_shape(
 
     size_t effective_kernel_size = (kernel_size - 1) * dilation + 1;
 
-    float raw = (input_size + pad_front + pad_back - effective_kernel_size) /
-                static_cast<float>(stride);
-
     size_t output_size;
     if (ceil_mode_) {
       output_size = static_cast<size_t>(std::ceil(
