@@ -18,15 +18,15 @@ class PoolingLayerOneDnn : public Layer {
                               bool ceil_mode = false,
                               std::string pooling_type = "average")
       : Layer(kPooling),
-        engine_(std::make_unique<dnnl::engine>(dnnl::engine::kind::cpu, 0)),
-        stream_(std::make_unique<dnnl::stream>(*engine_)),
         poolingShape_(pooling_shape),
         strides_(strides),
         pads_(pads),
         dilations_(dilations),
         ceil_mode_(ceil_mode),
         poolingType_(std::move(pooling_type)),
-        initialized_(false) {}
+        initialized_(false),
+        engine_(std::make_unique<dnnl::engine>(dnnl::engine::kind::cpu, 0)),
+        stream_(std::make_unique<dnnl::stream>(*engine_)) {}
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
