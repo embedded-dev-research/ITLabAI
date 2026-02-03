@@ -478,10 +478,6 @@ void ConvLayerOneDnn::run_special_conv(const std::vector<Tensor>& input,
   Type data_type = input_tensor.get_type();
   const Shape& input_shape = input_tensor.get_shape();
 
-  if (data_type == Type::kFloat) {
-    const std::vector<float>& input_data = *input_tensor.as<float>();
-  }
-
   if (!initialized_ || input_shape != last_input_shape_ ||
       data_type != last_data_type_) {
     initialize_special_conv(input_shape, data_type);

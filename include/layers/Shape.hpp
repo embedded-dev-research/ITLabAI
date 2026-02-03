@@ -5,8 +5,8 @@
 #include <iostream>
 #include <numeric>
 #include <ostream>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 namespace it_lab_ai {

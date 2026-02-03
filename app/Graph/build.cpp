@@ -472,8 +472,7 @@ ParseResult parse_json_model(RuntimeOptions options,
         }
 
         auto pool_layer = LayerFactory::createPoolingLayer(
-            pooltype, shape, options, strides, pads, dilations,
-            ceil_mode);
+            pooltype, shape, options, strides, pads, dilations, ceil_mode);
 
         layer = pool_layer;
       } else if (layer_type.find("Flatten") != std::string::npos) {
