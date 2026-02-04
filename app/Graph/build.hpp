@@ -34,6 +34,7 @@
 #include "layers/TransposeLayer.hpp"
 #include "layers_oneDNN/ConvLayer.hpp"
 #include "layers_oneDNN/EWLayer.hpp"
+#include "layers_oneDNN/BinaryOpLayer.hpp"
 
 extern std::unordered_map<std::string, std::string> model_paths;
 
@@ -98,6 +99,15 @@ class LayerFactory {
     }
     return std::make_shared<ConvolutionalLayer>(step, pads, dilations, kernel,
                                                 bias, group, useLegacyImpl);
+  }
+
+  static std::shared_ptr<Layer> createBinaryLayer(
+      const it_lab_ai::BinaryOpLayer::Operation op,
+      const RuntimeOptions& options) {
+    if (options.backend == Backend::kOneDnn) {
+      return std::make_shared<it_lab_ai::BinaryOpLayerOneDnn>(op);
+    }
+    return std::make_shared<it_lab_ai::BinaryOpLayer>(op);
   }
 };
 
