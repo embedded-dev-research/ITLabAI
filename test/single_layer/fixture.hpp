@@ -8,7 +8,10 @@
 
 #include "layers/Layer.hpp"
 
-using namespace it_lab_ai;
+using it_lab_ai::Backend;
+using it_lab_ai::ParBackend;
+using it_lab_ai::RuntimeOptions;
+using it_lab_ai::Shape;
 
 class BaseTestFixture : public ::testing::Test {
  public:
