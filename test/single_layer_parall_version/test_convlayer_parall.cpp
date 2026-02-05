@@ -43,7 +43,7 @@ TEST(convlayer_parall, parallel_conv_basic) {
 
   for (auto backend : backends) {
     RuntimeOptions options;
-    options.setParallelBackend(backend);
+    options.par_backend = backend;
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);
@@ -85,7 +85,7 @@ TEST(convlayer_parall, parallel_conv_stride2) {
 
   for (auto backend : backends) {
     RuntimeOptions options;
-    options.setParallelBackend(backend);
+    options.par_backend = backend;
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);
@@ -128,7 +128,7 @@ TEST(convlayer_parall, parallel_depthwise_conv) {
 
   for (auto backend : backends) {
     RuntimeOptions options;
-    options.setParallelBackend(backend);
+    options.par_backend = backend;
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);
@@ -174,7 +174,7 @@ TEST(convlayer_parall, parallel_conv_with_bias) {
 
   for (auto backend : backends) {
     RuntimeOptions options;
-    options.setParallelBackend(backend);
+    options.par_backend = backend;
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);
@@ -218,7 +218,7 @@ TEST(convlayer_parall, parallel_conv_large_kernel) {
 
   for (auto backend : backends) {
     RuntimeOptions options;
-    options.setParallelBackend(backend);
+    options.par_backend = backend;
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);
@@ -260,7 +260,7 @@ TEST(convlayer_parall, parallel_conv_single_image) {
 
   for (auto backend : backends) {
     RuntimeOptions options;
-    options.setParallelBackend(backend);
+    options.par_backend = backend;
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);

@@ -32,7 +32,7 @@ TEST(ewlayer_parall, parallel_for_ew_relu) {
 
   for (auto backend : backends) {
     RuntimeOptions options;
-    options.setParallelBackend(backend);
+    options.par_backend = backend;
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);
@@ -61,7 +61,7 @@ TEST(ewlayer_parall, parallel_for_sigmoid) {
 
   for (auto backend : backends) {
     RuntimeOptions options;
-    options.setParallelBackend(backend);
+    options.par_backend = backend;
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);
@@ -90,7 +90,7 @@ TEST(ewlayer_parall, parallel_for_minus) {
 
   for (auto backend : backends) {
     RuntimeOptions options;
-    options.setParallelBackend(backend);
+    options.par_backend = backend;
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);
@@ -119,7 +119,7 @@ TEST(ewlayer_parall, parallel_for_linear) {
 
   for (auto backend : backends) {
     RuntimeOptions options;
-    options.setParallelBackend(backend);
+    options.par_backend = backend;
 
     auto start = std::chrono::high_resolution_clock::now();
     layer.run(in, out, options);
