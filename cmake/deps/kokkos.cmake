@@ -50,6 +50,8 @@ if(NOT Kokkos_FOUND)
     set_target_properties(kokkoscore_external PROPERTIES
         IMPORTED_LOCATION_RELEASE "${_kokkos_core}"
         IMPORTED_LOCATION_DEBUG "${_kokkos_core}"
+        IMPORTED_LOCATION_RELWITHDEBINFO "${_kokkos_core}"
+        IMPORTED_LOCATION_MINSIZEREL "${_kokkos_core}"
         INTERFACE_INCLUDE_DIRECTORIES "${KOKKOS_INSTALL_DIR}/include"
     )
     add_dependencies(kokkoscore_external kokkos_external)
@@ -58,6 +60,8 @@ if(NOT Kokkos_FOUND)
     set_target_properties(kokkoscontainers_external PROPERTIES
         IMPORTED_LOCATION_RELEASE "${_kokkos_cont}"
         IMPORTED_LOCATION_DEBUG "${_kokkos_cont}"
+        IMPORTED_LOCATION_RELWITHDEBINFO "${_kokkos_cont}"
+        IMPORTED_LOCATION_MINSIZEREL "${_kokkos_cont}"
         INTERFACE_INCLUDE_DIRECTORIES "${KOKKOS_INSTALL_DIR}/include"
     )
     add_dependencies(kokkoscontainers_external kokkos_external)

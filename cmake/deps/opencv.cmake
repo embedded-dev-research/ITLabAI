@@ -76,6 +76,10 @@ if(NOT OpenCV_FOUND)
     add_library(OpenCV::opencv_world SHARED IMPORTED GLOBAL)
     set_target_properties(OpenCV::opencv_world PROPERTIES
         IMPORTED_LOCATION "${_opencv_world}"
+        IMPORTED_LOCATION_RELEASE "${_opencv_world}"
+        IMPORTED_LOCATION_DEBUG "${_opencv_world}"
+        IMPORTED_LOCATION_RELWITHDEBINFO "${_opencv_world}"
+        IMPORTED_LOCATION_MINSIZEREL "${_opencv_world}"
         INTERFACE_INCLUDE_DIRECTORIES "${OPENCV_INSTALL_DIR}/include/opencv4"
     )
 else()

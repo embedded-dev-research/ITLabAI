@@ -50,6 +50,10 @@ if(NOT dnnl_FOUND)
         IMPORTED_LOCATION_DEBUG "${_dnnl_lib}"
         INTERFACE_INCLUDE_DIRECTORIES "${ONEDNN_INSTALL_DIR}/include"
     )
+    set_target_properties(dnnl PROPERTIES
+        IMPORTED_LOCATION_RELWITHDEBINFO "${_dnnl_lib}"
+        IMPORTED_LOCATION_MINSIZEREL "${_dnnl_lib}"
+    )
     target_link_libraries(dnnl INTERFACE TBB::tbb)
     add_dependencies(dnnl onednn_external)
 else()

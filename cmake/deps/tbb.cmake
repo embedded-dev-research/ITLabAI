@@ -36,6 +36,8 @@ if(NOT TBB_FOUND)
     set_target_properties(TBB::tbb PROPERTIES
         IMPORTED_LOCATION_RELEASE "${_tbb_lib}"
         IMPORTED_LOCATION_DEBUG "${_tbb_lib}"
+        IMPORTED_LOCATION_RELWITHDEBINFO "${_tbb_lib}"
+        IMPORTED_LOCATION_MINSIZEREL "${_tbb_lib}"
         INTERFACE_INCLUDE_DIRECTORIES "${TBB_INSTALL_DIR}/include"
     )
     add_dependencies(TBB::tbb tbb_external)

@@ -39,6 +39,8 @@ if(NOT GTest_FOUND)
     set_target_properties(gtest PROPERTIES
         IMPORTED_LOCATION_RELEASE "${_gtest_lib}"
         IMPORTED_LOCATION_DEBUG "${_gtest_lib}"
+        IMPORTED_LOCATION_RELWITHDEBINFO "${_gtest_lib}"
+        IMPORTED_LOCATION_MINSIZEREL "${_gtest_lib}"
         INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INSTALL_DIR}/include"
     )
     target_link_libraries(gtest INTERFACE Threads::Threads)
@@ -48,6 +50,8 @@ if(NOT GTest_FOUND)
     set_target_properties(gtest_main PROPERTIES
         IMPORTED_LOCATION_RELEASE "${_gtest_main_lib}"
         IMPORTED_LOCATION_DEBUG "${_gtest_main_lib}"
+        IMPORTED_LOCATION_RELWITHDEBINFO "${_gtest_main_lib}"
+        IMPORTED_LOCATION_MINSIZEREL "${_gtest_main_lib}"
         INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INSTALL_DIR}/include"
     )
     target_link_libraries(gtest_main INTERFACE gtest Threads::Threads)
