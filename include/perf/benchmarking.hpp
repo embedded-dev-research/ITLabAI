@@ -33,8 +33,8 @@ double elapsed_time_omp(Function&& func, Args&&... args) {
   double end = omp_get_wtime();
   return end - start;
 #else
-  return elapsed_time<double, std::chrono::duration<double>::period>(
-      func, args...);
+  return elapsed_time<double, std::chrono::duration<double>::period>(func,
+                                                                     args...);
 #endif
 }
 
@@ -82,7 +82,7 @@ double throughput_omp(Function&& func, Args&&... args) {
   return 1 / elapsed_time_omp(func, args...);
 #else
   return throughput<double, std::chrono::duration<double>::period>(func,
-                                                                    args...);
+                                                                   args...);
 #endif
 }
 
