@@ -68,6 +68,4 @@ target_compile_definitions(run_test PRIVATE TEST_DATA_PATH="${CMAKE_SOURCE_DIR}/
 target_compile_definitions(run_test PRIVATE IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")
 target_compile_definitions(run_test PRIVATE IMAGENET_LABELS="${ITLABAI_TEST_DATA_DIR}/imagenet-labels.txt")
 target_compile_definitions(run_test PRIVATE TESTS_BINARY_PATH="${ITLABAI_TEST_DATA_DIR}")
-
-# Ensure OpenCV external built before tests (explicit, though helper already links)
 add_dependencies(run_test opencv_external)
