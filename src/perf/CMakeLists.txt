@@ -9,7 +9,6 @@ target_include_directories(perf_lib INTERFACE
 )
 itlabai_link_externals(perf_lib openmp)
 
-# Anchor object to avoid empty-archive edge cases when consumers expect a file
 add_library(perf_anchor OBJECT benchmarking.cpp)
 itlabai_target_defaults(perf_anchor)
 set_target_properties(perf_anchor PROPERTIES POSITION_INDEPENDENT_CODE ON)
