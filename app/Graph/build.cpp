@@ -780,8 +780,8 @@ ParseResult parse_json_model(RuntimeOptions options,
             keepdims = attributes["keepdims"].get<int64_t>();
           }
         }
-        auto reduce_layer = std::make_shared<it_lab_ai::ReduceLayer>(
-            it_lab_ai::ReduceLayer::Operation::kMean, keepdims, axes);
+        auto reduce_layer = LayerFactory::createReduceLayer(
+            it_lab_ai::ReduceLayer::Operation::kMean, keepdims, axes, options);
         layer = reduce_layer;
       } else if (layer_type == "ReduceSum") {
         int64_t keepdims = 0;
@@ -807,8 +807,8 @@ ParseResult parse_json_model(RuntimeOptions options,
             }
           }
         }
-        auto reduce_layer = std::make_shared<it_lab_ai::ReduceLayer>(
-            it_lab_ai::ReduceLayer::Operation::kSum, keepdims, axes);
+        auto reduce_layer = LayerFactory::createReduceLayer(
+            it_lab_ai::ReduceLayer::Operation::kSum, keepdims, axes, options);
         layer = reduce_layer;
       } else if (layer_type == "Constant") {
         if (layer_data.contains("attributes")) {

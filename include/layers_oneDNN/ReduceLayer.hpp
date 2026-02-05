@@ -1,0 +1,84 @@
+#pragma once
+#include <cstdint>
+#include <dnnl.hpp>
+#include <memory>
+#include <vector>
+
+#include "layers/Tensor.hpp"
+#include "layers/Layer.hpp"
+#include "layers/ReduceLayer.hpp"
+
+namespace it_lab_ai {
+
+class ReduceLayerOneDnn : public Layer {
+ public:
+
+  explicit ReduceLayerOneDnn(ReduceLayer::Operation op, int64_t keepdims = 0,
+                             const std::vector<int64_t>& axes = {});
+
+  explicit ReduceLayerOneDnn(int64_t keepdims = 0,
+                             const std::vector<int64_t>& axes = {})
+      : ReduceLayerOneDnn(ReduceLayer::Operation::kSum, keepdims, axes) {}
+
+  void run(const std::vector<Tensor>& input,
+           std::vector<Tensor>& output) override;
+
+  void set_axes(const std::vector<int64_t>& axes) {
+    axes_ = axes;
+    initialized_ = false;
+  }
+
+  void set_keepdims(int64_t keepdims) {
+    keepdims_ = keepdims;
+    initialized_ = false;
+  }
+
+  void set_operation(ReduceLayer::Operation op) {
+    op_ = op;
+    initialized_ = false;
+  }
+
+#ifdef ENABLE_STATISTIC_WEIGHTS
+  Tensor get_weights() override { return Tensor(); }
+#endif
+
+ private:
+  ReduceLayer::Operation op_;
+  int64_t keepdims_;
+  std::vector<int64_t> axes_;
+
+  bool initialized_ = false;
+  Shape last_input_shape_;
+  Type last_type_;
+
+  std::unique_ptr<dnnl::engine> engine_;
+  std::unique_ptr<dnnl::stream> stream_;
+  std::unique_ptr<dnnl::reduction> reduction_prim_;
+  std::unique_ptr<dnnl::binary>
+      binary_div_prim_;
+
+  dnnl::memory::desc src_md_;
+  dnnl::memory::desc dst_md_;
+  Shape output_shape_;
+
+  void initialize_onednn(const Tensor& input);
+  static void validate_input(const std::vector<Tensor>& input);
+  [[nodiscard]] static dnnl::memory::data_type get_dnnl_data_type(Type type);
+  [[nodiscard]] static dnnl::algorithm get_dnnl_algorithm(
+      ReduceLayer::Operation op);
+  [[nodiscard]] static dnnl::memory::format_tag pick_format(size_t ndims);
+
+  static void normalize_axes(const Shape& input_shape,
+                             std::vector<int64_t>& axes);
+  [[nodiscard]] Shape calculate_output_shape(
+      const Shape& input_shape, const std::vector<int64_t>& axes) const;
+
+  [[nodiscard]] static std::vector<dnnl::memory::dim> shape_to_dims(
+      const Shape& shape);
+  [[nodiscard]] static std::vector<dnnl::memory::dim> get_dnnl_axes(
+      const std::vector<int64_t>& axes);
+
+  void compute_mean(const Tensor& input, Tensor& output);
+};
+
+}  // namespace it_lab_ai
