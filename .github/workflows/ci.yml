@@ -63,6 +63,7 @@ jobs:
             cmake --preset ${{ steps.set_binaries.outputs.BUILD_PRESET }} \
               -DCMAKE_C_COMPILER_LAUNCHER=ccache \
               -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+              -DITLABAI_FETCH_TEST_DATA=ON \
               ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
               ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
               ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
@@ -110,6 +111,7 @@ jobs:
         cmake --preset dev-release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DITLABAI_FETCH_TEST_DATA=ON \
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++
         cmake --build --preset dev-release --parallel
@@ -145,6 +147,7 @@ jobs:
         cmake --preset dev-release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DITLABAI_FETCH_TEST_DATA=ON \
           -DCMAKE_PREFIX_PATH=$OPENMP_PATH \
           -DCMAKE_INCLUDE_PATH=$OPENMP_PATH/include \
           -DCMAKE_LIBRARY_PATH=$OPENMP_PATH/lib \
@@ -183,7 +186,7 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
     - name: Build
       run: |
-        cmake --preset dev-release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --preset dev-release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DITLABAI_FETCH_TEST_DATA=ON
         cmake --build --preset dev-release --parallel
     - name: Test
       run: |
@@ -204,7 +207,8 @@ jobs:
       run: |
         cmake --preset dev-release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DITLABAI_FETCH_TEST_DATA=ON
         cmake --build --preset dev-release --parallel
         ctest --preset dev-release
       env:
@@ -226,7 +230,8 @@ jobs:
       run: |
         cmake --preset coverage \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DITLABAI_FETCH_TEST_DATA=ON
         cmake --build --preset coverage --parallel
     - name: Test
       run: ctest --preset coverage
