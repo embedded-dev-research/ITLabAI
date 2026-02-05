@@ -17,14 +17,12 @@ class BaseTestFixture : public ::testing::Test {
  public:
   void SetUp() override {
     defaultOptions.backend = Backend::kNaive;
-    defaultOptions.parallel = false;
     defaultOptions.par_backend = ParBackend::kSeq;
   }
 
   static RuntimeOptions setTBBOptions() {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
-    options.parallel = true;
     options.par_backend = ParBackend::kTbb;
     return options;
   }
@@ -32,7 +30,6 @@ class BaseTestFixture : public ::testing::Test {
   static RuntimeOptions setSeqOptions() {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
-    options.parallel = true;
     options.par_backend = ParBackend::kSeq;
     return options;
   }
@@ -40,7 +37,6 @@ class BaseTestFixture : public ::testing::Test {
   static RuntimeOptions setSTLOptions() {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
-    options.parallel = true;
     options.par_backend = ParBackend::kThreads;
     return options;
   }
@@ -48,7 +44,6 @@ class BaseTestFixture : public ::testing::Test {
   static RuntimeOptions setKokkosOptions() {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
-    options.parallel = true;
     options.par_backend = ParBackend::kKokkos;
     return options;
   }
@@ -56,7 +51,6 @@ class BaseTestFixture : public ::testing::Test {
   static RuntimeOptions setOmpOptions() {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
-    options.parallel = true;
     options.par_backend = ParBackend::kOmp;
     return options;
   }
@@ -64,7 +58,6 @@ class BaseTestFixture : public ::testing::Test {
   static RuntimeOptions createOptionsWithBackend(ParBackend backend) {
     RuntimeOptions options;
     options.backend = Backend::kNaive;
-    options.parallel = (backend != ParBackend::kSeq);
     options.par_backend = backend;
     return options;
   }

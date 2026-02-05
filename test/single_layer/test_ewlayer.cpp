@@ -267,7 +267,6 @@ TEST(ewlayer, parallel_for_ew_sigmoid_compact) {
 
   for (const auto& [backend, name] : backends) {
     RuntimeOptions options;
-    options.parallel = (backend != ParBackend::kSeq);
     options.par_backend = backend;
     if (backend == ParBackend::kThreads) {
       options.threads = 4;
@@ -499,21 +498,16 @@ INSTANTIATE_TEST_SUITE_P(
       const auto& options = std::get<1>(info.param);
 
       std::string name = params.description + "_";
-
-      if (options.parallel) {
-        if (options.par_backend == ParBackend::kTbb) {
-          name += "TBB";
-        } else if (options.par_backend == ParBackend::kThreads) {
-          name += "STL";
-        } else if (options.par_backend == ParBackend::kOmp) {
-          name += "OMP";
-        } else if (options.par_backend == ParBackend::kKokkos) {
-          name += "Kokkos";
-        } else {
-          name += "Seq";
-        }
+      if (options.par_backend == ParBackend::kTbb) {
+        name += "TBB";
+      } else if (options.par_backend == ParBackend::kThreads) {
+        name += "STL";
+      } else if (options.par_backend == ParBackend::kOmp) {
+        name += "OMP";
+      } else if (options.par_backend == ParBackend::kKokkos) {
+        name += "Kokkos";
       } else {
-        name += "NoParallel";
+        name += "Seq";
       }
 
       std::replace(name.begin(), name.end(), ' ', '_');

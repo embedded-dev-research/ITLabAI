@@ -1072,7 +1072,6 @@ TEST_F(ConvTestFixture, Conv4DWithParallelNoneBackend) {
 TEST(ConvolutionalLayerTest, Conv4DWithParallelDefaultFallback) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
-  options.parallel = true;
 
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
@@ -1268,21 +1267,16 @@ INSTANTIATE_TEST_SUITE_P(
       const auto& options = std::get<1>(info.param);
 
       std::string name = params.description + "_";
-
-      if (options.parallel) {
-        if (options.par_backend == ParBackend::kTbb) {
-          name += "TBB";
-        } else if (options.par_backend == ParBackend::kOmp) {
-          name += "OMP";
-        } else if (options.par_backend == ParBackend::kThreads) {
-          name += "STL";
-        } else if (options.par_backend == ParBackend::kKokkos) {
-          name += "Kokkos";
-        } else {
-          name += "Seq";
-        }
+      if (options.par_backend == ParBackend::kTbb) {
+        name += "TBB";
+      } else if (options.par_backend == ParBackend::kOmp) {
+        name += "OMP";
+      } else if (options.par_backend == ParBackend::kThreads) {
+        name += "STL";
+      } else if (options.par_backend == ParBackend::kKokkos) {
+        name += "Kokkos";
       } else {
-        name += "NoParallel";
+        name += "Seq";
       }
 
       std::replace(name.begin(), name.end(), ' ', '_');
