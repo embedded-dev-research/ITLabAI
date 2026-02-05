@@ -1,5 +1,10 @@
-file(GLOB_RECURSE reader_src *.cpp)
-add_library(reader_lib STATIC "${READER_HEADERS}" "${reader_src}")
-
-include_directories(${CMAKE_SOURCE_DIR}/3rdparty/Json/include)
-target_include_directories(reader_lib PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/Json/include)
+add_library(reader_lib STATIC)
+target_sources(reader_lib PRIVATE reader_weights.cpp ${READER_HEADERS})
+target_include_directories(reader_lib
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+target_link_libraries(reader_lib PUBLIC nlohmann_json::nlohmann_json)
+itlabai_target_defaults(reader_lib)
+itlabai_link_externals(reader_lib)

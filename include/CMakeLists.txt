@@ -1,20 +1,47 @@
-file(GLOB_RECURSE graph_headers graph/*.h graph/*.hpp)
-set(GRAPH_HEADERS "${graph_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE graphT_headers graph_transformations/*.h graph_transformations/*.hpp)
-set(GRAPHT_HEADERS "${graphT_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE layers_headers layers/*.h layers/*.hpp)
-set(LAYERS_HEADERS "${layers_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE layers_oneDNN_headers layers_oneDNN/*.h layers_oneDNN/*.hpp)
-set(LAYERS_ONEDNN_HEADERS "${layers_oneDNN_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE perf_headers perf/*.h perf/*.hpp)
-set(PERF_HEADERS "${perf_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE reader_headers Weights_Reader/*.h Weights_Reader/*.hpp)
-set(READER_HEADERS "${reader_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE parallel_headers parallel/*.h parallel/*.hpp)
-set(LAYERS_HEADERS "${parallel_headers}" PARENT_SCOPE)
+set(GRAPH_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/graph/graph.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/graph/runtime_options.hpp
+)
+set(GRAPHT_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/graph_transformations/graph_transformations.hpp
+)
+set(LAYERS_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/BatchNormalizationLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/BinaryOpLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/ConcatLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/ConvLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/DropOutLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/EWLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/FCLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/FlattenLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/InputLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/Layer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/MatmulLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/OutputLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/PoolingLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/ReduceLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/ReshapeLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/Shape.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/SoftmaxLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/SplitLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/Tensor.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers/TransposeLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/parallel/backends.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/parallel/parallel.hpp
+)
+set(LAYERS_ONEDNN_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers_oneDNN/ConvLayer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layers_oneDNN/EWLayer.hpp
+)
+set(PERF_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/perf/benchmarking.hpp
+)
+set(READER_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/Weights_Reader/reader_weights.hpp
+)
+set(GRAPH_HEADERS "${GRAPH_HEADERS}" PARENT_SCOPE)
+set(GRAPHT_HEADERS "${GRAPHT_HEADERS}" PARENT_SCOPE)
+set(LAYERS_HEADERS "${LAYERS_HEADERS}" PARENT_SCOPE)
+set(LAYERS_ONEDNN_HEADERS "${LAYERS_ONEDNN_HEADERS}" PARENT_SCOPE)
+set(PERF_HEADERS "${PERF_HEADERS}" PARENT_SCOPE)
+set(READER_HEADERS "${READER_HEADERS}" PARENT_SCOPE)

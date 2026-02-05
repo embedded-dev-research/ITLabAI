@@ -1,86 +1,140 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(ITLabAI)
+project(ITLabAI VERSION 0.1.0 LANGUAGES CXX)
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+include(${CMAKE_SOURCE_DIR}/cmake/ProjectDefaults.cmake)
 
-set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+option(ITLABAI_BUILD_APPS "Build applications" ON)
+option(ITLABAI_BUILD_TESTS "Build tests" ON)
+option(ITLABAI_ENABLE_OPENMP "Enable OpenMP support" ON)
+option(ITLABAI_ENABLE_KOKKOS "Build with Kokkos external" ON)
+option(ITLABAI_USE_SYSTEM_DEPS "Use system packages when available" OFF)
+option(ITLABAI_FETCH_TEST_DATA "Download test data during build" OFF)
+set(ITLABAI_TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/docs/input" CACHE PATH "Directory containing sample/test data")
+option(BUILD_TESTING "Enable building tests" ${ITLABAI_BUILD_TESTS})
+option(ITLABAI_WARN_AS_ERROR "Treat warnings as errors for project targets" ON)
+option(ITLABAI_AUTOINCLUDE_EXTERNALS "Automatically add include directories for external deps when linked via helper" ON)
 
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
-
-if(ENABLE_STATISTIC_TENSORS)
-    add_definitions(-DENABLE_STATISTIC_TENSORS)
-endif()
-
 option(ENABLE_STATISTIC_TIME "Enable statistic time" OFF)
-
-if(ENABLE_STATISTIC_TIME)
-    add_definitions(-DENABLE_STATISTIC_TIME)
-endif()
-
 option(ENABLE_STATISTIC_WEIGHTS "Enable statistic weights" OFF)
 
-if(ENABLE_STATISTIC_WEIGHTS)
-    add_definitions(-DENABLE_STATISTIC_WEIGHTS)
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-enable_testing()
-
-find_package(OpenMP REQUIRED)
-
-if(OpenMP_FOUND)
-    message(STATUS "OpenMP found - enabling parallel support")
-    add_definitions(-DHAS_OPENMP)
-    link_libraries(OpenMP::OpenMP_CXX)
-else()
-    message(STATUS "OpenMP not found - parallel features disabled")
+set(ITLABAI_FEATURE_DEFS "")
+if(ENABLE_STATISTIC_TENSORS)
+    list(APPEND ITLABAI_FEATURE_DEFS ENABLE_STATISTIC_TENSORS)
+endif()
+if(ENABLE_STATISTIC_TIME)
+    list(APPEND ITLABAI_FEATURE_DEFS ENABLE_STATISTIC_TIME)
+endif()
+if(ENABLE_STATISTIC_WEIGHTS)
+    list(APPEND ITLABAI_FEATURE_DEFS ENABLE_STATISTIC_WEIGHTS)
 endif()
 
-include_directories("include")
+if(ITLABAI_ENABLE_OPENMP)
+    find_package(OpenMP QUIET)
+    if(OpenMP_FOUND)
+        message(STATUS "OpenMP found - enabling parallel support")
+        list(APPEND ITLABAI_FEATURE_DEFS HAS_OPENMP)
+    endif()
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-add_subdirectory(3rdparty)
+# External dependencies (isolated builds)
+include(cmake/deps.cmake)
 
-include(cmake/opencv_config.cmake)
-include(cmake/kokkos_config.cmake)
+if(ITLABAI_FETCH_TEST_DATA)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_custom_target(fetch_test_data
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${ITLABAI_TEST_DATA_DIR}
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/fetch_test_data.py --dest ${ITLABAI_TEST_DATA_DIR}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Downloading sample/test data"
+    )
+endif()
 
-include_directories("${KOKKOS_INSTALL_DIR}/include")
+if(NOT WIN32)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+else()
+    foreach(CONFIG "" _DEBUG _RELEASE)
+        set("CMAKE_ARCHIVE_OUTPUT_DIRECTORY${CONFIG}" "${CMAKE_BINARY_DIR}/lib")
+        set("CMAKE_LIBRARY_OUTPUT_DIRECTORY${CONFIG}" "${CMAKE_BINARY_DIR}/lib")
+        set("CMAKE_RUNTIME_OUTPUT_DIRECTORY${CONFIG}" "${CMAKE_BINARY_DIR}/bin")
+    endforeach()
+endif()
 
-add_library(Kokkos_imported INTERFACE)
-add_dependencies(Kokkos_imported kokkos_external)
-
-target_include_directories(Kokkos_imported INTERFACE 
-    "${KOKKOS_INSTALL_DIR}/include"
-)
-
-target_link_directories(Kokkos_imported INTERFACE 
+# RPATH for bundled externals
+set(_itlabai_rpath "")
+itlabai_set_rpath(
+    "${ONEDNN_INSTALL_DIR}/lib"
+    "${OPENCV_INSTALL_DIR}/lib"
+    "${TBB_INSTALL_DIR}/lib"
     "${KOKKOS_INSTALL_DIR}/lib"
 )
 
-
-target_link_libraries(Kokkos_imported INTERFACE kokkoscore kokkoscontainers)
-
-
-if(MSVC)
-    add_compile_options(/wd4267 /wd4244 /wd4127 /wd4324)
-endif()
-
-if (NOT WIN32)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
-else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /wd4996 /wd4190 /wd4189 /WX")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /wd4996 /wd4190 /wd4189 /WX")
-endif()
-
-foreach(CONFIG "" _DEBUG _RELEASE)
-    set("CMAKE_ARCHIVE_OUTPUT_DIRECTORY${CONFIG}" "${CMAKE_BINARY_DIR}/lib")
-    set("CMAKE_LIBRARY_OUTPUT_DIRECTORY${CONFIG}" "${CMAKE_BINARY_DIR}/lib")
-    set("CMAKE_RUNTIME_OUTPUT_DIRECTORY${CONFIG}" "${CMAKE_BINARY_DIR}/bin")
-endforeach()
-
-add_subdirectory(app)
 add_subdirectory(include)
 add_subdirectory(src)
-add_subdirectory(test)
+if(ITLABAI_BUILD_APPS)
+    add_subdirectory(app)
+endif()
+if(BUILD_TESTING AND ITLABAI_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
+
+# Aggregate interface target
+if(NOT TARGET itlabai)
+    add_library(itlabai INTERFACE)
+    add_library(ITLabAI::itlabai ALIAS itlabai)
+endif()
+target_link_libraries(itlabai INTERFACE graph_lib graphT_lib layers_lib layers_oneDNN_lib perf_lib reader_lib)
+target_include_directories(itlabai INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+if(ITLABAI_FEATURE_DEFS)
+    target_compile_definitions(itlabai INTERFACE ${ITLABAI_FEATURE_DEFS})
+endif()
+
+# Install/export
+install(TARGETS graph_lib graphT_lib layers_lib layers_oneDNN_lib perf_lib reader_lib itlabai
+    EXPORT ITLabAITargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/ITLabAIConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/ITLabAIConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/ITLabAIConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ITLabAI
+)
+
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/ITLabAIConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/ITLabAIConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ITLabAI
+)
+
+install(EXPORT ITLabAITargets
+    NAMESPACE ITLabAI::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ITLabAI
+)

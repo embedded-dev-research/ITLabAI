@@ -1,0 +1,142 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "dev-debug",
+      "generator": "Ninja",
+      "binaryDir": "build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ITLABAI_BUILD_TESTS": "ON",
+        "ITLABAI_BUILD_APPS": "ON",
+        "ITLABAI_ENABLE_OPENMP": "ON",
+        "ITLABAI_ENABLE_KOKKOS": "ON"
+      }
+    },
+    {
+      "name": "dev-release",
+      "generator": "Ninja",
+      "binaryDir": "build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "ITLABAI_BUILD_TESTS": "ON",
+        "ITLABAI_BUILD_APPS": "ON",
+        "ITLABAI_ENABLE_OPENMP": "ON",
+        "ITLABAI_ENABLE_KOKKOS": "ON"
+      }
+    },
+    {
+      "name": "dev-relwithdebinfo",
+      "generator": "Ninja",
+      "binaryDir": "build/relwithdebinfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ITLABAI_BUILD_TESTS": "ON",
+        "ITLABAI_BUILD_APPS": "ON",
+        "ITLABAI_ENABLE_OPENMP": "ON",
+        "ITLABAI_ENABLE_KOKKOS": "ON"
+      }
+    },
+    {
+      "name": "asan",
+      "inherits": "dev-debug",
+      "binaryDir": "build/asan",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
+        "CMAKE_C_FLAGS": "-fsanitize=address -fno-omit-frame-pointer"
+      }
+    },
+    {
+      "name": "ci",
+      "inherits": "dev-release",
+      "binaryDir": "build/ci",
+      "cacheVariables": {
+        "ITLABAI_FETCH_TEST_DATA": "ON"
+      }
+    },
+    {
+      "name": "coverage",
+      "inherits": "dev-relwithdebinfo",
+      "binaryDir": "build/coverage",
+      "cacheVariables": {
+        "CMAKE_C_FLAGS": "--coverage",
+        "CMAKE_CXX_FLAGS": "--coverage"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "dev-debug",
+      "configurePreset": "dev-debug"
+    },
+    {
+      "name": "dev-release",
+      "configurePreset": "dev-release"
+    },
+    {
+      "name": "dev-relwithdebinfo",
+      "configurePreset": "dev-relwithdebinfo"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci"
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "dev-debug",
+      "configurePreset": "dev-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "dev-release",
+      "configurePreset": "dev-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "dev-relwithdebinfo",
+      "configurePreset": "dev-relwithdebinfo",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

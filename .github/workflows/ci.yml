@@ -24,6 +24,7 @@ jobs:
             stats: false
           - build_type: RELEASE
             stats: true
+          - build_type: RELWITHDEBINFO
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -32,7 +33,26 @@ jobs:
     - name: Set binary paths
       id: set_binaries
       run: |
-        echo "ACC_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
+        case "${{ matrix.build_type }}" in
+          DEBUG)
+            echo "BUILD_PRESET=dev-debug" >> $GITHUB_OUTPUT
+            echo "ACC_BINARY=build/debug/bin/ACC" >> $GITHUB_OUTPUT
+            echo "BIN_DIR=build/debug/bin" >> $GITHUB_OUTPUT
+            echo "ROOT_DIR=build/debug" >> $GITHUB_OUTPUT
+            ;;
+          RELEASE)
+            echo "BUILD_PRESET=dev-release" >> $GITHUB_OUTPUT
+            echo "ACC_BINARY=build/release/bin/ACC" >> $GITHUB_OUTPUT
+            echo "BIN_DIR=build/release/bin" >> $GITHUB_OUTPUT
+            echo "ROOT_DIR=build/release" >> $GITHUB_OUTPUT
+            ;;
+          RELWITHDEBINFO)
+            echo "BUILD_PRESET=dev-relwithdebinfo" >> $GITHUB_OUTPUT
+            echo "ACC_BINARY=build/relwithdebinfo/bin/ACC" >> $GITHUB_OUTPUT
+            echo "BIN_DIR=build/relwithdebinfo/bin" >> $GITHUB_OUTPUT
+            echo "ROOT_DIR=build/relwithdebinfo" >> $GITHUB_OUTPUT
+            ;;
+        esac
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -40,40 +60,36 @@ jobs:
         max-size: 2G
     - name: Build
       run: |
-            cmake -S . -B build -G Ninja \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DOPENCV_PATH=build/3rdparty/opencv_build \
-            ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
-            ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
-            ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
-            cmake --build build --parallel
+            cmake --preset ${{ steps.set_binaries.outputs.BUILD_PRESET }} \
+              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+              ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
+              ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
+              ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
+            cmake --build --preset ${{ steps.set_binaries.outputs.BUILD_PRESET }} --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Prepare ALL libs
       run: |
-       mkdir -p build/bin/all_libs
-       cp -a build/3rdparty/opencv_build/lib/* build/bin/all_libs/ 2>/dev/null || true
-       ldd build/bin/ACC | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} build/bin/all_libs/ 2>/dev/null || true
+       mkdir -p "${{ steps.set_binaries.outputs.BIN_DIR }}/all_libs"
+       find "${{ steps.set_binaries.outputs.ROOT_DIR }}/_external/install" -type f \( -name "*.so" -o -name "*.so.*" -o -name "*.dylib" \) -exec cp {} "${{ steps.set_binaries.outputs.BIN_DIR }}/all_libs/" \; 2>/dev/null || true
+       ldd "${{ steps.set_binaries.outputs.ACC_BINARY }}" | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} "${{ steps.set_binaries.outputs.BIN_DIR }}/all_libs/" 2>/dev/null || true
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
        name: mnist-${{ matrix.build_type }}${{ matrix.stats && '-stats' || '' }}
        path: |
         ${{ steps.set_binaries.outputs.ACC_BINARY }}
-        build/bin/all_libs/*
-        build/bin/opencv_libs/*
-        build/setenv.sh
+        ${{ steps.set_binaries.outputs.BIN_DIR }}/all_libs/*
     - name: Test
-      run: cmake --build build -t test
+      run: ctest --preset ${{ steps.set_binaries.outputs.BUILD_PRESET }}
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
       run: |
         sudo apt-get update
         sudo apt-get install -y valgrind
-        valgrind cmake --build build -t test
+        valgrind ctest --preset ${{ steps.set_binaries.outputs.BUILD_PRESET }}
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-linux-clang:
@@ -91,21 +107,21 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build
       run: |
-        cmake -S . -B build -G Ninja \
+        cmake --preset dev-release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++
-        cmake --build build --parallel
+        cmake --build --preset dev-release --parallel
     - name: Test
-      run: cmake --build build -t test
+      run: ctest --preset dev-release
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
       run: |
         sudo apt-get update
         sudo apt-get install -y valgrind
-        valgrind cmake --build build -t test
+        valgrind ctest --preset dev-release
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-macos:
@@ -126,7 +142,7 @@ jobs:
       run: |
         OPENMP_PATH=$(brew --prefix libomp)
         echo "OpenMP path: $OPENMP_PATH"
-        cmake -S . -B build -G Ninja \
+        cmake --preset dev-release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_PREFIX_PATH=$OPENMP_PATH \
@@ -139,12 +155,12 @@ jobs:
           -DOpenMP_omp_LIBRARY="$OPENMP_PATH/lib/libomp.dylib" \
           -DCMAKE_EXE_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp" \
           -DCMAKE_SHARED_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp"
-        cmake --build build --parallel
+        cmake --build --preset dev-release --parallel
       env:
         LDFLAGS: "-L$(brew --prefix libomp)/lib -lomp"
         CPPFLAGS: "-I$(brew --prefix libomp)/include"
     - name: Test
-      run: cmake --build build -t test
+      run: ctest --preset dev-release
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
@@ -167,12 +183,11 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
     - name: Build
       run: |
-        cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release
-        cmake --build build --parallel --config Release
+        cmake --preset dev-release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build --preset dev-release --parallel
     - name: Test
       run: |
-        cd build
-        ctest --output-on-failure
+        ctest --preset dev-release --output-on-failure
   build-linux-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
@@ -187,12 +202,11 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build and Test
       run: |
-        cmake -S . -B build -G Ninja \
+        cmake --preset dev-release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_BUILD_TYPE=Release
-        cmake --build build --parallel
-        cmake --build build -t test
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build --preset dev-release --parallel
+        ctest --preset dev-release
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   codecov:
@@ -210,15 +224,12 @@ jobs:
         max-size: 2G
     - name: Build
       run: |
-        cmake -S . -B build -G Ninja \
+        cmake --preset coverage \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_C_FLAGS="--coverage" \
-          -DCMAKE_CXX_FLAGS="--coverage" \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo
-        cmake --build build --parallel
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build --preset coverage --parallel
     - name: Test
-      run: cmake --build build -t test
+      run: ctest --preset coverage
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Generate Coverage Data
@@ -244,12 +255,13 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: mnist-RELEASE
-        path: build/
+        path: .
         
     - name: Set binary path
       id: set_eval_binary
       run: |
-        echo "EVAL_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
+        echo "EVAL_BINARY=build/release/bin/ACC" >> $GITHUB_OUTPUT
+        echo "ALL_LIBS=build/release/bin/all_libs" >> $GITHUB_OUTPUT
         
     - name: Install system dependencies
       run: |
@@ -285,11 +297,11 @@ jobs:
     - name: Prepare environment
       run: |
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
-        export LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=$PWD/${{ steps.set_eval_binary.outputs.ALL_LIBS }}:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         
     - name: Run evaluation
       run: |
-        export LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=$PWD/${{ steps.set_eval_binary.outputs.ALL_LIBS }}:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --model alexnet_mnist > accuracy.txt 2>&1
         if [ $? -ne 0 ]; then
           exit 1

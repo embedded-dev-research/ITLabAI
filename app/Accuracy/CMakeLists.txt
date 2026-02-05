@@ -1,25 +1,21 @@
 set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/acc.hpp")
-set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/acc.cpp")
+set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/acc.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/acc_anchor.cpp")
 add_library(ACCLib STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 
-set_target_properties(ReadLib PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(ACCLib PROPERTIES LINKER_LANGUAGE CXX)
 
-find_package( OpenCV REQUIRED PATHS "${OPENCV_BUILD_DIR}" )
-include_directories( ${OpenCV_INCLUDE_DIRS} )
-target_link_libraries( ACCLib ${OpenCV_LIBS} )
-target_link_libraries( ACCLib TBB_unified)
-target_link_libraries( ACCLib layers_lib)
-target_link_libraries( ACCLib gtest_main)
-target_link_libraries( ACCLib Kokkos_imported)
+target_link_libraries(ACCLib
+    PUBLIC
+        layers_lib
+        OpenCV::opencv_world
+        TBB_unified
+        Kokkos_imported
+)
+itlabai_link_externals(ACCLib opencv tbb gtest kokkos openmp)
+itlabai_target_defaults(ACCLib)
+add_dependencies(ACCLib opencv_external)
+target_compile_definitions(ACCLib PUBLIC IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")
 
 add_executable(Accuracy_Check accuracy_check.cpp)
-target_link_libraries(Accuracy_Check ACCLib)
-
-file(DOWNLOAD
-    "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
-    "${CMAKE_CURRENT_BINARY_DIR}/image.jpg"
-    SHOW_PROGRESS
-    STATUS status_code
-    LOG log_file
-)
-add_definitions(-DIMAGE1_PATH="${CMAKE_CURRENT_BINARY_DIR}/image.jpg")
+target_link_libraries(Accuracy_Check PRIVATE ACCLib OpenCV::opencv_world)
+itlabai_target_defaults(Accuracy_Check)
