@@ -71,7 +71,7 @@ To build and run this project locally on Windows, follow these steps:
     ```
    and run the file
     ```bash
-   Graph_Build.exe --model alexnet_mnist
+   itlabai_graph_build_exe.exe --model alexnet_mnist
     ```
 ### *Linux/macOS*
    To build and run this project locally on Linux or macOS, follow these steps:
@@ -118,7 +118,7 @@ To build and run this project locally on Windows, follow these steps:
     ```
    and run the file
     ```bash
-   ./Graph_Build --model alexnet_mnist
+   ./itlabai_graph_build_exe --model alexnet_mnist
     ```
 
 ## Test Process
@@ -136,7 +136,7 @@ To build and run this project locally on Windows, follow these steps:
    ```
    and run the following files:
    ```bash
-   run_test.exe
+   itlabai_run_test_test.exe
    ```
 ### *Linux*
 To start the testing process locally, you need to go to the directory
@@ -145,8 +145,8 @@ To start the testing process locally, you need to go to the directory
    ```
    and run the following files:
    ```bash
-   chmod +x run_test
-   ./run_test
+   chmod +x itlabai_run_test_test
+   ./itlabai_run_test_test
    ```
 
 ## **Accuracy validation for Alexnet on MNIST**

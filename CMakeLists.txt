@@ -75,7 +75,6 @@ if(NOT TARGET itlabai)
     add_library(itlabai INTERFACE)
     add_library(ITLabAI::itlabai ALIAS itlabai)
 endif()
-target_link_libraries(itlabai INTERFACE graph_lib graphT_lib layers_lib layers_oneDNN_lib perf_lib reader_lib)
 target_include_directories(itlabai INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -85,7 +84,23 @@ if(ITLABAI_FEATURE_DEFS)
 endif()
 
 # Install/export
-install(TARGETS graph_lib graphT_lib layers_lib layers_oneDNN_lib perf_lib reader_lib itlabai
+target_link_libraries(itlabai INTERFACE
+    itlabai_graph_lib
+    itlabai_graph_transformations_lib
+    itlabai_layers_lib
+    itlabai_layers_onednn_lib
+    itlabai_perf_lib
+    itlabai_reader_lib
+)
+
+install(TARGETS
+    itlabai_graph_lib
+    itlabai_graph_transformations_lib
+    itlabai_layers_lib
+    itlabai_layers_onednn_lib
+    itlabai_perf_lib
+    itlabai_reader_lib
+    itlabai
     EXPORT ITLabAITargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
