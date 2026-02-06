@@ -44,6 +44,7 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DITLABAI_FETCH_TEST_DATA=ON \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
@@ -92,7 +93,8 @@ jobs:
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER=clang \
-          -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_CXX_COMPILER=clang++ \
+          -DITLABAI_FETCH_TEST_DATA=ON
         cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
@@ -126,6 +128,7 @@ jobs:
         cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DITLABAI_FETCH_TEST_DATA=ON \
           -DCMAKE_PREFIX_PATH=$OPENMP_PATH \
           -DCMAKE_INCLUDE_PATH=$OPENMP_PATH/include \
           -DCMAKE_LIBRARY_PATH=$OPENMP_PATH/lib \
@@ -164,7 +167,7 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
     - name: Build
       run: |
-        cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release
+        cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release -DITLABAI_FETCH_TEST_DATA=ON
         cmake --build build --parallel --config Release
     - name: Test
       run: |
@@ -187,7 +190,8 @@ jobs:
         cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_BUILD_TYPE=Release \
+          -DITLABAI_FETCH_TEST_DATA=ON
         cmake --build build --parallel
         cmake --build build -t test
       env:
@@ -212,7 +216,8 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_FLAGS="--coverage" \
           -DCMAKE_CXX_FLAGS="--coverage" \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DITLABAI_FETCH_TEST_DATA=ON
         cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
