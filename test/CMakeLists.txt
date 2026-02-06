@@ -9,10 +9,10 @@ file(GLOB_RECURSE ITLABAI_TEST_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/benchmarking/*.cpp"
 )
 
-add_executable(itlabai_run_test_test ${ITLABAI_TEST_SOURCES})
-add_executable(ITLabAI::RunTestTest ALIAS itlabai_run_test_test)
+add_executable(itlabai_unit_test ${ITLABAI_TEST_SOURCES})
+add_executable(ITLabAI::UnitTest ALIAS itlabai_unit_test)
 
-target_link_libraries(itlabai_run_test_test PUBLIC
+target_link_libraries(itlabai_unit_test PUBLIC
     itlabai_perf_lib
     itlabai_layers_lib
     itlabai_layers_onednn_lib
@@ -26,34 +26,34 @@ target_link_libraries(itlabai_run_test_test PUBLIC
     gtest_main
     gtest
 )
-itlabai_link_externals(itlabai_run_test_test openmp)
-itlabai_link_externals(itlabai_run_test_test gtest opencv tbb kokkos openmp)
-add_dependencies(itlabai_run_test_test opencv_external)
+itlabai_link_externals(itlabai_unit_test openmp)
+itlabai_link_externals(itlabai_unit_test gtest opencv tbb kokkos openmp)
+add_dependencies(itlabai_unit_test opencv_external)
 
-target_include_directories(itlabai_run_test_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-target_include_directories(itlabai_run_test_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
-itlabai_target_defaults(itlabai_run_test_test)
-itlabai_apply_runtime_rpath(itlabai_run_test_test)
+target_include_directories(itlabai_unit_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(itlabai_unit_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
+itlabai_target_defaults(itlabai_unit_test)
+itlabai_apply_runtime_rpath(itlabai_unit_test)
 
 if (WIN32)
-    target_compile_definitions(itlabai_run_test_test PRIVATE _CRT_SECURE_NO_WARNINGS)
-    add_custom_command(TARGET itlabai_run_test_test POST_BUILD
+    target_compile_definitions(itlabai_unit_test PRIVATE _CRT_SECURE_NO_WARNINGS)
+    add_custom_command(TARGET itlabai_unit_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:dnnl>
-            $<TARGET_FILE_DIR:itlabai_run_test_test>
+            $<TARGET_FILE_DIR:itlabai_unit_test>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:OpenCV::opencv_world>
-            $<TARGET_FILE_DIR:itlabai_run_test_test>
+            $<TARGET_FILE_DIR:itlabai_unit_test>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:TBB::tbb>
-            $<TARGET_FILE_DIR:itlabai_run_test_test>
+            $<TARGET_FILE_DIR:itlabai_unit_test>
     )
 endif()
 
-add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/itlabai_run_test_test)
+add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/itlabai_unit_test)
 
-target_compile_definitions(itlabai_run_test_test PRIVATE TEST_DATA_PATH="${CMAKE_SOURCE_DIR}/test/model_read/json_for_test")
-target_compile_definitions(itlabai_run_test_test PRIVATE IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")
-target_compile_definitions(itlabai_run_test_test PRIVATE IMAGENET_LABELS="${ITLABAI_TEST_DATA_DIR}/imagenet-labels.txt")
-target_compile_definitions(itlabai_run_test_test PRIVATE TESTS_BINARY_PATH="${ITLABAI_TEST_DATA_DIR}")
-add_dependencies(itlabai_run_test_test opencv_external)
+target_compile_definitions(itlabai_unit_test PRIVATE TEST_DATA_PATH="${CMAKE_SOURCE_DIR}/test/model_read/json_for_test")
+target_compile_definitions(itlabai_unit_test PRIVATE IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")
+target_compile_definitions(itlabai_unit_test PRIVATE IMAGENET_LABELS="${ITLABAI_TEST_DATA_DIR}/imagenet-labels.txt")
+target_compile_definitions(itlabai_unit_test PRIVATE TESTS_BINARY_PATH="${ITLABAI_TEST_DATA_DIR}")
+add_dependencies(itlabai_unit_test opencv_external)

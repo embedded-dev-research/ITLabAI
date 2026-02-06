@@ -136,7 +136,7 @@ To build and run this project locally on Windows, follow these steps:
    ```
    and run the following files:
    ```bash
-   itlabai_run_test_test.exe
+   itlabai_unit_test.exe
    ```
 ### *Linux*
 To start the testing process locally, you need to go to the directory
@@ -145,8 +145,8 @@ To start the testing process locally, you need to go to the directory
    ```
    and run the following files:
    ```bash
-   chmod +x itlabai_run_test_test
-   ./itlabai_run_test_test
+   chmod +x itlabai_unit_test
+   ./itlabai_unit_test
    ```
 
 ## **Accuracy validation for Alexnet on MNIST**
