@@ -14,35 +14,39 @@ void ReduceLayerOneDnn::run(const std::vector<Tensor>& input,
 
   const Tensor& in = input[0];
   Type type = in.get_type();
+  const Shape& input_shape = in.get_shape();
 
-  std::vector<int64_t> normalized_axes = axes_;
-  normalize_axes(in.get_shape(), normalized_axes);
+  normalized_axes_ = axes_;
+  normalize_axes(input_shape, normalized_axes_);
 
   bool need_reinit = !initialized_ || last_type_ != type ||
-                     last_input_shape_ != in.get_shape();
+                     last_input_shape_ != input_shape ||
+                     last_axes_ != normalized_axes_;
 
   if (need_reinit) {
     initialize_onednn(in);
+    last_input_shape_ = input_shape;
+    last_type_ = type;
+    last_axes_ = normalized_axes_;
+    initialized_ = true;
   }
 
   output.resize(1);
 
-  // Рассчитываем форму для oneDNN (с сохранением размерности)
   Shape oneDNN_output_shape =
-      calculate_output_shape(in.get_shape(), normalized_axes);
+      calculate_output_shape(input_shape, normalized_axes_);
 
-  // Финальная форма (убираем размерности 1, если keepdims_ = 0)
   Shape final_output_shape;
   if (keepdims_) {
     final_output_shape = oneDNN_output_shape;
   } else {
-    // Убираем измерения со значением 1
     for (size_t i = 0; i < oneDNN_output_shape.dims(); ++i) {
-      if (oneDNN_output_shape[i] != 1) {
+      if (std::find(normalized_axes_.begin(), normalized_axes_.end(),
+                    static_cast<int64_t>(i)) == normalized_axes_.end()) {
         final_output_shape.push_back(oneDNN_output_shape[i]);
       }
     }
-    // Если все измерения были 1, оставляем одно измерение
+
     if (final_output_shape.dims() == 0) {
       final_output_shape.push_back(1);
     }
@@ -52,82 +56,69 @@ void ReduceLayerOneDnn::run(const std::vector<Tensor>& input,
     const auto& src_data = *in.as<float>();
     std::vector<float> dst_data(oneDNN_output_shape.count());
 
-    if (reduction_prim_) {
-      dnnl::memory src_mem(src_md_, *engine_,
-                           const_cast<float*>(src_data.data()));
-      dnnl::memory dst_mem(dst_md_, *engine_, dst_data.data());
+    dnnl::memory src_mem(src_md_, *engine_,
+                         const_cast<float*>(src_data.data()));
+    dnnl::memory dst_mem(dst_md_, *engine_, dst_data.data());
 
-      reduction_prim_->execute(
-          *stream_, {{DNNL_ARG_SRC, src_mem}, {DNNL_ARG_DST, dst_mem}});
+    reduction_prim_->execute(
+        *stream_, {{DNNL_ARG_SRC, src_mem}, {DNNL_ARG_DST, dst_mem}});
+    stream_->wait();
 
-      stream_->wait();
+    if (op_ == ReduceLayer::Operation::kMean) {
+      size_t reduction_size = 1;
+      for (int64_t axis : normalized_axes_) {
+        reduction_size *= input_shape[axis];
+      }
 
-      // Для mean - дополнительное деление на количество элементов
-      if (op_ == ReduceLayer::Operation::kMean) {
-        size_t reduction_size = 1;
-        const Shape& input_shape = in.get_shape();
-        for (int64_t axis : normalized_axes) {
-          reduction_size *= input_shape[axis];
-        }
-
-        float scale = 1.0f / static_cast<float>(reduction_size);
-        for (size_t i = 0; i < dst_data.size(); ++i) {
-          dst_data[i] *= scale;
-        }
+      float scale = 1.0f / static_cast<float>(reduction_size);
+      for (float& v : dst_data) {
+        v *= scale;
       }
     }
 
-    // Создаем финальный тензор
     std::vector<float> final_data =
-        remove_unit_dims(dst_data, oneDNN_output_shape, final_output_shape);
+        keepdims_ ? dst_data
+                  : remove_unit_dims(dst_data, oneDNN_output_shape,
+                                     final_output_shape);
+
     output[0] = make_tensor(final_data, final_output_shape);
 
   } else if (type == Type::kInt) {
     const auto& src_data = *in.as<int>();
     std::vector<int> dst_data(oneDNN_output_shape.count());
 
-    if (reduction_prim_) {
-      dnnl::memory src_mem(src_md_, *engine_,
-                           const_cast<int*>(src_data.data()));
-      dnnl::memory dst_mem(dst_md_, *engine_, dst_data.data());
+    dnnl::memory src_mem(src_md_, *engine_, const_cast<int*>(src_data.data()));
+    dnnl::memory dst_mem(dst_md_, *engine_, dst_data.data());
 
-      reduction_prim_->execute(
-          *stream_, {{DNNL_ARG_SRC, src_mem}, {DNNL_ARG_DST, dst_mem}});
+    reduction_prim_->execute(
+        *stream_, {{DNNL_ARG_SRC, src_mem}, {DNNL_ARG_DST, dst_mem}});
+    stream_->wait();
 
-      stream_->wait();
-
-      // Для mean - дополнительное деление на количество элементов
-      if (op_ == ReduceLayer::Operation::kMean) {
-        size_t reduction_size = 1;
-        const Shape& input_shape = in.get_shape();
-        for (int64_t axis : normalized_axes) {
-          reduction_size *= input_shape[axis];
-        }
-
-        for (size_t i = 0; i < dst_data.size(); ++i) {
-          dst_data[i] /= static_cast<int>(reduction_size);
-        }
+    if (op_ == ReduceLayer::Operation::kMean) {
+      size_t reduction_size = 1;
+      for (int64_t axis : normalized_axes_) {
+        reduction_size *= input_shape[axis];
       }
 
-      // Для multiplication - нужно преобразовать сумму в произведение
-      if (op_ == ReduceLayer::Operation::kMult) {
-        // oneDNN вычислил сумму, нужно преобразовать в произведение
-        // Это сложно сделать корректно без дополнительной информации
-        // В данном случае, для mult лучше использовать fallback или другой
-        // подход
-        throw std::runtime_error(
-            "Multiplication reduction requires special handling");
+      for (int& v : dst_data) {
+        v /= static_cast<int>(reduction_size);
       }
     }
 
-    // Создаем финальный тензор
+    if (op_ == ReduceLayer::Operation::kMult) {
+      throw std::runtime_error(
+          "ReduceLayerOneDnn: kMult is not supported for int type");
+    }
+
     std::vector<int> final_data =
-        remove_unit_dims(dst_data, oneDNN_output_shape, final_output_shape);
+        keepdims_ ? dst_data
+                  : remove_unit_dims(dst_data, oneDNN_output_shape,
+                                     final_output_shape);
+
     output[0] = make_tensor(final_data, final_output_shape);
   }
 }
 
-// Вспомогательный метод для удаления измерений размером 1
 template <typename T>
 std::vector<T> ReduceLayerOneDnn::remove_unit_dims(
     const std::vector<T>& src_data, const Shape& src_shape,
@@ -139,11 +130,8 @@ std::vector<T> ReduceLayerOneDnn::remove_unit_dims(
   std::vector<T> dst_data(dst_shape.count());
   size_t dst_idx = 0;
 
-  // Проходим по всем измерениям src_shape
   std::vector<size_t> coords(src_shape.dims(), 0);
   for (size_t src_idx = 0; src_idx < src_data.size(); ++src_idx) {
-    // Проверяем, нужно ли сохранять этот элемент (все измерения размером 1
-    // должны быть на позиции 0)
     bool keep = true;
     for (size_t dim = 0; dim < coords.size(); ++dim) {
       if (src_shape[dim] == 1 && coords[dim] != 0) {
@@ -156,7 +144,6 @@ std::vector<T> ReduceLayerOneDnn::remove_unit_dims(
       dst_data[dst_idx++] = src_data[src_idx];
     }
 
-    // Обновляем координаты
     for (size_t dim = coords.size(); dim-- > 0;) {
       ++coords[dim];
       if (coords[dim] < src_shape[dim]) break;
@@ -196,15 +183,13 @@ Shape ReduceLayerOneDnn::calculate_output_shape(
       }
     }
   } else {
-    // Для oneDNN reduction с keepdims=0 нужно сохранять размерность,
-    // но установить размеры редуцированных осей в 1
     new_dims.resize(input_shape.dims(), 1);
     for (int64_t i = 0; i < static_cast<int64_t>(input_shape.dims()); ++i) {
       bool is_axis = std::find(axes.begin(), axes.end(), i) != axes.end();
       if (!is_axis) {
         new_dims[i] = input_shape[i];
       } else {
-        new_dims[i] = 1;  // Редуцированные оси становятся 1
+        new_dims[i] = 1;
       }
     }
   }
@@ -218,8 +203,7 @@ void ReduceLayerOneDnn::normalize_axes(const Shape& input_shape,
 
   if (rank == 0) {
     if (!axes.empty()) {
-      throw std::runtime_error(
-          "ReduceLayerOneDnn: Axis specified for scalar input");
+      throw std::runtime_error("ReduceLayer: Axis specified for scalar input");
     }
     return;
   }
@@ -233,7 +217,7 @@ void ReduceLayerOneDnn::normalize_axes(const Shape& input_shape,
   for (auto& axis : axes) {
     if (axis < -rank || axis >= rank) {
       throw std::runtime_error(
-          "ReduceLayerOneDnn: Axis out of range. Valid range is [-" +
+          "ReduceLayer: Axis out of range. Valid range is [-" +
           std::to_string(rank) + ", " + std::to_string(rank - 1) + "]");
     }
 
@@ -262,13 +246,10 @@ void ReduceLayerOneDnn::initialize_onednn(const Tensor& input) {
   auto dst_dims = shape_to_dims(output_shape_);
 
   try {
-    // Определяем формат в зависимости от размерности
     dnnl::memory::format_tag src_format = pick_format(input_shape.dims());
     dnnl::memory::format_tag dst_format = pick_format(output_shape_.dims());
 
-    // Для операций reduction нужно указать конкретный формат для source
     src_md_ = dnnl::memory::desc(src_dims, dnnl_type, src_format);
-    // Для destination можно использовать any
     dst_md_ = dnnl::memory::desc(dst_dims, dnnl_type, dst_format);
 
     auto algorithm = get_dnnl_algorithm(op_);
@@ -279,7 +260,6 @@ void ReduceLayerOneDnn::initialize_onednn(const Tensor& input) {
         *engine_, algorithm, src_md_, dst_md_, p, eps);
 
     reduction_prim_ = std::make_unique<dnnl::reduction>(reduction_pd);
-    // Обновляем memory descriptors после создания primitive
     src_md_ = reduction_pd.src_desc();
     dst_md_ = reduction_pd.dst_desc();
 
@@ -317,14 +297,13 @@ dnnl::algorithm ReduceLayerOneDnn::get_dnnl_algorithm(
     case ReduceLayer::Operation::kSum:
       return dnnl::algorithm::reduction_sum;
     case ReduceLayer::Operation::kMean:
-      return dnnl::algorithm::reduction_sum;  // Сначала сумма, потом деление
+      return dnnl::algorithm::reduction_sum;
     case ReduceLayer::Operation::kMax:
       return dnnl::algorithm::reduction_max;
     case ReduceLayer::Operation::kMin:
       return dnnl::algorithm::reduction_min;
     case ReduceLayer::Operation::kMult:
-      return dnnl::algorithm::reduction_sum;  // Для умножения тоже используем
-                                              // sum
+      return dnnl::algorithm::reduction_sum;
     default:
       throw std::invalid_argument("Unsupported reduction operation for oneDNN");
   }
@@ -337,7 +316,6 @@ std::vector<dnnl::memory::dim> ReduceLayerOneDnn::shape_to_dims(
     dims.push_back(static_cast<dnnl::memory::dim>(shape.at(i)));
   }
 
-  // Если размерность 0 (скаляр), создаем размерность 1
   if (dims.empty()) {
     dims.push_back(1);
   }
@@ -346,7 +324,6 @@ std::vector<dnnl::memory::dim> ReduceLayerOneDnn::shape_to_dims(
 }
 
 dnnl::memory::format_tag ReduceLayerOneDnn::pick_format(size_t ndims) {
-  // Для reduction операции нужно использовать конкретные форматы
   switch (ndims) {
     case 1:
       return dnnl::memory::format_tag::a;
@@ -359,7 +336,6 @@ dnnl::memory::format_tag ReduceLayerOneDnn::pick_format(size_t ndims) {
     case 5:
       return dnnl::memory::format_tag::abcde;
     default:
-      // Для более высоких размерностей используем ncdhw для 5D или abcd для 4D
       if (ndims == 6) {
         return dnnl::memory::format_tag::abcdef;
       }

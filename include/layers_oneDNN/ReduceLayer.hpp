@@ -47,6 +47,8 @@ class ReduceLayerOneDnn : public Layer {
   ReduceLayer::Operation op_;
   int64_t keepdims_;
   std::vector<int64_t> axes_;
+  std::vector<int64_t> normalized_axes_;
+  std::vector<int64_t> last_axes_;  
 
   bool initialized_ = false;
   Shape last_input_shape_;
