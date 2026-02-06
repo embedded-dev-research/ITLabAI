@@ -1,20 +1,25 @@
-file(GLOB_RECURSE graph_headers graph/*.h graph/*.hpp)
-set(GRAPH_HEADERS "${graph_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE graphT_headers graph_transformations/*.h graph_transformations/*.hpp)
-set(GRAPHT_HEADERS "${graphT_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE layers_headers layers/*.h layers/*.hpp)
-set(LAYERS_HEADERS "${layers_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE layers_oneDNN_headers layers_oneDNN/*.h layers_oneDNN/*.hpp)
-set(LAYERS_ONEDNN_HEADERS "${layers_oneDNN_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE perf_headers perf/*.h perf/*.hpp)
-set(PERF_HEADERS "${perf_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE reader_headers Weights_Reader/*.h Weights_Reader/*.hpp)
-set(READER_HEADERS "${reader_headers}" PARENT_SCOPE)
-
-file(GLOB_RECURSE parallel_headers parallel/*.h parallel/*.hpp)
-set(LAYERS_HEADERS "${parallel_headers}" PARENT_SCOPE)
+file(GLOB_RECURSE GRAPH_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/graph/*.hpp"
+)
+file(GLOB_RECURSE GRAPHT_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/graph_transformations/*.hpp"
+)
+file(GLOB_RECURSE LAYERS_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/layers/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/parallel/*.hpp"
+)
+file(GLOB_RECURSE LAYERS_ONEDNN_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/layers_oneDNN/*.hpp"
+)
+file(GLOB_RECURSE PERF_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/perf/*.hpp"
+)
+file(GLOB_RECURSE READER_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/Weights_Reader/*.hpp"
+)
+set(GRAPH_HEADERS "${GRAPH_HEADERS}" PARENT_SCOPE)
+set(GRAPHT_HEADERS "${GRAPHT_HEADERS}" PARENT_SCOPE)
+set(LAYERS_HEADERS "${LAYERS_HEADERS}" PARENT_SCOPE)
+set(LAYERS_ONEDNN_HEADERS "${LAYERS_ONEDNN_HEADERS}" PARENT_SCOPE)
+set(PERF_HEADERS "${PERF_HEADERS}" PARENT_SCOPE)
+set(READER_HEADERS "${READER_HEADERS}" PARENT_SCOPE)

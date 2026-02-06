@@ -1,4 +1,14 @@
-file(GLOB_RECURSE graphT_src *.cpp)
-add_library(graphT_lib STATIC "${GRAPHT_HEADERS}" "${graphT_src}")
-target_link_libraries(graphT_lib PUBLIC TBB_unified)
-add_dependencies(graphT_lib kokkos_external)
+file(GLOB GRAPHT_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+)
+
+add_library(itlabai_graph_transformations_lib STATIC)
+add_library(ITLabAI::GraphTransformationsLib ALIAS itlabai_graph_transformations_lib)
+target_sources(itlabai_graph_transformations_lib PRIVATE ${GRAPHT_SOURCES} ${GRAPHT_HEADERS})
+target_include_directories(itlabai_graph_transformations_lib
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+itlabai_link_externals(itlabai_graph_transformations_lib tbb kokkos openmp)
+itlabai_target_defaults(itlabai_graph_transformations_lib)
