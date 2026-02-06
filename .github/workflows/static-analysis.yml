@@ -11,21 +11,20 @@ jobs:
         submodules: true
     - name: Install prerequisites
       run: |
-        sudo apt-get update
-        sudo apt-get install -y clang libomp-dev ninja-build
+        sudo apt install clang libomp-dev
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ccache-${{ github.job }}
     - name: Build
       run: |
-            cmake --preset dev-debug -G Ninja \
-              -DCMAKE_C_COMPILER=clang \
-              -DCMAKE_CXX_COMPILER=clang++ \
-              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-            cmake --build --preset dev-debug --parallel
+            cmake -S . -B build -G Ninja  \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            cmake --build build --parallel
     - name: Run clang-tidy
       run: |
-        clang-tidy app/**/*.cpp src/**/*.cpp -format-style=file -header-filter="($PWD/include/.*|$PWD/src/.*|$PWD/app/.*)" -p build/debug
+        clang-tidy app/**/*.cpp src/**/*.cpp -format-style=file -header-filter="($PWD/include/.*|$PWD/src/.*|$PWD/app/.*)" -p build
