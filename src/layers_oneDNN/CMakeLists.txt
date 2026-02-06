@@ -1,10 +1,9 @@
-add_library(layers_oneDNN_lib STATIC)
-target_sources(layers_oneDNN_lib
-    PRIVATE
-        ConvLayer.cpp
-        EWLayer.cpp
-        ${LAYERS_ONEDNN_HEADERS}
+file(GLOB LAYERS_ONEDNN_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
 )
+
+add_library(layers_oneDNN_lib STATIC)
+target_sources(layers_oneDNN_lib PRIVATE ${LAYERS_ONEDNN_SOURCES} ${LAYERS_ONEDNN_HEADERS})
 target_include_directories(layers_oneDNN_lib
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>

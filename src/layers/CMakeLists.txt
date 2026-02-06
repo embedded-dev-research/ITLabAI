@@ -1,27 +1,9 @@
-add_library(layers_lib STATIC)
-target_sources(layers_lib
-    PRIVATE
-        BatchNormalizationLayer.cpp
-        BinaryOpLayer.cpp
-        ConcatLayer.cpp
-        ConvLayer.cpp
-        DropOutLayer.cpp
-        EWLayer.cpp
-        FCLayer.cpp
-        FlattenLayer.cpp
-        Layer.cpp
-        MatmulLayer.cpp
-        OutputLayer.cpp
-        PoolingLayer.cpp
-        ReduceLayer.cpp
-        ReshapeLayer.cpp
-        Shape.cpp
-        SoftmaxLayer.cpp
-        SplitLayer.cpp
-        Tensor.cpp
-        TransposeLayer.cpp
-        ${LAYERS_HEADERS}
+file(GLOB LAYERS_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
 )
+
+add_library(layers_lib STATIC)
+target_sources(layers_lib PRIVATE ${LAYERS_SOURCES} ${LAYERS_HEADERS})
 target_include_directories(layers_lib
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>

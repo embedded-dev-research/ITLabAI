@@ -1,36 +1,15 @@
-add_executable(run_test
-    main.cpp
-    graph/test_graph.cpp
-    inference/test_inference.cpp
-    model_read/model_read.cpp
-    test_read/test_read.cpp
-    single_layer/test_batchnormalizationlayer.cpp
-    single_layer/test_binaryoplayer.cpp
-    single_layer/test_concatlayer.cpp
-    single_layer/test_convlayer.cpp
-    single_layer/test_convlayer_onednn.cpp
-    single_layer/test_dropoutlayer.cpp
-    single_layer/test_ewlayer.cpp
-    single_layer/test_ewlayer_onednn.cpp
-    single_layer/test_fclayer.cpp
-    single_layer/test_flattenlayer.cpp
-    single_layer/test_inlayer.cpp
-    single_layer/test_matmullayer.cpp
-    single_layer/test_outputlayer.cpp
-    single_layer/test_poolinglayer.cpp
-    single_layer/test_reducelayer.cpp
-    single_layer/test_reshapelayer.cpp
-    single_layer/test_softmaxlayer.cpp
-    single_layer/test_splitlayer.cpp
-    single_layer/test_tensor.cpp
-    single_layer/test_transposelayer.cpp
-    single_layer_parall_version/test_convlayer_parall.cpp
-    single_layer_parall_version/test_ewlayer_parall.cpp
-    benchmarking/test_accuracy.cpp
-    benchmarking/test_layers_time.cpp
-    benchmarking/test_throughput.cpp
-    benchmarking/test_timer.cpp
+file(GLOB_RECURSE ITLABAI_TEST_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/graph/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/inference/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/model_read/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_read/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/single_layer/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/single_layer_parall_version/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarking/*.cpp"
 )
+
+add_executable(run_test ${ITLABAI_TEST_SOURCES})
 
 target_link_libraries(run_test PUBLIC
     perf_lib

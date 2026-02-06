@@ -1,6 +1,8 @@
-set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/build.hpp")
-set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/build.cpp")
-add_library(BuildGraph STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
+file(GLOB BUILDGRAPH_CPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+file(GLOB BUILDGRAPH_HPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+list(FILTER BUILDGRAPH_CPP INCLUDE REGEX "/build\\.cpp$")
+
+add_library(BuildGraph STATIC ${BUILDGRAPH_HPP} ${BUILDGRAPH_CPP})
 
 set_target_properties(BuildGraph PROPERTIES LINKER_LANGUAGE CXX)
 
@@ -20,17 +22,20 @@ target_compile_definitions(BuildGraph PUBLIC
     MNIST_PATH="${CMAKE_SOURCE_DIR}/docs/mnist/mnist/test"
 )
 
-add_executable(Graph_Build graph_build.cpp)
+file(GLOB GRAPH_BUILD_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/graph_build.cpp")
+add_executable(Graph_Build ${GRAPH_BUILD_MAIN})
 target_link_libraries(Graph_Build PRIVATE BuildGraph)
 itlabai_target_defaults(Graph_Build)
 itlabai_apply_runtime_rpath(Graph_Build)
 
-add_executable(ACC acc_check.cpp)
+file(GLOB ACC_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/acc_check.cpp")
+add_executable(ACC ${ACC_MAIN})
 target_link_libraries(ACC PRIVATE BuildGraph OpenCV::opencv_world)
 itlabai_target_defaults(ACC)
 itlabai_apply_runtime_rpath(ACC)
 
-add_executable(onnx_subgraphs onnx_subgraphs.cpp)
+file(GLOB ONNX_SUBGRAPHS_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/onnx_subgraphs.cpp")
+add_executable(onnx_subgraphs ${ONNX_SUBGRAPHS_MAIN})
 target_link_libraries(onnx_subgraphs PRIVATE BuildGraph)
 if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
     target_link_libraries(onnx_subgraphs PRIVATE OpenMP::OpenMP_CXX)

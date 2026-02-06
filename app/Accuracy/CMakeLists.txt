@@ -1,6 +1,8 @@
-set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/acc.hpp")
-set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/acc.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/acc_anchor.cpp")
-add_library(ACCLib STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
+file(GLOB ACC_CPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+file(GLOB ACC_HPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+list(FILTER ACC_CPP EXCLUDE REGEX "accuracy_check\\.cpp$")
+
+add_library(ACCLib STATIC ${ACC_HPP} ${ACC_CPP})
 
 set_target_properties(ACCLib PROPERTIES LINKER_LANGUAGE CXX)
 
@@ -16,7 +18,8 @@ itlabai_target_defaults(ACCLib)
 add_dependencies(ACCLib opencv_external)
 target_compile_definitions(ACCLib PUBLIC IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")
 
-add_executable(Accuracy_Check accuracy_check.cpp)
+file(GLOB ACC_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/accuracy_check.cpp")
+add_executable(Accuracy_Check ${ACC_MAIN})
 target_link_libraries(Accuracy_Check PRIVATE ACCLib OpenCV::opencv_world)
 itlabai_link_externals(Accuracy_Check openmp)
 itlabai_target_defaults(Accuracy_Check)

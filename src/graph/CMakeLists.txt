@@ -1,5 +1,9 @@
+file(GLOB GRAPH_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+)
+
 add_library(graph_lib STATIC)
-target_sources(graph_lib PRIVATE graph.cpp ${GRAPH_HEADERS})
+target_sources(graph_lib PRIVATE ${GRAPH_SOURCES} ${GRAPH_HEADERS})
 target_include_directories(graph_lib
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>

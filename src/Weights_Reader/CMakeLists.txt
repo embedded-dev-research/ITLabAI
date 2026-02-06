@@ -1,5 +1,9 @@
+file(GLOB READER_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+)
+
 add_library(reader_lib STATIC)
-target_sources(reader_lib PRIVATE reader_weights.cpp ${READER_HEADERS})
+target_sources(reader_lib PRIVATE ${READER_SOURCES} ${READER_HEADERS})
 target_include_directories(reader_lib
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
