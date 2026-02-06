@@ -23,10 +23,12 @@ target_compile_definitions(BuildGraph PUBLIC
 add_executable(Graph_Build graph_build.cpp)
 target_link_libraries(Graph_Build PRIVATE BuildGraph)
 itlabai_target_defaults(Graph_Build)
+itlabai_apply_runtime_rpath(Graph_Build)
 
 add_executable(ACC acc_check.cpp)
 target_link_libraries(ACC PRIVATE BuildGraph OpenCV::opencv_world)
 itlabai_target_defaults(ACC)
+itlabai_apply_runtime_rpath(ACC)
 
 add_executable(onnx_subgraphs onnx_subgraphs.cpp)
 target_link_libraries(onnx_subgraphs PRIVATE BuildGraph)
@@ -35,3 +37,4 @@ if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
 endif()
 target_link_libraries(onnx_subgraphs PRIVATE graphT_lib)
 itlabai_target_defaults(onnx_subgraphs)
+itlabai_apply_runtime_rpath(onnx_subgraphs)

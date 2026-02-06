@@ -53,6 +53,7 @@ add_dependencies(run_test opencv_external)
 target_include_directories(run_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
 itlabai_target_defaults(run_test)
+itlabai_apply_runtime_rpath(run_test)
 
 if (WIN32)
     target_compile_definitions(run_test PRIVATE _CRT_SECURE_NO_WARNINGS)

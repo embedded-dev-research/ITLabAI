@@ -13,8 +13,6 @@ option(ITLABAI_USE_SYSTEM_DEPS "Use system packages when available" OFF)
 option(ITLABAI_FETCH_TEST_DATA "Download test data during build" OFF)
 set(ITLABAI_TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/docs/input" CACHE PATH "Directory containing sample/test data")
 option(BUILD_TESTING "Enable building tests" ${ITLABAI_BUILD_TESTS})
-option(ITLABAI_WARN_AS_ERROR "Treat warnings as errors for project targets" ON)
-option(ITLABAI_AUTOINCLUDE_EXTERNALS "Automatically add include directories for external deps when linked via helper" ON)
 
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
 option(ENABLE_STATISTIC_TIME "Enable statistic time" OFF)
@@ -61,28 +59,6 @@ if(ITLABAI_FETCH_TEST_DATA)
         COMMENT "Downloading sample/test data"
     )
 endif()
-
-if(CMAKE_CONFIGURATION_TYPES)
-    foreach(cfg IN LISTS CMAKE_CONFIGURATION_TYPES)
-        string(TOUPPER "${cfg}" cfg_upper)
-        set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${cfg_upper} "${CMAKE_BINARY_DIR}/lib")
-        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${cfg_upper} "${CMAKE_BINARY_DIR}/lib")
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${cfg_upper} "${CMAKE_BINARY_DIR}/bin")
-    endforeach()
-else()
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-endif()
-
-# RPATH for bundled externals
-set(_itlabai_rpath "")
-itlabai_set_rpath(
-    "${ONEDNN_INSTALL_DIR}/lib"
-    "${OPENCV_INSTALL_DIR}/lib"
-    "${TBB_INSTALL_DIR}/lib"
-    "${KOKKOS_INSTALL_DIR}/lib"
-)
 
 add_subdirectory(include)
 add_subdirectory(src)

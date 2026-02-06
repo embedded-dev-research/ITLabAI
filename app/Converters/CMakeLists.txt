@@ -4,6 +4,8 @@ target_link_libraries(Reader_weights PUBLIC perf_lib layers_lib reader_lib)
 target_link_libraries(Reader_weights_onnx PUBLIC perf_lib layers_lib reader_lib)
 itlabai_target_defaults(Reader_weights)
 itlabai_target_defaults(Reader_weights_onnx)
+itlabai_apply_runtime_rpath(Reader_weights)
+itlabai_apply_runtime_rpath(Reader_weights_onnx)
 target_compile_definitions(Reader_weights PRIVATE
     MODEL_PATH_H5="${CMAKE_SOURCE_DIR}/docs/jsons/model_data_alexnet_1.json"
     MODEL_PATH_GOOGLENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/googlenet_onnx_model.json"
