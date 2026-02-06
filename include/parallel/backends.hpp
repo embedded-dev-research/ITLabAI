@@ -115,6 +115,7 @@ inline void impl_omp(std::size_t count,
 inline void impl_omp(std::size_t count,
                      const std::function<void(std::size_t)>& func,
                      const Options& opt) {
+  (void)opt;
   impl_seq(count, func);
 }
 #endif
