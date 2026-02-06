@@ -61,7 +61,7 @@ jobs:
       with:
        name: mnist-${{ matrix.build_type }}${{ matrix.stats && '-stats' || '' }}
        path: |
-       ${{ steps.set_binaries.outputs.ACC_BINARY }}
+        ${{ steps.set_binaries.outputs.ACC_BINARY }}
         build/bin/all_libs/*
     - name: Test
       run: cmake --build build -t test
