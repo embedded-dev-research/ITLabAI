@@ -8,10 +8,7 @@ endif()
 
 if(NOT GTest_FOUND)
     find_package(Threads REQUIRED)
-    set(_gtest_build_type "${CMAKE_BUILD_TYPE}")
-    if(NOT _gtest_build_type)
-        set(_gtest_build_type "Release")
-    endif()
+    itlabai_external_default_build_type(_gtest_build_type)
     set(_gtest_cmake_args "")
     if(MSVC)
         set(_gtest_msvc_runtime "MultiThreadedDLL")
@@ -23,7 +20,8 @@ if(NOT GTest_FOUND)
             -DCMAKE_MSVC_RUNTIME_LIBRARY=${_gtest_msvc_runtime}
         )
     endif()
-    ExternalProject_Add(gtest_external
+    itlabai_external_add(
+        NAME gtest_external
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/googletest"
         BINARY_DIR "${GTEST_BUILD_DIR}"
         INSTALL_DIR "${GTEST_INSTALL_DIR}"
@@ -40,7 +38,6 @@ if(NOT GTest_FOUND)
             ${GTEST_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
             ${GTEST_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX}
     )
-    add_dependencies(itlabai_external gtest_external)
 
     if(MSVC)
         set(_gtest_lib "${GTEST_INSTALL_DIR}/lib/gtest.lib")

@@ -7,10 +7,7 @@ if(ITLABAI_USE_SYSTEM_DEPS)
 endif()
 
 if(NOT dnnl_FOUND)
-    set(_onednn_build_type "${CMAKE_BUILD_TYPE}")
-    if(NOT _onednn_build_type)
-        set(_onednn_build_type "Release")
-    endif()
+    itlabai_external_default_build_type(_onednn_build_type)
     set(_onednn_depends "")
     if(TARGET tbb_external)
         set(_onednn_depends tbb_external)
@@ -28,7 +25,8 @@ if(NOT dnnl_FOUND)
         )
     endif()
 
-    ExternalProject_Add(onednn_external
+    itlabai_external_add(
+        NAME onednn_external
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/oneDNN"
         BINARY_DIR "${ONEDNN_BUILD_DIR}"
         INSTALL_DIR "${ONEDNN_INSTALL_DIR}"
@@ -50,7 +48,6 @@ if(NOT dnnl_FOUND)
             ${ITLABAI_EXTERNAL_WARNING_ARGS}
         BUILD_BYPRODUCTS ${_onednn_byproducts}
     )
-    add_dependencies(itlabai_external onednn_external)
 
     if(MSVC)
         set(_dnnl_lib "${ONEDNN_INSTALL_DIR}/lib/dnnl.lib")

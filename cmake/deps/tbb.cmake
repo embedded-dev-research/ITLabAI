@@ -7,10 +7,7 @@ if(ITLABAI_USE_SYSTEM_DEPS)
 endif()
 
 if(NOT TBB_FOUND)
-    set(_tbb_build_type "${CMAKE_BUILD_TYPE}")
-    if(NOT _tbb_build_type)
-        set(_tbb_build_type "Release")
-    endif()
+    itlabai_external_default_build_type(_tbb_build_type)
     set(_tbb_cmake_args ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS} ${ITLABAI_EXTERNAL_WARNING_ARGS})
 
     if(WIN32)
@@ -35,7 +32,8 @@ if(NOT TBB_FOUND)
         set(_tbb_lib "${TBB_INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}tbb${CMAKE_SHARED_LIBRARY_SUFFIX}")
     endif()
 
-    ExternalProject_Add(tbb_external
+    itlabai_external_add(
+        NAME tbb_external
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/TBB"
         BINARY_DIR "${TBB_BUILD_DIR}"
         INSTALL_DIR "${TBB_INSTALL_DIR}"
@@ -47,10 +45,8 @@ if(NOT TBB_FOUND)
             -DTBB_EXAMPLES=OFF
             -DTBB_STRICT=OFF
             ${_tbb_cmake_args}
-        BUILD_BYPRODUCTS
-            ${_tbb_byproducts}
+        BUILD_BYPRODUCTS ${_tbb_byproducts}
     )
-    add_dependencies(itlabai_external tbb_external)
 
     file(MAKE_DIRECTORY "${TBB_INSTALL_DIR}/include")
     file(MAKE_DIRECTORY "${TBB_INSTALL_DIR}/lib")

@@ -7,10 +7,7 @@ if(ITLABAI_USE_SYSTEM_DEPS)
 endif()
 
 if(NOT Kokkos_FOUND)
-    set(_kokkos_build_type "${CMAKE_BUILD_TYPE}")
-    if(NOT _kokkos_build_type)
-        set(_kokkos_build_type "Release")
-    endif()
+    itlabai_external_default_build_type(_kokkos_build_type)
     set(_kokkos_openmp_flag OFF)
     set(_kokkos_threads_flag ON)
     if(ITLABAI_ENABLE_OPENMP AND OpenMP_FOUND AND NOT (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
@@ -23,7 +20,8 @@ if(NOT Kokkos_FOUND)
         set(_kokkos_threads_flag ON)
     endif()
 
-    ExternalProject_Add(kokkos_external
+    itlabai_external_add(
+        NAME kokkos_external
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/kokkos"
         BINARY_DIR "${KOKKOS_BUILD_DIR}"
         INSTALL_DIR "${KOKKOS_INSTALL_DIR}"
@@ -44,7 +42,6 @@ if(NOT Kokkos_FOUND)
             ${KOKKOS_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}kokkoscore${CMAKE_STATIC_LIBRARY_SUFFIX}
             ${KOKKOS_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}kokkoscontainers${CMAKE_STATIC_LIBRARY_SUFFIX}
     )
-    add_dependencies(itlabai_external kokkos_external)
 
     if(MSVC)
         set(_kokkos_core "${KOKKOS_INSTALL_DIR}/lib/kokkoscore.lib")

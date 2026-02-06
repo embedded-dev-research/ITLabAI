@@ -11,11 +11,8 @@ if(ITLABAI_USE_SYSTEM_DEPS)
 endif()
 
 if(NOT OpenCV_FOUND)
-    set(_opencv_build_type "${CMAKE_BUILD_TYPE}")
-    if(NOT _opencv_build_type)
-        set(_opencv_build_type "Release")
-    endif()
-    set(OPENCV_FEATURE_ARGS
+    itlabai_external_default_build_type(_opencv_build_type)
+    set(OPENCV_BUILD_OPTS
         -DBUILD_TESTS=OFF
         -DBUILD_PERF_TESTS=OFF
         -DBUILD_EXAMPLES=OFF
@@ -24,6 +21,20 @@ if(NOT OpenCV_FOUND)
         -DBUILD_opencv_dnn=OFF
         -DBUILD_opencv_python=OFF
         -DBUILD_JAVA=OFF
+        -DBUILD_opencv_world=ON
+        -DBUILD_IPP_IW=OFF
+        -DINSTALL_C_EXAMPLES=OFF
+        -DINSTALL_PYTHON_EXAMPLES=OFF
+        -DINSTALL_CASCADES=OFF
+        -DINSTALL_TESTS=OFF
+        -DOPENCV_GENERATE_PKGCONFIG=OFF
+        -DOPENCV_INSTALL_FFMPEG=OFF
+        -DOPENCV_DISABLE_ADE=ON
+        -DOPENCV_ENABLE_NONFREE=OFF
+        -DOPENCV_DOWNLOAD_PATH=${CMAKE_SOURCE_DIR}/3rdparty/opencv_downloads
+        -DCMAKE_CXX_STANDARD=17
+    )
+    set(OPENCV_FEATURE_OPTS
         -DWITH_TBB=OFF
         -DWITH_IPP=OFF
         -DWITH_OPENEXR=OFF
@@ -39,18 +50,6 @@ if(NOT OpenCV_FOUND)
         -DWITH_JPEG=ON
         -DWITH_PNG=ON
         -DWITH_TIFF=ON
-        -DBUILD_opencv_world=ON
-        -DOPENCV_ENABLE_NONFREE=OFF
-        -DOPENCV_DOWNLOAD_PATH=${CMAKE_SOURCE_DIR}/3rdparty/opencv_downloads
-        -DOPENCV_DISABLE_ADE=ON
-        -DINSTALL_C_EXAMPLES=OFF
-        -DINSTALL_PYTHON_EXAMPLES=OFF
-        -DBUILD_IPP_IW=OFF
-        -DOPENCV_GENERATE_PKGCONFIG=OFF
-        -DOPENCV_INSTALL_FFMPEG=OFF
-        -DINSTALL_CASCADES=OFF
-        -DINSTALL_TESTS=OFF
-        -DCMAKE_CXX_STANDARD=17
     )
 
     if(WIN32)
@@ -103,7 +102,8 @@ if(NOT OpenCV_FOUND)
 
     set(OPENCV_INCLUDE_DIR "${_opencv_include_dir}")
 
-    ExternalProject_Add(opencv_external
+    itlabai_external_add(
+        NAME opencv_external
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/opencv"
         BINARY_DIR "${OPENCV_BUILD_DIR}"
         INSTALL_DIR "${OPENCV_INSTALL_DIR}"
@@ -116,15 +116,14 @@ if(NOT OpenCV_FOUND)
             -DBUILD_SHARED_LIBS=ON
             -DBUILD_PROTOBUF=ON
             -DPROTOBUF_UPDATE_FILES=OFF
-            ${OPENCV_FEATURE_ARGS}
+            ${OPENCV_BUILD_OPTS}
+            ${OPENCV_FEATURE_OPTS}
             ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS}
             ${ITLABAI_EXTERNAL_WARNING_ARGS}
         CMAKE_CACHE_ARGS
             -DBUILD_LIST:STRING=${OPENCV_COMPONENTS_ESC}
-        BUILD_BYPRODUCTS
-            ${_opencv_byproducts}
+        BUILD_BYPRODUCTS ${_opencv_byproducts}
     )
-    add_dependencies(itlabai_external opencv_external)
 
     file(MAKE_DIRECTORY "${_opencv_include_dir}")
     file(MAKE_DIRECTORY "${OPENCV_INSTALL_DIR}/lib")
