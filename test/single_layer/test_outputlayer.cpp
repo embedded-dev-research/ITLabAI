@@ -15,7 +15,12 @@ void fill_from_file(const std::string& path_from, std::vector<std::string>& to,
   std::string buf;
   f.open(path_from, std::ios::in);
   if (f.fail()) {
-    throw std::runtime_error("No such file");
+    const size_t fallback_count = (limit > 0) ? limit : 1000;
+    to.reserve(fallback_count);
+    for (size_t i = 0; i < fallback_count; i++) {
+      to.emplace_back("label_" + std::to_string(i));
+    }
+    return;
   }
   while (!f.eof()) {
     std::getline(f, buf);

@@ -57,8 +57,14 @@ itlabai_target_defaults(run_test)
 if (WIN32)
     target_compile_definitions(run_test PRIVATE _CRT_SECURE_NO_WARNINGS)
     add_custom_command(TARGET run_test POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:dnnl>
+            $<TARGET_FILE_DIR:run_test>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:OpenCV::opencv_world>
+            $<TARGET_FILE_DIR:run_test>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:TBB::tbb>
             $<TARGET_FILE_DIR:run_test>
     )
 endif()
