@@ -13,7 +13,6 @@ int main() {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
   options.threads = 4;
-  options.parallel = true;
   std::string image_path = IMAGE1_PATH;
   cv::Mat image = cv::imread(image_path);
   if (image.empty()) {

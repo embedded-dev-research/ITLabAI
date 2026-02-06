@@ -18,7 +18,7 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
     throw std::out_of_range("input must be 4-dimensional");
   }
 
-  ParBackend backend = options.getEffectiveParBackend();
+  ParBackend backend = options.par_backend;
 
   if (group_ > 1) {
     if (group_ == input[0].get_shape()[1] && group_ == kernel_.get_shape()[0]) {
