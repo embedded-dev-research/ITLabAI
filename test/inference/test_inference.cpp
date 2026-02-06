@@ -20,6 +20,7 @@ using namespace it_lab_ai;
 TEST(bfs, check_struct_graph) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = false;
   options.threads = 4;
 
   Graph graph;
@@ -95,6 +96,7 @@ TEST(bfs, check_struct_graph) {
 TEST(bfs, check_struct_graph_not_used_yolo) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = false;
   options.threads = 4;
 
   Graph graph;
@@ -148,6 +150,7 @@ TEST(bfs, check_struct_graph_not_used_yolo) {
 TEST(bfs, check_struct_graph_resnet1) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = false;
   options.threads = 4;
 
   Graph graph;
@@ -193,6 +196,7 @@ TEST(bfs, check_struct_graph_resnet1) {
 TEST(bfs, check_struct_graph_resnet2) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = false;
   options.threads = 4;
 
   Graph graph;
@@ -236,6 +240,7 @@ TEST(bfs, check_struct_graph_resnet2) {
 TEST(bfs, check_struct_graph_google1) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = false;
   options.threads = 4;
 
   Graph graph;
@@ -281,6 +286,7 @@ TEST(bfs, check_struct_graph_google1) {
 TEST(bfs, check_result_vec) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = false;
   options.threads = 4;
 
   Graph graph;
@@ -358,6 +364,7 @@ TEST(bfs, check_result_vec) {
 TEST(bfs, check_end_to_end) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = false;
   options.threads = 4;
 
   Graph graph;
@@ -403,6 +410,7 @@ TEST(bfs, check_end_to_end) {
 TEST(bfs, check_struct_layer) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = false;
   options.threads = 4;
 
   Graph graph;
@@ -435,6 +443,7 @@ TEST(bfs, check_struct_layer) {
 TEST(bfs, check_struct_layer_added) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = false;
   options.threads = 4;
 
   Graph graph;
@@ -470,6 +479,7 @@ TEST(bfs, check_struct_layer_added) {
 FLAKY_TEST(bfs, check_struct_graph_split) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = false;
   options.threads = 4;
 
   std::vector<std::vector<std::pair<int, int>>> split = {

@@ -369,9 +369,8 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
     if (has_bias) {
       bias_md = dnnl::memory::desc(
           {static_cast<dnnl::memory::dim>(bias_.get_shape()[0])}, dt,
-          dnnl::memory::format_tag::a);
+          dnnl::memory::format_tag::any);
     }
-
     dnnl::convolution_forward::primitive_desc conv_pd =
         has_bias ? dnnl::convolution_forward::primitive_desc(
                        *engine_, dnnl::prop_kind::forward_inference,
@@ -392,21 +391,20 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
 
     if (data_type == Type::kFloat) {
       const std::vector<float>& kernel_data = *kernel_.as<float>();
-
       size_t kh = k_shape[0];
       size_t kw = k_shape[1];
       size_t kic = k_shape[2];
       size_t koc = k_shape[3];
 
       std::vector<float> reordered(koc * kic * kh * kw);
+      size_t idx = 0;
 
-      for (size_t oc = 0; oc < koc; ++oc) {
-        for (size_t ic = 0; ic < kic; ++ic) {
-          for (size_t h = 0; h < kh; ++h) {
-            for (size_t w = 0; w < kw; ++w) {
+      for (size_t oc = 0; oc < koc; oc++) {
+        for (size_t ic = 0; ic < kic; ic++) {
+          for (size_t h = 0; h < kh; h++) {
+            for (size_t w = 0; w < kw; w++) {
               size_t src_idx = ((h * kw + w) * kic + ic) * koc + oc;
-              size_t dst_idx = ((oc * kic + ic) * kh + h) * kw + w;
-              reordered[dst_idx] = kernel_data[src_idx];
+              reordered[idx++] = kernel_data[src_idx];
             }
           }
         }
@@ -423,13 +421,14 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
       size_t koc = k_shape[3];
 
       std::vector<float> reordered(koc * kic * kh * kw);
-      for (size_t oc = 0; oc < koc; ++oc) {
-        for (size_t ic = 0; ic < kic; ++ic) {
-          for (size_t h = 0; h < kh; ++h) {
-            for (size_t w = 0; w < kw; ++w) {
+      size_t idx = 0;
+
+      for (size_t oc = 0; oc < koc; oc++) {
+        for (size_t ic = 0; ic < kic; ic++) {
+          for (size_t h = 0; h < kh; h++) {
+            for (size_t w = 0; w < kw; w++) {
               size_t src_idx = ((h * kw + w) * kic + ic) * koc + oc;
-              size_t dst_idx = ((oc * kic + ic) * kh + h) * kw + w;
-              reordered[dst_idx] = static_cast<float>(kernel_data_int[src_idx]);
+              reordered[idx++] = static_cast<float>(kernel_data_int[src_idx]);
             }
           }
         }
@@ -437,22 +436,6 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
 
       std::memcpy(weights_memory_.get_data_handle(), reordered.data(),
                   reordered.size() * sizeof(float));
-    }
-
-    if (has_bias) {
-      if (data_type == Type::kFloat) {
-        const std::vector<float>& bias_data = *bias_.as<float>();
-        std::memcpy(bias_memory_.get_data_handle(), bias_data.data(),
-                    bias_data.size() * sizeof(float));
-      } else if (data_type == Type::kInt) {
-        const std::vector<int>& bias_data_int = *bias_.as<int>();
-        std::vector<float> float_bias(bias_data_int.size());
-        std::transform(bias_data_int.begin(), bias_data_int.end(),
-                       float_bias.begin(),
-                       [](int val) { return static_cast<float>(val); });
-        std::memcpy(bias_memory_.get_data_handle(), float_bias.data(),
-                    float_bias.size() * sizeof(float));
-      }
     }
 
     conv_prim_ = std::make_unique<dnnl::convolution_forward>(conv_pd);
@@ -511,8 +494,8 @@ void ConvLayerOneDnn::run_special_conv(const std::vector<Tensor>& input,
   Shape output_shape = get_output_shape(input_shape);
 
   if (data_type == Type::kFloat) {
-    size_t output_size = dst_memory_.get_desc().get_size() / sizeof(float);
-    std::vector<float> output_data(output_size);
+    std::vector<float> output_data(dst_memory_.get_desc().get_size() /
+                                   sizeof(float));
     std::memcpy(output_data.data(), dst_memory_.get_data_handle(),
                 output_data.size() * sizeof(float));
     output[0] = make_tensor(output_data, output_shape);

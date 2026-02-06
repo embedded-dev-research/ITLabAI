@@ -1,49 +1,55 @@
-file(GLOB BUILDGRAPH_CPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-file(GLOB BUILDGRAPH_HPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
-list(FILTER BUILDGRAPH_CPP INCLUDE REGEX "/build\\.cpp$")
+set(INCLUDE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/build.hpp")
+set(SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/build.cpp")
+add_library(BuildGraph STATIC ${INCLUDE_HEADERS} ${SRC_FILES})
 
-add_library(itlabai_build_graph_lib STATIC ${BUILDGRAPH_HPP} ${BUILDGRAPH_CPP})
-add_library(ITLabAI::BuildGraphLib ALIAS itlabai_build_graph_lib)
+set_target_properties(BuildGraph PROPERTIES LINKER_LANGUAGE CXX)
 
-set_target_properties(itlabai_build_graph_lib PROPERTIES LINKER_LANGUAGE CXX)
+find_package(OpenCV REQUIRED PATHS "${OPENCV_BUILD_DIR}")
+include_directories(${OpenCV_INCLUDE_DIRS})
 
-target_link_libraries(itlabai_build_graph_lib PUBLIC itlabai_reader_lib itlabai_layers_lib itlabai_layers_onednn_lib OpenCV::opencv_world Kokkos_imported TBB_unified)
-itlabai_link_externals(itlabai_build_graph_lib opencv tbb gtest kokkos openmp)
-add_dependencies(itlabai_build_graph_lib opencv_external)
-target_compile_definitions(itlabai_build_graph_lib PUBLIC
-    IMAGE28_PATH="${CMAKE_SOURCE_DIR}/docs/input/28/"
-    IMAGENET_ACC="${CMAKE_SOURCE_DIR}/docs/ImageNet/test/"
-    IMAGENET_PATH="${CMAKE_SOURCE_DIR}/docs/input/Imagenet_test/"
-    MODEL_PATH_H5="${CMAKE_SOURCE_DIR}/docs/jsons/model_data_alexnet_1.json"
-    MODEL_PATH_GOOGLENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/googlenet_onnx_model.json"
-    MODEL_PATH_DENSENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/densenet121_Opset16_onnx_model.json"
-    MODEL_PATH_RESNET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/resnest101e_Opset16_onnx_model.json"
-    MODEL_PATH_YOLO11NET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/yolo11x-cls_onnx_model.json"
-    IMAGENET_LABELS="${CMAKE_SOURCE_DIR}/docs/imagenet1000_clsidx_to_labels.json"
-    MNIST_PATH="${CMAKE_SOURCE_DIR}/docs/mnist/mnist/test"
+target_link_libraries(BuildGraph PUBLIC ${OpenCV_LIBS})
+target_link_libraries(BuildGraph PUBLIC reader_lib)
+target_link_libraries(BuildGraph PUBLIC TBB_unified)
+target_link_libraries(BuildGraph PUBLIC layers_lib)
+target_link_libraries(BuildGraph PUBLIC layers_oneDNN_lib)
+target_link_libraries(BuildGraph PUBLIC gtest_main)
+
+target_include_directories(BuildGraph PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/Json/include)
+
+add_executable(Graph_Build graph_build.cpp)
+target_link_libraries(Graph_Build BuildGraph)
+
+add_executable(ACC acc_check.cpp)
+target_link_libraries(ACC BuildGraph)
+
+add_executable(onnx_subgraphs onnx_subgraphs.cpp)
+target_link_libraries(onnx_subgraphs BuildGraph)
+target_link_libraries(onnx_subgraphs OpenMP::OpenMP_CXX)
+target_link_libraries(onnx_subgraphs graphT_lib)
+
+file(DOWNLOAD
+    "https://raw.githubusercontent.com/DeepTrackAI/MNIST_dataset/main/mnist/test/1_000008.png"
+    "${CMAKE_SOURCE_DIR}/docs/input/28/test1.png"
+    SHOW_PROGRESS
+    STATUS status_code
+    LOG log_file
 )
 
-file(GLOB GRAPH_BUILD_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/graph_build.cpp")
-add_executable(itlabai_graph_build_exe ${GRAPH_BUILD_MAIN})
-add_executable(ITLabAI::GraphBuildExe ALIAS itlabai_graph_build_exe)
-target_link_libraries(itlabai_graph_build_exe PRIVATE itlabai_build_graph_lib)
-itlabai_target_defaults(itlabai_graph_build_exe)
-itlabai_apply_runtime_rpath(itlabai_graph_build_exe)
+file(DOWNLOAD
+    "blob:https://ru.pinterest.com/63b88674-b4a6-4ef3-85b2-ab57ef7bb8e7"
+    "${CMAKE_SOURCE_DIR}/docs/input/Imagenet_test/tench.png"
+    SHOW_PROGRESS
+    STATUS status_code
+    LOG log_file
+)
 
-file(GLOB ACC_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/acc_check.cpp")
-add_executable(itlabai_acc_exe ${ACC_MAIN})
-add_executable(ITLabAI::AccExe ALIAS itlabai_acc_exe)
-target_link_libraries(itlabai_acc_exe PRIVATE itlabai_build_graph_lib OpenCV::opencv_world)
-itlabai_target_defaults(itlabai_acc_exe)
-itlabai_apply_runtime_rpath(itlabai_acc_exe)
-
-file(GLOB ONNX_SUBGRAPHS_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/onnx_subgraphs.cpp")
-add_executable(itlabai_onnx_subgraphs_exe ${ONNX_SUBGRAPHS_MAIN})
-add_executable(ITLabAI::OnnxSubgraphsExe ALIAS itlabai_onnx_subgraphs_exe)
-target_link_libraries(itlabai_onnx_subgraphs_exe PRIVATE itlabai_build_graph_lib)
-if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
-    target_link_libraries(itlabai_onnx_subgraphs_exe PRIVATE OpenMP::OpenMP_CXX)
-endif()
-target_link_libraries(itlabai_onnx_subgraphs_exe PRIVATE itlabai_graph_transformations_lib)
-itlabai_target_defaults(itlabai_onnx_subgraphs_exe)
-itlabai_apply_runtime_rpath(itlabai_onnx_subgraphs_exe)
+add_definitions(-DIMAGE28_PATH="${CMAKE_SOURCE_DIR}/docs/input/28/")
+add_definitions(-DIMAGENET_ACC="${CMAKE_SOURCE_DIR}/docs/ImageNet/test/")
+add_definitions(-DIMAGENET_PATH="${CMAKE_SOURCE_DIR}/docs/input/Imagenet_test/")
+add_definitions(-DMODEL_PATH_H5="${CMAKE_SOURCE_DIR}/docs/jsons/model_data_alexnet_1.json")
+add_definitions(-DMODEL_PATH_GOOGLENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/googlenet_onnx_model.json")
+add_definitions(-DMODEL_PATH_DENSENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/densenet121_Opset16_onnx_model.json")
+add_definitions(-DMODEL_PATH_RESNET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/resnest101e_Opset16_onnx_model.json")
+add_definitions(-DMODEL_PATH_YOLO11NET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/yolo11x-cls_onnx_model.json")
+add_definitions(-DIMAGENET_LABELS="${CMAKE_SOURCE_DIR}/docs/imagenet1000_clsidx_to_labels.json")
+add_definitions(-DMNIST_PATH="${CMAKE_SOURCE_DIR}/docs/mnist/mnist/test")

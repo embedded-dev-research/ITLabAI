@@ -1,11 +1,8 @@
 ﻿#include <gtest/gtest.h>
 
-#include "fixture.hpp"
 #include "layers/ConvLayer.hpp"
 
 using namespace it_lab_ai;
-
-class ConvTestFixture : public BaseTestFixture {};
 
 TEST(ConvolutionalLayerTest, IncompatibleInput) {
   int step = 2;
@@ -588,8 +585,11 @@ TEST(ConvolutionalLayerTest, DepthwiseViaConvolutionalLayer) {
   }
 }
 
-TEST_F(ConvTestFixture, Conv4DSTLViaConvolutionalLayer) {
-  auto options = setSTLOptions();
+TEST(ConvolutionalLayerTest, Conv4DSTLViaConvolutionalLayer) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.par_backend = ParBackend::kThreads;
 
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
@@ -1043,7 +1043,12 @@ TEST(ConvolutionalLayerTest, Float4DKernelWorking) {
   ASSERT_EQ(result.size(), 4);
 }
 
-TEST_F(ConvTestFixture, Conv4DWithParallelNoneBackend) {
+TEST(ConvolutionalLayerTest, Conv4DWithParallelNoneBackend) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.par_backend = ParBackend::kSeq;
+
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
   Tensor input = make_tensor(image, input_shape);
@@ -1059,7 +1064,7 @@ TEST_F(ConvTestFixture, Conv4DWithParallelNoneBackend) {
   ConvolutionalLayer layer(1, 0, 1, kernel, Tensor());
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
-  layer.run(in, out, defaultOptions);
+  layer.run(in, out, options);
 
   std::vector<float> result = *out[0].as<float>();
 
@@ -1072,6 +1077,7 @@ TEST_F(ConvTestFixture, Conv4DWithParallelNoneBackend) {
 TEST(ConvolutionalLayerTest, Conv4DWithParallelDefaultFallback) {
   RuntimeOptions options;
   options.backend = Backend::kNaive;
+  options.parallel = true;
 
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
@@ -1098,8 +1104,11 @@ TEST(ConvolutionalLayerTest, Conv4DWithParallelDefaultFallback) {
   }
 }
 
-TEST_F(ConvTestFixture, Conv4DWithoutParallelFlag) {
-  auto options = setSTLOptions();
+TEST(ConvolutionalLayerTest, Conv4DWithoutParallelFlag) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = false;
+  options.par_backend = ParBackend::kThreads;
 
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
@@ -1126,7 +1135,12 @@ TEST_F(ConvTestFixture, Conv4DWithoutParallelFlag) {
   }
 }
 
-TEST_F(ConvTestFixture, Conv4DLegacyFloatWithParallelNone) {
+TEST(ConvolutionalLayerTest, Conv4DLegacyFloatWithParallelNone) {
+  RuntimeOptions options;
+  options.backend = Backend::kNaive;
+  options.parallel = true;
+  options.par_backend = ParBackend::kSeq;
+
   std::vector<float> image(48, 1.0f);
   Shape input_shape({1, 3, 4, 4});
   Tensor input = make_tensor(image, input_shape);
@@ -1148,7 +1162,7 @@ TEST_F(ConvTestFixture, Conv4DLegacyFloatWithParallelNone) {
   Tensor output = make_tensor(output_vec, output_shape);
   std::vector<Tensor> out{output};
 
-  layer.run(in, out, defaultOptions);
+  layer.run(in, out, options);
 
   std::vector<float> result = *out[0].as<float>();
 
@@ -1161,125 +1175,3 @@ TEST_F(ConvTestFixture, Conv4DLegacyFloatWithParallelNone) {
   ASSERT_NEAR(result[4], expected_value_ch2, 1e-5f);
   ASSERT_NEAR(result[5], expected_value_ch2, 1e-5f);
 }
-
-struct ConvTestParams {
-  std::vector<float> input_data;
-  Shape input_shape;
-  std::vector<float> kernel_data;
-  Shape kernel_shape;
-  std::vector<float> bias_data;
-  int stride;
-  int pad;
-  int dilation;
-  bool use_bias;
-  Shape output_shape;
-  std::vector<float> expected_output;
-  std::string description;
-};
-
-class ConvParametrizedTest : public ConvTestFixture,
-                             public ::testing::WithParamInterface<
-                                 std::tuple<ConvTestParams, RuntimeOptions>> {};
-
-TEST_P(ConvParametrizedTest, test_convolution_with_different_backends) {
-  auto [params, runtime_options] = GetParam();
-
-  Tensor input = make_tensor<float>(params.input_data, params.input_shape);
-  Tensor kernel = make_tensor<float>(params.kernel_data, params.kernel_shape);
-  Tensor bias;
-
-  if (params.use_bias) {
-    bias = make_tensor<float>(
-        params.bias_data, Shape({static_cast<size_t>(params.kernel_shape[0])}));
-  }
-
-  ConvolutionalLayer layer(params.stride, params.pad, params.dilation, kernel,
-                           bias, 1, true);
-
-  std::vector<float> output_vec(params.output_shape.count(), 0.0f);
-  Tensor output = make_tensor<float>(output_vec, params.output_shape);
-
-  std::vector<Tensor> inputs{input};
-  std::vector<Tensor> outputs{output};
-
-  layer.run(inputs, outputs, runtime_options);
-
-  auto output_data = *outputs[0].as<float>();
-  expectVectorsNear(output_data, params.expected_output, 1e-4f);
-}
-
-static std::vector<float> createSimpleKernel3x3() {
-  return {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-}
-
-INSTANTIATE_TEST_SUITE_P(
-    ConvLayerTests, ConvParametrizedTest,
-    ::testing::Combine(
-        ::testing::Values(
-            ConvTestParams{.input_data = std::vector<float>(48, 1.0f),
-                           .input_shape = {1, 3, 4, 4},
-                           .kernel_data = createSimpleKernel3x3(),
-                           .kernel_shape = {3, 3},
-                           .bias_data = {},
-                           .stride = 1,
-                           .pad = 0,
-                           .dilation = 1,
-                           .use_bias = false,
-                           .output_shape = {1, 3, 2, 2},
-                           .expected_output = std::vector<float>(12, 9.0f),
-                           .description = "2D_Kernel_3_Channels_4x4"},
-
-            ConvTestParams{.input_data = std::vector<float>(75, 1.0f),
-                           .input_shape = {1, 3, 5, 5},
-                           .kernel_data = {1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-                                           1.0f, 0.0f, 1.0f},
-                           .kernel_shape = {3, 3},
-                           .bias_data = {1.0f, 1.0f, 1.0f},
-                           .stride = 1,
-                           .pad = 0,
-                           .dilation = 1,
-                           .use_bias = true,
-                           .output_shape = {1, 3, 3, 3},
-                           .expected_output = std::vector<float>(27, 6.0f),
-                           .description = "2D_Kernel_With_Bias_3_Channels"},
-
-            ConvTestParams{.input_data = std::vector<float>(75, 1.0f),
-                           .input_shape = {1, 3, 5, 5},
-                           .kernel_data = {1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-                                           1.0f, 0.0f, 1.0f},
-                           .kernel_shape = {3, 3},
-                           .bias_data = {},
-                           .stride = 2,
-                           .pad = 0,
-                           .dilation = 1,
-                           .use_bias = false,
-                           .output_shape = {1, 3, 2, 2},
-                           .expected_output = std::vector<float>(12, 5.0f),
-                           .description = "2D_Kernel_Stride_2"}),
-        ::testing::Values(ConvTestFixture::setTBBOptions(),
-                          ConvTestFixture::setOmpOptions(),
-                          ConvTestFixture::setSeqOptions(),
-                          ConvTestFixture::setSTLOptions(),
-                          ConvTestFixture::setKokkosOptions())),
-    [](const ::testing::TestParamInfo<
-        std::tuple<ConvTestParams, RuntimeOptions>>& info) {
-      const auto& params = std::get<0>(info.param);
-      const auto& options = std::get<1>(info.param);
-
-      std::string name = params.description + "_";
-      if (options.par_backend == ParBackend::kTbb) {
-        name += "TBB";
-      } else if (options.par_backend == ParBackend::kOmp) {
-        name += "OMP";
-      } else if (options.par_backend == ParBackend::kThreads) {
-        name += "STL";
-      } else if (options.par_backend == ParBackend::kKokkos) {
-        name += "Kokkos";
-      } else {
-        name += "Seq";
-      }
-
-      std::replace(name.begin(), name.end(), ' ', '_');
-      std::replace(name.begin(), name.end(), '-', '_');
-      return name;
-    });

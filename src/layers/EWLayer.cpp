@@ -17,7 +17,7 @@ void EWLayer::run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
     throw std::runtime_error("EWLayer: Input tensors not 1");
   }
 
-  ParBackend backend = options.par_backend;
+  ParBackend backend = options.getEffectiveParBackend();
 
   switch (input[0].get_type()) {
     case Type::kInt: {

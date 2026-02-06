@@ -1,59 +1,45 @@
-file(GLOB_RECURSE ITLABAI_TEST_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/graph/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/inference/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/model_read/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/test_read/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/single_layer/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/single_layer_parall_version/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarking/*.cpp"
-)
+file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-add_executable(itlabai_unit_test ${ITLABAI_TEST_SOURCES})
-add_executable(ITLabAI::UnitTest ALIAS itlabai_unit_test)
+add_executable(run_test ${TEST_SRC_FILES})
 
-target_link_libraries(itlabai_unit_test PUBLIC
-    itlabai_perf_lib
-    itlabai_layers_lib
-    itlabai_layers_onednn_lib
-    itlabai_reader_image_lib
-    itlabai_reader_lib
-    itlabai_graph_lib
-    itlabai_graph_transformations_lib
-    Kokkos_imported
-    TBB_unified
-    OpenCV::opencv_world
-    gtest_main
-    gtest
-)
-itlabai_link_externals(itlabai_unit_test openmp)
-itlabai_link_externals(itlabai_unit_test gtest opencv tbb kokkos openmp)
-add_dependencies(itlabai_unit_test opencv_external)
+target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(run_test PUBLIC perf_lib layers_lib layers_oneDNN_lib)
+target_link_libraries(run_test PUBLIC gtest)
+target_link_libraries(run_test PUBLIC ReadLib)
+target_link_libraries(run_test PUBLIC reader_lib)
+target_link_libraries(run_test PUBLIC graph_lib)
+target_link_libraries(run_test PUBLIC graphT_lib)
 
-target_include_directories(itlabai_unit_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-target_include_directories(itlabai_unit_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
-itlabai_target_defaults(itlabai_unit_test)
-itlabai_apply_runtime_rpath(itlabai_unit_test)
+
+target_include_directories(run_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(run_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
 
 if (WIN32)
-    target_compile_definitions(itlabai_unit_test PRIVATE _CRT_SECURE_NO_WARNINGS)
-    add_custom_command(TARGET itlabai_unit_test POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    add_custom_command(TARGET run_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
             $<TARGET_FILE:dnnl>
-            $<TARGET_FILE_DIR:itlabai_unit_test>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:OpenCV::opencv_world>
-            $<TARGET_FILE_DIR:itlabai_unit_test>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:TBB::tbb>
-            $<TARGET_FILE_DIR:itlabai_unit_test>
+            $<TARGET_FILE_DIR:run_test>
     )
 endif()
 
-add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/itlabai_unit_test)
+add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/run_test)
 
-target_compile_definitions(itlabai_unit_test PRIVATE TEST_DATA_PATH="${CMAKE_SOURCE_DIR}/test/model_read/json_for_test")
-target_compile_definitions(itlabai_unit_test PRIVATE IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")
-target_compile_definitions(itlabai_unit_test PRIVATE IMAGENET_LABELS="${ITLABAI_TEST_DATA_DIR}/imagenet-labels.txt")
-target_compile_definitions(itlabai_unit_test PRIVATE TESTS_BINARY_PATH="${ITLABAI_TEST_DATA_DIR}")
-add_dependencies(itlabai_unit_test opencv_external)
+file(DOWNLOAD
+    "https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data/lena.jpg"
+    "${CMAKE_CURRENT_BINARY_DIR}/image.jpg"
+    SHOW_PROGRESS
+    STATUS status_code
+    LOG log_file
+)
+
+file(DOWNLOAD
+    "https://raw.githubusercontent.com/bpinaya/AlexNetRT/master/data/alexnet/imagenet-labels.txt"
+    "${CMAKE_CURRENT_BINARY_DIR}/imagenet-labels.txt"
+    SHOW_PROGRESS
+    STATUS status_code
+    LOG log_file
+)
+target_compile_definitions(run_test PRIVATE TEST_DATA_PATH="${CMAKE_SOURCE_DIR}/test/model_read/json_for_test")
+
+
+target_compile_definitions(run_test PUBLIC TESTS_BINARY_PATH="${CMAKE_CURRENT_BINARY_DIR}")

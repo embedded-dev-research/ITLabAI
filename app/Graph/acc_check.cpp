@@ -19,11 +19,11 @@ int main(int argc, char* argv[]) {
       model_name = argv[++i];
     } else if (std::string(argv[i]) == "--onednn") {
       options.backend = Backend::kOneDnn;
-      if (options.par_backend != ParBackend::kSeq) {
+      if (options.isParallel()) {
         std::cout << "Warning: oneDNN backend is not compatible with parallel "
                      "execution. Disabling parallelism."
                   << '\n';
-        options.par_backend = ParBackend::kSeq;
+        options.setParallelBackend(ParBackend::kSeq);
       }
     } else if (std::string(argv[i]) == "--parallel" && i + 1 < argc) {
       if (options.backend == Backend::kOneDnn) {
@@ -36,15 +36,15 @@ int main(int argc, char* argv[]) {
 
       std::string backend_str = argv[++i];
       if (backend_str == "tbb") {
-        options.par_backend = ParBackend::kTbb;
+        options.setParallelBackend(ParBackend::kTbb);
       } else if (backend_str == "threads" || backend_str == "stl") {
-        options.par_backend = ParBackend::kThreads;
+        options.setParallelBackend(ParBackend::kThreads);
       } else if (backend_str == "omp") {
-        options.par_backend = ParBackend::kOmp;
+        options.setParallelBackend(ParBackend::kOmp);
       } else {
         std::cerr << "Unknown parallel backend: " << backend_str
                   << ". Using default (Threads)." << '\n';
-        options.par_backend = ParBackend::kThreads;
+        options.setParallelBackend(ParBackend::kThreads);
       }
     } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
       options.threads = std::stoi(argv[++i]);

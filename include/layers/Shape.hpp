@@ -5,7 +5,6 @@
 #include <iostream>
 #include <numeric>
 #include <ostream>
-#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -40,16 +39,6 @@ class Shape {
   }
   [[nodiscard]] size_t dims() const noexcept { return dims_.size(); }
   [[nodiscard]] size_t get_index(const std::vector<size_t>& coords) const;
-  [[nodiscard]] std::string to_string() const {
-    std::stringstream ss;
-    ss << "(";
-    for (size_t i = 0; i < dims_.size(); ++i) {
-      if (i > 0) ss << ", ";
-      ss << dims_[i];
-    }
-    ss << ")";
-    return ss.str();
-  }
   bool operator==(const Shape& other) const {
     if (dims_.size() != other.dims_.size()) return false;
     for (size_t i = 0; i < dims_.size(); ++i) {

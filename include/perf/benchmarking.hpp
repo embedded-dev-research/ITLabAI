@@ -1,15 +1,13 @@
 // Using chrono for good measurements and parallelism support
 
 #pragma once
+#include <omp.h>
+
 #include <chrono>
 #include <cmath>
 #include <numeric>
 #include <stdexcept>
 #include <vector>
-
-#ifdef HAS_OPENMP
-#include <omp.h>
-#endif
 
 namespace it_lab_ai {
 
@@ -27,15 +25,10 @@ DurationContainerType elapsed_time(Function&& func, Args&&... args) {
 // returns time in seconds
 template <class Function, typename... Args>
 double elapsed_time_omp(Function&& func, Args&&... args) {
-#ifdef HAS_OPENMP
   double start = omp_get_wtime();
   func(args...);
   double end = omp_get_wtime();
   return end - start;
-#else
-  return elapsed_time<double, std::chrono::duration<double>::period>(func,
-                                                                     args...);
-#endif
 }
 
 template <typename DurationContainerType, typename DurationType, class Function,
@@ -56,17 +49,12 @@ DurationContainerType elapsed_time_avg(const size_t iters, Function&& func,
 template <class Function, typename... Args>
 double elapsed_time_omp_avg(const size_t iters, Function&& func,
                             Args&&... args) {
-#ifdef HAS_OPENMP
   double start = omp_get_wtime();
   for (size_t i = 0; i < iters; i++) {
     func(args...);
   }
   double end = omp_get_wtime();
   return (end - start) / iters;
-#else
-  return elapsed_time_avg<double, std::chrono::duration<double>::period>(
-      iters, func, args...);
-#endif
 }
 
 template <typename ThroughputContainerType, typename DurationType,
@@ -78,12 +66,7 @@ ThroughputContainerType throughput(Function&& func, Args&&... args) {
 
 template <class Function, typename... Args>
 double throughput_omp(Function&& func, Args&&... args) {
-#ifdef HAS_OPENMP
   return 1 / elapsed_time_omp(func, args...);
-#else
-  return throughput<double, std::chrono::duration<double>::period>(func,
-                                                                   args...);
-#endif
 }
 
 template <typename ThroughputContainerType, typename DurationType,

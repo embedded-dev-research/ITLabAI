@@ -14,14 +14,16 @@ void PoolingLayer::run(const std::vector<Tensor>& input,
   if (input.size() != 1) {
     throw std::runtime_error("PoolingLayer: Input tensors not 1");
   }
-  switch (options.par_backend) {
-    case ParBackend::kTbb:
-      implType_ = kTBB;
-      break;
-    case ParBackend::kSeq:
-    default:
-      implType_ = kDefault;
-      break;
+  if (options.parallel) {
+    switch (options.par_backend) {
+      case ParBackend::kTbb:
+        implType_ = kTBB;
+        break;
+      case ParBackend::kSeq:
+      default:
+        implType_ = kDefault;
+        break;
+    }
   }
   switch (input[0].get_type()) {
     case Type::kInt: {
