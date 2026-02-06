@@ -18,4 +18,5 @@ target_compile_definitions(ACCLib PUBLIC IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/l
 
 add_executable(Accuracy_Check accuracy_check.cpp)
 target_link_libraries(Accuracy_Check PRIVATE ACCLib OpenCV::opencv_world)
+itlabai_link_externals(Accuracy_Check openmp)
 itlabai_target_defaults(Accuracy_Check)

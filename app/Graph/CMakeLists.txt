@@ -25,7 +25,7 @@ target_link_libraries(Graph_Build PRIVATE BuildGraph)
 itlabai_target_defaults(Graph_Build)
 
 add_executable(ACC acc_check.cpp)
-target_link_libraries(ACC PRIVATE BuildGraph OpenCV::opencv_world Kokkos_imported TBB_unified)
+target_link_libraries(ACC PRIVATE BuildGraph OpenCV::opencv_world)
 itlabai_target_defaults(ACC)
 
 add_executable(onnx_subgraphs onnx_subgraphs.cpp)

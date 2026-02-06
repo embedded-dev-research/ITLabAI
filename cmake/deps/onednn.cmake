@@ -16,6 +16,18 @@ if(NOT dnnl_FOUND)
         set(_onednn_depends tbb_external)
     endif()
 
+    set(_onednn_byproducts "")
+    if(MSVC)
+        list(APPEND _onednn_byproducts
+            ${ONEDNN_INSTALL_DIR}/lib/dnnl.lib
+            ${ONEDNN_INSTALL_DIR}/bin/dnnl.dll
+        )
+    else()
+        list(APPEND _onednn_byproducts
+            ${ONEDNN_INSTALL_DIR}/lib/libdnnl${CMAKE_SHARED_LIBRARY_SUFFIX}
+        )
+    endif()
+
     ExternalProject_Add(onednn_external
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/oneDNN"
         BINARY_DIR "${ONEDNN_BUILD_DIR}"
@@ -36,9 +48,7 @@ if(NOT dnnl_FOUND)
             -DBUILD_SHARED_LIBS=ON
             ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS}
             ${ITLABAI_EXTERNAL_WARNING_ARGS}
-        BUILD_BYPRODUCTS
-            ${ONEDNN_INSTALL_DIR}/lib/dnnl.lib
-            ${ONEDNN_INSTALL_DIR}/bin/dnnl.dll
+        BUILD_BYPRODUCTS ${_onednn_byproducts}
     )
     add_dependencies(itlabai_external onednn_external)
 
