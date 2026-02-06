@@ -44,7 +44,6 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DOPENCV_PATH=build/3rdparty/opencv_build \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
@@ -54,17 +53,15 @@ jobs:
     - name: Prepare ALL libs
       run: |
        mkdir -p build/bin/all_libs
-       cp -a build/3rdparty/opencv_build/lib/* build/bin/all_libs/ 2>/dev/null || true
+       find build/_external/install -type f \( -name "*.so" -o -name "*.so.*" -o -name "*.dylib" \) -exec cp {} build/bin/all_libs/ \; 2>/dev/null || true
        ldd build/bin/itlabai_acc_exe | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} build/bin/all_libs/ 2>/dev/null || true
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
        name: mnist-${{ matrix.build_type }}${{ matrix.stats && '-stats' || '' }}
        path: |
-        ${{ steps.set_binaries.outputs.ACC_BINARY }}
+       ${{ steps.set_binaries.outputs.ACC_BINARY }}
         build/bin/all_libs/*
-        build/bin/opencv_libs/*
-        build/setenv.sh
     - name: Test
       run: cmake --build build -t test
       env:
