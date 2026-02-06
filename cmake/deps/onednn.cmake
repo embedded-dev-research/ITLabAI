@@ -7,6 +7,10 @@ if(ITLABAI_USE_SYSTEM_DEPS)
 endif()
 
 if(NOT dnnl_FOUND)
+    set(_onednn_build_type "${CMAKE_BUILD_TYPE}")
+    if(NOT _onednn_build_type)
+        set(_onednn_build_type "Release")
+    endif()
     set(_onednn_depends "")
     if(TARGET tbb_external)
         set(_onednn_depends tbb_external)
@@ -19,7 +23,7 @@ if(NOT dnnl_FOUND)
         DEPENDS ${_onednn_depends}
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${ONEDNN_INSTALL_DIR}
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=${_onednn_build_type}
             -DDNNL_BUILD_TESTS=OFF
             -DDNNL_BUILD_EXAMPLES=OFF
             -DDNNL_BUILD_DOC=OFF
@@ -30,6 +34,7 @@ if(NOT dnnl_FOUND)
             -DTBB_ROOT=${TBB_INSTALL_DIR}
             -DDNNL_LIBRARY_TYPE=SHARED
             -DBUILD_SHARED_LIBS=ON
+            ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS}
         BUILD_BYPRODUCTS
             ${ONEDNN_INSTALL_DIR}/lib/dnnl.lib
             ${ONEDNN_INSTALL_DIR}/bin/dnnl.dll

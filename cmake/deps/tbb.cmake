@@ -7,27 +7,23 @@ if(ITLABAI_USE_SYSTEM_DEPS)
 endif()
 
 if(NOT TBB_FOUND)
-    set(_tbb_cmake_args "")
-    if(MSVC)
-        list(APPEND _tbb_cmake_args
-            -DCMAKE_C_COMPILER=cl
-            -DCMAKE_CXX_COMPILER=cl
-        )
-    elseif(WIN32)
-        get_filename_component(_clang_dir "${CMAKE_C_COMPILER}" DIRECTORY)
-        set(_clang_cl "${_clang_dir}/clang-cl.exe")
-        if(EXISTS "${_clang_cl}")
-            list(APPEND _tbb_cmake_args
-                -DCMAKE_C_COMPILER=${_clang_cl}
-                -DCMAKE_CXX_COMPILER=${_clang_cl}
-            )
-        endif()
+    set(_tbb_build_type "${CMAKE_BUILD_TYPE}")
+    if(NOT _tbb_build_type)
+        set(_tbb_build_type "Release")
     endif()
+    set(_tbb_cmake_args ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS})
 
     if(WIN32)
-        set(_tbb_lib_name "tbb12")
-        set(_tbb_lib "${TBB_INSTALL_DIR}/lib/${_tbb_lib_name}.lib")
-        set(_tbb_dll "${TBB_INSTALL_DIR}/bin/${_tbb_lib_name}.dll")
+        set(_tbb_debug_suffix "")
+        if(_tbb_build_type STREQUAL "Debug")
+            set(_tbb_debug_suffix "_debug")
+        endif()
+        set(_tbb_release_lib "${TBB_INSTALL_DIR}/lib/tbb12.lib")
+        set(_tbb_release_dll "${TBB_INSTALL_DIR}/bin/tbb12.dll")
+        set(_tbb_debug_lib "${TBB_INSTALL_DIR}/lib/tbb12_debug.lib")
+        set(_tbb_debug_dll "${TBB_INSTALL_DIR}/bin/tbb12_debug.dll")
+        set(_tbb_lib "${TBB_INSTALL_DIR}/lib/tbb12${_tbb_debug_suffix}.lib")
+        set(_tbb_dll "${TBB_INSTALL_DIR}/bin/tbb12${_tbb_debug_suffix}.dll")
         set(_tbb_byproducts
             "${_tbb_lib}"
             "${_tbb_dll}"
@@ -45,7 +41,7 @@ if(NOT TBB_FOUND)
         INSTALL_DIR "${TBB_INSTALL_DIR}"
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${TBB_INSTALL_DIR}
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=${_tbb_build_type}
             -DBUILD_SHARED_LIBS=ON
             -DTBB_TEST=OFF
             -DTBB_EXAMPLES=OFF
@@ -62,15 +58,15 @@ if(NOT TBB_FOUND)
     add_library(TBB::tbb SHARED IMPORTED GLOBAL)
     if(WIN32)
         set_target_properties(TBB::tbb PROPERTIES
-            IMPORTED_LOCATION_RELEASE "${_tbb_dll}"
-            IMPORTED_LOCATION_DEBUG "${_tbb_dll}"
-            IMPORTED_LOCATION_RELWITHDEBINFO "${_tbb_dll}"
-            IMPORTED_LOCATION_MINSIZEREL "${_tbb_dll}"
+            IMPORTED_LOCATION_RELEASE "${_tbb_release_dll}"
+            IMPORTED_LOCATION_DEBUG "${_tbb_debug_dll}"
+            IMPORTED_LOCATION_RELWITHDEBINFO "${_tbb_release_dll}"
+            IMPORTED_LOCATION_MINSIZEREL "${_tbb_release_dll}"
             IMPORTED_IMPLIB "${_tbb_lib}"
-            IMPORTED_IMPLIB_RELEASE "${_tbb_lib}"
-            IMPORTED_IMPLIB_DEBUG "${_tbb_lib}"
-            IMPORTED_IMPLIB_RELWITHDEBINFO "${_tbb_lib}"
-            IMPORTED_IMPLIB_MINSIZEREL "${_tbb_lib}"
+            IMPORTED_IMPLIB_RELEASE "${_tbb_release_lib}"
+            IMPORTED_IMPLIB_DEBUG "${_tbb_debug_lib}"
+            IMPORTED_IMPLIB_RELWITHDEBINFO "${_tbb_release_lib}"
+            IMPORTED_IMPLIB_MINSIZEREL "${_tbb_release_lib}"
             INTERFACE_INCLUDE_DIRECTORIES "${TBB_INSTALL_DIR}/include"
         )
     else()

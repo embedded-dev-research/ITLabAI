@@ -7,6 +7,10 @@ if(ITLABAI_USE_SYSTEM_DEPS)
 endif()
 
 if(NOT Kokkos_FOUND)
+    set(_kokkos_build_type "${CMAKE_BUILD_TYPE}")
+    if(NOT _kokkos_build_type)
+        set(_kokkos_build_type "Release")
+    endif()
     set(_kokkos_openmp_flag OFF)
     set(_kokkos_threads_flag ON)
     if(ITLABAI_ENABLE_OPENMP AND OpenMP_FOUND AND NOT (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
@@ -25,7 +29,7 @@ if(NOT Kokkos_FOUND)
         INSTALL_DIR "${KOKKOS_INSTALL_DIR}"
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${KOKKOS_INSTALL_DIR}
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=${_kokkos_build_type}
             -DKokkos_ENABLE_SERIAL=ON
             -DKokkos_ENABLE_THREADS=${_kokkos_threads_flag}
             -DKokkos_ENABLE_OPENMP=${_kokkos_openmp_flag}
@@ -34,6 +38,7 @@ if(NOT Kokkos_FOUND)
             -DKokkos_ENABLE_TESTS=OFF
             -DKokkos_ENABLE_EXAMPLES=OFF
             -DBUILD_SHARED_LIBS=OFF
+            ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS}
         BUILD_BYPRODUCTS
             ${KOKKOS_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}kokkoscore${CMAKE_STATIC_LIBRARY_SUFFIX}
             ${KOKKOS_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}kokkoscontainers${CMAKE_STATIC_LIBRARY_SUFFIX}

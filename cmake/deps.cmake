@@ -5,6 +5,26 @@ set(ITLABAI_EXTERNAL_ROOT "${CMAKE_BINARY_DIR}/_external" CACHE PATH "Root for e
 set(ITLABAI_EXTERNAL_BUILD_ROOT "${ITLABAI_EXTERNAL_ROOT}/build" CACHE PATH "External build trees")
 set(ITLABAI_EXTERNAL_INSTALL_ROOT "${ITLABAI_EXTERNAL_ROOT}/install" CACHE PATH "External install trees")
 
+set(ITLABAI_EXTERNAL_TOOLCHAIN_ARGS "")
+set(_itlabai_cc "")
+set(_itlabai_cxx "")
+if(DEFINED CMAKE_C_COMPILER AND NOT CMAKE_C_COMPILER STREQUAL "")
+    set(_itlabai_cc "${CMAKE_C_COMPILER}")
+elseif(DEFINED ENV{CC} AND NOT "$ENV{CC}" STREQUAL "")
+    set(_itlabai_cc "$ENV{CC}")
+endif()
+if(DEFINED CMAKE_CXX_COMPILER AND NOT CMAKE_CXX_COMPILER STREQUAL "")
+    set(_itlabai_cxx "${CMAKE_CXX_COMPILER}")
+elseif(DEFINED ENV{CXX} AND NOT "$ENV{CXX}" STREQUAL "")
+    set(_itlabai_cxx "$ENV{CXX}")
+endif()
+if(_itlabai_cc)
+    list(APPEND ITLABAI_EXTERNAL_TOOLCHAIN_ARGS -DCMAKE_C_COMPILER=${_itlabai_cc})
+endif()
+if(_itlabai_cxx)
+    list(APPEND ITLABAI_EXTERNAL_TOOLCHAIN_ARGS -DCMAKE_CXX_COMPILER=${_itlabai_cxx})
+endif()
+
 add_custom_target(itlabai_external) # aggregator for externals
 
 include(${CMAKE_CURRENT_LIST_DIR}/deps/tbb.cmake)

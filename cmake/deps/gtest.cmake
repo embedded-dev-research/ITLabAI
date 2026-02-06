@@ -8,18 +8,33 @@ endif()
 
 if(NOT GTest_FOUND)
     find_package(Threads REQUIRED)
+    set(_gtest_build_type "${CMAKE_BUILD_TYPE}")
+    if(NOT _gtest_build_type)
+        set(_gtest_build_type "Release")
+    endif()
+    set(_gtest_cmake_args "")
+    if(MSVC)
+        set(_gtest_msvc_runtime "MultiThreadedDLL")
+        if(_gtest_build_type STREQUAL "Debug")
+            set(_gtest_msvc_runtime "MultiThreadedDebugDLL")
+        endif()
+        list(APPEND _gtest_cmake_args
+            -Dgtest_force_shared_crt=ON
+            -DCMAKE_MSVC_RUNTIME_LIBRARY=${_gtest_msvc_runtime}
+        )
+    endif()
     ExternalProject_Add(gtest_external
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/googletest"
         BINARY_DIR "${GTEST_BUILD_DIR}"
         INSTALL_DIR "${GTEST_INSTALL_DIR}"
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${GTEST_INSTALL_DIR}
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=${_gtest_build_type}
             -DBUILD_GMOCK=ON
             -DINSTALL_GTEST=ON
             -DBUILD_SHARED_LIBS=OFF
-            $<$<BOOL:${MSVC}>:-Dgtest_force_shared_crt=ON>
-            $<$<BOOL:${MSVC}>:-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL>
+            ${_gtest_cmake_args}
+            ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS}
         BUILD_BYPRODUCTS
             ${GTEST_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
             ${GTEST_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX}
