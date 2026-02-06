@@ -11,7 +11,7 @@ if(NOT TBB_FOUND)
     if(NOT _tbb_build_type)
         set(_tbb_build_type "Release")
     endif()
-    set(_tbb_cmake_args ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS})
+    set(_tbb_cmake_args ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS} ${ITLABAI_EXTERNAL_WARNING_ARGS})
 
     if(WIN32)
         set(_tbb_debug_suffix "")

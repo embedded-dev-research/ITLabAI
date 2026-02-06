@@ -35,6 +35,7 @@ if(NOT dnnl_FOUND)
             -DDNNL_LIBRARY_TYPE=SHARED
             -DBUILD_SHARED_LIBS=ON
             ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS}
+            ${ITLABAI_EXTERNAL_WARNING_ARGS}
         BUILD_BYPRODUCTS
             ${ONEDNN_INSTALL_DIR}/lib/dnnl.lib
             ${ONEDNN_INSTALL_DIR}/bin/dnnl.dll

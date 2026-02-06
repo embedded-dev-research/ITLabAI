@@ -25,6 +25,17 @@ if(_itlabai_cxx)
     list(APPEND ITLABAI_EXTERNAL_TOOLCHAIN_ARGS -DCMAKE_CXX_COMPILER=${_itlabai_cxx})
 endif()
 
+option(ITLABAI_EXTERNAL_WARNINGS_AS_ERRORS "Treat warnings as errors for external projects" OFF)
+set(ITLABAI_EXTERNAL_WARNING_ARGS "")
+if(NOT ITLABAI_EXTERNAL_WARNINGS_AS_ERRORS)
+    list(APPEND ITLABAI_EXTERNAL_WARNING_ARGS -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF)
+    if(MSVC OR (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+        list(APPEND ITLABAI_EXTERNAL_WARNING_ARGS -DCMAKE_C_FLAGS=/WX- -DCMAKE_CXX_FLAGS=/WX-)
+    else()
+        list(APPEND ITLABAI_EXTERNAL_WARNING_ARGS -DCMAKE_C_FLAGS=-Wno-error -DCMAKE_CXX_FLAGS=-Wno-error)
+    endif()
+endif()
+
 add_custom_target(itlabai_external) # aggregator for externals
 
 include(${CMAKE_CURRENT_LIST_DIR}/deps/tbb.cmake)
