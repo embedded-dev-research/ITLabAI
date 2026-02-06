@@ -18,6 +18,8 @@ if(NOT GTest_FOUND)
             -DBUILD_GMOCK=ON
             -DINSTALL_GTEST=ON
             -DBUILD_SHARED_LIBS=OFF
+            $<$<BOOL:${MSVC}>:-Dgtest_force_shared_crt=ON>
+            $<$<BOOL:${MSVC}>:-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL>
         BUILD_BYPRODUCTS
             ${GTEST_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
             ${GTEST_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX}

@@ -13,6 +13,11 @@ if(NOT Kokkos_FOUND)
         set(_kokkos_openmp_flag ON)
         set(_kokkos_threads_flag OFF)
     endif()
+    if(MSVC)
+        # MSVC OpenMP is limited to 2.0; disable OpenMP for Kokkos.
+        set(_kokkos_openmp_flag OFF)
+        set(_kokkos_threads_flag ON)
+    endif()
 
     ExternalProject_Add(kokkos_external
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/kokkos"

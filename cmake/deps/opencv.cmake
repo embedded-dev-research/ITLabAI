@@ -46,6 +46,46 @@ if(NOT OpenCV_FOUND)
         -DCMAKE_CXX_STANDARD=17
     )
 
+    if(WIN32)
+        set(_opencv_ver_header "${CMAKE_SOURCE_DIR}/3rdparty/opencv/modules/core/include/opencv2/core/version.hpp")
+        if(EXISTS "${_opencv_ver_header}")
+            file(READ "${_opencv_ver_header}" _opencv_ver_text)
+            string(REGEX REPLACE ".*#define CV_VERSION_MAJOR[ \t]+([0-9]+).*" "\\1" _opencv_ver_major "${_opencv_ver_text}")
+            string(REGEX REPLACE ".*#define CV_VERSION_MINOR[ \t]+([0-9]+).*" "\\1" _opencv_ver_minor "${_opencv_ver_text}")
+            string(REGEX REPLACE ".*#define CV_VERSION_REVISION[ \t]+([0-9]+).*" "\\1" _opencv_ver_patch "${_opencv_ver_text}")
+            set(_opencv_dllversion "${_opencv_ver_major}${_opencv_ver_minor}${_opencv_ver_patch}")
+        else()
+            set(_opencv_dllversion "")
+        endif()
+
+        if(MSVC_VERSION GREATER_EQUAL 1930)
+            set(_opencv_vc "vc17")
+        elseif(MSVC_VERSION GREATER_EQUAL 1920)
+            set(_opencv_vc "vc16")
+        else()
+            set(_opencv_vc "vc15")
+        endif()
+        set(_opencv_arch "x64")
+        set(_opencv_libdir "${OPENCV_INSTALL_DIR}/${_opencv_arch}/${_opencv_vc}/lib")
+        set(_opencv_bindir "${OPENCV_INSTALL_DIR}/${_opencv_arch}/${_opencv_vc}/bin")
+
+        set(_opencv_world_lib "${_opencv_libdir}/opencv_world${_opencv_dllversion}.lib")
+        set(_opencv_world_dll "${_opencv_bindir}/opencv_world${_opencv_dllversion}.dll")
+        set(_opencv_include_dir "${OPENCV_INSTALL_DIR}/include")
+
+        set(_opencv_byproducts
+            "${_opencv_world_lib}"
+            "${_opencv_world_dll}"
+        )
+    else()
+        set(_opencv_world "${OPENCV_INSTALL_DIR}/lib/libopencv_world${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        set(_opencv_include_dir "${OPENCV_INSTALL_DIR}/include/opencv4")
+
+        set(_opencv_byproducts
+            "${_opencv_world}"
+        )
+    endif()
+
     ExternalProject_Add(opencv_external
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/opencv"
         BINARY_DIR "${OPENCV_BUILD_DIR}"
@@ -53,6 +93,9 @@ if(NOT OpenCV_FOUND)
         CMAKE_ARGS
             -DCMAKE_INSTALL_PREFIX=${OPENCV_INSTALL_DIR}
             -DCMAKE_BUILD_TYPE=Release
+            -DOPENCV_INSTALL_BIN_DIR=bin
+            -DOPENCV_INSTALL_LIB_DIR=lib
+            -DOPENCV_INSTALL_INCLUDE_DIR=include
             -DBUILD_SHARED_LIBS=ON
             -DBUILD_PROTOBUF=ON
             -DPROTOBUF_UPDATE_FILES=OFF
@@ -60,28 +103,38 @@ if(NOT OpenCV_FOUND)
         CMAKE_CACHE_ARGS
             -DBUILD_LIST:STRING=${OPENCV_COMPONENTS_ESC}
         BUILD_BYPRODUCTS
-            ${OPENCV_INSTALL_DIR}/lib/libopencv_world${CMAKE_SHARED_LIBRARY_SUFFIX}
+            ${_opencv_byproducts}
     )
     add_dependencies(itlabai_external opencv_external)
 
-    if(MSVC)
-        set(_opencv_world "${OPENCV_INSTALL_DIR}/lib/opencv_world.lib")
-    else()
-        set(_opencv_world "${OPENCV_INSTALL_DIR}/lib/libopencv_world${CMAKE_SHARED_LIBRARY_SUFFIX}")
-    endif()
-
-    file(MAKE_DIRECTORY "${OPENCV_INSTALL_DIR}/include/opencv4")
+    file(MAKE_DIRECTORY "${_opencv_include_dir}")
     file(MAKE_DIRECTORY "${OPENCV_INSTALL_DIR}/lib")
 
     add_library(OpenCV::opencv_world SHARED IMPORTED GLOBAL)
-    set_target_properties(OpenCV::opencv_world PROPERTIES
-        IMPORTED_LOCATION "${_opencv_world}"
-        IMPORTED_LOCATION_RELEASE "${_opencv_world}"
-        IMPORTED_LOCATION_DEBUG "${_opencv_world}"
-        IMPORTED_LOCATION_RELWITHDEBINFO "${_opencv_world}"
-        IMPORTED_LOCATION_MINSIZEREL "${_opencv_world}"
-        INTERFACE_INCLUDE_DIRECTORIES "${OPENCV_INSTALL_DIR}/include/opencv4"
-    )
+    if(WIN32)
+        set_target_properties(OpenCV::opencv_world PROPERTIES
+            IMPORTED_LOCATION "${_opencv_world_dll}"
+            IMPORTED_LOCATION_RELEASE "${_opencv_world_dll}"
+            IMPORTED_LOCATION_DEBUG "${_opencv_world_dll}"
+            IMPORTED_LOCATION_RELWITHDEBINFO "${_opencv_world_dll}"
+            IMPORTED_LOCATION_MINSIZEREL "${_opencv_world_dll}"
+            IMPORTED_IMPLIB "${_opencv_world_lib}"
+            IMPORTED_IMPLIB_RELEASE "${_opencv_world_lib}"
+            IMPORTED_IMPLIB_DEBUG "${_opencv_world_lib}"
+            IMPORTED_IMPLIB_RELWITHDEBINFO "${_opencv_world_lib}"
+            IMPORTED_IMPLIB_MINSIZEREL "${_opencv_world_lib}"
+            INTERFACE_INCLUDE_DIRECTORIES "${_opencv_include_dir}"
+        )
+    else()
+        set_target_properties(OpenCV::opencv_world PROPERTIES
+            IMPORTED_LOCATION "${_opencv_world}"
+            IMPORTED_LOCATION_RELEASE "${_opencv_world}"
+            IMPORTED_LOCATION_DEBUG "${_opencv_world}"
+            IMPORTED_LOCATION_RELWITHDEBINFO "${_opencv_world}"
+            IMPORTED_LOCATION_MINSIZEREL "${_opencv_world}"
+            INTERFACE_INCLUDE_DIRECTORIES "${_opencv_include_dir}"
+        )
+    endif()
 else()
     # System OpenCV: ensure a world-like target exists
     if(NOT TARGET OpenCV::opencv_world)

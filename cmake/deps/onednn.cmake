@@ -31,12 +31,14 @@ if(NOT dnnl_FOUND)
             -DDNNL_LIBRARY_TYPE=SHARED
             -DBUILD_SHARED_LIBS=ON
         BUILD_BYPRODUCTS
-            ${ONEDNN_INSTALL_DIR}/lib/libdnnl${CMAKE_SHARED_LIBRARY_SUFFIX}
+            ${ONEDNN_INSTALL_DIR}/lib/dnnl.lib
+            ${ONEDNN_INSTALL_DIR}/bin/dnnl.dll
     )
     add_dependencies(itlabai_external onednn_external)
 
     if(MSVC)
-        set(_dnnl_lib "${ONEDNN_INSTALL_DIR}/lib/dnnl.dll")
+        set(_dnnl_lib "${ONEDNN_INSTALL_DIR}/lib/dnnl.lib")
+        set(_dnnl_dll "${ONEDNN_INSTALL_DIR}/bin/dnnl.dll")
     else()
         set(_dnnl_lib "${ONEDNN_INSTALL_DIR}/lib/libdnnl${CMAKE_SHARED_LIBRARY_SUFFIX}")
     endif()
@@ -44,16 +46,29 @@ if(NOT dnnl_FOUND)
     file(MAKE_DIRECTORY "${ONEDNN_INSTALL_DIR}/include")
     file(MAKE_DIRECTORY "${ONEDNN_INSTALL_DIR}/lib")
 
-    add_library(dnnl STATIC IMPORTED GLOBAL)
-    set_target_properties(dnnl PROPERTIES
-        IMPORTED_LOCATION_RELEASE "${_dnnl_lib}"
-        IMPORTED_LOCATION_DEBUG "${_dnnl_lib}"
-        INTERFACE_INCLUDE_DIRECTORIES "${ONEDNN_INSTALL_DIR}/include"
-    )
-    set_target_properties(dnnl PROPERTIES
-        IMPORTED_LOCATION_RELWITHDEBINFO "${_dnnl_lib}"
-        IMPORTED_LOCATION_MINSIZEREL "${_dnnl_lib}"
-    )
+    add_library(dnnl SHARED IMPORTED GLOBAL)
+    if(MSVC)
+        set_target_properties(dnnl PROPERTIES
+            IMPORTED_LOCATION_RELEASE "${_dnnl_dll}"
+            IMPORTED_LOCATION_DEBUG "${_dnnl_dll}"
+            IMPORTED_LOCATION_RELWITHDEBINFO "${_dnnl_dll}"
+            IMPORTED_LOCATION_MINSIZEREL "${_dnnl_dll}"
+            IMPORTED_IMPLIB "${_dnnl_lib}"
+            IMPORTED_IMPLIB_RELEASE "${_dnnl_lib}"
+            IMPORTED_IMPLIB_DEBUG "${_dnnl_lib}"
+            IMPORTED_IMPLIB_RELWITHDEBINFO "${_dnnl_lib}"
+            IMPORTED_IMPLIB_MINSIZEREL "${_dnnl_lib}"
+            INTERFACE_INCLUDE_DIRECTORIES "${ONEDNN_INSTALL_DIR}/include"
+        )
+    else()
+        set_target_properties(dnnl PROPERTIES
+            IMPORTED_LOCATION_RELEASE "${_dnnl_lib}"
+            IMPORTED_LOCATION_DEBUG "${_dnnl_lib}"
+            IMPORTED_LOCATION_RELWITHDEBINFO "${_dnnl_lib}"
+            IMPORTED_LOCATION_MINSIZEREL "${_dnnl_lib}"
+            INTERFACE_INCLUDE_DIRECTORIES "${ONEDNN_INSTALL_DIR}/include"
+        )
+    endif()
     target_link_libraries(dnnl INTERFACE TBB::tbb)
     add_dependencies(dnnl onednn_external)
 else()
