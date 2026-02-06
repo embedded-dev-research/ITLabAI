@@ -563,3 +563,155 @@ TEST(convlayer_onednn, int_output_processing) {
     EXPECT_EQ(val, 9);
   }
 }
+
+TEST(convlayer_onednn, int_bias_processing_special_conv) {
+  std::vector<int> kernel_data(3 * 3 * 1 * 2, 1);
+  std::vector<int> bias_data = {5, -3};
+
+  Tensor kernel = make_tensor(kernel_data, Shape({3, 3, 1, 2}));
+  Tensor bias = make_tensor(bias_data, Shape({2}));
+
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 1, true);
+
+  std::vector<int> input_data(1 * 1 * 4 * 4, 2);
+  Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  EXPECT_EQ(out[0].get_type(), Type::kInt);
+
+  auto output_vals = *out[0].as<int>();
+  EXPECT_EQ(output_vals.size(), 8);
+  for (size_t i = 0; i < 4; ++i) {
+    EXPECT_EQ(output_vals[i], 23);
+  }
+  for (size_t i = 4; i < 8; ++i) {
+    EXPECT_EQ(output_vals[i], 15);
+  }
+}
+
+TEST(convlayer_onednn, float_bias_processing_special_conv) {
+  std::vector<float> kernel_data(3 * 3 * 1 * 2, 1.0f);
+  std::vector<float> bias_data = {2.5f, -1.5f};
+
+  Tensor kernel = make_tensor(kernel_data, Shape({3, 3, 1, 2}));
+  Tensor bias = make_tensor(bias_data, Shape({2}));
+
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 1, true);
+
+  std::vector<float> input_data(1 * 1 * 4 * 4, 1.5f);
+  Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  EXPECT_EQ(out[0].get_type(), Type::kFloat);
+
+  auto output_vals = *out[0].as<float>();
+  EXPECT_EQ(output_vals.size(), 8);
+  for (size_t i = 0; i < 4; ++i) {
+    EXPECT_NEAR(output_vals[i], 13.5f + 2.5f, 1e-5f);
+  }
+  for (size_t i = 4; i < 8; ++i) {
+    EXPECT_NEAR(output_vals[i], 13.5f - 1.5f, 1e-5f);
+  }
+}
+
+TEST(convlayer_onednn, empty_bias_special_conv) {
+  std::vector<float> kernel_data(3 * 3 * 1 * 2, 1.0f);
+
+  Tensor kernel = make_tensor(kernel_data, Shape({3, 3, 1, 2}));
+  Tensor bias = make_tensor<float>({}, Shape({0}));
+
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 1, true);
+
+  std::vector<float> input_data(1 * 1 * 4 * 4, 2.0f);
+  Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+}
+
+TEST(convlayer_onednn, negative_bias_values) {
+  std::vector<float> kernel_data(3 * 3 * 1 * 1, 1.0f);
+  std::vector<float> bias_data = {-10.0f};
+
+  Tensor kernel = make_tensor(kernel_data, Shape({3, 3, 1, 1}));
+  Tensor bias = make_tensor(bias_data, Shape({1}));
+
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 1, true);
+
+  std::vector<float> input_data(1 * 1 * 4 * 4, 1.0f);
+  Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  auto output_vals = *out[0].as<float>();
+  EXPECT_NEAR(output_vals[0], -1.0f, 1e-5f);
+}
+
+TEST(convlayer_onednn, large_bias_values_int) {
+  std::vector<int> kernel_data(3 * 3 * 1 * 1, 1);
+  std::vector<int> bias_data = {1000};
+
+  Tensor kernel = make_tensor(kernel_data, Shape({3, 3, 1, 1}));
+  Tensor bias = make_tensor(bias_data, Shape({1}));
+
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 1, true);
+
+  std::vector<int> input_data(1 * 1 * 4 * 4, 1);
+  Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));
+  Tensor output;
+  std::vector<Tensor> in{input};
+  std::vector<Tensor> out{output};
+
+  EXPECT_NO_THROW(layer.run(in, out));
+
+  auto output_vals = *out[0].as<int>();
+  EXPECT_EQ(output_vals[0], 1009);
+}
+
+TEST(convlayer_onednn, bias_with_different_conv_modes) {
+  std::vector<float> kernel_data(3 * 3 * 1 * 2, 1.0f);
+  std::vector<float> bias_data = {5.0f, 10.0f};
+
+  Tensor kernel = make_tensor(kernel_data, Shape({2, 1, 3, 3}));
+  Tensor bias = make_tensor(bias_data, Shape({2}));
+
+  {
+    ConvLayerOneDnn layer_normal(1, 0, 1, kernel, bias, 1, false);
+
+    std::vector<float> input_data(1 * 1 * 4 * 4, 2.0f);
+    Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));
+    Tensor output_normal;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output_normal};
+
+    EXPECT_NO_THROW(layer_normal.run(in, out));
+  }
+
+  {
+    std::vector<float> kernel_data_hwio(3 * 3 * 1 * 2, 1.0f);
+    Tensor kernel_hwio = make_tensor(kernel_data_hwio, Shape({3, 3, 1, 2}));
+
+    ConvLayerOneDnn layer_special(1, 0, 1, kernel_hwio, bias, 1, true);
+
+    std::vector<float> input_data(1 * 1 * 4 * 4, 2.0f);
+    Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));
+    Tensor output_special;
+    std::vector<Tensor> in{input};
+    std::vector<Tensor> out{output_special};
+
+    EXPECT_NO_THROW(layer_special.run(in, out));
+  }
+}
