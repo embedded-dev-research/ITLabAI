@@ -36,6 +36,16 @@ else()
     message(STATUS "OpenMP not found - parallel features disabled")
 endif()
 
+option(ENABLE_SYCL "Enable SYCL support" OFF)
+
+if(ENABLE_SYCL)
+    message(STATUS "SYCL enabled")
+    add_definitions(-DHAS_SYCL)
+
+    add_compile_options(-fsycl)
+    add_link_options(-fsycl)
+endif()
+
 include_directories("include")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")

@@ -12,6 +12,10 @@
 #include <thread>
 #include <vector>
 
+#ifdef HAS_SYCL
+#include <sycl/sycl.hpp>
+#endif
+
 namespace it_lab_ai {
 namespace parallel {
 
@@ -20,7 +24,8 @@ enum class Backend : std::uint8_t {
   kThreads = 1,
   kTbb = 2,
   kOmp = 3,
-  kKokkos = 4
+  kKokkos = 4,
+  kSycl = 5
 };
 
 struct Options {
@@ -141,6 +146,28 @@ inline void impl_kokkos(std::size_t count,
   Kokkos::parallel_for("parallel_for", count, kokkos_func);
   Kokkos::fence();
 }
+
+#ifdef HAS_SYCL
+inline void impl_sycl(std::size_t count,
+                      const std::function<void(std::size_t)>& func,
+                      const Options& opt) {
+  if (count == 0) return;
+
+  static sycl::queue q(sycl::default_selector_v);
+
+  sycl::range<1> num_items{count};
+
+  q.submit([&](sycl::handler& h) {
+     h.parallel_for(num_items, [=](sycl::id<1> idx) { func(idx[0]); });
+   }).wait();
+}
+#else
+inline void impl_sycl(std::size_t count,
+                      const std::function<void(std::size_t)>& func,
+                      const Options& opt) {
+  impl_seq(count, func);
+}
+#endif
 
 }  // namespace parallel
 }  // namespace it_lab_ai

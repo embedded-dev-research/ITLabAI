@@ -11,12 +11,21 @@ constexpr bool kHasOmp =
     false;
 #endif
 
+constexpr bool kHasSycl =
+#ifdef HAS_SYCL
+    true;
+#else
+    false;
+#endif
+
 inline Backend resolve_default_backend(std::size_t n, const Options& opt) {
   if (n < opt.min_parallel_n) {
     return Backend::kSeq;
   }
 
-#ifdef HAS_OPENMP
+#ifdef HAS_SYCL
+  return Backend::kSycl;
+#elif defined(HAS_OPENMP)
   return Backend::kOmp;
 #else
   return Backend::kTbb;
@@ -30,7 +39,7 @@ inline Backend select_backend(const Options& opt, std::size_t n) {
 
   if (opt.backend == Backend::kSeq || opt.backend == Backend::kThreads ||
       opt.backend == Backend::kTbb || opt.backend == Backend::kOmp ||
-      opt.backend == Backend::kKokkos) {
+      opt.backend == Backend::kKokkos || opt.backend == Backend::kSycl) {
     return opt.backend;
   }
 
@@ -59,6 +68,9 @@ inline void parallel_for(std::size_t count, Func&& func,
       break;
     case Backend::kKokkos:
       impl_kokkos(count, std::forward<Func>(func), opt);
+      break;
+    case Backend::kSycl:
+      impl_sycl(count, std::forward<Func>(func), opt);
       break;
   }
 }

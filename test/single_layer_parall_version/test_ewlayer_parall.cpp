@@ -26,9 +26,9 @@ TEST(ewlayer_parall, parallel_for_ew_relu) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  std::vector<ParBackend> backends = {ParBackend::kSeq,    ParBackend::kThreads,
+                                      ParBackend::kTbb,    ParBackend::kOmp,
+                                      ParBackend::kKokkos, Backend::kSycl};
 
   for (auto backend : backends) {
     RuntimeOptions options;
