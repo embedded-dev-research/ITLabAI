@@ -12,9 +12,8 @@ namespace it_lab_ai {
 
 class ReduceLayerOneDnn : public Layer {
  public:
-  ReduceLayerOneDnn(ReduceLayer::Operation op,
-                                       int64_t keepdims,
-                                       const std::vector<int64_t>& axes)
+  ReduceLayerOneDnn(ReduceLayer::Operation op, int64_t keepdims,
+                    const std::vector<int64_t>& axes)
       : Layer(kReduce), op_(op), keepdims_(keepdims), axes_(axes) {}
 
   explicit ReduceLayerOneDnn(int64_t keepdims = 0,
@@ -48,7 +47,7 @@ class ReduceLayerOneDnn : public Layer {
   int64_t keepdims_;
   std::vector<int64_t> axes_;
   std::vector<int64_t> normalized_axes_;
-  std::vector<int64_t> last_axes_;  
+  std::vector<int64_t> last_axes_;
 
   bool initialized_ = false;
   Shape last_input_shape_;
