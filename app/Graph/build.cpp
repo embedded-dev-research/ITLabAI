@@ -101,7 +101,8 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                   << '\n';
       }
       auto pool_layer =
-          std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype);
+          LayerFactory::createPoolingLayer(pooltype, shape, options);
+
       layers.push_back(pool_layer);
       layerpostop.push_back(false);
       if (comments) std::cout << "PoolingLayer added to layers." << '\n';
@@ -408,8 +409,8 @@ ParseResult parse_json_model(RuntimeOptions options,
               << '\n';
         }
       } else if (layer_type == "GlobalAveragePool") {
-        auto pool_layer = std::make_shared<it_lab_ai::PoolingLayer>(
-            it_lab_ai::Shape({0, 0}), "average");
+        auto pool_layer = LayerFactory::createPoolingLayer(
+            "average", it_lab_ai::Shape({0, 0}), options);
         layer = pool_layer;
         if (comments) {
           std::cout << "GlobalAveragePool layer added (will use input spatial "
@@ -470,30 +471,9 @@ ParseResult parse_json_model(RuntimeOptions options,
           }
         }
 
-        auto pool_layer =
-            std::make_shared<it_lab_ai::PoolingLayer>(shape, pooltype);
+        auto pool_layer = LayerFactory::createPoolingLayer(
+            pooltype, shape, options, strides, pads, dilations, ceil_mode);
 
-        try {
-          if (strides[0] != 2 || strides[1] != 2) {
-            pool_layer->setStrides(strides[0], strides[1]);
-          }
-
-          if (pads[0] != 0 || pads[1] != 0 || pads[2] != 0 || pads[3] != 0) {
-            pool_layer->setPads(pads[0], pads[1], pads[2], pads[3]);
-          }
-
-          if (dilations[0] != 1 || dilations[1] != 1) {
-            pool_layer->setDilations(dilations[0], dilations[1]);
-          }
-
-          pool_layer->setCeilMode(ceil_mode);
-
-        } catch (const std::exception& e) {
-          if (comments) {
-            std::cout << "Warning: Some pooling parameters not supported: "
-                      << e.what() << '\n';
-          }
-        }
         layer = pool_layer;
       } else if (layer_type.find("Flatten") != std::string::npos) {
         int axis = 1;
