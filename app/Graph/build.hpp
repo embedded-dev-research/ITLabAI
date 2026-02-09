@@ -34,6 +34,7 @@
 #include "layers/TransposeLayer.hpp"
 #include "layers_oneDNN/ConvLayer.hpp"
 #include "layers_oneDNN/EWLayer.hpp"
+#include "layers_oneDNN/PoolingLayer.hpp"
 #include "layers_oneDNN/ReduceLayer.hpp"
 
 extern std::unordered_map<std::string, std::string> model_paths;
@@ -108,6 +109,19 @@ class LayerFactory {
       return std::make_shared<ReduceLayerOneDnn>(op, keepdims, axes);
     }
     return std::make_shared<ReduceLayer>(op, keepdims, axes);
+  }
+
+  static std::shared_ptr<Layer> createPoolingLayer(
+      const std::string& PoolType, const Shape& shape,
+      const RuntimeOptions& options, const Shape& strides = {2, 2},
+      const Shape& pads = {0, 0, 0, 0}, const Shape& dilations = {1, 1},
+      bool ceil_mode = false) {
+    if (options.backend == Backend::kOneDnn) {
+      return std::make_shared<PoolingLayerOneDnn>(
+          shape, strides, pads, dilations, ceil_mode, PoolType);
+    }
+    return std::make_shared<PoolingLayer>(shape, strides, pads, dilations,
+                                          ceil_mode, PoolType);
   }
 };
 
