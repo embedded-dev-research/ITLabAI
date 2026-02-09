@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "layers/Tensor.hpp"
-#include "layers/Layer.hpp"
 #include "layers/BinaryOpLayer.hpp"
+#include "layers/Layer.hpp"
+#include "layers/Tensor.hpp"
 
 namespace it_lab_ai {
 
@@ -14,7 +14,8 @@ class BinaryOpLayerOneDnn : public Layer {
  public:
   BinaryOpLayerOneDnn()
       : Layer(kBinaryOp), op_(BinaryOpLayer::Operation::kMul) {}
-  explicit BinaryOpLayerOneDnn(BinaryOpLayer::Operation op) : Layer(kBinaryOp), op_(op) {}
+  explicit BinaryOpLayerOneDnn(BinaryOpLayer::Operation op)
+      : Layer(kBinaryOp), op_(op) {}
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;

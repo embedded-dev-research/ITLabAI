@@ -1,8 +1,8 @@
+#include "layers_oneDNN/BinaryOpLayer.hpp"
+
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
-
-#include "layers_oneDNN/BinaryOpLayer.hpp"
 
 namespace it_lab_ai {
 
@@ -181,7 +181,8 @@ dnnl::memory::data_type BinaryOpLayerOneDnn::get_dnnl_data_type(Type type) {
   }
 }
 
-dnnl::algorithm BinaryOpLayerOneDnn::get_dnnl_algorithm(BinaryOpLayer::Operation op) {
+dnnl::algorithm BinaryOpLayerOneDnn::get_dnnl_algorithm(
+    BinaryOpLayer::Operation op) {
   switch (op) {
     case BinaryOpLayer::Operation::kAdd:
       return dnnl::algorithm::binary_add;
