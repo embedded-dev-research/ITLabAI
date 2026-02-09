@@ -81,8 +81,10 @@ TEST(reducelayer_onednn, mean_2d_float_keepdims) {
   layer.run(in, out);
 
   auto output_data = *out[0].as<float>();
-  std::vector<float> expected = {2.0F, 3.0F, 4.0F};
+  std::vector<float> expected = {2.5F, 3.5F, 4.5F};
+  Shape expected_shape = {1, 3};
 
+  EXPECT_EQ(out[0].get_shape(), expected_shape);
   ASSERT_EQ(output_data.size(), expected.size());
   for (size_t i = 0; i < output_data.size(); i++) {
     EXPECT_NEAR(output_data[i], expected[i], 1e-5);
@@ -102,7 +104,9 @@ TEST(reducelayer_onednn, mean_2d_int_keepdims) {
 
   auto output_data = *out[0].as<int>();
   std::vector<int> expected = {2, 3, 4};
+  Shape expected_shape = {1, 3};
 
+  EXPECT_EQ(out[0].get_shape(), expected_shape);
   ASSERT_EQ(output_data.size(), expected.size());
   for (size_t i = 0; i < output_data.size(); i++) {
     EXPECT_EQ(output_data[i], expected[i]);
@@ -135,6 +139,7 @@ TEST(reducelayer_onednn, min_3d_float_nokeepdims) {
 
   std::vector<float> input_data = {10.0F, 2.0F, 30.0F, 4.0F, 50.0F, 6.0F,
                                    70.0F, 8.0F, 90.0F, 1.0F, 11.0F, 12.0F};
+
   Tensor input = make_tensor(input_data, Shape({2, 2, 3}));
   Tensor output;
 
@@ -143,8 +148,10 @@ TEST(reducelayer_onednn, min_3d_float_nokeepdims) {
   layer.run(in, out);
 
   auto output_data = *out[0].as<float>();
-  std::vector<float> expected = {1.0F, 4.0F};
+  std::vector<float> expected = {2.0F, 1.0F};
+  Shape expected_shape = {2};
 
+  EXPECT_EQ(out[0].get_shape(), expected_shape);
   ASSERT_EQ(output_data.size(), expected.size());
   for (size_t i = 0; i < output_data.size(); i++) {
     EXPECT_NEAR(output_data[i], expected[i], 1e-5);
@@ -169,10 +176,13 @@ TEST(reducelayer_onednn, sum_multiple_axes) {
   auto output_data = *out[0].as<float>();
   Shape output_shape = out[0].get_shape();
 
+  std::vector<float> expected = {68.0F, 100.0F, 132.0F};
+
   EXPECT_EQ(output_shape, Shape({3}));
-  EXPECT_NEAR(output_data[0], 22.0F, 1e-5);
-  EXPECT_NEAR(output_data[1], 70.0F, 1e-5);
-  EXPECT_NEAR(output_data[2], 118.0F, 1e-5);
+  ASSERT_EQ(output_data.size(), expected.size());
+  for (size_t i = 0; i < output_data.size(); i++) {
+    EXPECT_NEAR(output_data[i], expected[i], 1e-5);
+  }
 }
 
 TEST(reducelayer_onednn, mean_4d_float) {
