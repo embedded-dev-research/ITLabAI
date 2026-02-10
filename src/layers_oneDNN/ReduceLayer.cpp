@@ -70,7 +70,7 @@ void ReduceLayerOneDnn::run(const std::vector<Tensor>& input,
         reduction_size *= input_shape[axis];
       }
 
-      float scale = 1.0f / static_cast<float>(reduction_size);
+      float scale = 1.0F / static_cast<float>(reduction_size);
       for (float& v : dst_data) {
         v *= scale;
       }
