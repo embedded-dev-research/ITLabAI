@@ -10,24 +10,24 @@ void BinaryOpLayerOneDnn::run(const std::vector<Tensor>& input,
                               std::vector<Tensor>& output) {
   validate_input(input);
 
-  const Tensor& A = input[0];
-  const Tensor& B = input[1];
-  Type type = A.get_type();
+  const Tensor& a = input[0];
+  const Tensor& b = input[1];
+  Type type = a.get_type();
 
   bool need_reinit = !initialized_ || last_type_ != type ||
-                     last_shape_a_ != A.get_shape() ||
-                     last_shape_b_ != B.get_shape();
+                     last_shape_a_ != a.get_shape() ||
+                     last_shape_b_ != b.get_shape();
 
   if (need_reinit) {
-    initialize_onednn(A, B);
+    initialize_onednn(a, b);
   }
 
   output.resize(1);
-  output_shape_ = calculate_output_shape(A.get_shape(), B.get_shape());
+  output_shape_ = calculate_output_shape(a.get_shape(), b.get_shape());
 
   if (type == Type::kFloat) {
-    const auto& src0_data = *A.as<float>();
-    const auto& src1_data = *B.as<float>();
+    const auto& src0_data = *a.as<float>();
+    const auto& src1_data = *b.as<float>();
     std::vector<float> dst_data(output_shape_.count());
 
     dnnl::memory src0_mem(src0_md_, *engine_,
@@ -43,8 +43,8 @@ void BinaryOpLayerOneDnn::run(const std::vector<Tensor>& input,
     stream_->wait();
     output[0] = make_tensor(dst_data, output_shape_);
   } else if (type == Type::kInt) {
-    const auto& src0_data = *A.as<int>();
-    const auto& src1_data = *B.as<int>();
+    const auto& src0_data = *a.as<int>();
+    const auto& src1_data = *b.as<int>();
     std::vector<int> dst_data(output_shape_.count());
 
     dnnl::memory src0_mem(src0_md_, *engine_,
@@ -97,15 +97,10 @@ Shape BinaryOpLayerOneDnn::calculate_output_shape(const Shape& shape_a,
     size_t dim_a = (i < dims_a) ? shape_a[idx_a] : 1;
     size_t dim_b = (i < dims_b) ? shape_b[idx_b] : 1;
 
-    if (dim_a == 1) {
-      result[idx_result] = dim_b;
-    } else if (dim_b == 1) {
-      result[idx_result] = dim_a;
-    } else if (dim_a == dim_b) {
-      result[idx_result] = dim_a;
-    } else {
+    if (!(dim_a == dim_b || dim_a == 1 || dim_b == 1)) {
       throw std::runtime_error("BinaryOpLayerOneDnn: Incompatible dimensions");
     }
+    result[idx_result] = std::max(dim_a, dim_b);
   }
 
   return result;
