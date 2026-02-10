@@ -33,17 +33,17 @@ void ReduceLayerOneDnn::run(const std::vector<Tensor>& input,
 
   output.resize(1);
 
-  Shape oneDNN_output_shape =
+  Shape one_dnn_output_shape =
       calculate_output_shape(input_shape, normalized_axes_);
 
   Shape final_output_shape;
   if (keepdims_) {
-    final_output_shape = oneDNN_output_shape;
+    final_output_shape = one_dnn_output_shape;
   } else {
-    for (size_t i = 0; i < oneDNN_output_shape.dims(); ++i) {
+    for (size_t i = 0; i < one_dnn_output_shape.dims(); ++i) {
       if (std::find(normalized_axes_.begin(), normalized_axes_.end(),
                     static_cast<int64_t>(i)) == normalized_axes_.end()) {
-        final_output_shape.push_back(oneDNN_output_shape[i]);
+        final_output_shape.push_back(one_dnn_output_shape[i]);
       }
     }
 
@@ -54,7 +54,7 @@ void ReduceLayerOneDnn::run(const std::vector<Tensor>& input,
 
   if (type == Type::kFloat) {
     const auto& src_data = *in.as<float>();
-    std::vector<float> dst_data(oneDNN_output_shape.count());
+    std::vector<float> dst_data(one_dnn_output_shape.count());
 
     dnnl::memory src_mem(src_md_, *engine_,
                          const_cast<float*>(src_data.data()));
@@ -78,14 +78,14 @@ void ReduceLayerOneDnn::run(const std::vector<Tensor>& input,
 
     std::vector<float> final_data =
         keepdims_ ? dst_data
-                  : remove_unit_dims(dst_data, oneDNN_output_shape,
+                  : remove_unit_dims(dst_data, one_dnn_output_shape,
                                      final_output_shape);
 
     output[0] = make_tensor(final_data, final_output_shape);
 
   } else if (type == Type::kInt) {
     const auto& src_data = *in.as<int>();
-    std::vector<int> dst_data(oneDNN_output_shape.count());
+    std::vector<int> dst_data(one_dnn_output_shape.count());
 
     dnnl::memory src_mem(src_md_, *engine_, const_cast<int*>(src_data.data()));
     dnnl::memory dst_mem(dst_md_, *engine_, dst_data.data());
@@ -112,7 +112,7 @@ void ReduceLayerOneDnn::run(const std::vector<Tensor>& input,
 
     std::vector<int> final_data =
         keepdims_ ? dst_data
-                  : remove_unit_dims(dst_data, oneDNN_output_shape,
+                  : remove_unit_dims(dst_data, one_dnn_output_shape,
                                      final_output_shape);
 
     output[0] = make_tensor(final_data, final_output_shape);
@@ -253,8 +253,8 @@ void ReduceLayerOneDnn::initialize_onednn(const Tensor& input) {
     dst_md_ = dnnl::memory::desc(dst_dims, dnnl_type, dst_format);
 
     auto algorithm = get_dnnl_algorithm(op_);
-    float p = 0.0f;
-    float eps = 0.0f;
+    float p = 0.0F;
+    float eps = 0.0F;
 
     auto reduction_pd = dnnl::reduction::primitive_desc(
         *engine_, algorithm, src_md_, dst_md_, p, eps);
@@ -269,7 +269,7 @@ void ReduceLayerOneDnn::initialize_onednn(const Tensor& input) {
     for (auto d : src_dims) std::cerr << d << " ";
     std::cerr << "\nOutput dims: ";
     for (auto d : dst_dims) std::cerr << d << " ";
-    std::cerr << "\nOperation: " << static_cast<int>(op_) << std::endl;
+    std::cerr << "\nOperation: " << static_cast<int>(op_) << '\n';
 
     throw std::runtime_error("Failed to create oneDNN reduction primitive: " +
                              std::string(e.what()));
@@ -295,15 +295,13 @@ dnnl::algorithm ReduceLayerOneDnn::get_dnnl_algorithm(
     ReduceLayer::Operation op) {
   switch (op) {
     case ReduceLayer::Operation::kSum:
-      return dnnl::algorithm::reduction_sum;
     case ReduceLayer::Operation::kMean:
+    case ReduceLayer::Operation::kMult:
       return dnnl::algorithm::reduction_sum;
     case ReduceLayer::Operation::kMax:
       return dnnl::algorithm::reduction_max;
     case ReduceLayer::Operation::kMin:
       return dnnl::algorithm::reduction_min;
-    case ReduceLayer::Operation::kMult:
-      return dnnl::algorithm::reduction_sum;
     default:
       throw std::invalid_argument("Unsupported reduction operation for oneDNN");
   }

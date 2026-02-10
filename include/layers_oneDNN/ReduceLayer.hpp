@@ -66,7 +66,7 @@ class ReduceLayerOneDnn : public Layer {
   [[nodiscard]] static dnnl::memory::data_type get_dnnl_data_type(Type type);
   [[nodiscard]] static dnnl::algorithm get_dnnl_algorithm(
       ReduceLayer::Operation op);
-  dnnl::memory::format_tag pick_format(size_t ndims);
+  [[nodiscard]] static dnnl::memory::format_tag pick_format(size_t ndims);
   static void normalize_axes(const Shape& input_shape,
                              std::vector<int64_t>& axes);
   [[nodiscard]] Shape calculate_output_shape(
