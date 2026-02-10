@@ -33,7 +33,7 @@ Other models:</br>
 ## **How do I launch the inference?**
 * Make sure you install the project dependencies by running: *pip install -r requirements.txt*
 * You need to run the script *parser.py* that is located in app/converters to read weights from a model *Alexnet-model.h5* or *parser_onnx.py* to read weights from a models ONNX or YOLO and the json file with the weights will be stored in the *docs* folder.
-* Then put the test images in png format in the folder *docs/input*
+* Then put the test images in png format in the build data folder (default: *build/<preset>/input* or *build/input* when using `-B build`)
 * After building the project, which is described below, run Graph_build with the parameter --model (alexnet_mnist or googlenet or densenet or resnet or yolo) and the parameter --parallel if you need. App Graph_build is located in folder *build/bin*
 
 ## **Building a Project**

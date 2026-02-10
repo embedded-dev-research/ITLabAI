@@ -29,6 +29,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+    - name: Fetch test data
+      run: python3 scripts/fetch_test_data.py --dest build/input
     - name: Set binary paths
       id: set_binaries
       run: |
@@ -80,6 +82,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+    - name: Fetch test data
+      run: python3 scripts/fetch_test_data.py --dest build/input
     - name: Install prerequisites
       run: |
         sudo apt install clang libomp-dev
@@ -113,6 +117,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+    - name: Fetch test data
+      run: python3 scripts/fetch_test_data.py --dest build/input
     - name: Install prerequisites
       run: |
         brew install libomp ninja
@@ -153,6 +159,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+    - name: Fetch test data
+      run: python scripts/fetch_test_data.py --dest build/input
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
       with:
@@ -179,6 +187,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+    - name: Fetch test data
+      run: python3 scripts/fetch_test_data.py --dest build/input
     - name: Install prerequisites
       run: sudo apt-get update && sudo apt-get install -y libomp-dev build-essential cmake
     - name: Setup ccache
@@ -202,6 +212,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+    - name: Fetch test data
+      run: python3 scripts/fetch_test_data.py --dest build/input
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install -y gcovr
     - name: Setup ccache

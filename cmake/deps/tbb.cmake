@@ -8,11 +8,12 @@ endif()
 
 if(NOT TBB_FOUND)
     itlabai_external_default_build_type(_tbb_build_type)
+    string(TOLOWER "${_tbb_build_type}" _tbb_build_type_lower)
     set(_tbb_cmake_args ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS} ${ITLABAI_EXTERNAL_WARNING_ARGS})
 
     if(WIN32)
         set(_tbb_debug_suffix "")
-        if(_tbb_build_type STREQUAL "Debug")
+        if(_tbb_build_type_lower STREQUAL "debug")
             set(_tbb_debug_suffix "_debug")
         endif()
         set(_tbb_release_lib "${TBB_INSTALL_DIR}/lib/tbb12.lib")
@@ -26,10 +27,16 @@ if(NOT TBB_FOUND)
             "${_tbb_dll}"
         )
     else()
+        set(_tbb_debug_suffix "")
+        if(_tbb_build_type_lower STREQUAL "debug")
+            set(_tbb_debug_suffix "_debug")
+        endif()
+        set(_tbb_release_lib "${TBB_INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}tbb${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        set(_tbb_debug_lib "${TBB_INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}tbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}")
         set(_tbb_byproducts
-            "${TBB_INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}tbb${CMAKE_SHARED_LIBRARY_SUFFIX}"
+            "${TBB_INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}tbb${_tbb_debug_suffix}${CMAKE_SHARED_LIBRARY_SUFFIX}"
         )
-        set(_tbb_lib "${TBB_INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}tbb${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        set(_tbb_lib "${TBB_INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}tbb${_tbb_debug_suffix}${CMAKE_SHARED_LIBRARY_SUFFIX}")
     endif()
 
     itlabai_external_add(
@@ -67,10 +74,11 @@ if(NOT TBB_FOUND)
         )
     else()
         set_target_properties(TBB::tbb PROPERTIES
-            IMPORTED_LOCATION_RELEASE "${_tbb_lib}"
-            IMPORTED_LOCATION_DEBUG "${_tbb_lib}"
-            IMPORTED_LOCATION_RELWITHDEBINFO "${_tbb_lib}"
-            IMPORTED_LOCATION_MINSIZEREL "${_tbb_lib}"
+            IMPORTED_LOCATION "${_tbb_lib}"
+            IMPORTED_LOCATION_RELEASE "${_tbb_release_lib}"
+            IMPORTED_LOCATION_DEBUG "${_tbb_debug_lib}"
+            IMPORTED_LOCATION_RELWITHDEBINFO "${_tbb_release_lib}"
+            IMPORTED_LOCATION_MINSIZEREL "${_tbb_release_lib}"
             INTERFACE_INCLUDE_DIRECTORIES "${TBB_INSTALL_DIR}/include"
         )
     endif()

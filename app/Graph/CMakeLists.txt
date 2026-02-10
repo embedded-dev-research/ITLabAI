@@ -11,9 +11,9 @@ target_link_libraries(itlabai_build_graph_lib PUBLIC itlabai_reader_lib itlabai_
 itlabai_link_externals(itlabai_build_graph_lib opencv tbb gtest kokkos openmp)
 add_dependencies(itlabai_build_graph_lib opencv_external)
 target_compile_definitions(itlabai_build_graph_lib PUBLIC
-    IMAGE28_PATH="${CMAKE_SOURCE_DIR}/docs/input/28/"
+    IMAGE28_PATH="${ITLABAI_TEST_DATA_DIR}/28/"
     IMAGENET_ACC="${CMAKE_SOURCE_DIR}/docs/ImageNet/test/"
-    IMAGENET_PATH="${CMAKE_SOURCE_DIR}/docs/input/Imagenet_test/"
+    IMAGENET_PATH="${ITLABAI_TEST_DATA_DIR}/Imagenet_test/"
     MODEL_PATH_H5="${CMAKE_SOURCE_DIR}/docs/jsons/model_data_alexnet_1.json"
     MODEL_PATH_GOOGLENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/googlenet_onnx_model.json"
     MODEL_PATH_DENSENET_ONNX="${CMAKE_SOURCE_DIR}/docs/jsons/densenet121_Opset16_onnx_model.json"

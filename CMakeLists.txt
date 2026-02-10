@@ -10,8 +10,14 @@ option(ITLABAI_BUILD_TESTS "Build tests" ON)
 option(ITLABAI_ENABLE_OPENMP "Enable OpenMP support" ON)
 option(ITLABAI_ENABLE_KOKKOS "Build with Kokkos external" ON)
 option(ITLABAI_USE_SYSTEM_DEPS "Use system packages when available" OFF)
-option(ITLABAI_FETCH_TEST_DATA "Download test data during build" OFF)
-set(ITLABAI_TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/docs/input" CACHE PATH "Directory containing sample/test data")
+option(ITLABAI_FETCH_TEST_DATA "Download test data during configure" ON)
+set(_itlabai_default_test_data_dir "${CMAKE_BINARY_DIR}/input")
+if(NOT DEFINED ITLABAI_TEST_DATA_DIR)
+    set(ITLABAI_TEST_DATA_DIR "${_itlabai_default_test_data_dir}" CACHE PATH "Directory containing sample/test data")
+elseif(ITLABAI_TEST_DATA_DIR STREQUAL "${CMAKE_SOURCE_DIR}/docs/input")
+    # Auto-migrate old default to build-local data dir.
+    set(ITLABAI_TEST_DATA_DIR "${_itlabai_default_test_data_dir}" CACHE PATH "Directory containing sample/test data" FORCE)
+endif()
 option(BUILD_TESTING "Enable building tests" ${ITLABAI_BUILD_TESTS})
 
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
@@ -52,12 +58,17 @@ include(cmake/deps.cmake)
 
 if(ITLABAI_FETCH_TEST_DATA)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
-    add_custom_target(fetch_test_data
+    execute_process(
         COMMAND ${CMAKE_COMMAND} -E make_directory ${ITLABAI_TEST_DATA_DIR}
+    )
+    execute_process(
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/fetch_test_data.py --dest ${ITLABAI_TEST_DATA_DIR}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Downloading sample/test data"
+        RESULT_VARIABLE _itlabai_fetch_data_result
     )
+    if(NOT _itlabai_fetch_data_result EQUAL 0)
+        message(FATAL_ERROR "Failed to fetch test data. Disable with -DITLABAI_FETCH_TEST_DATA=OFF if needed.")
+    endif()
 endif()
 
 add_subdirectory(include)
