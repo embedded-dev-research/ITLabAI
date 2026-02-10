@@ -97,7 +97,7 @@ Shape BinaryOpLayerOneDnn::calculate_output_shape(const Shape& shape_a,
     size_t dim_a = (i < dims_a) ? shape_a[idx_a] : 1;
     size_t dim_b = (i < dims_b) ? shape_b[idx_b] : 1;
 
-    if (!(dim_a == dim_b || dim_a == 1 || dim_b == 1)) {
+    if (!(dim_a != dim_b && dim_a != 1 && dim_b != 1)) {
       throw std::runtime_error("BinaryOpLayerOneDnn: Incompatible dimensions");
     }
     result[idx_result] = std::max(dim_a, dim_b);
