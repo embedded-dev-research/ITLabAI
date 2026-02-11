@@ -4,10 +4,11 @@ function(itlabai_target_defaults target_name)
     if(CMAKE_CONFIGURATION_TYPES)
         foreach(_cfg IN LISTS CMAKE_CONFIGURATION_TYPES)
             string(TOUPPER "${_cfg}" _cfg_upper)
+            string(TOLOWER "${_cfg}" _cfg_lower)
             set_target_properties(${target_name} PROPERTIES
-                ARCHIVE_OUTPUT_DIRECTORY_${_cfg_upper} "${CMAKE_BINARY_DIR}/lib"
-                LIBRARY_OUTPUT_DIRECTORY_${_cfg_upper} "${CMAKE_BINARY_DIR}/lib"
-                RUNTIME_OUTPUT_DIRECTORY_${_cfg_upper} "${CMAKE_BINARY_DIR}/bin"
+                ARCHIVE_OUTPUT_DIRECTORY_${_cfg_upper} "${CMAKE_BINARY_DIR}/lib/${_cfg_lower}"
+                LIBRARY_OUTPUT_DIRECTORY_${_cfg_upper} "${CMAKE_BINARY_DIR}/lib/${_cfg_lower}"
+                RUNTIME_OUTPUT_DIRECTORY_${_cfg_upper} "${CMAKE_BINARY_DIR}/bin/${_cfg_lower}"
             )
         endforeach()
     else()
@@ -76,18 +77,6 @@ function(itlabai_use_openmp target_name)
     itlabai_use_externals_scope(_scope ${target_name})
     if(TARGET OpenMP::OpenMP_CXX)
         target_link_libraries(${target_name} ${_scope} OpenMP::OpenMP_CXX)
-    endif()
-    if(OpenMP_FOUND)
-        # Ensure both compile and link stages pick up OpenMP flags.
-        if(DEFINED OpenMP_CXX_FLAGS AND NOT OpenMP_CXX_FLAGS STREQUAL "")
-            string(REPLACE " " ";" _omp_flags "${OpenMP_CXX_FLAGS}")
-            target_compile_options(${target_name} ${_scope} ${_omp_flags})
-            target_link_options(${target_name} ${_scope} ${_omp_flags})
-        endif()
-        if(DEFINED OpenMP_EXE_LINKER_FLAGS AND NOT OpenMP_EXE_LINKER_FLAGS STREQUAL "")
-            string(REPLACE " " ";" _omp_lflags "${OpenMP_EXE_LINKER_FLAGS}")
-            target_link_options(${target_name} ${_scope} ${_omp_lflags})
-        endif()
     endif()
 endfunction()
 

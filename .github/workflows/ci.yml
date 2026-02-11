@@ -70,7 +70,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y valgrind
-        valgrind ctest --preset ${{ matrix.preset }} --output-on-failure
+        valgrind --error-exitcode=1 ${{ matrix.build_dir }}/bin/itlabai_run_test --gtest_filter=-convlayer_parall.*
+        valgrind --error-exitcode=1 ${{ matrix.build_dir }}/bin/itlabai_run_test --gtest_filter=convlayer_parall.*
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-linux-clang:
@@ -88,21 +89,22 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build
       run: |
-        cmake -S . -B build -G Ninja \
+        cmake --preset dev-release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++
-        cmake --build build --parallel
+        cmake --build --preset dev-release --parallel
     - name: Test
-      run: cmake --build build -t test
+      run: ctest --preset dev-release --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
       run: |
         sudo apt-get update
         sudo apt-get install -y valgrind
-        valgrind cmake --build build -t test
+        valgrind --error-exitcode=1 build/release/bin/itlabai_run_test --gtest_filter=-convlayer_parall.*
+        valgrind --error-exitcode=1 build/release/bin/itlabai_run_test --gtest_filter=convlayer_parall.*
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-macos:
@@ -123,7 +125,7 @@ jobs:
       run: |
         OPENMP_PATH=$(brew --prefix libomp)
         echo "OpenMP path: $OPENMP_PATH"
-        cmake -S . -B build -G Ninja \
+        cmake --preset dev-release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_PREFIX_PATH=$OPENMP_PATH \
@@ -136,12 +138,12 @@ jobs:
           -DOpenMP_omp_LIBRARY="$OPENMP_PATH/lib/libomp.dylib" \
           -DCMAKE_EXE_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp" \
           -DCMAKE_SHARED_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp"
-        cmake --build build --parallel
+        cmake --build --preset dev-release --parallel
       env:
         LDFLAGS: "-L$(brew --prefix libomp)/lib -lomp"
         CPPFLAGS: "-I$(brew --prefix libomp)/include"
     - name: Test
-      run: cmake --build build -t test
+      run: ctest --preset dev-release --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
@@ -164,12 +166,10 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
     - name: Build
       run: |
-        cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release
-        cmake --build build --parallel --config Release
+        cmake --preset dev-release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build --preset dev-release --parallel --config Release
     - name: Test
-      run: |
-        cd build
-        ctest --output-on-failure
+      run: ctest --preset dev-release --output-on-failure
   build-linux-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
@@ -184,12 +184,11 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build and Test
       run: |
-        cmake -S . -B build -G Ninja \
+        cmake --preset dev-release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_BUILD_TYPE=Release
-        cmake --build build --parallel
-        cmake --build build -t test
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build --preset dev-release --parallel
+        ctest --preset dev-release --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   codecov:
@@ -245,7 +244,12 @@ jobs:
     - name: Set binary path
       id: set_eval_binary
       run: |
-        echo "EVAL_BINARY=build/bin/itlabai_acc" >> $GITHUB_OUTPUT
+        EVAL_BINARY=$(find build -type f -name itlabai_acc | head -n1)
+        if [ -z "$EVAL_BINARY" ]; then
+          echo "Failed to locate itlabai_acc in downloaded artifact"
+          exit 1
+        fi
+        echo "EVAL_BINARY=$EVAL_BINARY" >> $GITHUB_OUTPUT
         
     - name: Install system dependencies
       run: |
@@ -280,12 +284,18 @@ jobs:
 
     - name: Prepare environment
       run: |
+        LIB_DIR=$(find build -type d -name all_libs | head -n1)
+        if [ -z "$LIB_DIR" ]; then
+          echo "Failed to locate all_libs directory in downloaded artifact"
+          exit 1
+        fi
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
-        export LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=$PWD/$LIB_DIR:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         
     - name: Run evaluation
       run: |
-        export LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+        LIB_DIR=$(find build -type d -name all_libs | head -n1)
+        export LD_LIBRARY_PATH=$PWD/$LIB_DIR:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --model alexnet_mnist > accuracy.txt 2>&1
         if [ $? -ne 0 ]; then
           exit 1

@@ -120,7 +120,13 @@ install(TARGETS
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+    DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+)
 
 # Bundle vendored third-party runtime and headers into package install.
 install(DIRECTORY "${ONEDNN_INSTALL_DIR}/include/" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/itlabai/thirdparty/onednn")

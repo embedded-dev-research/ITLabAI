@@ -16,6 +16,17 @@ function(_itlabai_pick_first _out_var)
     set(${_out_var} "${_found}" PARENT_SCOPE)
 endfunction()
 
+function(_itlabai_require_file _path _message)
+    if(NOT EXISTS "${_path}")
+        set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+        set(_msg "${_message}\nExpected path: ${_path}")
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.17")
+            set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE "${_msg}" PARENT_SCOPE)
+        endif()
+        message(FATAL_ERROR "${_msg}")
+    endif()
+endfunction()
+
 if(NOT TARGET TBB::tbb)
     _itlabai_pick_first(_itlabai_tbb_lib
         "${_itlabai_vendor_lib_dir}/tbb12*.dll"
@@ -29,6 +40,10 @@ if(NOT TARGET TBB::tbb)
             INTERFACE_INCLUDE_DIRECTORIES "${_itlabai_vendor_include_dir}/tbb"
         )
     endif()
+endif()
+if(NOT TARGET TBB::tbb)
+    set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+    message(FATAL_ERROR "Missing bundled TBB runtime in ITLabAI package at ${_itlabai_vendor_lib_dir}")
 endif()
 
 if(NOT TARGET dnnl)
@@ -48,6 +63,10 @@ if(NOT TARGET dnnl)
         endif()
     endif()
 endif()
+if(NOT TARGET dnnl)
+    set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+    message(FATAL_ERROR "Missing bundled oneDNN runtime in ITLabAI package at ${_itlabai_vendor_lib_dir}")
+endif()
 
 if(NOT TARGET OpenCV::opencv_world)
     _itlabai_pick_first(_itlabai_opencv_lib
@@ -62,6 +81,10 @@ if(NOT TARGET OpenCV::opencv_world)
             INTERFACE_INCLUDE_DIRECTORIES "${_itlabai_vendor_include_dir}/opencv/opencv4"
         )
     endif()
+endif()
+if(NOT TARGET OpenCV::opencv_world)
+    set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+    message(FATAL_ERROR "Missing bundled OpenCV runtime in ITLabAI package at ${_itlabai_vendor_lib_dir}")
 endif()
 
 if(NOT TARGET Kokkos_imported)
@@ -90,6 +113,10 @@ if(NOT TARGET Kokkos_imported)
 endif()
 
 if(NOT TARGET nlohmann_json::nlohmann_json)
+    _itlabai_require_file(
+        "${_itlabai_vendor_include_dir}/json/nlohmann/json.hpp"
+        "Missing bundled nlohmann_json headers in ITLabAI package"
+    )
     add_library(nlohmann_json::nlohmann_json INTERFACE IMPORTED)
     set_target_properties(nlohmann_json::nlohmann_json PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${_itlabai_vendor_include_dir}/json"
