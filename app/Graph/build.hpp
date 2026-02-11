@@ -35,6 +35,7 @@
 #include "layers_oneDNN/ConvLayer.hpp"
 #include "layers_oneDNN/EWLayer.hpp"
 #include "layers_oneDNN/PoolingLayer.hpp"
+#include "layers_oneDNN/ReduceLayer.hpp"
 
 extern std::unordered_map<std::string, std::string> model_paths;
 
@@ -99,6 +100,15 @@ class LayerFactory {
     }
     return std::make_shared<ConvolutionalLayer>(step, pads, dilations, kernel,
                                                 bias, group, useLegacyImpl);
+  }
+
+  static std::shared_ptr<Layer> createReduceLayer(
+      ReduceLayer::Operation op, int64_t keepdims,
+      const std::vector<int64_t>& axes, const RuntimeOptions& options) {
+    if (options.backend == Backend::kOneDnn) {
+      return std::make_shared<ReduceLayerOneDnn>(op, keepdims, axes);
+    }
+    return std::make_shared<ReduceLayer>(op, keepdims, axes);
   }
 
   static std::shared_ptr<Layer> createPoolingLayer(
