@@ -1,12 +1,103 @@
 @PACKAGE_INIT@
 
-include(CMakeFindDependencyMacro)
+set(_itlabai_vendor_lib_dir "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_LIBDIR@/itlabai/thirdparty/lib")
+set(_itlabai_vendor_include_dir "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_INCLUDEDIR@/itlabai/thirdparty")
 
-find_dependency(TBB)
-find_dependency(OpenMP QUIET)
-find_dependency(OpenCV)
-find_dependency(dnnl)
-find_dependency(Kokkos QUIET)
-find_dependency(nlohmann_json QUIET)
+function(_itlabai_pick_first _out_var)
+    set(_found "")
+    foreach(_pattern IN LISTS ARGN)
+        file(GLOB _candidates "${_pattern}")
+        list(SORT _candidates)
+        if(_candidates)
+            list(GET _candidates 0 _found)
+            break()
+        endif()
+    endforeach()
+    set(${_out_var} "${_found}" PARENT_SCOPE)
+endfunction()
+
+if(NOT TARGET TBB::tbb)
+    _itlabai_pick_first(_itlabai_tbb_lib
+        "${_itlabai_vendor_lib_dir}/tbb12*.dll"
+        "${_itlabai_vendor_lib_dir}/libtbb*.so*"
+        "${_itlabai_vendor_lib_dir}/libtbb*.dylib"
+    )
+    if(_itlabai_tbb_lib)
+        add_library(TBB::tbb SHARED IMPORTED)
+        set_target_properties(TBB::tbb PROPERTIES
+            IMPORTED_LOCATION "${_itlabai_tbb_lib}"
+            INTERFACE_INCLUDE_DIRECTORIES "${_itlabai_vendor_include_dir}/tbb"
+        )
+    endif()
+endif()
+
+if(NOT TARGET dnnl)
+    _itlabai_pick_first(_itlabai_dnnl_lib
+        "${_itlabai_vendor_lib_dir}/dnnl*.dll"
+        "${_itlabai_vendor_lib_dir}/libdnnl*.so*"
+        "${_itlabai_vendor_lib_dir}/libdnnl*.dylib"
+    )
+    if(_itlabai_dnnl_lib)
+        add_library(dnnl SHARED IMPORTED)
+        set_target_properties(dnnl PROPERTIES
+            IMPORTED_LOCATION "${_itlabai_dnnl_lib}"
+            INTERFACE_INCLUDE_DIRECTORIES "${_itlabai_vendor_include_dir}/onednn"
+        )
+        if(TARGET TBB::tbb)
+            target_link_libraries(dnnl INTERFACE TBB::tbb)
+        endif()
+    endif()
+endif()
+
+if(NOT TARGET OpenCV::opencv_world)
+    _itlabai_pick_first(_itlabai_opencv_lib
+        "${_itlabai_vendor_lib_dir}/opencv_world*.dll"
+        "${_itlabai_vendor_lib_dir}/libopencv_world*.so*"
+        "${_itlabai_vendor_lib_dir}/libopencv_world*.dylib"
+    )
+    if(_itlabai_opencv_lib)
+        add_library(OpenCV::opencv_world SHARED IMPORTED)
+        set_target_properties(OpenCV::opencv_world PROPERTIES
+            IMPORTED_LOCATION "${_itlabai_opencv_lib}"
+            INTERFACE_INCLUDE_DIRECTORIES "${_itlabai_vendor_include_dir}/opencv/opencv4"
+        )
+    endif()
+endif()
+
+if(NOT TARGET Kokkos_imported)
+    add_library(Kokkos_imported INTERFACE IMPORTED)
+    _itlabai_pick_first(_itlabai_kokkos_core
+        "${_itlabai_vendor_lib_dir}/kokkoscore*.lib"
+        "${_itlabai_vendor_lib_dir}/libkokkoscore*.a"
+    )
+    _itlabai_pick_first(_itlabai_kokkos_cont
+        "${_itlabai_vendor_lib_dir}/kokkoscontainers*.lib"
+        "${_itlabai_vendor_lib_dir}/libkokkoscontainers*.a"
+    )
+    if(_itlabai_kokkos_core AND _itlabai_kokkos_cont)
+        add_library(kokkoscore_external STATIC IMPORTED)
+        set_target_properties(kokkoscore_external PROPERTIES
+            IMPORTED_LOCATION "${_itlabai_kokkos_core}"
+            INTERFACE_INCLUDE_DIRECTORIES "${_itlabai_vendor_include_dir}/kokkos"
+        )
+        add_library(kokkoscontainers_external STATIC IMPORTED)
+        set_target_properties(kokkoscontainers_external PROPERTIES
+            IMPORTED_LOCATION "${_itlabai_kokkos_cont}"
+            INTERFACE_INCLUDE_DIRECTORIES "${_itlabai_vendor_include_dir}/kokkos"
+        )
+        target_link_libraries(Kokkos_imported INTERFACE kokkoscore_external kokkoscontainers_external)
+    endif()
+endif()
+
+if(NOT TARGET nlohmann_json::nlohmann_json)
+    add_library(nlohmann_json::nlohmann_json INTERFACE IMPORTED)
+    set_target_properties(nlohmann_json::nlohmann_json PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_itlabai_vendor_include_dir}/json"
+    )
+endif()
+
+if(NOT TARGET OpenMP::OpenMP_CXX)
+    add_library(OpenMP::OpenMP_CXX INTERFACE IMPORTED)
+endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/ITLabAITargets.cmake")

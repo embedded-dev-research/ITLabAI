@@ -4,10 +4,10 @@ file(GLOB READER_SOURCES CONFIGURE_DEPENDS
 
 add_library(itlabai_reader_lib STATIC)
 add_library(ITLabAI::ReaderLib ALIAS itlabai_reader_lib)
-target_sources(itlabai_reader_lib PRIVATE ${READER_SOURCES} ${READER_HEADERS})
+target_sources(itlabai_reader_lib PRIVATE ${READER_SOURCES})
 target_include_directories(itlabai_reader_lib
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(itlabai_reader_lib PUBLIC nlohmann_json::nlohmann_json)

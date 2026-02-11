@@ -17,7 +17,7 @@ if(MSVC)
 endif()
 itlabai_external_add(
     NAME gtest_external
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/googletest"
+    SOURCE_DIR "${PROJECT_SOURCE_DIR}/3rdparty/googletest"
     BINARY_DIR "${GTEST_BUILD_DIR}"
     INSTALL_DIR "${GTEST_INSTALL_DIR}"
     CMAKE_ARGS

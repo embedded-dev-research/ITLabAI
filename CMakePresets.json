@@ -51,9 +51,16 @@
     {
       "name": "ci",
       "inherits": "dev-release",
-      "binaryDir": "build/ci",
+      "binaryDir": "build/ci"
+    },
+    {
+      "name": "ci-stats",
+      "inherits": "dev-release",
+      "binaryDir": "build/ci-stats",
       "cacheVariables": {
-        "ITLABAI_FETCH_TEST_DATA": "ON"
+        "ENABLE_STATISTIC_TENSORS": "ON",
+        "ENABLE_STATISTIC_TIME": "ON",
+        "ENABLE_STATISTIC_WEIGHTS": "ON"
       }
     },
     {
@@ -89,6 +96,10 @@
     {
       "name": "coverage",
       "configurePreset": "coverage"
+    },
+    {
+      "name": "ci-stats",
+      "configurePreset": "ci-stats"
     }
   ],
   "testPresets": [
@@ -130,6 +141,13 @@
     {
       "name": "coverage",
       "configurePreset": "coverage",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci-stats",
+      "configurePreset": "ci-stats",
       "output": {
         "outputOnFailure": true
       }

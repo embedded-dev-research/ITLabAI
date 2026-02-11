@@ -12,7 +12,7 @@ option(ITLABAI_FETCH_TEST_DATA "Download test data during configure" ON)
 set(_itlabai_default_test_data_dir "${CMAKE_BINARY_DIR}/input")
 if(NOT DEFINED ITLABAI_TEST_DATA_DIR)
     set(ITLABAI_TEST_DATA_DIR "${_itlabai_default_test_data_dir}" CACHE PATH "Directory containing sample/test data")
-elseif(ITLABAI_TEST_DATA_DIR STREQUAL "${CMAKE_SOURCE_DIR}/docs/input")
+elseif(ITLABAI_TEST_DATA_DIR STREQUAL "${PROJECT_SOURCE_DIR}/docs/input")
     # Auto-migrate old default to build-local data dir.
     set(ITLABAI_TEST_DATA_DIR "${_itlabai_default_test_data_dir}" CACHE PATH "Directory containing sample/test data" FORCE)
 endif()
@@ -55,7 +55,7 @@ if(ITLABAI_ENABLE_OPENMP)
     endif()
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # External dependencies
 include(cmake/deps.cmake)
@@ -66,8 +66,8 @@ if(ITLABAI_FETCH_TEST_DATA)
         COMMAND ${CMAKE_COMMAND} -E make_directory ${ITLABAI_TEST_DATA_DIR}
     )
     execute_process(
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/fetch_test_data.py --dest ${ITLABAI_TEST_DATA_DIR}
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/fetch_test_data.py --dest ${ITLABAI_TEST_DATA_DIR}
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         RESULT_VARIABLE _itlabai_fetch_data_result
     )
     if(NOT _itlabai_fetch_data_result EQUAL 0)
@@ -75,7 +75,6 @@ if(ITLABAI_FETCH_TEST_DATA)
     endif()
 endif()
 
-add_subdirectory(include)
 add_subdirectory(src)
 if(ITLABAI_BUILD_APPS)
     add_subdirectory(app)
@@ -91,7 +90,7 @@ if(NOT TARGET itlabai)
     add_library(ITLabAI::itlabai ALIAS itlabai)
 endif()
 target_include_directories(itlabai INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 if(ITLABAI_FEATURE_DEFS)
@@ -122,6 +121,24 @@ install(TARGETS
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+# Bundle vendored third-party runtime and headers into package install.
+install(DIRECTORY "${ONEDNN_INSTALL_DIR}/include/" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/itlabai/thirdparty/onednn")
+install(DIRECTORY "${TBB_INSTALL_DIR}/include/" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/itlabai/thirdparty/tbb")
+install(DIRECTORY "${OPENCV_INSTALL_DIR}/include/" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/itlabai/thirdparty/opencv")
+if(ITLABAI_ENABLE_KOKKOS)
+    install(DIRECTORY "${KOKKOS_INSTALL_DIR}/include/" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/itlabai/thirdparty/kokkos")
+endif()
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/3rdparty/Json/include/" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/itlabai/thirdparty/json")
+
+set(_itlabai_vendor_lib_dir "${CMAKE_INSTALL_LIBDIR}/itlabai/thirdparty/lib")
+install(FILES "$<TARGET_FILE:dnnl>" DESTINATION "${_itlabai_vendor_lib_dir}" OPTIONAL)
+install(FILES "$<TARGET_FILE:TBB::tbb>" DESTINATION "${_itlabai_vendor_lib_dir}" OPTIONAL)
+install(FILES "$<TARGET_FILE:OpenCV::opencv_world>" DESTINATION "${_itlabai_vendor_lib_dir}" OPTIONAL)
+if(ITLABAI_ENABLE_KOKKOS)
+    install(FILES "$<TARGET_FILE:kokkoscore_external>" DESTINATION "${_itlabai_vendor_lib_dir}" OPTIONAL)
+    install(FILES "$<TARGET_FILE:kokkoscontainers_external>" DESTINATION "${_itlabai_vendor_lib_dir}" OPTIONAL)
+endif()
 
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/ITLabAIConfigVersion.cmake

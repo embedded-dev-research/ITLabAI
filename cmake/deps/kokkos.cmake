@@ -17,7 +17,7 @@ endif()
 
 itlabai_external_add(
     NAME kokkos_external
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/kokkos"
+    SOURCE_DIR "${PROJECT_SOURCE_DIR}/3rdparty/kokkos"
     BINARY_DIR "${KOKKOS_BUILD_DIR}"
     INSTALL_DIR "${KOKKOS_INSTALL_DIR}"
     CMAKE_ARGS

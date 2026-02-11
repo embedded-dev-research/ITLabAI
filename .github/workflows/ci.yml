@@ -19,11 +19,15 @@ jobs:
     strategy:
       matrix:
         include:
-          - build_type: DEBUG
-          - build_type: RELEASE
-            stats: false
-          - build_type: RELEASE
-            stats: true
+          - preset: dev-debug
+            build_dir: build/debug
+            artifact_name: DEBUG
+          - preset: dev-release
+            build_dir: build/release
+            artifact_name: RELEASE
+          - preset: ci-stats
+            build_dir: build/ci-stats
+            artifact_name: RELEASE-stats
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -32,45 +36,41 @@ jobs:
     - name: Set binary paths
       id: set_binaries
       run: |
-        echo "ACC_BINARY=build/bin/itlabai_acc" >> $GITHUB_OUTPUT
+        echo "ACC_BINARY=${{ matrix.build_dir }}/bin/itlabai_acc" >> $GITHUB_OUTPUT
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
-        key: ccache-${{ github.job }}-${{ matrix.build_type }}
+        key: ccache-${{ github.job }}-${{ matrix.preset }}
         max-size: 2G
     - name: Build
       run: |
-            cmake -S . -B build -G Ninja \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
-            ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
-            ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
-            cmake --build build --parallel
+        cmake --preset ${{ matrix.preset }} \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build --preset ${{ matrix.preset }} --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Prepare ALL libs
       run: |
-       mkdir -p build/bin/all_libs
-       find build/_external/install -type f \( -name "*.so" -o -name "*.so.*" -o -name "*.dylib" \) -exec cp {} build/bin/all_libs/ \; 2>/dev/null || true
-       ldd build/bin/itlabai_acc | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} build/bin/all_libs/ 2>/dev/null || true
+       mkdir -p ${{ matrix.build_dir }}/bin/all_libs
+       find ${{ matrix.build_dir }}/_external/install -type f \( -name "*.so" -o -name "*.so.*" -o -name "*.dylib" \) -exec cp {} ${{ matrix.build_dir }}/bin/all_libs/ \; 2>/dev/null || true
+       ldd ${{ matrix.build_dir }}/bin/itlabai_acc | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} ${{ matrix.build_dir }}/bin/all_libs/ 2>/dev/null || true
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-       name: mnist-${{ matrix.build_type }}${{ matrix.stats && '-stats' || '' }}
+       name: mnist-${{ matrix.artifact_name }}
        path: |
         ${{ steps.set_binaries.outputs.ACC_BINARY }}
-        build/bin/all_libs/*
+        ${{ matrix.build_dir }}/bin/all_libs/*
     - name: Test
-      run: cmake --build build -t test
+      run: ctest --preset ${{ matrix.preset }} --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
       run: |
         sudo apt-get update
         sudo apt-get install -y valgrind
-        valgrind cmake --build build -t test
+        valgrind ctest --preset ${{ matrix.preset }} --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-linux-clang:
@@ -203,18 +203,16 @@ jobs:
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
-        key: ccache-${{ github.job }}-${{ matrix.build_type }}
+        key: ccache-${{ github.job }}
         max-size: 2G
     - name: Build
       run: |
-        cmake -S . -B build -G Ninja \
+        cmake --preset coverage \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_FLAGS="--coverage" \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo
-        cmake --build build --parallel
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build --preset coverage --parallel
     - name: Test
-      run: cmake --build build -t test
+      run: ctest --preset coverage --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Generate Coverage Data

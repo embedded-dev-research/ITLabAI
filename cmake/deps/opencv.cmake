@@ -25,7 +25,7 @@ set(OPENCV_BUILD_OPTS
     -DOPENCV_INSTALL_FFMPEG=OFF
     -DOPENCV_DISABLE_ADE=ON
     -DOPENCV_ENABLE_NONFREE=OFF
-    -DOPENCV_DOWNLOAD_PATH=${CMAKE_SOURCE_DIR}/3rdparty/opencv_downloads
+    -DOPENCV_DOWNLOAD_PATH=${PROJECT_SOURCE_DIR}/3rdparty/opencv_downloads
     -DCMAKE_CXX_STANDARD=17
 )
 set(OPENCV_FEATURE_OPTS
@@ -51,7 +51,7 @@ if(WIN32)
     if(_opencv_build_type STREQUAL "Debug")
         set(_opencv_debug_suffix "d")
     endif()
-    set(_opencv_ver_header "${CMAKE_SOURCE_DIR}/3rdparty/opencv/modules/core/include/opencv2/core/version.hpp")
+    set(_opencv_ver_header "${PROJECT_SOURCE_DIR}/3rdparty/opencv/modules/core/include/opencv2/core/version.hpp")
     if(EXISTS "${_opencv_ver_header}")
         file(READ "${_opencv_ver_header}" _opencv_ver_text)
         string(REGEX REPLACE ".*#define CV_VERSION_MAJOR[ \t]+([0-9]+).*" "\\1" _opencv_ver_major "${_opencv_ver_text}")
@@ -98,7 +98,7 @@ set(OPENCV_INCLUDE_DIR "${_opencv_include_dir}")
 
 itlabai_external_add(
     NAME opencv_external
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/opencv"
+    SOURCE_DIR "${PROJECT_SOURCE_DIR}/3rdparty/opencv"
     BINARY_DIR "${OPENCV_BUILD_DIR}"
     INSTALL_DIR "${OPENCV_INSTALL_DIR}"
     CMAKE_ARGS

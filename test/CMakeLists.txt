@@ -26,7 +26,7 @@ target_link_libraries(itlabai_run_test_test PUBLIC
 itlabai_link_externals(itlabai_run_test_test gtest opencv tbb kokkos openmp)
 
 target_include_directories(itlabai_run_test_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-target_include_directories(itlabai_run_test_test PRIVATE "${CMAKE_SOURCE_DIR}/app/ReaderImage")
+target_include_directories(itlabai_run_test_test PRIVATE "${PROJECT_SOURCE_DIR}/app/ReaderImage")
 itlabai_target_defaults(itlabai_run_test_test)
 itlabai_apply_runtime_rpath(itlabai_run_test_test)
 
@@ -45,7 +45,18 @@ if (WIN32)
     )
 endif()
 
-add_test(NAME UnitTests COMMAND itlabai_run_test_test)
+add_test(
+    NAME UnitTests
+    COMMAND itlabai_run_test_test
+        --gtest_filter=-convlayer_parall.*
+)
+set_tests_properties(UnitTests PROPERTIES LABELS "unit")
+add_test(
+    NAME PerfTests
+    COMMAND itlabai_run_test_test
+        --gtest_filter=convlayer_parall.*
+)
+set_tests_properties(PerfTests PROPERTIES LABELS "perf")
 
 target_compile_definitions(itlabai_run_test_test PRIVATE TEST_DATA_PATH="${ITLABAI_TEST_MODEL_JSON_DIR}")
 target_compile_definitions(itlabai_run_test_test PRIVATE IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")

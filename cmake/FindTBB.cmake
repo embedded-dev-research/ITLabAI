@@ -1,7 +1,7 @@
 # Lightweight FindTBB to reuse vendored TBB target from this project
 
 if(TARGET TBB::tbb)
-    set(_vendor_tbb_include "${CMAKE_SOURCE_DIR}/3rdparty/TBB/include")
+    set(_vendor_tbb_include "${PROJECT_SOURCE_DIR}/3rdparty/TBB/include")
     if(EXISTS "${_vendor_tbb_include}/oneapi/tbb/version.h")
         # TBB::tbb is an ALIAS; set properties on the real target 'tbb'
         if(TARGET tbb)
@@ -21,7 +21,7 @@ endif()
 add_library(TBB::tbb INTERFACE IMPORTED)
 set_target_properties(TBB::tbb PROPERTIES
     INTERFACE_LINK_LIBRARIES tbb
-    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/3rdparty/TBB/include"
+    INTERFACE_INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/3rdparty/TBB/include"
 )
 set(TBB_FOUND TRUE)
 set(TBB_IMPORTED_TARGETS TBB::tbb)

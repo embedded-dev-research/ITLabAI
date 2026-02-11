@@ -36,7 +36,7 @@ set(_tbb_cmake_args ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS} ${ITLABAI_EXTERNAL_WARNIN
 
 itlabai_external_add(
     NAME tbb_external
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/TBB"
+    SOURCE_DIR "${PROJECT_SOURCE_DIR}/3rdparty/TBB"
     BINARY_DIR "${TBB_BUILD_DIR}"
     INSTALL_DIR "${TBB_INSTALL_DIR}"
     CMAKE_ARGS

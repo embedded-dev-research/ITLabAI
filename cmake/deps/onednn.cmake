@@ -22,7 +22,7 @@ endif()
 
 itlabai_external_add(
     NAME onednn_external
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/oneDNN"
+    SOURCE_DIR "${PROJECT_SOURCE_DIR}/3rdparty/oneDNN"
     BINARY_DIR "${ONEDNN_BUILD_DIR}"
     INSTALL_DIR "${ONEDNN_INSTALL_DIR}"
     DEPENDS ${_onednn_depends}
