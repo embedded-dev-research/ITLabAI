@@ -61,7 +61,6 @@
       "inherits": "dev-relwithdebinfo",
       "binaryDir": "build/coverage",
       "cacheVariables": {
-        "CMAKE_C_FLAGS": "--coverage",
         "CMAKE_CXX_FLAGS": "--coverage"
       }
     }

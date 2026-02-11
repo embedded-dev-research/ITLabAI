@@ -142,10 +142,10 @@ function(itlabai_apply_runtime_rpath target_name)
     if(_paths)
         set_target_properties(${target_name} PROPERTIES
             BUILD_RPATH "${_paths}"
-            INSTALL_RPATH "${_paths}"
-            INSTALL_RPATH_USE_LINK_PATH TRUE
             SKIP_BUILD_RPATH FALSE
             BUILD_WITH_INSTALL_RPATH FALSE
+            INSTALL_RPATH ""
+            INSTALL_RPATH_USE_LINK_PATH FALSE
         )
     endif()
 endfunction()

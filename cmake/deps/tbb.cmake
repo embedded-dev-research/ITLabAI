@@ -4,7 +4,7 @@ set(TBB_INSTALL_DIR "${ITLABAI_EXTERNAL_INSTALL_ROOT}/tbb")
 
 itlabai_external_default_build_type(_tbb_build_type)
 string(TOLOWER "${_tbb_build_type}" _tbb_build_type_lower)
-set(_tbb_cmake_args ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS} ${ITLABAI_EXTERNAL_WARNING_ARGS})
+set(_tbb_cmake_args ${ITLABAI_EXTERNAL_TOOLCHAIN_ARGS} ${ITLABAI_EXTERNAL_WARNING_ARGS_C_AND_CXX})
 
     if(WIN32)
         set(_tbb_debug_suffix "")
