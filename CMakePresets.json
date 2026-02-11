@@ -12,7 +12,6 @@
       "binaryDir": "build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "ITLABAI_BUILD_TESTS": "ON",
         "ITLABAI_BUILD_APPS": "ON",
         "ITLABAI_ENABLE_OPENMP": "ON",
         "ITLABAI_ENABLE_KOKKOS": "ON"
@@ -24,7 +23,6 @@
       "binaryDir": "build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "ITLABAI_BUILD_TESTS": "ON",
         "ITLABAI_BUILD_APPS": "ON",
         "ITLABAI_ENABLE_OPENMP": "ON",
         "ITLABAI_ENABLE_KOKKOS": "ON"
@@ -36,7 +34,6 @@
       "binaryDir": "build/relwithdebinfo",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "ITLABAI_BUILD_TESTS": "ON",
         "ITLABAI_BUILD_APPS": "ON",
         "ITLABAI_ENABLE_OPENMP": "ON",
         "ITLABAI_ENABLE_KOKKOS": "ON"

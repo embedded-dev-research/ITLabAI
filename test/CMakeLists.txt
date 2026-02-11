@@ -52,7 +52,7 @@ if (WIN32)
     )
 endif()
 
-add_test(UnitTests $<TARGET_FILE:itlabai_run_test_test>)
+add_test(NAME UnitTests COMMAND itlabai_run_test_test)
 
 target_compile_definitions(itlabai_run_test_test PRIVATE TEST_DATA_PATH="${CMAKE_SOURCE_DIR}/test/model_read/json_for_test")
 target_compile_definitions(itlabai_run_test_test PRIVATE IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")
