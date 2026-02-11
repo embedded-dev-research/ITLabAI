@@ -5,6 +5,7 @@ file(GLOB_RECURSE ITLABAI_TEST_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/model_read/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_read/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/single_layer/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/single_layer_onednn_version/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/single_layer_parall_version/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/benchmarking/*.cpp"
 )
