@@ -53,7 +53,7 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-# External dependencies (isolated builds)
+# External dependencies
 include(cmake/deps.cmake)
 
 if(ITLABAI_FETCH_TEST_DATA)

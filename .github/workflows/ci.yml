@@ -225,6 +225,8 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: embedded-dev-research/ITLabAI
+        files: coverage.xml
+        disable_search: true
         
   evaluate-model:
     runs-on: ubuntu-latest
