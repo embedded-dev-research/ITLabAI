@@ -36,6 +36,18 @@ Other models:</br>
 * Then put the test images in png format in the build data folder (default: *build/<preset>/input* or *build/input* when using `-B build`)
 * After building the project, which is described below, run Graph_build with the parameter --model (alexnet_mnist or googlenet or densenet or resnet or yolo) and the parameter --parallel if you need. App Graph_build is located in folder *build/bin*
 
+## Executables (build/bin)
+After build, the project produces these executables:
+
+* `itlabai_graph_build` - main inference app
+* `itlabai_acc` - accuracy validation app
+* `itlabai_onnx_subgraphs` - ONNX subgraph utility
+* `itlabai_run_test` - unit/integration test runner
+* `itlabai_accuracy_check` - additional accuracy check tool
+* `itlabai_reader` - image reader utility
+* `itlabai_reader_weights` - model weights reader
+* `itlabai_reader_weights_onnx` - ONNX weights reader
+
 ## **Building a Project**
 ### *Windows*
 To build and run this project locally on Windows, follow these steps:
@@ -71,7 +83,7 @@ To build and run this project locally on Windows, follow these steps:
     ```
    and run the file
     ```bash
-   itlabai_graph_build_exe.exe --model alexnet_mnist
+   itlabai_graph_build --model alexnet_mnist
     ```
 ### *Linux/macOS*
    To build and run this project locally on Linux or macOS, follow these steps:
@@ -118,7 +130,7 @@ To build and run this project locally on Windows, follow these steps:
     ```
    and run the file
     ```bash
-   ./itlabai_graph_build_exe --model alexnet_mnist
+   ./itlabai_graph_build --model alexnet_mnist
     ```
 
 ## Test Process
@@ -136,7 +148,7 @@ To build and run this project locally on Windows, follow these steps:
    ```
    and run the following files:
    ```bash
-   itlabai_unit_test.exe
+   itlabai_run_test
    ```
 ### *Linux*
 To start the testing process locally, you need to go to the directory
@@ -145,18 +157,18 @@ To start the testing process locally, you need to go to the directory
    ```
    and run the following files:
    ```bash
-   chmod +x itlabai_unit_test
-   ./itlabai_unit_test
+   chmod +x itlabai_run_test
+   ./itlabai_run_test
    ```
 
 ## **Accuracy validation for Alexnet on MNIST**
 To run accuracy validation you need to use the MNIST dataset, which you can download [here](https://github.com/DeepTrackAI/MNIST_dataset/tree/main/mnist/test) and put it in a folder *docs/mnist/mnist/test*
-Now you can run accuracy check - *build\bin\ACC.exe --model alexnet_mnist*
+Now you can run accuracy check - *build\bin\itlabai_acc --model alexnet_mnist*
 * **The accuracy should be 98.01%**
 
 ## **Accuracy validation for ONNX or YOLO models on ImageNet**
 To run accuracy validation you need to use the ImageNet dataset, which you can download [here](https://www.kaggle.com/datasets/sautkin/imagenet1kvalid) and put it in a folder *docs/Imagenet/*
-Now you can run accuracy check - *build\bin\ACC.exe --model googlenet*
+Now you can run accuracy check - *build\bin\itlabai_acc --model googlenet*
 
 ## **Documentation of project**
 https://github.com/embedded-dev-research/ITLabAI/blob/Semyon1104/Final_documentation/docs/IT_Lab_2023.pdf

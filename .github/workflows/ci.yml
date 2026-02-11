@@ -32,7 +32,7 @@ jobs:
     - name: Set binary paths
       id: set_binaries
       run: |
-        echo "ACC_BINARY=build/bin/itlabai_acc_exe" >> $GITHUB_OUTPUT
+        echo "ACC_BINARY=build/bin/itlabai_acc" >> $GITHUB_OUTPUT
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -54,7 +54,7 @@ jobs:
       run: |
        mkdir -p build/bin/all_libs
        find build/_external/install -type f \( -name "*.so" -o -name "*.so.*" -o -name "*.dylib" \) -exec cp {} build/bin/all_libs/ \; 2>/dev/null || true
-       ldd build/bin/itlabai_acc_exe | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} build/bin/all_libs/ 2>/dev/null || true
+       ldd build/bin/itlabai_acc | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} build/bin/all_libs/ 2>/dev/null || true
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -246,7 +246,7 @@ jobs:
     - name: Set binary path
       id: set_eval_binary
       run: |
-        echo "EVAL_BINARY=build/bin/itlabai_acc_exe" >> $GITHUB_OUTPUT
+        echo "EVAL_BINARY=build/bin/itlabai_acc" >> $GITHUB_OUTPUT
         
     - name: Install system dependencies
       run: |

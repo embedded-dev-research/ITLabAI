@@ -11,6 +11,7 @@ file(GLOB_RECURSE ITLABAI_TEST_SOURCES CONFIGURE_DEPENDS
 
 add_executable(itlabai_run_test_test ${ITLABAI_TEST_SOURCES})
 add_executable(ITLabAI::RunTestTest ALIAS itlabai_run_test_test)
+set_target_properties(itlabai_run_test_test PROPERTIES OUTPUT_NAME "itlabai_run_test")
 
 target_link_libraries(itlabai_run_test_test PUBLIC
     itlabai_perf_lib
@@ -50,7 +51,7 @@ if (WIN32)
     )
 endif()
 
-add_test(UnitTests ${CMAKE_BINARY_DIR}/bin/itlabai_run_test_test)
+add_test(UnitTests $<TARGET_FILE:itlabai_run_test_test>)
 
 target_compile_definitions(itlabai_run_test_test PRIVATE TEST_DATA_PATH="${CMAKE_SOURCE_DIR}/test/model_read/json_for_test")
 target_compile_definitions(itlabai_run_test_test PRIVATE IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")

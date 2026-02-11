@@ -14,6 +14,7 @@ target_compile_definitions(itlabai_reader_image_lib PUBLIC IMAGE1_PATH="${ITLABA
 file(GLOB READER_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reader_img.cpp")
 add_executable(itlabai_reader_exe ${READER_MAIN})
 add_executable(ITLabAI::ReaderExe ALIAS itlabai_reader_exe)
+set_target_properties(itlabai_reader_exe PROPERTIES OUTPUT_NAME "itlabai_reader")
 target_link_libraries(itlabai_reader_exe PRIVATE itlabai_reader_image_lib OpenCV::opencv_world)
 itlabai_target_defaults(itlabai_reader_exe)
 itlabai_apply_runtime_rpath(itlabai_reader_exe)
