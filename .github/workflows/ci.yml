@@ -29,8 +29,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Fetch test data
-      run: python3 scripts/fetch_test_data.py --dest build/input
     - name: Set binary paths
       id: set_binaries
       run: |
@@ -46,7 +44,6 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DITLABAI_FETCH_TEST_DATA=ON \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
             ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
@@ -82,8 +79,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Fetch test data
-      run: python3 scripts/fetch_test_data.py --dest build/input
     - name: Install prerequisites
       run: |
         sudo apt install clang libomp-dev
@@ -97,8 +92,7 @@ jobs:
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER=clang \
-          -DCMAKE_CXX_COMPILER=clang++ \
-          -DITLABAI_FETCH_TEST_DATA=ON
+          -DCMAKE_CXX_COMPILER=clang++
         cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
@@ -117,8 +111,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Fetch test data
-      run: python3 scripts/fetch_test_data.py --dest build/input
     - name: Install prerequisites
       run: |
         brew install libomp ninja
@@ -134,7 +126,6 @@ jobs:
         cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DITLABAI_FETCH_TEST_DATA=ON \
           -DCMAKE_PREFIX_PATH=$OPENMP_PATH \
           -DCMAKE_INCLUDE_PATH=$OPENMP_PATH/include \
           -DCMAKE_LIBRARY_PATH=$OPENMP_PATH/lib \
@@ -159,8 +150,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Fetch test data
-      run: python scripts/fetch_test_data.py --dest build/input
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
       with:
@@ -175,7 +164,7 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
     - name: Build
       run: |
-        cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release -DITLABAI_FETCH_TEST_DATA=ON
+        cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release
         cmake --build build --parallel --config Release
     - name: Test
       run: |
@@ -187,8 +176,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Fetch test data
-      run: python3 scripts/fetch_test_data.py --dest build/input
     - name: Install prerequisites
       run: sudo apt-get update && sudo apt-get install -y libomp-dev build-essential cmake
     - name: Setup ccache
@@ -200,8 +187,7 @@ jobs:
         cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DITLABAI_FETCH_TEST_DATA=ON
+          -DCMAKE_BUILD_TYPE=Release
         cmake --build build --parallel
         cmake --build build -t test
       env:
@@ -212,8 +198,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Fetch test data
-      run: python3 scripts/fetch_test_data.py --dest build/input
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install -y gcovr
     - name: Setup ccache
@@ -228,8 +212,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_FLAGS="--coverage" \
           -DCMAKE_CXX_FLAGS="--coverage" \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-          -DITLABAI_FETCH_TEST_DATA=ON
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
         cmake --build build --parallel
     - name: Test
       run: cmake --build build -t test
