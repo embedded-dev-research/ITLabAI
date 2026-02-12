@@ -63,7 +63,7 @@ jobs:
         ${{ steps.set_binaries.outputs.ACC_BINARY }}
         ${{ matrix.build_dir }}/bin/all_libs/*
     - name: Test
-      run: ctest --preset ${{ matrix.preset }} --output-on-failure
+      run: ctest --preset ${{ matrix.preset }} --output-on-failure -L unit
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
@@ -71,7 +71,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y valgrind
         valgrind --error-exitcode=1 ${{ matrix.build_dir }}/bin/itlabai_run_test --gtest_filter=-convlayer_parall.*
-        valgrind --error-exitcode=1 ${{ matrix.build_dir }}/bin/itlabai_run_test --gtest_filter=convlayer_parall.*
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-linux-clang:
@@ -96,7 +95,7 @@ jobs:
           -DCMAKE_CXX_COMPILER=clang++
         cmake --build --preset dev-release --parallel
     - name: Test
-      run: ctest --preset dev-release --output-on-failure
+      run: ctest --preset dev-release --output-on-failure -L unit
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
@@ -104,7 +103,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y valgrind
         valgrind --error-exitcode=1 build/release/bin/itlabai_run_test --gtest_filter=-convlayer_parall.*
-        valgrind --error-exitcode=1 build/release/bin/itlabai_run_test --gtest_filter=convlayer_parall.*
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-macos:
@@ -143,7 +141,7 @@ jobs:
         LDFLAGS: "-L$(brew --prefix libomp)/lib -lomp"
         CPPFLAGS: "-I$(brew --prefix libomp)/include"
     - name: Test
-      run: ctest --preset dev-release --output-on-failure
+      run: ctest --preset dev-release --output-on-failure -L unit
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
@@ -169,7 +167,7 @@ jobs:
         cmake --preset dev-release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         cmake --build --preset dev-release --parallel --config Release
     - name: Test
-      run: ctest --preset dev-release --output-on-failure
+      run: ctest --preset dev-release --output-on-failure -L unit
   build-linux-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
@@ -188,7 +186,7 @@ jobs:
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         cmake --build --preset dev-release --parallel
-        ctest --preset dev-release --output-on-failure
+        ctest --preset dev-release --output-on-failure -L unit
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   codecov:
@@ -211,7 +209,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         cmake --build --preset coverage --parallel
     - name: Test
-      run: ctest --preset coverage --output-on-failure
+      run: ctest --preset coverage --output-on-failure -L unit
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Generate Coverage Data

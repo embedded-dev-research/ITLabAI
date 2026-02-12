@@ -1,0 +1,28 @@
+name: Perf Daily
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  perf-daily-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ccache-${{ github.job }}
+    - name: Build
+      run: |
+        cmake --preset dev-release \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build --preset dev-release --parallel
+    - name: Run Perf Tests
+      run: ctest --preset dev-release --output-on-failure -L perf
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
