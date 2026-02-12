@@ -46,6 +46,9 @@ itlabai_external_add(
         -DTBB_TEST=OFF
         -DTBB_EXAMPLES=OFF
         -DTBB_STRICT=OFF
+        # IPO/LTO with clang can produce LLVM bitcode objects that are later linked
+        # by a non-clang driver in some configurations, causing "file format not recognized".
+        -DTBB_ENABLE_IPO=OFF
         ${_tbb_cmake_args}
     BUILD_BYPRODUCTS ${_tbb_byproducts}
 )

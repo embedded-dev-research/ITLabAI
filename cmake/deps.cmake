@@ -2,8 +2,25 @@ include(ExternalProject)
 
 # Root directories for all external builds/installs
 set(ITLABAI_EXTERNAL_ROOT "${CMAKE_BINARY_DIR}/_external" CACHE PATH "Root for external project builds")
-set(ITLABAI_EXTERNAL_BUILD_ROOT "${ITLABAI_EXTERNAL_ROOT}/build" CACHE PATH "External build trees")
-set(ITLABAI_EXTERNAL_INSTALL_ROOT "${ITLABAI_EXTERNAL_ROOT}/install" CACHE PATH "External install trees")
+
+# ExternalProject build dirs are not cleaned by `cmake --fresh`, and switching compilers
+# in the same build dir can leave stale external caches behind. Isolate external build/install
+# trees by toolchain to avoid mixing artifacts and accidentally installing to system paths.
+function(itlabai_sanitize_identifier out_var in_str)
+    set(_s "${in_str}")
+    if(_s STREQUAL "")
+        set(_s "unknown")
+    endif()
+    string(REGEX REPLACE "[^A-Za-z0-9_.-]+" "_" _s "${_s}")
+    set(${out_var} "${_s}" PARENT_SCOPE)
+endfunction()
+
+set(_itlabai_toolchain_id "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
+itlabai_sanitize_identifier(ITLABAI_EXTERNAL_TOOLCHAIN_ID "${_itlabai_toolchain_id}")
+
+# Do NOT cache these: they must track the active toolchain reliably.
+set(ITLABAI_EXTERNAL_BUILD_ROOT "${ITLABAI_EXTERNAL_ROOT}/build/${ITLABAI_EXTERNAL_TOOLCHAIN_ID}")
+set(ITLABAI_EXTERNAL_INSTALL_ROOT "${ITLABAI_EXTERNAL_ROOT}/install/${ITLABAI_EXTERNAL_TOOLCHAIN_ID}")
 
 function(itlabai_external_default_build_type out_var)
     set(_bt "${CMAKE_BUILD_TYPE}")
@@ -32,13 +49,19 @@ function(itlabai_external_add)
         message(FATAL_ERROR "itlabai_external_add: INSTALL_DIR is required")
     endif()
 
+    # Force a non-system install prefix for every external. This prevents any external
+    # from using its default (often /usr/local) even when reconfiguring is skipped.
+    set(_itlabai_ep_cache_args
+        -DCMAKE_INSTALL_PREFIX:PATH=${EP_INSTALL_DIR}
+    )
+
     ExternalProject_Add(${EP_NAME}
         SOURCE_DIR "${EP_SOURCE_DIR}"
         BINARY_DIR "${EP_BINARY_DIR}"
         INSTALL_DIR "${EP_INSTALL_DIR}"
         DEPENDS ${EP_DEPENDS}
         CMAKE_ARGS ${EP_CMAKE_ARGS}
-        CMAKE_CACHE_ARGS ${EP_CMAKE_CACHE_ARGS}
+        CMAKE_CACHE_ARGS ${_itlabai_ep_cache_args} ${EP_CMAKE_CACHE_ARGS}
         BUILD_BYPRODUCTS ${EP_BUILD_BYPRODUCTS}
     )
     add_dependencies(itlabai_external ${EP_NAME})
