@@ -617,7 +617,7 @@ ParseResult parse_json_model(RuntimeOptions options,
             continue;
           }
 
-          auto bin_layer = std::make_shared<it_lab_ai::BinaryOpLayer>(op);
+          auto bin_layer = LayerFactory::createBinaryLayer(op, options);
           layer = bin_layer;
         }
       } else if (layer_type == "Gemm") {

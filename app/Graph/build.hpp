@@ -32,6 +32,7 @@
 #include "layers/SplitLayer.hpp"
 #include "layers/Tensor.hpp"
 #include "layers/TransposeLayer.hpp"
+#include "layers_oneDNN/BinaryOpLayer.hpp"
 #include "layers_oneDNN/ConvLayer.hpp"
 #include "layers_oneDNN/EWLayer.hpp"
 #include "layers_oneDNN/PoolingLayer.hpp"
@@ -100,6 +101,15 @@ class LayerFactory {
     }
     return std::make_shared<ConvolutionalLayer>(step, pads, dilations, kernel,
                                                 bias, group, useLegacyImpl);
+  }
+
+  static std::shared_ptr<Layer> createBinaryLayer(
+      const it_lab_ai::BinaryOpLayer::Operation op,
+      const RuntimeOptions& options) {
+    if (options.backend == Backend::kOneDnn) {
+      return std::make_shared<it_lab_ai::BinaryOpLayerOneDnn>(op);
+    }
+    return std::make_shared<it_lab_ai::BinaryOpLayer>(op);
   }
 
   static std::shared_ptr<Layer> createReduceLayer(
