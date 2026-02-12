@@ -110,7 +110,7 @@ class LayerFactory {
       return std::make_shared<it_lab_ai::BinaryOpLayerOneDnn>(op);
     }
     return std::make_shared<it_lab_ai::BinaryOpLayer>(op);
-}
+  }
 
   static std::shared_ptr<Layer> createReduceLayer(
       ReduceLayer::Operation op, int64_t keepdims,
