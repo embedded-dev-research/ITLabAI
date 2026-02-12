@@ -57,6 +57,7 @@ class Shape {
     }
     return true;
   }
+  void push_back(size_t value) { dims_.push_back(value); }
 
   bool operator!=(const Shape& other) const { return !(*this == other); }
   friend std::ostream& operator<<(std::ostream& os, const Shape& shape);
