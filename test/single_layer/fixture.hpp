@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <ostream>
 #include <random>
 #include <string>
 #include <vector>
@@ -12,6 +13,42 @@ using it_lab_ai::Backend;
 using it_lab_ai::ParBackend;
 using it_lab_ai::RuntimeOptions;
 using it_lab_ai::Shape;
+
+namespace it_lab_ai {
+
+inline const char* backendToString(Backend backend) {
+  switch (backend) {
+    case Backend::kNaive:
+      return "Naive";
+    case Backend::kOneDnn:
+      return "OneDnn";
+  }
+  return "Unknown";
+}
+
+inline const char* parBackendToString(ParBackend backend) {
+  switch (backend) {
+    case ParBackend::kSeq:
+      return "Seq";
+    case ParBackend::kThreads:
+      return "Threads";
+    case ParBackend::kTbb:
+      return "Tbb";
+    case ParBackend::kOmp:
+      return "Omp";
+    case ParBackend::kKokkos:
+      return "Kokkos";
+  }
+  return "Unknown";
+}
+
+inline void PrintTo(const RuntimeOptions& options, std::ostream* os) {
+  *os << "{backend=" << backendToString(options.backend)
+      << ", par_backend=" << parBackendToString(options.par_backend)
+      << ", threads=" << options.threads << "}";
+}
+
+}  // namespace it_lab_ai
 
 class BaseTestFixture : public ::testing::Test {
  public:

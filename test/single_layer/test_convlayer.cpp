@@ -1177,6 +1177,16 @@ struct ConvTestParams {
   std::string description;
 };
 
+void PrintTo(const ConvTestParams& params, std::ostream* os) {
+  *os << "{description=" << params.description
+      << ", input_shape=" << params.input_shape.to_string()
+      << ", kernel_shape=" << params.kernel_shape.to_string()
+      << ", output_shape=" << params.output_shape.to_string()
+      << ", stride=" << params.stride << ", pad=" << params.pad
+      << ", dilation=" << params.dilation
+      << ", use_bias=" << (params.use_bias ? "true" : "false") << "}";
+}
+
 class ConvParametrizedTest : public ConvTestFixture,
                              public ::testing::WithParamInterface<
                                  std::tuple<ConvTestParams, RuntimeOptions>> {};

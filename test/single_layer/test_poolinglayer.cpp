@@ -513,6 +513,17 @@ struct PoolingTestParams {
   std::string description;
 };
 
+void PrintTo(const PoolingTestParams& params, std::ostream* os) {
+  *os << "{description=" << params.description
+      << ", input_shape=" << params.input_shape.to_string()
+      << ", pool_shape=" << params.pool_shape.to_string()
+      << ", strides=" << params.strides.to_string()
+      << ", pads=" << params.pads.to_string()
+      << ", dilations=" << params.dilations.to_string()
+      << ", ceil_mode=" << (params.ceil_mode ? "true" : "false")
+      << ", pooling_type=" << params.pooling_type << "}";
+}
+
 class PoolingParametrizedTest
     : public BaseTestFixture,
       public ::testing::WithParamInterface<

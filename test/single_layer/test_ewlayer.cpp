@@ -11,23 +11,33 @@ using namespace it_lab_ai;
 
 class EWLayerTest_F : public BaseTestFixture {};
 
+struct EWBasicTestParams {
+  std::vector<double> input;
+  EWLayerImpl<double> layer;
+  std::vector<double> expected_output;
+  std::string description;
+};
+
+template <typename Fn>
+std::vector<double> transformVector(const std::vector<double>& input, Fn fn) {
+  std::vector<double> output(input.size());
+  std::transform(input.begin(), input.end(), output.begin(), fn);
+  return output;
+}
+
+void PrintTo(const EWBasicTestParams& params, std::ostream* os) {
+  *os << "{description=" << params.description
+      << ", input_size=" << params.input.size()
+      << ", expected_size=" << params.expected_output.size() << "}";
+}
+
 class EWTestsParameterized
-    : public ::testing::TestWithParam<
-          std::tuple<std::vector<double>, EWLayerImpl<double>,
-                     std::vector<double>, std::function<double(double)>>> {};
-// 1) input; 2) constructed ewlayerimpl; 3) expected_output; 4) lambda_expr.
+    : public ::testing::TestWithParam<EWBasicTestParams> {};
 
 TEST_P(EWTestsParameterized, element_wise_works_correctly) {
-  auto data = GetParam();
-  std::vector<double> input = std::get<0>(data);
-  EWLayerImpl<double> a = std::get<1>(data);
-  std::vector<double> output = a.run(input);
-  std::vector<double> true_output = std::get<2>(data);
-  auto func = std::get<3>(data);
-  if (func != nullptr) {
-    true_output = std::vector<double>(input.size());
-    std::transform(input.begin(), input.end(), true_output.begin(), func);
-  }
+  const auto& data = GetParam();
+  std::vector<double> output = data.layer.run(data.input);
+  const auto& true_output = data.expected_output;
   for (size_t i = 0; i < output.size(); i++) {
     EXPECT_NEAR(output[i], true_output[i], 1e-5);
   }
@@ -39,44 +49,45 @@ std::vector<double> basic_data2 = {1.0, -1.0, 2.0, -2.0};
 INSTANTIATE_TEST_SUITE_P(
     element_wise_tests, EWTestsParameterized,
     ::testing::Values(
-        std::make_tuple(basic_data1, EWLayerImpl<double>({2, 2}, "minus"),
-                        std::vector<double>({-2.0, -3.9, -0.1, -2.3}),
-                        std::function<double(double)>()),
-        std::make_tuple(basic_data1, EWLayerImpl<double>({2, 2}, "sin"),
-                        std::vector<double>(),
-                        std::function<double(double)>([](double arg) -> double {
-                          return std::sin(arg);
-                        })),
-        std::make_tuple(basic_data2, EWLayerImpl<double>({2, 2}, "relu"),
-                        std::vector<double>({1.0, 0.0, 2.0, 0.0}),
-                        std::function<double(double)>()),
-        std::make_tuple(basic_data2, EWLayerImpl<double>({2, 2}, "tanh"),
-                        std::vector<double>(),
-                        std::function<double(double)>([](double arg) -> double {
-                          return std::tanh(arg);
-                        })),
-        std::make_tuple(basic_data2,
-                        EWLayerImpl<double>({2, 2}, "linear", 2.0F, 1.0F),
-                        std::vector<double>({3.0, -1.0, 5.0, -3.0}),
-                        std::function<double(double)>()),
-        std::make_tuple(std::vector<double>({0.0, 1.0, -1.0}),
-                        EWLayerImpl<double>({3}, "sigmoid"),
-                        std::vector<double>(),
-                        std::function<double(double)>([](double x) {
-                          return 1.0 / (1.0 + std::exp(-x));
-                        })),
-        std::make_tuple(std::vector<double>{-100.0, -50.0, 0.0, 50.0, 100.0},
-                        EWLayerImpl<double>({5}, "sigmoid"),
-                        std::vector<double>(),
-                        std::function<double(double)>([](double x) {
-                          if (x >= 0) {
-                            double z = std::exp(-x);
-                            return 1.0 / (1.0 + z);
-                          } else {
-                            double z = std::exp(x);
-                            return z / (1.0 + z);
-                          }
-                        }))));
+        EWBasicTestParams{basic_data1, EWLayerImpl<double>({2, 2}, "minus"),
+                          std::vector<double>({-2.0, -3.9, -0.1, -2.3}),
+                          "minus_basic"},
+        EWBasicTestParams{
+            basic_data1, EWLayerImpl<double>({2, 2}, "sin"),
+            transformVector(basic_data1,
+                            [](double arg) { return std::sin(arg); }),
+            "sin_basic"},
+        EWBasicTestParams{basic_data2, EWLayerImpl<double>({2, 2}, "relu"),
+                          std::vector<double>({1.0, 0.0, 2.0, 0.0}),
+                          "relu_basic"},
+        EWBasicTestParams{
+            basic_data2, EWLayerImpl<double>({2, 2}, "tanh"),
+            transformVector(basic_data2,
+                            [](double arg) { return std::tanh(arg); }),
+            "tanh_basic"},
+        EWBasicTestParams{
+            basic_data2, EWLayerImpl<double>({2, 2}, "linear", 2.0F, 1.0F),
+            std::vector<double>({3.0, -1.0, 5.0, -3.0}), "linear_basic"},
+        EWBasicTestParams{std::vector<double>({0.0, 1.0, -1.0}),
+                          EWLayerImpl<double>({3}, "sigmoid"),
+                          transformVector(std::vector<double>({0.0, 1.0, -1.0}),
+                                          [](double x) {
+                                            return 1.0 / (1.0 + std::exp(-x));
+                                          }),
+                          "sigmoid_basic"},
+        EWBasicTestParams{std::vector<double>{-100.0, -50.0, 0.0, 50.0, 100.0},
+                          EWLayerImpl<double>({5}, "sigmoid"),
+                          transformVector(std::vector<double>{-100.0, -50.0,
+                                                              0.0, 50.0, 100.0},
+                                          [](double x) {
+                                            if (x >= 0) {
+                                              double z = std::exp(-x);
+                                              return 1.0 / (1.0 + z);
+                                            }
+                                            double z = std::exp(x);
+                                            return z / (1.0 + z);
+                                          }),
+                          "sigmoid_extreme"}));
 
 TEST(ewlayer, new_ewlayer_can_relu_float) {
   EWLayer layer("relu");
@@ -405,6 +416,13 @@ struct EWLayerTestParams {
   std::vector<float> expected_output;
   std::string description;
 };
+
+void PrintTo(const EWLayerTestParams& params, std::ostream* os) {
+  *os << "{description=" << params.description
+      << ", activation_type=" << params.activation_type
+      << ", alpha=" << params.alpha << ", beta=" << params.beta
+      << ", input_shape=" << params.input_shape.to_string() << "}";
+}
 
 class EWLayerParametrizedTest
     : public BaseTestFixture,
