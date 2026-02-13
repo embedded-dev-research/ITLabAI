@@ -10,7 +10,10 @@ target_link_libraries(itlabai_acc_lib
     PUBLIC
         itlabai_layers_lib
 )
-itlabai_link_externals(itlabai_acc_lib opencv tbb kokkos openmp)
+target_link_libraries(itlabai_acc_lib PUBLIC OpenCV::opencv_world TBB::tbb Kokkos_imported)
+if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(itlabai_acc_lib PUBLIC OpenMP::OpenMP_CXX)
+endif()
 itlabai_target_defaults(itlabai_acc_lib)
 target_compile_definitions(itlabai_acc_lib PUBLIC IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")
 

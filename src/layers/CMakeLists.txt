@@ -10,5 +10,8 @@ target_include_directories(itlabai_layers_lib
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(itlabai_layers_lib PUBLIC dnnl)
-itlabai_link_externals(itlabai_layers_lib tbb openmp kokkos)
+target_link_libraries(itlabai_layers_lib PUBLIC TBB::tbb Kokkos_imported)
+if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(itlabai_layers_lib PUBLIC OpenMP::OpenMP_CXX)
+endif()
 itlabai_target_defaults(itlabai_layers_lib)

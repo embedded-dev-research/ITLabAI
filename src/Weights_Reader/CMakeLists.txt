@@ -11,4 +11,3 @@ target_include_directories(itlabai_reader_lib
 )
 target_link_libraries(itlabai_reader_lib PUBLIC nlohmann_json::nlohmann_json)
 itlabai_target_defaults(itlabai_reader_lib)
-itlabai_link_externals(itlabai_reader_lib)

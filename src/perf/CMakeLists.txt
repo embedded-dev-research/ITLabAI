@@ -11,7 +11,9 @@ target_include_directories(itlabai_perf_lib INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-itlabai_link_externals(itlabai_perf_lib openmp)
+if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(itlabai_perf_lib INTERFACE OpenMP::OpenMP_CXX)
+endif()
 
 add_library(itlabai_perf_anchor_obj OBJECT benchmarking.cpp)
 itlabai_target_defaults(itlabai_perf_anchor_obj)

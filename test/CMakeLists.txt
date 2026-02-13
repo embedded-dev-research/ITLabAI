@@ -24,7 +24,10 @@ target_link_libraries(itlabai_run_test_test PUBLIC
     itlabai_graph_lib
     itlabai_graph_transformations_lib
 )
-itlabai_link_externals(itlabai_run_test_test gtest opencv tbb kokkos openmp)
+target_link_libraries(itlabai_run_test_test PUBLIC gtest_main gtest OpenCV::opencv_world TBB::tbb Kokkos_imported)
+if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(itlabai_run_test_test PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 target_include_directories(itlabai_run_test_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(itlabai_run_test_test PRIVATE "${PROJECT_SOURCE_DIR}/app/ReaderImage")

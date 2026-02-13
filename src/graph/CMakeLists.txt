@@ -9,5 +9,8 @@ target_include_directories(itlabai_graph_lib
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-itlabai_link_externals(itlabai_graph_lib tbb kokkos openmp)
+target_link_libraries(itlabai_graph_lib PUBLIC TBB::tbb Kokkos_imported)
+if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(itlabai_graph_lib PUBLIC OpenMP::OpenMP_CXX)
+endif()
 itlabai_target_defaults(itlabai_graph_lib)

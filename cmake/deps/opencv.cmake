@@ -150,3 +150,6 @@ else()
         INTERFACE_INCLUDE_DIRECTORIES "${_opencv_include_dir}"
     )
 endif()
+
+# Ensure OpenCV headers/libs are built/installed before anything that links against it.
+add_dependencies(OpenCV::opencv_world opencv_external)

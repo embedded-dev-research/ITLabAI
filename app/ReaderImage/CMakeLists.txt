@@ -4,7 +4,10 @@ add_library(itlabai_reader_image_lib STATIC ${READER_IMG_HEADERS} ${READER_IMG_S
 
 set_target_properties(itlabai_reader_image_lib PROPERTIES LINKER_LANGUAGE CXX)
 
-itlabai_link_externals(itlabai_reader_image_lib opencv tbb openmp)
+target_link_libraries(itlabai_reader_image_lib PUBLIC OpenCV::opencv_world TBB::tbb)
+if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(itlabai_reader_image_lib PUBLIC OpenMP::OpenMP_CXX)
+endif()
 itlabai_target_defaults(itlabai_reader_image_lib)
 target_compile_definitions(itlabai_reader_image_lib PUBLIC IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")
 

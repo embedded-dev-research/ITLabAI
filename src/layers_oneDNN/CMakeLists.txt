@@ -10,7 +10,10 @@ target_include_directories(itlabai_layers_onednn_lib
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(itlabai_layers_onednn_lib PUBLIC dnnl)
-itlabai_link_externals(itlabai_layers_onednn_lib tbb kokkos openmp)
+target_link_libraries(itlabai_layers_onednn_lib PUBLIC TBB::tbb Kokkos_imported)
+if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(itlabai_layers_onednn_lib PUBLIC OpenMP::OpenMP_CXX)
+endif()
 target_compile_definitions(itlabai_layers_onednn_lib PRIVATE 
     DNNL_ENABLE_CONCURRENT_EXEC=1
 )

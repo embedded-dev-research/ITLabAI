@@ -25,6 +25,21 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Output directories (set globally; avoid per-target output directory boilerplate).
+if(CMAKE_CONFIGURATION_TYPES)
+  foreach(_cfg IN LISTS CMAKE_CONFIGURATION_TYPES)
+    string(TOUPPER "${_cfg}" _cfg_upper)
+    string(TOLOWER "${_cfg}" _cfg_lower)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${_cfg_upper} "${CMAKE_BINARY_DIR}/bin/${_cfg_lower}")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${_cfg_upper} "${CMAKE_BINARY_DIR}/lib/${_cfg_lower}")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${_cfg_upper} "${CMAKE_BINARY_DIR}/lib/${_cfg_lower}")
+  endforeach()
+else()
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+endif()
+
 # Project data / assets (used by apps/tests).
 set(ITLABAI_DOCS_DIR "${PROJECT_SOURCE_DIR}/docs" CACHE PATH "Project docs root")
 set(ITLABAI_MODELS_JSON_DIR "${ITLABAI_DOCS_DIR}/jsons" CACHE PATH "Directory with generated model json files")
@@ -100,4 +115,3 @@ if(BUILD_TESTING)
 endif()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/Packaging.cmake")
-
