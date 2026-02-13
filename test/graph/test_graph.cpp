@@ -48,7 +48,7 @@ TEST(graph, test_deep_copy) {
   auto lay4_alt = std::make_shared<ConvLayerOneDnn>();
   auto lay5 = std::make_shared<FCLayer>();
   auto lay6 = std::make_shared<FlattenLayer>();
-  auto lay7 = std::make_shared<FlattenLayer>();
+  auto lay7 = std::make_shared<ConcatLayer>();
   auto lay8 = std::make_shared<DropOutLayer>();
   auto lay9 = std::make_shared<SplitLayer>(0, 2);
   auto lay10 = std::make_shared<BinaryOpLayer>();
@@ -77,13 +77,13 @@ TEST(graph, test_deep_copy) {
   graph.makeConnection(lay2, lay5);
   graph2.makeConnection(lay2, lay5);
   graph.makeConnection(lay3, lay6);
-  graph2.makeConnection(lay3, lay6);
+  graph2.makeConnection(lay3_alt, lay6);
   graph.makeConnection(lay3, lay7);
-  graph2.makeConnection(lay3, lay7);
+  graph2.makeConnection(lay3_alt, lay7);
   graph.makeConnection(lay4, lay8);
-  graph2.makeConnection(lay4, lay8);
+  graph2.makeConnection(lay4_alt, lay8);
   graph.makeConnection(lay4, lay9);
-  graph2.makeConnection(lay4, lay9);
+  graph2.makeConnection(lay4_alt, lay9);
   graph.makeConnection(lay5, lay10);
   graph2.makeConnection(lay5, lay10_alt);
   graph.makeConnection(lay5, lay11);
@@ -100,8 +100,8 @@ TEST(graph, test_deep_copy) {
   graph2.makeConnection(lay8, lay16);
   graph.makeConnection(lay8, lay17);
   graph2.makeConnection(lay8, lay17);
-  graph.setOutput(lay16, output);
-  graph2.setOutput(lay16, output);
+  graph.setOutput(lay17, output);
+  graph2.setOutput(lay17, output);
   RuntimeOptions opt;
   opt.backend = Backend::kOneDnn;
   ASSERT_NO_THROW(graph.clone(graph_c, output));
