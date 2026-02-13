@@ -49,7 +49,9 @@ class ConvolutionalLayer : public Layer {
                      std::shared_ptr<Tensor> kernel,
                      std::shared_ptr<Tensor> bias = std::make_shared<Tensor>(),
                      size_t group = 1, bool useLegacyImpl = false)
-      : Layer(kConvolution), kernel_(kernel), bias_(bias) {
+      : Layer(kConvolution),
+        kernel_(std::move(kernel)),
+        bias_(std::move(bias)) {
     stride_ = step;
     pads_ = pads;
     group_ = group;

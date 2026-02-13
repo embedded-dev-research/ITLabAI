@@ -21,7 +21,9 @@ class FCLayer : public Layer {
         weights_(std::make_shared<Tensor>(weights)),
         bias_(std::make_shared<Tensor>(bias)) {}
   FCLayer(std::shared_ptr<Tensor> weights, std::shared_ptr<Tensor> bias)
-      : Layer(kFullyConnected), weights_(weights), bias_(bias) {}
+      : Layer(kFullyConnected),
+        weights_(std::move(weights)),
+        bias_(std::move(bias)) {}
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS

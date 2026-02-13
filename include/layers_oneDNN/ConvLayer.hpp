@@ -41,8 +41,8 @@ class ConvLayerOneDnn : public Layer {
         stride_(stride),
         pads_(pads),
         dilations_(dilations),
-        kernel_(kernel),
-        bias_(bias),
+        kernel_(std::move(kernel)),
+        bias_(std::move(bias)),
         group_(group),
         use_legacy_(use_legacy) {}
 
