@@ -341,7 +341,7 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
     std::vector<std::shared_ptr<Layer>> layers;
     for (int j = 0; j < subgraph_to.getLayersCount(); j++) {
       std::shared_ptr<Layer> layer =
-          layer_based_shared_copy(subgraph_to.getLayerFromID(j));
+          layer_based_shared_copy(subgraph_to.getLayerFromID(j), options);
       layers.push_back(layer);
       new_graph.addSingleLayer(layer);
       auto it = std::find(roots2_c.begin(), roots2_c.end(), j);
