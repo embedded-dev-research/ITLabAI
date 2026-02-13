@@ -50,6 +50,29 @@ jobs:
         cmake --build --preset ${{ matrix.preset }} --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
+    - name: Package smoke test
+      if: matrix.preset == 'release'
+      run: |
+        set -euo pipefail
+        INSTALL_DIR="$(mktemp -d)"
+        cmake --install "${{ matrix.build_dir }}" --prefix "$INSTALL_DIR"
+
+        CONSUMER_DIR="$(mktemp -d)"
+        cat > "$CONSUMER_DIR/CMakeLists.txt" <<'CMAKE'
+        cmake_minimum_required(VERSION 3.20)
+        project(itlabai_consumer LANGUAGES CXX)
+        find_package(ITLabAI CONFIG REQUIRED)
+        add_executable(consumer main.cpp)
+        target_link_libraries(consumer PRIVATE ITLabAI::graph)
+        set_target_properties(consumer PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES)
+        CMAKE
+        cat > "$CONSUMER_DIR/main.cpp" <<'CPP'
+        #include <graph/graph.hpp>
+        int main() { it_lab_ai::Graph g; (void)g; return 0; }
+        CPP
+
+        cmake -S "$CONSUMER_DIR" -B "$CONSUMER_DIR/build" -DCMAKE_PREFIX_PATH="$INSTALL_DIR" -DCMAKE_BUILD_TYPE=Release
+        cmake --build "$CONSUMER_DIR/build" --parallel
     - name: Prepare ALL libs
       run: |
        mkdir -p ${{ matrix.build_dir }}/bin/all_libs
