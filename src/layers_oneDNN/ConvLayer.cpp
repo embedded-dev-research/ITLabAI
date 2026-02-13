@@ -10,6 +10,9 @@ namespace it_lab_ai {
 
 void ConvLayerOneDnn::run(const std::vector<Tensor>& input,
                           std::vector<Tensor>& output) {
+  if (kernel_ == nullptr || bias_ == nullptr) {
+    throw std::runtime_error("ConvLayerOneDnn: no kernel or bias");
+  }
   if (use_legacy_) {
     run_special_conv(input, output);
     return;

@@ -42,6 +42,7 @@ TEST(graph, test_deep_copy) {
   auto lay1 = std::make_shared<InputLayer>();
   Shape sh = {2, 2};
   auto lay2 = std::make_shared<PoolingLayer>(sh, "average");
+  auto lay2_alt = std::make_shared<PoolingLayerOneDnn>(sh);
   auto lay3 = std::make_shared<EWLayer>();
   auto lay3_alt = std::make_shared<EwLayerOneDnn>();
   auto lay4 = std::make_shared<ConvolutionalLayer>();
@@ -69,13 +70,13 @@ TEST(graph, test_deep_copy) {
   graph.setInput(lay1, input);
   graph2.setInput(lay1, input);
   graph.makeConnection(lay1, lay2);
-  graph2.makeConnection(lay1, lay2);
+  graph2.makeConnection(lay1, lay2_alt);
   graph.makeConnection(lay1, lay3);
   graph2.makeConnection(lay1, lay3_alt);
   graph.makeConnection(lay2, lay4);
-  graph2.makeConnection(lay2, lay4_alt);
+  graph2.makeConnection(lay2_alt, lay4_alt);
   graph.makeConnection(lay2, lay5);
-  graph2.makeConnection(lay2, lay5);
+  graph2.makeConnection(lay2_alt, lay5);
   graph.makeConnection(lay3, lay6);
   graph2.makeConnection(lay3_alt, lay6);
   graph.makeConnection(lay3, lay7);
@@ -105,7 +106,7 @@ TEST(graph, test_deep_copy) {
   RuntimeOptions opt;
   opt.backend = Backend::kOneDnn;
   ASSERT_NO_THROW(graph.clone(graph_c, output));
-  ASSERT_NO_THROW(graph.clone(graph2_c, output, opt));
+  ASSERT_NO_THROW(graph2.clone(graph2_c, output, opt));
 }
 
 TEST(graph, check_connection) {

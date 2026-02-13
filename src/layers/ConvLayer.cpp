@@ -11,6 +11,9 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
 void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                              std::vector<Tensor>& output,
                              const RuntimeOptions& options) {
+  if (kernel_ == nullptr || bias_ == nullptr) {
+    throw std::runtime_error("ConvolutionalLayer: no weights or bias");
+  }
   if (input.size() != 1) {
     throw std::runtime_error("ConvolutionalLayer: Input tensors not 1");
   }

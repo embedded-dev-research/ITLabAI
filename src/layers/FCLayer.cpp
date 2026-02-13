@@ -4,6 +4,9 @@ namespace it_lab_ai {
 
 void FCLayer::run(const std::vector<Tensor>& input,
                   std::vector<Tensor>& output) {
+  if (bias_ == nullptr || weights_ == nullptr) {
+    throw std::runtime_error("FCLayer: no weights or bias");
+  }
   if (input.size() != 1) {
     throw std::runtime_error("FCLayer: Input tensors not 1");
   }
