@@ -42,7 +42,7 @@ void Graph::clone(Graph& result, Tensor& out,
   result.start_ = this->start_;
   result.V_ = this->V_;
   result.layers_ = std::vector<std::shared_ptr<Layer>>();
-  for (int i = 0; i < this->layers_.size(); i++) {
+  for (size_t i = 0; i < this->layers_.size(); i++) {
     result.layers_.push_back(
         layer_based_shared_copy(this->layers_[i], options));
   }

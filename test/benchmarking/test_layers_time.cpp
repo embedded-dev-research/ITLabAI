@@ -72,8 +72,8 @@ TEST(conv_test, is_conv_stl_ok) {
   RuntimeOptions options_stl;
   options_stl.par_backend = ParBackend::kTbb;
 
-  ConvolutionalLayer p1(1, 1, 2, kernel, Tensor());
-  ConvolutionalLayer p2(1, 1, 2, kernel, Tensor());
+  ConvolutionalLayer p1(1, 1, 2, kernel);
+  ConvolutionalLayer p2(1, 1, 2, kernel);
   double count1 = elapsed_time<double, std::milli>(test_func, p1, input, output,
                                                    options_seq);
   double count2 = elapsed_time<double, std::milli>(test_func, p2, input, output,
