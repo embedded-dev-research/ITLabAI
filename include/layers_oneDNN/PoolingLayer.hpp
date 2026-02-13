@@ -27,6 +27,18 @@ class PoolingLayerOneDnn : public Layer {
         engine_(std::make_unique<dnnl::engine>(dnnl::engine::kind::cpu, 0)),
         stream_(std::make_unique<dnnl::stream>(*engine_)) {}
 
+  PoolingLayerOneDnn(const PoolingLayerOneDnn& c)
+      : Layer(kPooling),
+        engine_(std::make_unique<dnnl::engine>(dnnl::engine::kind::cpu, 0)),
+        stream_(std::make_unique<dnnl::stream>(*engine_)) {
+    this->poolingShape_ = c.poolingShape_;
+    this->strides_ = c.strides_;
+    this->pads_ = c.pads_;
+    this->dilations_ = c.dilations_;
+    this->ceil_mode_ = c.ceil_mode_;
+    this->poolingType_ = c.poolingType_;
+  }
+
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 

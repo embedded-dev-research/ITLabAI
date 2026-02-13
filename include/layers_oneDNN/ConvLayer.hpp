@@ -17,10 +17,25 @@ class ConvLayerOneDnn : public Layer {
         pads_(0),
         dilations_(1),
         group_(1),
-        use_legacy_(false) {}
+        use_legacy_(false),
+        kernel_(nullptr),
+        bias_(nullptr) {}
 
-  ConvLayerOneDnn(size_t stride, size_t pads, size_t dilations,
-                  const Tensor& kernel, const Tensor& bias = Tensor(),
+  ConvLayerOneDnn(size_t stride, size_t pads, size_t dilations, Tensor& kernel,
+                  Tensor& bias = *std::make_shared<Tensor>(), size_t group = 1,
+                  bool use_legacy = false)
+      : Layer(kConvolution),
+        stride_(stride),
+        pads_(pads),
+        dilations_(dilations),
+        kernel_(&kernel),
+        bias_(&bias),
+        group_(group),
+        use_legacy_(use_legacy) {}
+
+    ConvLayerOneDnn(size_t stride, size_t pads, size_t dilations,
+                  std::shared_ptr<Tensor> kernel,
+                  std::shared_ptr<Tensor> bias = std::make_shared<Tensor>(),
                   size_t group = 1, bool use_legacy = false)
       : Layer(kConvolution),
         stride_(stride),
@@ -31,11 +46,21 @@ class ConvLayerOneDnn : public Layer {
         group_(group),
         use_legacy_(use_legacy) {}
 
+  ConvLayerOneDnn(const ConvLayerOneDnn& c) : Layer(kConvolution) {
+    this->stride_ = c.stride_;
+    this->pads_ = c.pads_;
+    this->dilations_ = c.dilations_;
+    this->kernel_ = c.kernel_;
+    this->bias_ = c.bias_;
+    this->group_ = c.group_;
+    this->use_legacy_ = c.use_legacy_;
+  }
+
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return kernel_; }
+  Tensor get_weights() override { return *kernel_; }
 #endif
 
  private:
@@ -85,8 +110,8 @@ class ConvLayerOneDnn : public Layer {
   size_t stride_;
   size_t pads_;
   size_t dilations_;
-  Tensor kernel_;
-  Tensor bias_;
+  std::shared_ptr<Tensor> kernel_;
+  std::shared_ptr<Tensor> bias_;
   size_t group_;
   bool use_legacy_;
 

@@ -22,27 +22,36 @@ class ConvolutionalLayer : public Layer {
   size_t stride_;
   size_t pads_;
   size_t dilations_;
-  Tensor kernel_;
-  Tensor bias_;
+  std::shared_ptr<Tensor> kernel_;
+  std::shared_ptr<Tensor> bias_;
   size_t group_;
   bool useLegacyImpl_;
 
  public:
-  ConvolutionalLayer() : Layer(kConvolution) {
+  ConvolutionalLayer() : Layer(kConvolution), kernel_(nullptr), bias_(nullptr) {
     stride_ = 0;
     pads_ = 0;
     dilations_ = 0;
   }
-  ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
-                     const Tensor& kernel, const Tensor& bias = Tensor(),
+  ConvolutionalLayer(size_t step, size_t pads, size_t dilations, Tensor& kernel,
+                     Tensor& bias = *std::make_shared<Tensor>(),
                      size_t group = 1, bool useLegacyImpl = false)
-      : Layer(kConvolution) {
+      : Layer(kConvolution), kernel_(&kernel), bias_(&bias) {
     stride_ = step;
     pads_ = pads;
     group_ = group;
     dilations_ = dilations;
-    kernel_ = kernel;
-    bias_ = bias;
+    useLegacyImpl_ = useLegacyImpl;
+  }
+  ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
+                     std::shared_ptr<Tensor> kernel,
+                     std::shared_ptr<Tensor> bias = std::make_shared<Tensor>(),
+                     size_t group = 1, bool useLegacyImpl = false)
+      : Layer(kConvolution), kernel_(kernel), bias_(bias) {
+    stride_ = step;
+    pads_ = pads;
+    group_ = group;
+    dilations_ = dilations;
     useLegacyImpl_ = useLegacyImpl;
   }
   void run(const std::vector<Tensor>& input,
@@ -50,7 +59,7 @@ class ConvolutionalLayer : public Layer {
   void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
            const RuntimeOptions& options) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return kernel_; }
+  Tensor get_weights() override { return *kernel_; }
 #endif
 };
 
