@@ -14,6 +14,7 @@ std::unordered_map<std::string, std::string> model_paths = {
 void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                         it_lab_ai::Tensor& output, RuntimeOptions options,
                         bool comments) {
+  double total_tensor_creation_time = 0.0;
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -33,8 +34,13 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       std::cout << "Processing layer of type: " << layer_type << '\n';
     }
 
+     auto tensor_start = std::chrono::high_resolution_clock::now();
     it_lab_ai::Tensor tensor =
         it_lab_ai::create_tensor_from_json(layer_data, it_lab_ai::Type::kFloat);
+    auto tensor_end = std::chrono::high_resolution_clock::now();
+    total_tensor_creation_time +=
+        std::chrono::duration<double, std::milli>(tensor_end - tensor_start)
+            .count();
 
     if (layer_type.find("Conv") != std::string::npos) {
       it_lab_ai::Tensor tmp_tensor = tensor;
@@ -151,6 +157,8 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   }
 
   graph.setOutput(layers.back(), output);
+  std::cout << "Tensor creation total: " << total_tensor_creation_time
+            << " ms\n";
 }
 
 namespace {
@@ -267,7 +275,7 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
 ParseResult parse_json_model(RuntimeOptions options,
                              const std::string& json_path, bool comments) {
   ParseResult result;
-
+  double total_tensor_creation_time = 0.0;
   auto& layers = result.layers;
   auto& name_to_layer = result.name_to_layer;
   auto& connections = result.connections;
@@ -283,8 +291,13 @@ ParseResult parse_json_model(RuntimeOptions options,
   std::string last_constant_name;
   std::vector<int64_t> last_constant_value;
 
+  auto json_read_start = std::chrono::high_resolution_clock::now();
   const std::string& json_file = json_path;
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
+  auto json_read_end = std::chrono::high_resolution_clock::now();
+  double json_read_time =
+      std::chrono::duration<double, std::milli>(json_read_end - json_read_start)
+          .count();
   std::string input_layer_name = "images";
   for (const auto& layer_data : model_data) {
     std::string layer_type = layer_data["type"];
@@ -320,8 +333,13 @@ ParseResult parse_json_model(RuntimeOptions options,
       std::shared_ptr<it_lab_ai::Layer> layer;
 
       if (layer_type.find("Conv") != std::string::npos) {
+        auto tensor_start = std::chrono::high_resolution_clock::now();
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
             layer_data, it_lab_ai::Type::kFloat);
+        auto tensor_end = std::chrono::high_resolution_clock::now();
+        total_tensor_creation_time +=
+            std::chrono::duration<double, std::milli>(tensor_end - tensor_start)
+                .count();
 
         size_t stride = 1;
         size_t pads = 0;
@@ -382,8 +400,13 @@ ParseResult parse_json_model(RuntimeOptions options,
         layer = LayerFactory::createEwLayer("sigmoid", options);
       } else if (layer_type.find("Dense") != std::string::npos ||
                  layer_type.find("FullyConnected") != std::string::npos) {
+        auto tensor_start = std::chrono::high_resolution_clock::now();
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
             layer_data, it_lab_ai::Type::kFloat);
+        auto tensor_end = std::chrono::high_resolution_clock::now();
+        total_tensor_creation_time +=
+            std::chrono::duration<double, std::milli>(tensor_end - tensor_start)
+                .count();
 
         it_lab_ai::Tensor tmp_tensor = it_lab_ai::Tensor(
             it_lab_ai::Shape({tensor.get_shape()[1], tensor.get_shape()[0]}),
@@ -621,8 +644,13 @@ ParseResult parse_json_model(RuntimeOptions options,
           layer = bin_layer;
         }
       } else if (layer_type == "Gemm") {
+        auto tensor_start = std::chrono::high_resolution_clock::now();
         it_lab_ai::Tensor tensor = it_lab_ai::create_tensor_from_json(
             layer_data, it_lab_ai::Type::kFloat);
+        auto tensor_end = std::chrono::high_resolution_clock::now();
+        total_tensor_creation_time +=
+            std::chrono::duration<double, std::milli>(tensor_end - tensor_start)
+                .count();
 
         float alpha = 1.0F;
         float beta = 1.0F;
@@ -962,7 +990,13 @@ ParseResult parse_json_model(RuntimeOptions options,
       throw;
     }
   }
-
+  std::cout << "\n========== PARSING TIME BREAKDOWN ==========\n";
+  std::cout << "JSON file reading: " << std::fixed << std::setprecision(3)
+            << json_read_time << " ms\n";
+  std::cout << "Tensor creation:   " << total_tensor_creation_time << " ms\n";
+  std::cout << "Other operations:  "
+            << (json_read_time + total_tensor_creation_time) << " ms\n";
+  std::cout << "============================================\n" << std::endl;
   return result;
 }
 

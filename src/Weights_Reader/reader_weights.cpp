@@ -5,25 +5,46 @@
 #include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <vector>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 namespace it_lab_ai {
 
 using json = nlohmann::json;
 
 json read_json(const std::string& filename) {
-  std::ifstream ifs(filename);
-  if (!ifs.is_open()) {
-    throw std::runtime_error("Failed to open JSON file: " + filename);
-  }
+#ifdef _WIN32
+  // Windows implementation
+  HANDLE file = CreateFileA(filename.c_str(), GENERIC_READ, FILE_SHARE_READ,
+                            NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  HANDLE mapping = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, NULL);
+  char* data = (char*)MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0);
+  size_t size = GetFileSize(file, NULL);
 
-  json model_data;
-  try {
-    ifs >> model_data;
-  } catch (const json::parse_error& e) {
-    throw std::runtime_error("JSON parse error: " + std::string(e.what()));
-  }
+  json result = json::parse(data, data + size);
 
-  return model_data;
+  UnmapViewOfFile(data);
+  CloseHandle(mapping);
+  CloseHandle(file);
+#else
+  // Unix implementation
+  int fd = open(filename.c_str(), O_RDONLY);
+  struct stat sb;
+  fstat(fd, &sb);
+  char* data = (char*)mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+  json result = json::parse(data, data + sb.st_size);
+
+  munmap(data, sb.st_size);
+  close(fd);
+#endif
+  return result;
 }
 
 void extract_values_from_json(const json& j, std::vector<float>& values) {
