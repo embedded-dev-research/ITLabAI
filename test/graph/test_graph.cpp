@@ -9,6 +9,7 @@
 #include "layers/EWLayer.hpp"
 #include "layers/FCLayer.hpp"
 #include "layers/InputLayer.hpp"
+#include "layers/PoolingLayer.hpp"
 #include "layers/SplitLayer.hpp"
 #include "perf/benchmarking.hpp"
 
@@ -280,18 +281,6 @@ TEST(graph, set_output_null_layer) {
   EXPECT_THROW(graph.setOutput(nullptr, output), std::invalid_argument);
 }
 
-TEST(graph, get_vertex_value_invalid_id) {
-  Graph graph;
-  EXPECT_THROW(static_cast<void>(graph.getVertexValue(1000)),
-               std::invalid_argument);
-}
-
-TEST(graph, get_edge_value_invalid_pos) {
-  Graph graph;
-  EXPECT_THROW(static_cast<void>(graph.getEdgeValue(1000)),
-               std::invalid_argument);
-}
-
 TEST(graph, get_inputs_size_invalid_id) {
   Graph graph;
   EXPECT_THROW(static_cast<void>(graph.getInputsSize(1000)),
@@ -333,7 +322,7 @@ TEST(graph, complex_graph_with_split_distribution) {
   ASSERT_TRUE(graph.areLayerNext(ew_layer2, concat_layer));
 }
 
-TEST(graph, vertex_out_of_range) {
+TEST(graph, outs_out_of_range) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
@@ -352,10 +341,10 @@ TEST(graph, vertex_out_of_range) {
   graph.makeConnection(fcLayer2, fcLayer3);
   graph.makeConnection(fcLayer, fcLayer4);
   graph.setOutput(fcLayer4, output);
-  ASSERT_ANY_THROW(static_cast<void>(graph.getVertexValue(5)));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getOutLayers(5)));
 }
 
-TEST(graph, edges_out_of_range) {
+TEST(graph, outsizes_out_of_range) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
   Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
@@ -374,7 +363,7 @@ TEST(graph, edges_out_of_range) {
   graph.makeConnection(fcLayer2, fcLayer3);
   graph.makeConnection(fcLayer, fcLayer4);
   graph.setOutput(fcLayer4, output);
-  ASSERT_ANY_THROW(static_cast<void>(graph.getEdgeValue(999)));
+  ASSERT_ANY_THROW(static_cast<void>(graph.getOutputsSize(999)));
 }
 
 TEST(graph, inputs_out_of_range) {
@@ -463,6 +452,25 @@ TEST(graph, get_in_layers) {
   ASSERT_NO_THROW(static_cast<void>(graph.getInLayers(0)));
 }
 
+std::vector<std::shared_ptr<FCLayer>> init_fc_layers(size_t size,
+                                                     Tensor& weights,
+                                                     Tensor& bias) {
+  std::vector<std::shared_ptr<FCLayer>> result;
+  for (size_t i = 0; i < size; i++) {
+    result.push_back(std::make_shared<FCLayer>(weights, bias));
+  }
+  return result;
+}
+
+std::vector<std::shared_ptr<EWLayer>> init_ew_layers(size_t size,
+                                                     std::string name) {
+  std::vector<std::shared_ptr<EWLayer>> result;
+  for (size_t i = 0; i < size; i++) {
+    result.push_back(std::make_shared<EWLayer>(name));
+  }
+  return result;
+}
+
 TEST(graph_transformations, check_subgraphs_search) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
   Tensor weights = make_tensor<float>(vec1, {3, 2});
@@ -472,20 +480,17 @@ TEST(graph_transformations, check_subgraphs_search) {
 
   Graph graph;
   Graph subgraph;
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(6, weights, bias);
 
-  auto fcLayer = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer2 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer3 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer4 = std::make_shared<FCLayer>(weights, bias);
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[0], fcLayers[3]);
+  graph.setOutput(fcLayers[3], output);
 
-  graph.setInput(fcLayer, input);
-  graph.makeConnection(fcLayer, fcLayer2);
-  graph.makeConnection(fcLayer2, fcLayer3);
-  graph.makeConnection(fcLayer, fcLayer4);
-  graph.setOutput(fcLayer4, output);
-
-  subgraph.setInput(fcLayer, input);
-  subgraph.makeConnection(fcLayer, fcLayer2);
+  subgraph.setInput(fcLayers[4], input);
+  subgraph.makeConnection(fcLayers[4], fcLayers[5]);
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({1, 2}));
   ASSERT_NE(it, res.end());
@@ -500,21 +505,20 @@ TEST(graph_transformations, check_subgraphs_search1) {
 
   Graph graph;
   Graph subgraph;
-  auto fcLayer = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer2 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer3 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer4 = std::make_shared<FCLayer>(weights, bias);
-  auto ewLayer5 = std::make_shared<EWLayer>("relu");
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(5, weights, bias);
+  auto ewLayer1 = std::make_shared<EWLayer>("relu");
+  auto ewLayer2 = std::make_shared<EWLayer>("relu");
 
-  graph.setInput(fcLayer, input);
-  graph.makeConnection(fcLayer, fcLayer2);
-  graph.makeConnection(fcLayer2, fcLayer3);
-  graph.makeConnection(fcLayer, fcLayer4);
-  graph.makeConnection(fcLayer4, ewLayer5);
-  graph.setOutput(ewLayer5, output);
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[0], fcLayers[3]);
+  graph.makeConnection(fcLayers[3], ewLayer1);
+  graph.setOutput(ewLayer1, output);
 
-  subgraph.setInput(fcLayer, input);
-  subgraph.makeConnection(fcLayer, ewLayer5);
+  subgraph.setInput(fcLayers[4], input);
+  subgraph.makeConnection(fcLayers[4], ewLayer2);
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({3, 4}));
   ASSERT_NE(it, res.end());
@@ -529,21 +533,19 @@ TEST(graph_transformations, check_subgraphs_search2) {
 
   Graph graph;
   Graph subgraph;
-  auto fcLayer = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer2 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer3 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer4 = std::make_shared<FCLayer>(weights, bias);
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(7, weights, bias);
 
-  graph.setInput(fcLayer, input);
-  graph.makeConnection(fcLayer, fcLayer2);
-  graph.makeConnection(fcLayer2, fcLayer3);
-  graph.makeConnection(fcLayer3, fcLayer);
-  graph.makeConnection(fcLayer3, fcLayer4);
-  graph.setOutput(fcLayer4, output);
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[2], fcLayers[0]);
+  graph.makeConnection(fcLayers[2], fcLayers[3]);
+  graph.setOutput(fcLayers[3], output);
 
-  subgraph.setInput(fcLayer, input);
-  subgraph.makeConnection(fcLayer, fcLayer2);
-  subgraph.makeConnection(fcLayer2, fcLayer3);
+  subgraph.setInput(fcLayers[4], input);
+  subgraph.makeConnection(fcLayers[4], fcLayers[5]);
+  subgraph.makeConnection(fcLayers[5], fcLayers[6]);
 
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({0, 1, 2}));
@@ -559,21 +561,19 @@ TEST(graph_transformations, check_subgraphs_search3) {
 
   Graph graph;
   Graph subgraph;
-  auto fcLayer = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer2 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer3 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer4 = std::make_shared<FCLayer>(weights, bias);
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(7, weights, bias);
 
-  graph.setInput(fcLayer, input);
-  graph.makeConnection(fcLayer, fcLayer2);
-  graph.makeConnection(fcLayer2, fcLayer3);
-  graph.makeConnection(fcLayer3, fcLayer);
-  graph.makeConnection(fcLayer2, fcLayer4);
-  graph.setOutput(fcLayer4, output);
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[2], fcLayers[0]);
+  graph.makeConnection(fcLayers[1], fcLayers[3]);
+  graph.setOutput(fcLayers[3], output);
 
-  subgraph.setInput(fcLayer, input);
-  subgraph.makeConnection(fcLayer, fcLayer2);
-  subgraph.makeConnection(fcLayer2, fcLayer3);
+  subgraph.setInput(fcLayers[4], input);
+  subgraph.makeConnection(fcLayers[4], fcLayers[5]);
+  subgraph.makeConnection(fcLayers[5], fcLayers[6]);
 
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({2, 0, 1}));
@@ -589,21 +589,19 @@ TEST(graph_transformations, check_subgraphs_search4) {
 
   Graph graph;
   Graph subgraph;
-  auto fcLayer = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer2 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer3 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer4 = std::make_shared<FCLayer>(weights, bias);
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(7, weights, bias);
 
-  graph.setInput(fcLayer, input);
-  graph.makeConnection(fcLayer, fcLayer2);
-  graph.makeConnection(fcLayer2, fcLayer3);
-  graph.makeConnection(fcLayer3, fcLayer);
-  graph.makeConnection(fcLayer, fcLayer4);
-  graph.setOutput(fcLayer4, output);
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[2], fcLayers[0]);
+  graph.makeConnection(fcLayers[0], fcLayers[3]);
+  graph.setOutput(fcLayers[3], output);
 
-  subgraph.setInput(fcLayer, input);
-  subgraph.makeConnection(fcLayer, fcLayer2);
-  subgraph.makeConnection(fcLayer2, fcLayer3);
+  subgraph.setInput(fcLayers[4], input);
+  subgraph.makeConnection(fcLayers[4], fcLayers[5]);
+  subgraph.makeConnection(fcLayers[5], fcLayers[6]);
 
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({1, 2, 0}));
@@ -619,23 +617,22 @@ TEST(graph_transformations, check_subgraphs_search5) {
 
   Graph graph;
   Graph subgraph;
-  auto fcLayer = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer2 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer3 = std::make_shared<FCLayer>(weights, bias);
-  auto fcLayer4 = std::make_shared<FCLayer>(weights, bias);
-  auto ewLayer5 = std::make_shared<EWLayer>("relu");
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(7, weights, bias);
+  auto ewLayer1 = std::make_shared<EWLayer>("relu");
+  auto ewLayer2 = std::make_shared<EWLayer>("relu");
 
-  graph.setInput(fcLayer, input);
-  graph.makeConnection(fcLayer, fcLayer2);
-  graph.makeConnection(fcLayer, fcLayer4);
-  graph.makeConnection(fcLayer2, fcLayer3);
-  graph.makeConnection(fcLayer4, ewLayer5);
-  graph.setOutput(ewLayer5, output);
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[0], fcLayers[3]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[3], ewLayer1);
+  graph.setOutput(ewLayer1, output);
 
-  subgraph.setInput(fcLayer, input);
-  subgraph.makeConnection(fcLayer, fcLayer2);
-  subgraph.addSingleLayer(fcLayer3);
-  subgraph.makeConnection(fcLayer3, ewLayer5);
+  subgraph.setInput(fcLayers[4], input);
+  subgraph.makeConnection(fcLayers[4], fcLayers[5]);
+  subgraph.addSingleLayer(fcLayers[6]);
+  subgraph.makeConnection(fcLayers[6], ewLayer2);
 
   auto res = find_subgraphs(graph, subgraph);
   auto it = std::find(res.begin(), res.end(), std::vector<int>({1, 3, 2, 4}));
@@ -659,6 +656,9 @@ TEST(graph_transformations, check_subgraphs_big_random) {
   for (int i = 0; i < num_vertices / 2; i++) {
     layers.push_back(std::make_shared<EWLayer>("relu"));
   }
+  layers.push_back(std::make_shared<FCLayer>(weights, bias));
+  layers.push_back(std::make_shared<EWLayer>("relu"));
+  layers.push_back(std::make_shared<FCLayer>(weights, bias));
 
   graph.setInput(layers[0], input);
   for (int i = 0; i < num_vertices; i++) {
@@ -677,9 +677,9 @@ TEST(graph_transformations, check_subgraphs_big_random) {
   }
   graph.setOutput(layers[num_vertices - 1], output);
 
-  subgraph.setInput(layers[0], input);
-  subgraph.makeConnection(layers[0], layers[50]);
-  subgraph.makeConnection(layers[50], layers[1]);
+  subgraph.setInput(layers[num_vertices], input);
+  subgraph.makeConnection(layers[num_vertices], layers[num_vertices + 1]);
+  subgraph.makeConnection(layers[num_vertices + 1], layers[num_vertices + 2]);
 
   std::vector<std::vector<int>> res1 = find_subgraphs(graph, subgraph);
   double res1_time =
@@ -713,15 +713,13 @@ TEST_P(SubgraphTestsParameterized, check_subgraphs_big_random_lines) {
     }
     graph.setOutput(layers[num_vertices - 1], output);
 
-    std::shared_ptr<Layer> temp_layer =
-        std::make_shared<FCLayer>(weights, bias);
-    subgraph.setInput(temp_layer, input);
-    std::shared_ptr<Layer> temp_layer2 =
-        std::make_shared<FCLayer>(weights, bias);
+    std::vector<std::shared_ptr<Layer>> temp_layers;
+    for (int i = 0; i < num_vertices_sub + 2; i++) {
+      temp_layers.push_back(std::make_shared<FCLayer>(weights, bias));
+    }
+    subgraph.setInput(temp_layers[0], input);
     for (int i = 0; i < num_vertices_sub; i++) {
-      subgraph.makeConnection(temp_layer, temp_layer2);
-      temp_layer = temp_layer2;
-      temp_layer2 = std::make_shared<FCLayer>(weights, bias);
+      subgraph.makeConnection(temp_layers[i], temp_layers[i + 1]);
     }
 
     double res1_time = elapsed_time_avg<double, std::milli>(1, find_subgraphs,
@@ -742,3 +740,459 @@ std::vector<std::tuple<int, int>> genVector() {
 
 INSTANTIATE_TEST_SUITE_P(graph_transformations, SubgraphTestsParameterized,
                          ::testing::Values(genVector()));
+
+TEST(graph_transformations, check_subgraphs_replace) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  Graph res_graph;
+  Graph subgraph;
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(9, weights, bias);
+
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[0], fcLayers[3]);
+  graph.setOutput(fcLayers[3], output);
+
+  subgraph.setInput(fcLayers[4], input);
+  subgraph.makeConnection(fcLayers[4], fcLayers[5]);
+
+  res_graph.setInput(fcLayers[6], input);
+  res_graph.makeConnection(fcLayers[6], fcLayers[7]);
+  std::shared_ptr<Layer> lay = std::make_shared<EWLayer>("relu");
+  res_graph.addSingleLayer(lay);
+  res_graph.makeConnection(lay, fcLayers[8]);
+
+  Graph res;
+  changed_subgraphs(graph, subgraph, res, output);
+  ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
+}
+
+TEST(graph_transformations, check_subgraphs_replace2) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  Graph res_graph;
+  Graph subgraph;
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(8, weights, bias);
+
+  graph.setInput(fcLayers[0], input);
+  graph.addSingleLayer(fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[0], fcLayers[3]);
+  graph.makeConnection(fcLayers[3], fcLayers[4]);
+  graph.setOutput(fcLayers[4], output);
+
+  subgraph.setInput(fcLayers[5], input);
+  subgraph.makeConnection(fcLayers[5], fcLayers[6]);
+
+  std::shared_ptr<Layer> lay = std::make_shared<EWLayer>("relu");
+  std::shared_ptr<Layer> lay2 = std::make_shared<EWLayer>("relu");
+  res_graph.setInput(lay2, input);
+  res_graph.addSingleLayer(lay);
+  res_graph.makeConnection(lay, fcLayers[7]);
+
+  Graph res;
+  changed_subgraphs(graph, subgraph, res, output);
+  ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
+}
+
+TEST(graph_transformations, check_subgraphs_replace3) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  Graph res_graph;
+  Graph subgraph;
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(10, weights, bias);
+  Shape shapepool({2, 2});
+  std::shared_ptr<Layer> pool1 =
+      std::make_shared<PoolingLayer>(shapepool, "max");
+  std::shared_ptr<Layer> pool2 =
+      std::make_shared<PoolingLayer>(shapepool, "max");
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[2], fcLayers[3]);
+  graph.makeConnection(fcLayers[3], fcLayers[4]);
+  graph.makeConnection(fcLayers[4], pool1);
+  graph.makeConnection(fcLayers[2], pool1);
+  graph.setOutput(pool1, output);
+
+  subgraph.setInput(fcLayers[5], input);
+  subgraph.makeConnection(fcLayers[5], fcLayers[7]);
+  subgraph.makeConnection(fcLayers[7], pool2);
+  subgraph.addSingleLayer(fcLayers[6]);
+  subgraph.makeConnection(fcLayers[6], fcLayers[5]);
+  subgraph.makeConnection(fcLayers[6], pool2);
+
+  std::shared_ptr<Layer> lay = std::make_shared<EWLayer>("relu");
+  res_graph.setInput(fcLayers[8], input);
+  res_graph.makeConnection(fcLayers[8], fcLayers[9]);
+  res_graph.makeConnection(fcLayers[9], lay);
+
+  Graph res;
+  changed_subgraphs(graph, subgraph, res, output);
+  ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
+}
+
+TEST(graph_transformations, check_subgraphs_replace4) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  Graph res_graph;
+  Graph subgraph;
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(8, weights, bias);
+  std::shared_ptr<Layer> ewLayer1 = std::make_shared<EWLayer>("relu");
+
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[2], fcLayers[3]);
+  graph.makeConnection(fcLayers[3], ewLayer1);
+  graph.makeConnection(ewLayer1, fcLayers[4]);
+  graph.setOutput(fcLayers[4], output);
+
+  subgraph.setInput(fcLayers[5], input);
+  subgraph.makeConnection(fcLayers[5], fcLayers[6]);
+
+  std::shared_ptr<Layer> lay = std::make_shared<EWLayer>("relu");
+  std::shared_ptr<Layer> lay2 = std::make_shared<EWLayer>("relu");
+  std::shared_ptr<Layer> ewLayer2 = std::make_shared<EWLayer>("relu");
+
+  res_graph.setInput(lay, input);
+  res_graph.makeConnection(lay, lay2);
+  res_graph.makeConnection(lay2, ewLayer2);
+  res_graph.makeConnection(ewLayer2, fcLayers[7]);
+
+  Graph res;
+  changed_subgraphs(graph, subgraph, res, output);
+  ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
+}
+
+TEST(graph_transformations, check_subgraphs_replace5) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  Graph res_graph;
+  Graph subgraph;
+  std::shared_ptr<Layer> fcLayer1 = std::make_shared<FCLayer>(weights, bias);
+  std::shared_ptr<Layer> fcLayer2 = std::make_shared<FCLayer>(weights, bias);
+  std::vector<std::shared_ptr<EWLayer>> ewLayers = init_ew_layers(14, "relu");
+
+  graph.setInput(fcLayer1, input);
+  for (int i = 0; i < 4; i++) {
+    graph.makeConnection(fcLayer1, ewLayers[i]);
+  }
+  for (int i = 0; i < 4; i++) {
+    graph.makeConnection(ewLayers[i], ewLayers[i + 4]);
+  }
+  graph.setOutput(ewLayers[7], output);
+
+  subgraph.setInput(ewLayers[8], input);
+  subgraph.makeConnection(ewLayers[8], ewLayers[9]);
+
+  res_graph.setInput(fcLayer2, input);
+  for (int i = 0; i < 4; i++) {
+    res_graph.makeConnection(fcLayer2, ewLayers[10 + i]);
+  }
+
+  Graph res;
+  changed_subgraphs(graph, subgraph, res, output);
+  ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
+}
+
+TEST(graph_transformations, check_subgraphs_replace_s) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  Graph res_graph;
+  Graph subgraph;
+  Graph subgraph2;
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(12, weights, bias);
+
+  std::vector<std::shared_ptr<FCLayer>> fcLayers_to =
+      init_fc_layers(3, weights, bias);
+  Shape shape = {2, 2};
+
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[0], fcLayers[3]);
+  graph.setOutput(fcLayers[3], output);
+
+  subgraph.setInput(fcLayers[4], input);
+  subgraph.makeConnection(fcLayers[4], fcLayers[5]);
+
+  subgraph2.setInput(fcLayers_to[0], input);
+  subgraph2.makeConnection(fcLayers_to[0], fcLayers_to[1]);
+  std::shared_ptr<Layer> pool_to = std::make_shared<PoolingLayer>(shape, "max");
+  subgraph2.makeConnection(fcLayers_to[1], pool_to);
+  subgraph2.makeConnection(pool_to, fcLayers_to[2]);
+
+  res_graph.setInput(fcLayers[6], input);
+  res_graph.makeConnection(fcLayers[6], fcLayers[7]);
+  std::shared_ptr<Layer> pool = std::make_shared<PoolingLayer>(shape, "max");
+  res_graph.addSingleLayer(fcLayers[8]);
+  res_graph.makeConnection(fcLayers[8], fcLayers[9]);
+  res_graph.makeConnection(fcLayers[9], pool);
+  res_graph.makeConnection(pool, fcLayers[10]);
+  res_graph.makeConnection(fcLayers[10], fcLayers[11]);
+
+  Graph res;
+  changed_subgraphs(graph, subgraph, subgraph2, res, output);
+  ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
+}
+
+TEST(graph_transformations, check_subgraphs_replace_s2) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  Graph res_graph;
+  Graph subgraph;
+  Graph subgraph2;
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(21, weights, bias);
+
+  graph.setInput(fcLayers[0], input);
+  graph.addSingleLayer(fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[0], fcLayers[3]);
+  graph.makeConnection(fcLayers[3], fcLayers[4]);
+  graph.setOutput(fcLayers[4], output);
+
+  subgraph.setInput(fcLayers[5], input);
+  subgraph.makeConnection(fcLayers[5], fcLayers[6]);
+
+  subgraph2.setInput(fcLayers[8], input);
+  subgraph2.makeConnection(fcLayers[8], fcLayers[9]);
+  subgraph2.makeConnection(fcLayers[8], fcLayers[10]);
+  subgraph2.makeConnection(fcLayers[9], fcLayers[11]);
+  subgraph2.makeConnection(fcLayers[10], fcLayers[11]);
+
+  res_graph.setInput(fcLayers[12], input);
+  res_graph.addSingleLayer(fcLayers[13]);
+  res_graph.makeConnection(fcLayers[12], fcLayers[14]);
+  res_graph.makeConnection(fcLayers[12], fcLayers[15]);
+  res_graph.makeConnection(fcLayers[14], fcLayers[16]);
+  res_graph.makeConnection(fcLayers[15], fcLayers[16]);
+  res_graph.makeConnection(fcLayers[16], fcLayers[17]);
+  res_graph.makeConnection(fcLayers[13], fcLayers[18]);
+  res_graph.makeConnection(fcLayers[13], fcLayers[19]);
+  res_graph.makeConnection(fcLayers[18], fcLayers[20]);
+  res_graph.makeConnection(fcLayers[19], fcLayers[20]);
+
+  Graph res;
+  changed_subgraphs(graph, subgraph, subgraph2, res, output);
+  ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
+}
+
+TEST(graph_transformations, check_subgraphs_replace_s3) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  Graph res_graph;
+  Graph subgraph;
+  Graph subgraph2;
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(26, weights, bias);
+  std::vector<std::shared_ptr<EWLayer>> ewLayers = init_ew_layers(10, "relu");
+  graph.setInput(ewLayers[6], input);
+  graph.addSingleLayer(fcLayers[1]);
+  graph.makeConnection(ewLayers[6], ewLayers[0]);
+  graph.makeConnection(ewLayers[6], fcLayers[3]);
+  graph.makeConnection(fcLayers[1], ewLayers[0]);
+  graph.makeConnection(fcLayers[3], fcLayers[4]);
+  graph.makeConnection(ewLayers[0], ewLayers[1]);
+  graph.makeConnection(ewLayers[1], fcLayers[6]);
+  graph.makeConnection(ewLayers[1], fcLayers[7]);
+  graph.makeConnection(fcLayers[4], fcLayers[7]);
+  graph.setOutput(fcLayers[7], output);
+
+  subgraph.setInput(fcLayers[8], input);
+  subgraph.makeConnection(fcLayers[8], fcLayers[9]);
+  subgraph.addSingleLayer(ewLayers[4]);
+  subgraph.makeConnection(ewLayers[4], ewLayers[5]);
+
+  subgraph2.setInput(ewLayers[8], input);
+  subgraph2.addSingleLayer(fcLayers[13]);
+  subgraph2.makeConnection(ewLayers[8], fcLayers[14]);
+  subgraph2.makeConnection(fcLayers[13], fcLayers[14]);
+  subgraph2.makeConnection(fcLayers[14], ewLayers[9]);
+  subgraph2.makeConnection(fcLayers[14], fcLayers[16]);
+
+  res_graph.setInput(fcLayers[17], input);
+  res_graph.addSingleLayer(ewLayers[7]);
+  res_graph.makeConnection(fcLayers[17], ewLayers[2]);
+  res_graph.makeConnection(ewLayers[7], ewLayers[2]);
+  res_graph.makeConnection(ewLayers[7], fcLayers[20]);
+  res_graph.makeConnection(ewLayers[2], fcLayers[21]);
+  res_graph.makeConnection(fcLayers[20], fcLayers[21]);
+  res_graph.makeConnection(fcLayers[21], fcLayers[22]);
+  res_graph.makeConnection(fcLayers[21], ewLayers[3]);
+  res_graph.makeConnection(ewLayers[3], fcLayers[24]);
+  res_graph.makeConnection(fcLayers[22], fcLayers[25]);
+  res_graph.makeConnection(ewLayers[3], fcLayers[25]);
+  IOOrder order;
+  order.in_order = std::vector<int>({1, 0});
+  order.out_order = std::vector<int>({1, 0});
+  Graph res;
+  changed_subgraphs(graph, subgraph, subgraph2, res, output, RuntimeOptions(),
+                    order);
+  ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
+}
+
+TEST(graph_transformations, check_subgraphs_replace_s4) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  Graph res_graph;
+  Graph subgraph;
+  Graph subgraph2;
+  Graph subgraph_to;
+  Graph subgraph_to2;
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(28, weights, bias);
+
+  graph.setInput(fcLayers[0], input);
+  graph.makeConnection(fcLayers[0], fcLayers[1]);
+  graph.makeConnection(fcLayers[1], fcLayers[2]);
+  graph.makeConnection(fcLayers[2], fcLayers[3]);
+  graph.makeConnection(fcLayers[3], fcLayers[4]);
+  graph.addSingleLayer(fcLayers[5]);
+  graph.makeConnection(fcLayers[5], fcLayers[4]);
+  graph.makeConnection(fcLayers[0], fcLayers[5]);
+  graph.setOutput(fcLayers[5], output);
+
+  subgraph.setInput(fcLayers[6], input);
+  subgraph.makeConnection(fcLayers[6], fcLayers[7]);
+  subgraph.makeConnection(fcLayers[6], fcLayers[8]);
+
+  subgraph2.setInput(fcLayers[9], input);
+  subgraph2.addSingleLayer(fcLayers[10]);
+  subgraph2.makeConnection(fcLayers[9], fcLayers[11]);
+  subgraph2.makeConnection(fcLayers[10], fcLayers[11]);
+
+  subgraph_to.setInput(fcLayers[12], input);
+  subgraph_to.makeConnection(fcLayers[12], fcLayers[13]);
+  subgraph_to.makeConnection(fcLayers[13], fcLayers[14]);
+  subgraph_to.makeConnection(fcLayers[13], fcLayers[15]);
+
+  subgraph_to2.setInput(fcLayers[16], input);
+  subgraph_to2.addSingleLayer(fcLayers[17]);
+  subgraph_to2.makeConnection(fcLayers[16], fcLayers[18]);
+  subgraph_to2.makeConnection(fcLayers[17], fcLayers[18]);
+  subgraph_to2.makeConnection(fcLayers[18], fcLayers[19]);
+
+  res_graph.setInput(fcLayers[20], input);
+  res_graph.makeConnection(fcLayers[20], fcLayers[21]);
+  res_graph.makeConnection(fcLayers[21], fcLayers[22]);
+  res_graph.makeConnection(fcLayers[21], fcLayers[23]);
+  res_graph.makeConnection(fcLayers[22], fcLayers[24]);
+  res_graph.makeConnection(fcLayers[24], fcLayers[25]);
+  res_graph.makeConnection(fcLayers[25], fcLayers[26]);
+  res_graph.makeConnection(fcLayers[23], fcLayers[26]);
+  res_graph.makeConnection(fcLayers[26], fcLayers[27]);
+  Graph graph2;
+  graph.clone(graph2, output);
+  Graph res1;
+  changed_subgraphs(graph, subgraph, subgraph_to, res1, output);
+  Graph res2;
+  changed_subgraphs(res1, subgraph2, subgraph_to2, res2, output);
+
+  Graph res2_1;
+  changed_subgraphs(graph2, subgraph2, subgraph_to2, res2_1, output);
+  Graph res1_1;
+  changed_subgraphs(res2_1, subgraph, subgraph_to, res1_1, output);
+
+  ASSERT_FALSE(find_subgraphs(res2, res_graph).empty());
+  ASSERT_FALSE(find_subgraphs(res1_1, res_graph).empty());
+}
+
+TEST(graph_transformations, check_subgraphs_replace_s5) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+
+  Graph graph;
+  Graph res_graph;
+  Graph subgraph;
+  Graph subgraph2;
+  Graph subgraph_to;
+  std::vector<std::shared_ptr<FCLayer>> fcLayers =
+      init_fc_layers(3, weights, bias);
+
+  std::vector<std::shared_ptr<EWLayer>> ewLayers = init_ew_layers(16, "relu");
+
+  graph.setInput(fcLayers[0], input);
+  for (int i = 0; i < 4; i++) {
+    graph.makeConnection(fcLayers[0], ewLayers[i]);
+  }
+  for (int i = 0; i < 4; i++) {
+    graph.makeConnection(ewLayers[i], ewLayers[i + 4]);
+  }
+  graph.setOutput(ewLayers[7], output);
+
+  subgraph.setInput(ewLayers[8], input);
+  subgraph.makeConnection(ewLayers[8], ewLayers[9]);
+
+  subgraph2.setInput(fcLayers[1], input);
+  subgraph2.makeConnection(fcLayers[1], ewLayers[10]);
+
+  subgraph_to.setInput(ewLayers[11], input);
+
+  res_graph.setInput(fcLayers[2], input);
+  res_graph.makeConnection(fcLayers[2], ewLayers[12]);
+  res_graph.makeConnection(fcLayers[2], ewLayers[13]);
+  res_graph.makeConnection(fcLayers[2], ewLayers[14]);
+  res_graph.addSingleLayer(ewLayers[15]);
+
+  Graph res;
+  changed_subgraphs(graph, subgraph, res, output);
+  Graph res2;
+  changed_subgraphs(res, subgraph2, res2, output);
+  ASSERT_FALSE(find_subgraphs(res2, res_graph).empty());
+}
