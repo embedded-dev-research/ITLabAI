@@ -3,7 +3,6 @@ file(GLOB PERF_HEADERS CONFIGURE_DEPENDS
 )
 
 add_library(itlabai_perf_lib INTERFACE)
-add_library(ITLabAI::PerfLib ALIAS itlabai_perf_lib)
 target_sources(itlabai_perf_lib INTERFACE
     $<BUILD_INTERFACE:${PERF_HEADERS}>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/perf/benchmarking.hpp>

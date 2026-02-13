@@ -3,7 +3,6 @@ file(GLOB LAYERS_ONEDNN_SOURCES CONFIGURE_DEPENDS
 )
 
 add_library(itlabai_layers_onednn_lib STATIC)
-add_library(ITLabAI::LayersOneDnnLib ALIAS itlabai_layers_onednn_lib)
 target_sources(itlabai_layers_onednn_lib PRIVATE ${LAYERS_ONEDNN_SOURCES})
 target_include_directories(itlabai_layers_onednn_lib
     PUBLIC

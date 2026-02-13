@@ -3,7 +3,6 @@ file(GLOB READER_SOURCES CONFIGURE_DEPENDS
 )
 
 add_library(itlabai_reader_lib STATIC)
-add_library(ITLabAI::ReaderLib ALIAS itlabai_reader_lib)
 target_sources(itlabai_reader_lib PRIVATE ${READER_SOURCES})
 target_include_directories(itlabai_reader_lib
     PUBLIC

@@ -3,7 +3,6 @@ file(GLOB GRAPH_SOURCES CONFIGURE_DEPENDS
 )
 
 add_library(itlabai_graph_lib STATIC)
-add_library(ITLabAI::GraphLib ALIAS itlabai_graph_lib)
 target_sources(itlabai_graph_lib PRIVATE ${GRAPH_SOURCES})
 target_include_directories(itlabai_graph_lib
     PUBLIC

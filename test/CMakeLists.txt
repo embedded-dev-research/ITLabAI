@@ -11,7 +11,6 @@ file(GLOB_RECURSE ITLABAI_TEST_SOURCES CONFIGURE_DEPENDS
 )
 
 add_executable(itlabai_run_test_test ${ITLABAI_TEST_SOURCES})
-add_executable(ITLabAI::RunTestTest ALIAS itlabai_run_test_test)
 set_target_properties(itlabai_run_test_test PROPERTIES OUTPUT_NAME "itlabai_run_test")
 
 if(TARGET itlabai_fetch_test_data)

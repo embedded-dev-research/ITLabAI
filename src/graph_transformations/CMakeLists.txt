@@ -3,7 +3,6 @@ file(GLOB GRAPHT_SOURCES CONFIGURE_DEPENDS
 )
 
 add_library(itlabai_graph_transformations_lib STATIC)
-add_library(ITLabAI::GraphTransformationsLib ALIAS itlabai_graph_transformations_lib)
 target_sources(itlabai_graph_transformations_lib PRIVATE ${GRAPHT_SOURCES})
 target_include_directories(itlabai_graph_transformations_lib
     PUBLIC
