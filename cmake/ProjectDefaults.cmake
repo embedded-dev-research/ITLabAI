@@ -32,10 +32,14 @@ function(itlabai_target_defaults target_name)
     endif()
     target_compile_features(${target_name} PRIVATE cxx_std_20)
 
-    # Ensure in-tree targets see the same feature defines/flags (OpenMP/statistics, etc).
-    if(TARGET itlabai_options)
-        itlabai_use_externals_scope(_scope ${target_name})
-        target_link_libraries(${target_name} ${_scope} itlabai_options)
+    # Apply project feature defines to every in-tree target.
+    if(ITLABAI_FEATURE_DEFS)
+        get_target_property(_tgt_type ${target_name} TYPE)
+        if(_tgt_type STREQUAL "INTERFACE_LIBRARY")
+            target_compile_definitions(${target_name} INTERFACE ${ITLABAI_FEATURE_DEFS})
+        else()
+            target_compile_definitions(${target_name} PUBLIC ${ITLABAI_FEATURE_DEFS})
+        endif()
     endif()
 endfunction()
 

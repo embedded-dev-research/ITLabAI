@@ -25,14 +25,11 @@ target_compile_definitions(itlabai_build_graph_lib PUBLIC
     MNIST_PATH="${ITLABAI_MNIST_DIR}"
 )
 
-if(TARGET itlabai_fetch_test_data)
-    add_dependencies(itlabai_build_graph_lib itlabai_fetch_test_data)
-endif()
-
 file(GLOB GRAPH_BUILD_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/graph_build.cpp")
 add_executable(itlabai_graph_build_exe ${GRAPH_BUILD_MAIN})
 set_target_properties(itlabai_graph_build_exe PROPERTIES OUTPUT_NAME "itlabai_graph_build")
 target_link_libraries(itlabai_graph_build_exe PRIVATE itlabai_build_graph_lib)
+add_dependencies(itlabai_graph_build_exe itlabai_fetch_test_data)
 itlabai_target_defaults(itlabai_graph_build_exe)
 itlabai_apply_runtime_rpath(itlabai_graph_build_exe)
 
@@ -40,6 +37,7 @@ file(GLOB ACC_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/acc_check.cpp"
 add_executable(itlabai_acc_exe ${ACC_MAIN})
 set_target_properties(itlabai_acc_exe PROPERTIES OUTPUT_NAME "itlabai_acc")
 target_link_libraries(itlabai_acc_exe PRIVATE itlabai_build_graph_lib)
+add_dependencies(itlabai_acc_exe itlabai_fetch_test_data)
 itlabai_target_defaults(itlabai_acc_exe)
 itlabai_apply_runtime_rpath(itlabai_acc_exe)
 
@@ -47,6 +45,7 @@ file(GLOB ONNX_SUBGRAPHS_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/onn
 add_executable(itlabai_onnx_subgraphs_exe ${ONNX_SUBGRAPHS_MAIN})
 set_target_properties(itlabai_onnx_subgraphs_exe PROPERTIES OUTPUT_NAME "itlabai_onnx_subgraphs")
 target_link_libraries(itlabai_onnx_subgraphs_exe PRIVATE itlabai_build_graph_lib)
+add_dependencies(itlabai_onnx_subgraphs_exe itlabai_fetch_test_data)
 if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
     target_link_libraries(itlabai_onnx_subgraphs_exe PRIVATE OpenMP::OpenMP_CXX)
 endif()

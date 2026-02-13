@@ -17,6 +17,16 @@
       }
     },
     {
+      "name": "debug",
+      "inherits": "dev-debug",
+      "binaryDir": "build/debug"
+    },
+    {
+      "name": "release",
+      "inherits": "dev-release",
+      "binaryDir": "build/release"
+    },
+    {
       "name": "dev-debug",
       "inherits": "dev",
       "binaryDir": "build/debug",
@@ -73,6 +83,7 @@
       "inherits": "dev-relwithdebinfo",
       "binaryDir": "build/coverage",
       "cacheVariables": {
+        "ITLABAI_BUILD_APPS": "OFF",
         "CMAKE_CXX_FLAGS": "--coverage",
         "CMAKE_C_FLAGS": "--coverage"
       }
@@ -86,6 +97,14 @@
     {
       "name": "dev-release",
       "configurePreset": "dev-release"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
     },
     {
       "name": "dev-relwithdebinfo",
@@ -119,6 +138,20 @@
     {
       "name": "dev-release",
       "configurePreset": "dev-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
       "output": {
         "outputOnFailure": true
       }

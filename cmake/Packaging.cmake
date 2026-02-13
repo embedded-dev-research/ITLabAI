@@ -14,14 +14,12 @@ install(
 
 # Export in-tree targets
 install(TARGETS
-  itlabai_options
   itlabai_graph_lib
   itlabai_graph_transformations_lib
   itlabai_layers_lib
   itlabai_layers_onednn_lib
   itlabai_perf_lib
   itlabai_reader_lib
-  itlabai
   EXPORT ITLabAITargets
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"

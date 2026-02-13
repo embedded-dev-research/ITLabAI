@@ -6,10 +6,6 @@ add_library(itlabai_acc_lib STATIC ${ACC_HPP} ${ACC_CPP})
 
 set_target_properties(itlabai_acc_lib PROPERTIES LINKER_LANGUAGE CXX)
 
-if(TARGET itlabai_fetch_test_data)
-    add_dependencies(itlabai_acc_lib itlabai_fetch_test_data)
-endif()
-
 target_link_libraries(itlabai_acc_lib
     PUBLIC
         itlabai_layers_lib
@@ -22,5 +18,6 @@ file(GLOB ACC_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/accuracy_check
 add_executable(itlabai_accuracy_check_exe ${ACC_MAIN})
 set_target_properties(itlabai_accuracy_check_exe PROPERTIES OUTPUT_NAME "itlabai_accuracy_check")
 target_link_libraries(itlabai_accuracy_check_exe PRIVATE itlabai_acc_lib)
+add_dependencies(itlabai_accuracy_check_exe itlabai_fetch_test_data)
 itlabai_target_defaults(itlabai_accuracy_check_exe)
 itlabai_apply_runtime_rpath(itlabai_accuracy_check_exe)

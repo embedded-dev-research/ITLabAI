@@ -1,8 +1,7 @@
-set(ONEDNN_PREFIX "${ITLABAI_EXTERNAL_ROOT}/onednn")
 set(ONEDNN_BUILD_DIR "${ITLABAI_EXTERNAL_BUILD_ROOT}/onednn")
 set(ONEDNN_INSTALL_DIR "${ITLABAI_EXTERNAL_INSTALL_ROOT}/onednn")
 
-itlabai_external_default_build_type(_onednn_build_type)
+set(_onednn_build_type "${ITLABAI_EXTERNAL_BUILD_TYPE}")
 set(_onednn_depends "")
 if(TARGET tbb_external)
     set(_onednn_depends tbb_external)

@@ -3,7 +3,7 @@ set(GTEST_BUILD_DIR "${ITLABAI_EXTERNAL_BUILD_ROOT}/gtest")
 set(GTEST_INSTALL_DIR "${ITLABAI_EXTERNAL_INSTALL_ROOT}/gtest")
 
 find_package(Threads REQUIRED)
-itlabai_external_default_build_type(_gtest_build_type)
+set(_gtest_build_type "${ITLABAI_EXTERNAL_BUILD_TYPE}")
 set(_gtest_cmake_args "")
 if(MSVC)
     set(_gtest_msvc_runtime "MultiThreadedDLL")

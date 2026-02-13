@@ -1,11 +1,10 @@
-set(OPENCV_PREFIX "${ITLABAI_EXTERNAL_ROOT}/opencv")
 set(OPENCV_BUILD_DIR "${ITLABAI_EXTERNAL_BUILD_ROOT}/opencv_min")
 set(OPENCV_INSTALL_DIR "${ITLABAI_EXTERNAL_INSTALL_ROOT}/opencv_min")
 
 set(OPENCV_COMPONENTS core imgproc imgcodecs highgui world)
 set(OPENCV_COMPONENTS_ESC "core\\;imgproc\\;imgcodecs\\;highgui\\;world")
 
-itlabai_external_default_build_type(_opencv_build_type)
+set(_opencv_build_type "${ITLABAI_EXTERNAL_BUILD_TYPE}")
 set(OPENCV_BUILD_OPTS
     -DBUILD_TESTS=OFF
     -DBUILD_PERF_TESTS=OFF

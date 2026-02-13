@@ -19,10 +19,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - preset: dev-debug
+          - preset: debug
             build_dir: build/debug
             artifact_name: DEBUG
-          - preset: dev-release
+          - preset: release
             build_dir: build/release
             artifact_name: RELEASE
           - preset: ci-stats
@@ -53,8 +53,10 @@ jobs:
     - name: Prepare ALL libs
       run: |
        mkdir -p ${{ matrix.build_dir }}/bin/all_libs
-       find ${{ matrix.build_dir }}/_external/install -type f \( -name "*.so" -o -name "*.so.*" -o -name "*.dylib" \) -exec cp {} ${{ matrix.build_dir }}/bin/all_libs/ \; 2>/dev/null || true
-       ldd ${{ matrix.build_dir }}/bin/itlabai_acc | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} ${{ matrix.build_dir }}/bin/all_libs/ 2>/dev/null || true
+       # Copy bundled runtime libs from ExternalProject installs (OpenCV/oneDNN/TBB).
+       cp -a ${{ matrix.build_dir }}/_external/install/*/opencv_min/lib/* ${{ matrix.build_dir }}/bin/all_libs/ 2>/dev/null || true
+       cp -a ${{ matrix.build_dir }}/_external/install/*/onednn/lib/* ${{ matrix.build_dir }}/bin/all_libs/ 2>/dev/null || true
+       cp -a ${{ matrix.build_dir }}/_external/install/*/tbb/lib/* ${{ matrix.build_dir }}/bin/all_libs/ 2>/dev/null || true
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -63,6 +65,7 @@ jobs:
         ${{ steps.set_binaries.outputs.ACC_BINARY }}
         ${{ matrix.build_dir }}/bin/all_libs/*
     - name: Test
+      # TODO(aobolensk): re-enable perf-labeled tests in PR CI when runtime budget allows.
       run: ctest --preset ${{ matrix.preset }} --output-on-failure -L unit
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
@@ -88,14 +91,14 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build
       run: |
-        cmake --preset dev-release \
+        cmake --preset release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++
-        cmake --build --preset dev-release --parallel
+        cmake --build --preset release --parallel
     - name: Test
-      run: ctest --preset dev-release --output-on-failure -L unit
+      run: ctest --preset release --output-on-failure -L unit
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
@@ -182,11 +185,11 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build and Test
       run: |
-        cmake --preset dev-release \
+        cmake --preset release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        cmake --build --preset dev-release --parallel
-        ctest --preset dev-release --output-on-failure -L unit
+        cmake --build --preset release --parallel
+        ctest --preset release --output-on-failure -L unit
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   codecov:
@@ -221,6 +224,29 @@ jobs:
         slug: embedded-dev-research/ITLabAI
         files: coverage.xml
         disable_search: true
+
+  perf-tests:
+    # Perf tests are intentionally not part of PR CI runtime budget.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ccache-${{ github.job }}
+    - name: Build
+      run: |
+        cmake --preset release \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build --preset release --parallel
+    - name: Run Perf Tests
+      run: ctest --preset release --output-on-failure -L perf
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
         
   evaluate-model:
     runs-on: ubuntu-latest
@@ -282,18 +308,12 @@ jobs:
 
     - name: Prepare environment
       run: |
-        LIB_DIR=$(find build -type d -name all_libs | head -n1)
-        if [ -z "$LIB_DIR" ]; then
-          echo "Failed to locate all_libs directory in downloaded artifact"
-          exit 1
-        fi
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
-        export LD_LIBRARY_PATH=$PWD/$LIB_DIR:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=$PWD/build/release/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         
     - name: Run evaluation
       run: |
-        LIB_DIR=$(find build -type d -name all_libs | head -n1)
-        export LD_LIBRARY_PATH=$PWD/$LIB_DIR:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=$PWD/build/release/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --model alexnet_mnist > accuracy.txt 2>&1
         if [ $? -ne 0 ]; then
           exit 1

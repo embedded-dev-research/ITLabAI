@@ -1,8 +1,7 @@
-set(KOKKOS_PREFIX "${ITLABAI_EXTERNAL_ROOT}/kokkos")
 set(KOKKOS_BUILD_DIR "${ITLABAI_EXTERNAL_BUILD_ROOT}/kokkos")
 set(KOKKOS_INSTALL_DIR "${ITLABAI_EXTERNAL_INSTALL_ROOT}/kokkos")
 
-itlabai_external_default_build_type(_kokkos_build_type)
+set(_kokkos_build_type "${ITLABAI_EXTERNAL_BUILD_TYPE}")
 set(_kokkos_openmp_flag OFF)
 set(_kokkos_threads_flag ON)
 if(ITLABAI_ENABLE_OPENMP AND OpenMP_FOUND AND NOT (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
