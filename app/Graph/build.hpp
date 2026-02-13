@@ -93,8 +93,8 @@ class LayerFactory {
 
   static std::shared_ptr<Layer> createConvLayer(
       const RuntimeOptions& options, size_t step, size_t pads, size_t dilations,
-      const Tensor& kernel, const Tensor& bias = Tensor(), size_t group = 1,
-      bool useLegacyImpl = false) {
+      Tensor& kernel, Tensor& bias = *std::make_shared<Tensor>(),
+      size_t group = 1, bool useLegacyImpl = false) {
     if (options.backend == Backend::kOneDnn) {
       return std::make_shared<ConvLayerOneDnn>(step, pads, dilations, kernel,
                                                bias, group, useLegacyImpl);
