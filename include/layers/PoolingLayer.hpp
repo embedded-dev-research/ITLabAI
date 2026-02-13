@@ -248,7 +248,7 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
                                              static_cast<int>(pads_[2])
                                        : 0;
 
-        ValueType sum = ValueType(0);
+        auto sum = ValueType(0);
         ValueType max_val = std::numeric_limits<ValueType>::lowest();
         size_t count = 0;
 
