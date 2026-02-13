@@ -38,8 +38,8 @@ void FCLayer::run(const std::vector<Tensor>& input,
       break;
     }
     case Type::kFloat: {
-      FCLayerImpl<float> used_impl(*weights_->as<float>(), weights_->get_shape(),
-                                   *bias_->as<float>());
+      FCLayerImpl<float> used_impl(*weights_->as<float>(),
+                                   weights_->get_shape(), *bias_->as<float>());
       auto result = used_impl.run(*input[0].as<float>());
       output[0] = make_tensor(result, {batch_size, output_size});
       break;

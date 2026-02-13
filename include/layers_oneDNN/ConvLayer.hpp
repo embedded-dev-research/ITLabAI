@@ -16,10 +16,10 @@ class ConvLayerOneDnn : public Layer {
         stride_(1),
         pads_(0),
         dilations_(1),
-        group_(1),
-        use_legacy_(false),
         kernel_(nullptr),
-        bias_(nullptr) {}
+        bias_(nullptr),
+        group_(1),
+        use_legacy_(false) {}
 
   ConvLayerOneDnn(size_t stride, size_t pads, size_t dilations, Tensor& kernel,
                   Tensor& bias = *std::make_shared<Tensor>(), size_t group = 1,
@@ -33,7 +33,7 @@ class ConvLayerOneDnn : public Layer {
         group_(group),
         use_legacy_(use_legacy) {}
 
-    ConvLayerOneDnn(size_t stride, size_t pads, size_t dilations,
+  ConvLayerOneDnn(size_t stride, size_t pads, size_t dilations,
                   std::shared_ptr<Tensor> kernel,
                   std::shared_ptr<Tensor> bias = std::make_shared<Tensor>(),
                   size_t group = 1, bool use_legacy = false)

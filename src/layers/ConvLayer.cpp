@@ -21,7 +21,8 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
   ParBackend backend = options.par_backend;
 
   if (group_ > 1) {
-    if (group_ == input[0].get_shape()[1] && group_ == kernel_->get_shape()[0]) {
+    if (group_ == input[0].get_shape()[1] &&
+        group_ == kernel_->get_shape()[0]) {
       switch (input[0].get_type()) {
         case Type::kFloat:
           DepthwiseConv4D<float>(input[0], *kernel_, *bias_, output[0], stride_,
@@ -83,9 +84,11 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                         dilations_ +
                     kernel_->get_shape()[kernel_->get_shape().dims() - 1],
                 static_cast<int>(
-                    ((1 + kernel_->get_shape()[kernel_->get_shape().dims() - 1]) *
+                    ((1 +
+                      kernel_->get_shape()[kernel_->get_shape().dims() - 1]) *
                          dilations_ +
-                     kernel_->get_shape()[kernel_->get_shape().dims() - 1] - 1) /
+                     kernel_->get_shape()[kernel_->get_shape().dims() - 1] -
+                     1) /
                     2)),
             sh);
       } else {
@@ -137,9 +140,11 @@ void ConvolutionalLayer::run(const std::vector<Tensor>& input,
                         dilations_ +
                     kernel_->get_shape()[kernel_->get_shape().dims() - 1],
                 static_cast<int>(
-                    ((1 + kernel_->get_shape()[kernel_->get_shape().dims() - 1]) *
+                    ((1 +
+                      kernel_->get_shape()[kernel_->get_shape().dims() - 1]) *
                          dilations_ +
-                     kernel_->get_shape()[kernel_->get_shape().dims() - 1] - 1) /
+                     kernel_->get_shape()[kernel_->get_shape().dims() - 1] -
+                     1) /
                     2)),
             sh);
       } else {
