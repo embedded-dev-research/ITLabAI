@@ -2,10 +2,6 @@ set(ONEDNN_BUILD_DIR "${ITLABAI_EXTERNAL_BUILD_ROOT}/onednn")
 set(ONEDNN_INSTALL_DIR "${ITLABAI_EXTERNAL_INSTALL_ROOT}/onednn")
 
 set(_onednn_build_type "${ITLABAI_EXTERNAL_BUILD_TYPE}")
-set(_onednn_depends "")
-if(TARGET tbb_external)
-    set(_onednn_depends tbb_external)
-endif()
 
 set(_onednn_byproducts "")
 if(MSVC)
@@ -24,7 +20,7 @@ itlabai_external_add(
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/3rdparty/oneDNN"
     BINARY_DIR "${ONEDNN_BUILD_DIR}"
     INSTALL_DIR "${ONEDNN_INSTALL_DIR}"
-    DEPENDS ${_onednn_depends}
+    DEPENDS tbb_external
     CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=${_onednn_build_type}
         -DDNNL_BUILD_TESTS=OFF

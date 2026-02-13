@@ -126,7 +126,7 @@ jobs:
       run: |
         OPENMP_PATH=$(brew --prefix libomp)
         echo "OpenMP path: $OPENMP_PATH"
-        cmake --preset dev-release \
+        cmake --preset release \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_PREFIX_PATH=$OPENMP_PATH \
@@ -139,12 +139,12 @@ jobs:
           -DOpenMP_omp_LIBRARY="$OPENMP_PATH/lib/libomp.dylib" \
           -DCMAKE_EXE_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp" \
           -DCMAKE_SHARED_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp"
-        cmake --build --preset dev-release --parallel
+        cmake --build --preset release --parallel
       env:
         LDFLAGS: "-L$(brew --prefix libomp)/lib -lomp"
         CPPFLAGS: "-I$(brew --prefix libomp)/include"
     - name: Test
-      run: ctest --preset dev-release --output-on-failure -L unit
+      run: ctest --preset release --output-on-failure -L unit
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
@@ -167,10 +167,10 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
     - name: Build
       run: |
-        cmake --preset dev-release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        cmake --build --preset dev-release --parallel --config Release
+        cmake --preset release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake --build --preset release --parallel --config Release
     - name: Test
-      run: ctest --preset dev-release --output-on-failure -L unit
+      run: ctest --preset release --output-on-failure -L unit
   build-linux-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
