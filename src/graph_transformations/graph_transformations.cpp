@@ -43,7 +43,7 @@ bool run_search(const Graph& graph, const Graph& subgraph,
   size_t cur_size = assignments.size();
   for (int prev_id = 0; prev_id < static_cast<int>(cur_size); prev_id++) {
     size_t amount_connected_s = subgraph.getOutputsSize(prev_id);
-    for (int j = 0; j < amount_connected_s; j++) {
+    for (size_t j = 0; j < amount_connected_s; j++) {
       int next_id = subgraph.getOutLayers(prev_id)[j];
       if (next_id < static_cast<int>(cur_size)) {
         if (!has_edge(graph, assignments[prev_id], assignments[next_id])) {
@@ -180,7 +180,7 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
       if (amount_connected == amount_connected_s) {
         continue;
       }
-      for (int k = 0; k < amount_connected; k++) {
+      for (size_t k = 0; k < amount_connected; k++) {
         int id = new_graph.getOutLayers(subs[i][roots[j]])[k];
         auto it = std::find(subs[i].begin(), subs[i].end(), id);
         if (it == subs[i].end()) {
@@ -190,7 +190,7 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
     }
     for (int leaf : leafs) {
       amount_connected = new_graph.getOutputsSize(subs[i][leaf]);
-      for (int k = 0; k < amount_connected; k++) {
+      for (size_t k = 0; k < amount_connected; k++) {
         int id = new_graph.getOutLayers(subs[i][leaf])[k];
         auto it =
             std::find(leafs_outs_final.begin(), leafs_outs_final.end(), id);
@@ -301,7 +301,7 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
       if (amount_connected == amount_connected_s) {
         continue;
       }
-      for (int k = 0; k < amount_connected; k++) {
+      for (size_t k = 0; k < amount_connected; k++) {
         int id = new_graph.getOutLayers(subs[i][roots[j]])[k];
         auto it = std::find(subs[i].begin(), subs[i].end(), id);
         if (it == subs[i].end()) {
@@ -311,7 +311,7 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
     }
     for (size_t j = 0; j < leafs.size(); j++) {
       amount_connected = new_graph.getOutputsSize(subs[i][leafs[j]]);
-      for (int k = 0; k < amount_connected; k++) {
+      for (size_t k = 0; k < amount_connected; k++) {
         int id = new_graph.getOutLayers(subs[i][leafs[j]])[k];
         leafs_outs_final[j].push_back(id);
       }
@@ -357,19 +357,19 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
     }
     for (int j = 0; j < subgraph_to.getLayersCount(); j++) {
       std::vector<int> cur_outs = subgraph_to.getOutLayers(j);
-      for (int k = 0; k < cur_outs.size(); k++) {
+      for (size_t k = 0; k < cur_outs.size(); k++) {
         new_graph.makeConnection(layers[j], layers[cur_outs[k]]);
       }
     }
-    for (int j = 0; j < roots_inps_final.size(); j++) {
-      for (int k = 0; k < roots_inps_final[j].size(); k++) {
+    for (size_t j = 0; j < roots_inps_final.size(); j++) {
+      for (size_t k = 0; k < roots_inps_final[j].size(); k++) {
         new_graph.makeConnection(
             new_graph.getLayerFromID(roots_inps_final[j][k]),
             new_graph.getLayerFromID(roots2[order.in_order[j]]));
       }
     }
-    for (int j = 0; j < leafs_outs_final.size(); j++) {
-      for (int k = 0; k < leafs_outs_final[j].size(); k++) {
+    for (size_t j = 0; j < leafs_outs_final.size(); j++) {
+      for (size_t k = 0; k < leafs_outs_final[j].size(); k++) {
         new_graph.makeConnection(
             new_graph.getLayerFromID(leafs2[order.out_order[j]]),
             new_graph.getLayerFromID(leafs_outs_final[j][k]));
