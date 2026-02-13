@@ -11,9 +11,6 @@ target_link_libraries(itlabai_acc_lib
         itlabai_layers_lib
 )
 target_link_libraries(itlabai_acc_lib PUBLIC OpenCV::opencv_world TBB::tbb Kokkos_imported)
-if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
-    target_link_libraries(itlabai_acc_lib PUBLIC OpenMP::OpenMP_CXX)
-endif()
 itlabai_target_defaults(itlabai_acc_lib)
 target_compile_definitions(itlabai_acc_lib PUBLIC IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")
 
@@ -23,4 +20,3 @@ set_target_properties(itlabai_accuracy_check_exe PROPERTIES OUTPUT_NAME "itlabai
 target_link_libraries(itlabai_accuracy_check_exe PRIVATE itlabai_acc_lib)
 add_dependencies(itlabai_accuracy_check_exe itlabai_fetch_test_data)
 itlabai_target_defaults(itlabai_accuracy_check_exe)
-itlabai_apply_runtime_rpath(itlabai_accuracy_check_exe)

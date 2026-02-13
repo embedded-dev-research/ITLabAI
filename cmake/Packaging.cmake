@@ -14,6 +14,8 @@ install(
 
 # Export in-tree targets
 install(TARGETS
+  itlabai_features
+  itlabai_openmp
   itlabai_graph_lib
   itlabai_graph_transformations_lib
   itlabai_layers_lib

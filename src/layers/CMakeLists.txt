@@ -11,7 +11,4 @@ target_include_directories(itlabai_layers_lib
 )
 target_link_libraries(itlabai_layers_lib PUBLIC dnnl)
 target_link_libraries(itlabai_layers_lib PUBLIC TBB::tbb Kokkos_imported)
-if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
-    target_link_libraries(itlabai_layers_lib PUBLIC OpenMP::OpenMP_CXX)
-endif()
 itlabai_target_defaults(itlabai_layers_lib)

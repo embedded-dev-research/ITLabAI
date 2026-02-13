@@ -25,14 +25,10 @@ target_link_libraries(itlabai_run_test_test PUBLIC
     itlabai_graph_transformations_lib
 )
 target_link_libraries(itlabai_run_test_test PUBLIC gtest_main gtest OpenCV::opencv_world TBB::tbb Kokkos_imported)
-if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
-    target_link_libraries(itlabai_run_test_test PUBLIC OpenMP::OpenMP_CXX)
-endif()
 
 target_include_directories(itlabai_run_test_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(itlabai_run_test_test PRIVATE "${PROJECT_SOURCE_DIR}/app/ReaderImage")
 itlabai_target_defaults(itlabai_run_test_test)
-itlabai_apply_runtime_rpath(itlabai_run_test_test)
 
 if (WIN32)
     target_compile_definitions(itlabai_run_test_test PRIVATE _CRT_SECURE_NO_WARNINGS)

@@ -84,10 +84,30 @@ if(ITLABAI_ENABLE_OPENMP)
   list(APPEND ITLABAI_FEATURE_DEFS HAS_OPENMP)
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+add_library(itlabai_features INTERFACE)
+if(ITLABAI_FEATURE_DEFS)
+  target_compile_definitions(itlabai_features INTERFACE ${ITLABAI_FEATURE_DEFS})
+endif()
+
+add_library(itlabai_openmp INTERFACE)
+if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
+  target_link_libraries(itlabai_openmp INTERFACE OpenMP::OpenMP_CXX)
+endif()
 
 # Third-party dependencies (isolated via ExternalProject).
 include(cmake/deps.cmake)
+
+# Runtime loader paths for the in-tree executables (Linux/macOS).
+# Keep it global instead of per-target helper calls.
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH "")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+set(CMAKE_BUILD_RPATH
+  "${OPENCV_INSTALL_DIR}/lib"
+  "${ONEDNN_INSTALL_DIR}/lib"
+  "${TBB_INSTALL_DIR}/lib"
+)
 
 # Test data (used by tests and demo apps). Always define the target to avoid conditional
 # add_dependencies() blocks in subdirectories.

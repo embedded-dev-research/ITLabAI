@@ -11,9 +11,6 @@ target_include_directories(itlabai_layers_onednn_lib
 )
 target_link_libraries(itlabai_layers_onednn_lib PUBLIC dnnl)
 target_link_libraries(itlabai_layers_onednn_lib PUBLIC TBB::tbb Kokkos_imported)
-if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
-    target_link_libraries(itlabai_layers_onednn_lib PUBLIC OpenMP::OpenMP_CXX)
-endif()
 target_compile_definitions(itlabai_layers_onednn_lib PRIVATE 
     DNNL_ENABLE_CONCURRENT_EXEC=1
 )

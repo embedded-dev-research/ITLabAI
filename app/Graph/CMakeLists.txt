@@ -12,9 +12,6 @@ target_link_libraries(itlabai_build_graph_lib PUBLIC
     itlabai_layers_onednn_lib
 )
 target_link_libraries(itlabai_build_graph_lib PUBLIC OpenCV::opencv_world TBB::tbb Kokkos_imported)
-if(ITLABAI_ENABLE_OPENMP AND TARGET OpenMP::OpenMP_CXX)
-    target_link_libraries(itlabai_build_graph_lib PUBLIC OpenMP::OpenMP_CXX)
-endif()
 target_compile_definitions(itlabai_build_graph_lib PUBLIC
     IMAGE28_PATH="${ITLABAI_TEST_DATA_DIR}/28/"
     IMAGENET_ACC="${ITLABAI_IMAGENET_ACC_DIR}/"
@@ -34,7 +31,6 @@ set_target_properties(itlabai_graph_build_exe PROPERTIES OUTPUT_NAME "itlabai_gr
 target_link_libraries(itlabai_graph_build_exe PRIVATE itlabai_build_graph_lib)
 add_dependencies(itlabai_graph_build_exe itlabai_fetch_test_data)
 itlabai_target_defaults(itlabai_graph_build_exe)
-itlabai_apply_runtime_rpath(itlabai_graph_build_exe)
 
 file(GLOB ACC_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/acc_check.cpp")
 add_executable(itlabai_acc_exe ${ACC_MAIN})
@@ -42,7 +38,6 @@ set_target_properties(itlabai_acc_exe PROPERTIES OUTPUT_NAME "itlabai_acc")
 target_link_libraries(itlabai_acc_exe PRIVATE itlabai_build_graph_lib)
 add_dependencies(itlabai_acc_exe itlabai_fetch_test_data)
 itlabai_target_defaults(itlabai_acc_exe)
-itlabai_apply_runtime_rpath(itlabai_acc_exe)
 
 file(GLOB ONNX_SUBGRAPHS_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/onnx_subgraphs.cpp")
 add_executable(itlabai_onnx_subgraphs_exe ${ONNX_SUBGRAPHS_MAIN})
@@ -51,4 +46,3 @@ target_link_libraries(itlabai_onnx_subgraphs_exe PRIVATE itlabai_build_graph_lib
 add_dependencies(itlabai_onnx_subgraphs_exe itlabai_fetch_test_data)
 target_link_libraries(itlabai_onnx_subgraphs_exe PRIVATE itlabai_graph_transformations_lib)
 itlabai_target_defaults(itlabai_onnx_subgraphs_exe)
-itlabai_apply_runtime_rpath(itlabai_onnx_subgraphs_exe)
