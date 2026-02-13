@@ -88,14 +88,14 @@ jobs:
         ${{ steps.set_binaries.outputs.ACC_BINARY }}
         ${{ matrix.build_dir }}/bin/all_libs/*
     - name: Test
-      # TODO(aobolensk): re-enable perf-labeled tests in PR CI when runtime budget allows.
-      run: ctest --preset ${{ matrix.preset }} --output-on-failure -L unit
+      run: ctest --preset ${{ matrix.preset }} --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
       run: |
         sudo apt-get update
         sudo apt-get install -y valgrind
+        # Keep valgrind runtime bounded: run the unit subset (perf tests are still executed above).
         valgrind --error-exitcode=1 ${{ matrix.build_dir }}/bin/itlabai_run_test --gtest_filter=-convlayer_parall.*
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
@@ -121,7 +121,7 @@ jobs:
           -DCMAKE_CXX_COMPILER=clang++
         cmake --build --preset release --parallel
     - name: Test
-      run: ctest --preset release --output-on-failure -L unit
+      run: ctest --preset release --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
@@ -167,7 +167,7 @@ jobs:
         LDFLAGS: "-L$(brew --prefix libomp)/lib -lomp"
         CPPFLAGS: "-I$(brew --prefix libomp)/include"
     - name: Test
-      run: ctest --preset release --output-on-failure -L unit
+      run: ctest --preset release --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
@@ -193,7 +193,7 @@ jobs:
         cmake --preset release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         cmake --build --preset release --parallel --config Release
     - name: Test
-      run: ctest --preset release --output-on-failure -L unit
+      run: ctest --preset release --output-on-failure
   build-linux-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
@@ -212,7 +212,7 @@ jobs:
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         cmake --build --preset release --parallel
-        ctest --preset release --output-on-failure -L unit
+        ctest --preset release --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   codecov:
@@ -235,7 +235,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         cmake --build --preset coverage --parallel
     - name: Test
-      run: ctest --preset coverage --output-on-failure -L unit
+      run: ctest --preset coverage --output-on-failure
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Generate Coverage Data
@@ -248,29 +248,6 @@ jobs:
         files: coverage.xml
         disable_search: true
 
-  perf-tests:
-    # Perf tests are intentionally not part of PR CI runtime budget.
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Setup ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: ccache-${{ github.job }}
-    - name: Build
-      run: |
-        cmake --preset release \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        cmake --build --preset release --parallel
-    - name: Run Perf Tests
-      run: ctest --preset release --output-on-failure -L perf
-      env:
-        CTEST_OUTPUT_ON_FAILURE: 1
-        
   evaluate-model:
     runs-on: ubuntu-latest
     needs: [build-linux]
