@@ -164,6 +164,11 @@ std::shared_ptr<Layer> layer_based_shared_copy(
           *dynamic_cast<BatchNormalizationLayer*>(layer.get()));
       return std::shared_ptr<Layer>(tmp_layer);
     }
+    case it_lab_ai::kOutput: {
+      OutputLayer* tmp_layer =
+          new OutputLayer(*dynamic_cast<OutputLayer*>(layer.get()));
+      return std::shared_ptr<Layer>(tmp_layer);
+    }
     default: {
       throw std::invalid_argument("No such layer type");
     }

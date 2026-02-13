@@ -75,7 +75,8 @@ class Graph {
   Graph& operator=(Graph&&) noexcept = default;
   ~Graph() = default;
 
-  void clone(Graph& result, Tensor& out, const RuntimeOptions& options) const;
+  void clone(Graph& result, Tensor& out,
+             const RuntimeOptions& options = RuntimeOptions()) const;
 
   void setSplitDistribution(
       std::vector<std::vector<std::pair<int, int>>> split_dist) {

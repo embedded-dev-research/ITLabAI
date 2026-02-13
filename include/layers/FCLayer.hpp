@@ -17,7 +17,9 @@ class FCLayer : public Layer {
  public:
   FCLayer() : Layer(kFullyConnected), weights_(nullptr), bias_(nullptr) {}
   FCLayer(Tensor& weights, Tensor& bias)
-      : Layer(kFullyConnected), weights_(&weights), bias_(&bias) {}
+      : Layer(kFullyConnected),
+        weights_(std::make_shared<Tensor>(weights)),
+        bias_(std::make_shared<Tensor>(bias)) {}
   FCLayer(std::shared_ptr<Tensor> weights, std::shared_ptr<Tensor> bias)
       : Layer(kFullyConnected), weights_(weights), bias_(bias) {}
   void run(const std::vector<Tensor>& input,
