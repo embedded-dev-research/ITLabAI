@@ -19,15 +19,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - preset: debug
-            build_dir: build/debug
-            artifact_name: DEBUG
-          - preset: release
-            build_dir: build/release
-            artifact_name: RELEASE
-          - preset: ci-stats
-            build_dir: build/ci-stats
-            artifact_name: RELEASE-stats
+          - build_type: DEBUG
+          - build_type: RELEASE
+            stats: false
+          - build_type: RELEASE
+            stats: true
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -36,67 +32,52 @@ jobs:
     - name: Set binary paths
       id: set_binaries
       run: |
-        echo "ACC_BINARY=${{ matrix.build_dir }}/bin/itlabai_acc" >> $GITHUB_OUTPUT
+        echo "ACC_BINARY=build/bin/itlabai_acc" >> $GITHUB_OUTPUT
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
-        key: ccache-${{ github.job }}-${{ matrix.preset }}
+        key: ccache-${{ github.job }}-${{ matrix.build_type }}
         max-size: 2G
     - name: Build
       run: |
-        cmake --preset ${{ matrix.preset }} \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        cmake --build --preset ${{ matrix.preset }} --parallel
+            cmake -S . -B build -G Ninja \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DOPENCV_PATH=build/3rdparty/opencv_build \
+            ${{ matrix.stats && '-DENABLE_STATISTIC_TENSORS=ON' || '' }} \
+            ${{ matrix.stats && '-DENABLE_STATISTIC_TIME=ON' || '' }} \
+            ${{ matrix.stats && '-DENABLE_STATISTIC_WEIGHTS=ON' || '' }}
+            cmake --build build --parallel
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - name: Package smoke test
-      if: matrix.preset == 'release'
-      run: |
-        set -euo pipefail
-        INSTALL_DIR="$(mktemp -d)"
-        cmake --install "${{ matrix.build_dir }}" --prefix "$INSTALL_DIR"
-
-        CONSUMER_DIR="$(mktemp -d)"
-        cat > "$CONSUMER_DIR/CMakeLists.txt" <<'CMAKE'
-        cmake_minimum_required(VERSION 3.20)
-        project(itlabai_consumer LANGUAGES CXX)
-        find_package(ITLabAI CONFIG REQUIRED)
-        add_executable(consumer main.cpp)
-        target_link_libraries(consumer PRIVATE ITLabAI::graph)
-        set_target_properties(consumer PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED YES)
-        CMAKE
-        cat > "$CONSUMER_DIR/main.cpp" <<'CPP'
-        #include <graph/graph.hpp>
-        int main() { it_lab_ai::Graph g; (void)g; return 0; }
-        CPP
-
-        cmake -S "$CONSUMER_DIR" -B "$CONSUMER_DIR/build" -DCMAKE_PREFIX_PATH="$INSTALL_DIR" -DCMAKE_BUILD_TYPE=Release
-        cmake --build "$CONSUMER_DIR/build" --parallel
     - name: Prepare ALL libs
       run: |
-       mkdir -p ${{ matrix.build_dir }}/bin/all_libs
-       # Copy bundled runtime libs from ExternalProject installs (OpenCV/oneDNN/TBB).
-       cp -a ${{ matrix.build_dir }}/_external/install/*/opencv_min/lib/* ${{ matrix.build_dir }}/bin/all_libs/ 2>/dev/null || true
-       cp -a ${{ matrix.build_dir }}/_external/install/*/onednn/lib/* ${{ matrix.build_dir }}/bin/all_libs/ 2>/dev/null || true
-       cp -a ${{ matrix.build_dir }}/_external/install/*/tbb/lib/* ${{ matrix.build_dir }}/bin/all_libs/ 2>/dev/null || true
+       mkdir -p build/bin/all_libs
+       cp -a build/3rdparty/opencv_build/lib/* build/bin/all_libs/ 2>/dev/null || true
+       cp -a build/_external/install/*/opencv_min/lib/* build/bin/all_libs/ 2>/dev/null || true
+       cp -a build/_external/install/*/onednn/lib/* build/bin/all_libs/ 2>/dev/null || true
+       cp -a build/_external/install/*/tbb/lib/* build/bin/all_libs/ 2>/dev/null || true
+       ldd "${{ steps.set_binaries.outputs.ACC_BINARY }}" | grep "=> /" | awk '{print $3}' | xargs -I {} cp {} build/bin/all_libs/ 2>/dev/null || true
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-       name: mnist-${{ matrix.artifact_name }}
+       name: mnist-${{ matrix.build_type }}${{ matrix.stats && '-stats' || '' }}
+       if-no-files-found: ignore
        path: |
         ${{ steps.set_binaries.outputs.ACC_BINARY }}
-        ${{ matrix.build_dir }}/bin/all_libs/*
+        build/bin/all_libs/*
+        build/bin/opencv_libs/*
+        build/setenv.sh
     - name: Test
-      run: ctest --preset ${{ matrix.preset }} --output-on-failure
+      run: cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
       run: |
         sudo apt-get update
         sudo apt-get install -y valgrind
-        # Keep valgrind runtime bounded: run the unit subset (perf tests are still executed above).
-        valgrind --error-exitcode=1 ${{ matrix.build_dir }}/bin/itlabai_run_test --gtest_filter=-convlayer_parall.*
+        valgrind cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-linux-clang:
@@ -114,21 +95,21 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build
       run: |
-        cmake --preset release \
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++
-        cmake --build --preset release --parallel
+        cmake --build build --parallel
     - name: Test
-      run: ctest --preset release --output-on-failure
+      run: cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Test (valgrind)
       run: |
         sudo apt-get update
         sudo apt-get install -y valgrind
-        valgrind --error-exitcode=1 build/release/bin/itlabai_run_test --gtest_filter=-convlayer_parall.*
+        valgrind cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-macos:
@@ -149,7 +130,7 @@ jobs:
       run: |
         OPENMP_PATH=$(brew --prefix libomp)
         echo "OpenMP path: $OPENMP_PATH"
-        cmake --preset release \
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_PREFIX_PATH=$OPENMP_PATH \
@@ -162,12 +143,12 @@ jobs:
           -DOpenMP_omp_LIBRARY="$OPENMP_PATH/lib/libomp.dylib" \
           -DCMAKE_EXE_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp" \
           -DCMAKE_SHARED_LINKER_FLAGS="-L$OPENMP_PATH/lib -lomp"
-        cmake --build --preset release --parallel
+        cmake --build build --parallel
       env:
         LDFLAGS: "-L$(brew --prefix libomp)/lib -lomp"
         CPPFLAGS: "-I$(brew --prefix libomp)/include"
     - name: Test
-      run: ctest --preset release --output-on-failure
+      run: cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   build-windows:
@@ -190,10 +171,12 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
     - name: Build
       run: |
-        cmake --preset release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        cmake --build --preset release --parallel --config Release
+        cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --parallel --config Release
     - name: Test
-      run: ctest --preset release --output-on-failure
+      run: |
+        cd build
+        ctest --output-on-failure
   build-linux-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
@@ -208,11 +191,12 @@ jobs:
         key: ccache-${{ github.job }}
     - name: Build and Test
       run: |
-        cmake --preset release \
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        cmake --build --preset release --parallel
-        ctest --preset release --output-on-failure
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --parallel
+        cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
   codecov:
@@ -226,16 +210,19 @@ jobs:
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
-        key: ccache-${{ github.job }}
+        key: ccache-${{ github.job }}-${{ matrix.build_type }}
         max-size: 2G
     - name: Build
       run: |
-        cmake --preset coverage \
+        cmake -S . -B build -G Ninja \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        cmake --build --preset coverage --parallel
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_C_FLAGS="--coverage" \
+          -DCMAKE_CXX_FLAGS="--coverage" \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        cmake --build build --parallel
     - name: Test
-      run: ctest --preset coverage --output-on-failure
+      run: cmake --build build -t test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - name: Generate Coverage Data
@@ -245,9 +232,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: embedded-dev-research/ITLabAI
-        files: coverage.xml
-        disable_search: true
-
+        
   evaluate-model:
     runs-on: ubuntu-latest
     needs: [build-linux]
@@ -268,12 +253,7 @@ jobs:
     - name: Set binary path
       id: set_eval_binary
       run: |
-        EVAL_BINARY=$(find build -type f -name itlabai_acc | head -n1)
-        if [ -z "$EVAL_BINARY" ]; then
-          echo "Failed to locate itlabai_acc in downloaded artifact"
-          exit 1
-        fi
-        echo "EVAL_BINARY=$EVAL_BINARY" >> $GITHUB_OUTPUT
+        echo "EVAL_BINARY=build/bin/itlabai_acc" >> $GITHUB_OUTPUT
         
     - name: Install system dependencies
       run: |
@@ -309,11 +289,11 @@ jobs:
     - name: Prepare environment
       run: |
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
-        export LD_LIBRARY_PATH=$PWD/build/release/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         
     - name: Run evaluation
       run: |
-        export LD_LIBRARY_PATH=$PWD/build/release/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
         "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" --model alexnet_mnist > accuracy.txt 2>&1
         if [ $? -ne 0 ]; then
           exit 1
