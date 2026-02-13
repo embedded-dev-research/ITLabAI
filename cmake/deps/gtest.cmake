@@ -21,7 +21,6 @@ itlabai_external_add(
     BINARY_DIR "${GTEST_BUILD_DIR}"
     INSTALL_DIR "${GTEST_INSTALL_DIR}"
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${GTEST_INSTALL_DIR}
         -DCMAKE_BUILD_TYPE=${_gtest_build_type}
         -DBUILD_GMOCK=ON
         -DINSTALL_GTEST=ON

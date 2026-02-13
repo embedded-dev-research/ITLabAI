@@ -14,6 +14,10 @@ add_executable(itlabai_run_test_test ${ITLABAI_TEST_SOURCES})
 add_executable(ITLabAI::RunTestTest ALIAS itlabai_run_test_test)
 set_target_properties(itlabai_run_test_test PROPERTIES OUTPUT_NAME "itlabai_run_test")
 
+if(TARGET itlabai_fetch_test_data)
+    add_dependencies(itlabai_run_test_test itlabai_fetch_test_data)
+endif()
+
 target_link_libraries(itlabai_run_test_test PUBLIC
     itlabai_perf_lib
     itlabai_layers_lib

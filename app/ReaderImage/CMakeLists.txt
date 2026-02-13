@@ -5,6 +5,10 @@ add_library(ITLabAI::ReaderImageLib ALIAS itlabai_reader_image_lib)
 
 set_target_properties(itlabai_reader_image_lib PROPERTIES LINKER_LANGUAGE CXX)
 
+if(TARGET itlabai_fetch_test_data)
+    add_dependencies(itlabai_reader_image_lib itlabai_fetch_test_data)
+endif()
+
 itlabai_link_externals(itlabai_reader_image_lib opencv tbb openmp)
 itlabai_target_defaults(itlabai_reader_image_lib)
 target_compile_definitions(itlabai_reader_image_lib PUBLIC IMAGE1_PATH="${ITLABAI_TEST_DATA_DIR}/lena.jpg")

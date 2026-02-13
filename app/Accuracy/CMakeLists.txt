@@ -7,6 +7,10 @@ add_library(ITLabAI::AccLib ALIAS itlabai_acc_lib)
 
 set_target_properties(itlabai_acc_lib PROPERTIES LINKER_LANGUAGE CXX)
 
+if(TARGET itlabai_fetch_test_data)
+    add_dependencies(itlabai_acc_lib itlabai_fetch_test_data)
+endif()
+
 target_link_libraries(itlabai_acc_lib
     PUBLIC
         itlabai_layers_lib

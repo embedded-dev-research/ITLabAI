@@ -8,7 +8,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ProjectDefaults.cmake)
 option(ITLABAI_BUILD_APPS "Build applications" ON)
 option(ITLABAI_ENABLE_OPENMP "Enable OpenMP support" ON)
 option(ITLABAI_ENABLE_KOKKOS "Build with Kokkos external" ON)
-option(ITLABAI_FETCH_TEST_DATA "Download test data during configure" ON)
+option(ITLABAI_FETCH_TEST_DATA "Fetch test data (build target) during build when needed" ON)
+option(ITLABAI_WERROR "Treat warnings as errors for ITLabAI targets" ON)
 set(_itlabai_default_test_data_dir "${CMAKE_BINARY_DIR}/input")
 if(NOT DEFINED ITLABAI_TEST_DATA_DIR)
     set(ITLABAI_TEST_DATA_DIR "${_itlabai_default_test_data_dir}" CACHE PATH "Directory containing sample/test data")
@@ -57,22 +58,27 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+# Shared compile options/defines for all in-tree ITLabAI targets.
+if(NOT TARGET itlabai_options)
+    add_library(itlabai_options INTERFACE)
+endif()
+if(ITLABAI_FEATURE_DEFS)
+    target_compile_definitions(itlabai_options INTERFACE ${ITLABAI_FEATURE_DEFS})
+endif()
+target_compile_features(itlabai_options INTERFACE cxx_std_20)
+
 # External dependencies
 include(cmake/deps.cmake)
 
 if(ITLABAI_FETCH_TEST_DATA)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${ITLABAI_TEST_DATA_DIR}
+    add_custom_target(itlabai_fetch_test_data
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${ITLABAI_TEST_DATA_DIR}"
+        COMMAND ${Python3_EXECUTABLE} "${PROJECT_SOURCE_DIR}/scripts/fetch_test_data.py" --dest "${ITLABAI_TEST_DATA_DIR}"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        COMMENT "Fetching ITLabAI test data into ${ITLABAI_TEST_DATA_DIR}"
+        VERBATIM
     )
-    execute_process(
-        COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/fetch_test_data.py --dest ${ITLABAI_TEST_DATA_DIR}
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-        RESULT_VARIABLE _itlabai_fetch_data_result
-    )
-    if(NOT _itlabai_fetch_data_result EQUAL 0)
-        message(FATAL_ERROR "Failed to fetch test data. Disable with -DITLABAI_FETCH_TEST_DATA=OFF if needed.")
-    endif()
 endif()
 
 add_subdirectory(src)
@@ -93,9 +99,7 @@ target_include_directories(itlabai INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-if(ITLABAI_FEATURE_DEFS)
-    target_compile_definitions(itlabai INTERFACE ${ITLABAI_FEATURE_DEFS})
-endif()
+target_link_libraries(itlabai INTERFACE itlabai_options)
 
 # Install/export
 target_link_libraries(itlabai INTERFACE
@@ -108,6 +112,7 @@ target_link_libraries(itlabai INTERFACE
 )
 
 install(TARGETS
+    itlabai_options
     itlabai_graph_lib
     itlabai_graph_transformations_lib
     itlabai_layers_lib

@@ -27,7 +27,6 @@ itlabai_external_add(
     INSTALL_DIR "${ONEDNN_INSTALL_DIR}"
     DEPENDS ${_onednn_depends}
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${ONEDNN_INSTALL_DIR}
         -DCMAKE_BUILD_TYPE=${_onednn_build_type}
         -DDNNL_BUILD_TESTS=OFF
         -DDNNL_BUILD_EXAMPLES=OFF

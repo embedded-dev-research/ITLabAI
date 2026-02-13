@@ -40,7 +40,6 @@ itlabai_external_add(
     BINARY_DIR "${TBB_BUILD_DIR}"
     INSTALL_DIR "${TBB_INSTALL_DIR}"
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${TBB_INSTALL_DIR}
         -DCMAKE_BUILD_TYPE=${_tbb_build_type}
         -DBUILD_SHARED_LIBS=ON
         -DTBB_TEST=OFF

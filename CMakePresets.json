@@ -7,36 +7,37 @@
   },
   "configurePresets": [
     {
-      "name": "dev-debug",
+      "name": "dev",
+      "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "build/debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
         "ITLABAI_BUILD_APPS": "ON",
         "ITLABAI_ENABLE_OPENMP": "ON",
         "ITLABAI_ENABLE_KOKKOS": "ON"
+      }
+    },
+    {
+      "name": "dev-debug",
+      "inherits": "dev",
+      "binaryDir": "build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
       "name": "dev-release",
-      "generator": "Ninja",
+      "inherits": "dev",
       "binaryDir": "build/release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "ITLABAI_BUILD_APPS": "ON",
-        "ITLABAI_ENABLE_OPENMP": "ON",
-        "ITLABAI_ENABLE_KOKKOS": "ON"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
       "name": "dev-relwithdebinfo",
-      "generator": "Ninja",
+      "inherits": "dev",
       "binaryDir": "build/relwithdebinfo",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "ITLABAI_BUILD_APPS": "ON",
-        "ITLABAI_ENABLE_OPENMP": "ON",
-        "ITLABAI_ENABLE_KOKKOS": "ON"
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
@@ -51,16 +52,20 @@
     {
       "name": "ci",
       "inherits": "dev-release",
-      "binaryDir": "build/ci"
+      "binaryDir": "build/ci",
+      "cacheVariables": {
+        "ITLABAI_WERROR": "ON"
+      }
     },
     {
       "name": "ci-stats",
-      "inherits": "dev-release",
+      "inherits": "ci",
       "binaryDir": "build/ci-stats",
       "cacheVariables": {
         "ENABLE_STATISTIC_TENSORS": "ON",
         "ENABLE_STATISTIC_TIME": "ON",
-        "ENABLE_STATISTIC_WEIGHTS": "ON"
+        "ENABLE_STATISTIC_WEIGHTS": "ON",
+        "ITLABAI_WERROR": "ON"
       }
     },
     {
@@ -68,7 +73,8 @@
       "inherits": "dev-relwithdebinfo",
       "binaryDir": "build/coverage",
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "--coverage"
+        "CMAKE_CXX_FLAGS": "--coverage",
+        "CMAKE_C_FLAGS": "--coverage"
       }
     }
   ],

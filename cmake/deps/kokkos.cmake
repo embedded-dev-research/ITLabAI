@@ -21,7 +21,6 @@ itlabai_external_add(
     BINARY_DIR "${KOKKOS_BUILD_DIR}"
     INSTALL_DIR "${KOKKOS_INSTALL_DIR}"
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${KOKKOS_INSTALL_DIR}
         -DCMAKE_BUILD_TYPE=${_kokkos_build_type}
         -DKokkos_ENABLE_SERIAL=ON
         -DKokkos_ENABLE_THREADS=${_kokkos_threads_flag}

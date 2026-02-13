@@ -102,7 +102,6 @@ itlabai_external_add(
     BINARY_DIR "${OPENCV_BUILD_DIR}"
     INSTALL_DIR "${OPENCV_INSTALL_DIR}"
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${OPENCV_INSTALL_DIR}
         -DCMAKE_BUILD_TYPE=${_opencv_build_type}
         -DOPENCV_INSTALL_BIN_DIR=bin
         -DOPENCV_INSTALL_LIB_DIR=lib

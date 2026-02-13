@@ -26,6 +26,10 @@ target_compile_definitions(itlabai_build_graph_lib PUBLIC
     MNIST_PATH="${ITLABAI_MNIST_DIR}"
 )
 
+if(TARGET itlabai_fetch_test_data)
+    add_dependencies(itlabai_build_graph_lib itlabai_fetch_test_data)
+endif()
+
 file(GLOB GRAPH_BUILD_MAIN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/graph_build.cpp")
 add_executable(itlabai_graph_build_exe ${GRAPH_BUILD_MAIN})
 add_executable(ITLabAI::GraphBuildExe ALIAS itlabai_graph_build_exe)
