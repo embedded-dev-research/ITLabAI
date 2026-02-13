@@ -62,6 +62,10 @@ if(WIN32)
         set(_opencv_dllversion "")
     endif()
 
+    # Expose for packaging (used to generate ITLabAIThirdPartyTargets.cmake).
+    # Keep it cached so configure_file(@ONLY) in a different directory can read it.
+    set(ITLABAI_OPENCV_DLLVERSION "${_opencv_dllversion}" CACHE INTERNAL "OpenCV DLL version suffix for Windows packaging")
+
     if(MSVC_VERSION GREATER_EQUAL 1930)
         set(_opencv_vc "vc17")
     elseif(MSVC_VERSION GREATER_EQUAL 1920)
@@ -88,6 +92,7 @@ if(WIN32)
 else()
     set(_opencv_world "${OPENCV_INSTALL_DIR}/lib/libopencv_world${CMAKE_SHARED_LIBRARY_SUFFIX}")
     set(_opencv_include_dir "${OPENCV_INSTALL_DIR}/include/opencv4")
+    set(ITLABAI_OPENCV_DLLVERSION "" CACHE INTERNAL "OpenCV DLL version suffix for Windows packaging")
 
     set(_opencv_byproducts
         "${_opencv_world}"
