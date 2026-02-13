@@ -1,0 +1,23 @@
+include_guard(GLOBAL)
+
+# In-tree convenience aliases. (Installed package defines the same names.)
+
+if(TARGET itlabai_graph_lib AND NOT TARGET ITLabAI::graph)
+  add_library(ITLabAI::graph ALIAS itlabai_graph_lib)
+endif()
+if(TARGET itlabai_layers_lib AND NOT TARGET ITLabAI::layers)
+  add_library(ITLabAI::layers ALIAS itlabai_layers_lib)
+endif()
+if(TARGET itlabai_layers_onednn_lib AND NOT TARGET ITLabAI::layers_onednn)
+  add_library(ITLabAI::layers_onednn ALIAS itlabai_layers_onednn_lib)
+endif()
+if(TARGET itlabai_graph_transformations_lib AND NOT TARGET ITLabAI::graph_transformations)
+  add_library(ITLabAI::graph_transformations ALIAS itlabai_graph_transformations_lib)
+endif()
+if(TARGET itlabai_reader_lib AND NOT TARGET ITLabAI::reader)
+  add_library(ITLabAI::reader ALIAS itlabai_reader_lib)
+endif()
+if(TARGET itlabai_perf_lib AND NOT TARGET ITLabAI::perf)
+  add_library(ITLabAI::perf ALIAS itlabai_perf_lib)
+endif()
+
