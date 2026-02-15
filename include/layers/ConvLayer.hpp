@@ -33,8 +33,8 @@ class ConvolutionalLayer : public Layer {
     pads_ = 0;
     dilations_ = 0;
   }
-  ConvolutionalLayer(size_t step, size_t pads, size_t dilations, Tensor& kernel,
-                     Tensor& bias = *std::make_shared<Tensor>(),
+  ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
+                     const Tensor& kernel, const Tensor& bias = Tensor(),
                      size_t group = 1, bool useLegacyImpl = false)
       : Layer(kConvolution),
         kernel_(std::make_shared<Tensor>(kernel)),

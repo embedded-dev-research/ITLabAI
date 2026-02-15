@@ -21,9 +21,9 @@ class ConvLayerOneDnn : public Layer {
         group_(1),
         use_legacy_(false) {}
 
-  ConvLayerOneDnn(size_t stride, size_t pads, size_t dilations, Tensor& kernel,
-                  Tensor& bias = *std::make_shared<Tensor>(), size_t group = 1,
-                  bool use_legacy = false)
+  ConvLayerOneDnn(size_t stride, size_t pads, size_t dilations,
+                  const Tensor& kernel, const Tensor& bias = Tensor(),
+                  size_t group = 1, bool use_legacy = false)
       : Layer(kConvolution),
         stride_(stride),
         pads_(pads),
