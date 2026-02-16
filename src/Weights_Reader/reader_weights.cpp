@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <vector>
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -20,7 +21,6 @@ using json = nlohmann::json;
 
 json read_json(const std::string& filename) {
 #ifdef _WIN32
-  // Windows implementation
   HANDLE file = CreateFileA(filename.c_str(), GENERIC_READ, FILE_SHARE_READ,
                             NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   HANDLE mapping = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, NULL);
@@ -33,7 +33,6 @@ json read_json(const std::string& filename) {
   CloseHandle(mapping);
   CloseHandle(file);
 #else
-  // Unix implementation
   int fd = open(filename.c_str(), O_RDONLY);
   struct stat sb;
   fstat(fd, &sb);
