@@ -11,17 +11,23 @@ namespace it_lab_ai {
 
 class FCLayer : public Layer {
  private:
-  Tensor weights_;
-  Tensor bias_;
+  std::shared_ptr<Tensor> weights_;
+  std::shared_ptr<Tensor> bias_;
 
  public:
-  FCLayer() : Layer(kFullyConnected) {}
-  FCLayer(Tensor weights, const Tensor& bias)
-      : Layer(kFullyConnected), weights_(std::move(weights)), bias_(bias) {}
+  FCLayer() : Layer(kFullyConnected), weights_(nullptr), bias_(nullptr) {}
+  FCLayer(const Tensor& weights, const Tensor& bias)
+      : Layer(kFullyConnected),
+        weights_(std::make_shared<Tensor>(weights)),
+        bias_(std::make_shared<Tensor>(bias)) {}
+  FCLayer(std::shared_ptr<Tensor> weights, std::shared_ptr<Tensor> bias)
+      : Layer(kFullyConnected),
+        weights_(std::move(weights)),
+        bias_(std::move(bias)) {}
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return weights_; }
+  Tensor get_weights() override { return *weights_; }
 #endif
 };
 

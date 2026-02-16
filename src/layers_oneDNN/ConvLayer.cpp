@@ -10,6 +10,9 @@ namespace it_lab_ai {
 
 void ConvLayerOneDnn::run(const std::vector<Tensor>& input,
                           std::vector<Tensor>& output) {
+  if (kernel_ == nullptr || bias_ == nullptr) {
+    throw std::runtime_error("ConvLayerOneDnn: no kernel or bias");
+  }
   if (use_legacy_) {
     run_special_conv(input, output);
     return;
@@ -43,7 +46,7 @@ void ConvLayerOneDnn::run(const std::vector<Tensor>& input,
                 static_cast<float*>(src_memory_.get_data_handle()));
     }
 
-    if (!bias_.empty()) {
+    if (!bias_->empty()) {
       conv_prim_->execute(*stream_, {{DNNL_ARG_SRC, src_memory_},
                                      {DNNL_ARG_WEIGHTS, weights_memory_},
                                      {DNNL_ARG_BIAS, bias_memory_},
@@ -98,7 +101,7 @@ void ConvLayerOneDnn::validate_input(const std::vector<Tensor>& input) const {
   }
 
   const Shape& input_shape = input[0].get_shape();
-  const Shape& kernel_shape = kernel_.get_shape();
+  const Shape& kernel_shape = kernel_->get_shape();
 
   if (input_shape.dims() != 4) {
     throw std::runtime_error("ConvLayerOneDnn: Input must be 4D (NCHW format)");
@@ -143,7 +146,7 @@ void ConvLayerOneDnn::validate_input(const std::vector<Tensor>& input) const {
 void ConvLayerOneDnn::validate_depthwise_input(
     const std::vector<Tensor>& input) const {
   const Shape& input_shape = input[0].get_shape();
-  const Shape& kernel_shape = kernel_.get_shape();
+  const Shape& kernel_shape = kernel_->get_shape();
 
   size_t in_channels = input_shape[1];
   size_t kernel_out_channels = kernel_shape[0];
@@ -161,7 +164,7 @@ void ConvLayerOneDnn::validate_depthwise_input(
 }
 
 bool ConvLayerOneDnn::is_depthwise_convolution() const {
-  const Shape& kernel_shape = kernel_.get_shape();
+  const Shape& kernel_shape = kernel_->get_shape();
   return (group_ == kernel_shape[0]);
 }
 
@@ -195,19 +198,19 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
     dnnl::memory::format_tag weights_format;
     if (is_depthwise) {
       kernel_dims = {static_cast<dnnl::memory::dim>(group_), 1, 1,
-                     static_cast<dnnl::memory::dim>(kernel_.get_shape()[2]),
-                     static_cast<dnnl::memory::dim>(kernel_.get_shape()[3])};
+                     static_cast<dnnl::memory::dim>(kernel_->get_shape()[2]),
+                     static_cast<dnnl::memory::dim>(kernel_->get_shape()[3])};
       weights_format = dnnl::memory::format_tag::goihw;
     } else if (group_ > 1) {
       kernel_dims = {
           static_cast<dnnl::memory::dim>(group_),
-          static_cast<dnnl::memory::dim>(kernel_.get_shape()[0] / group_),
-          static_cast<dnnl::memory::dim>(kernel_.get_shape()[1]),
-          static_cast<dnnl::memory::dim>(kernel_.get_shape()[2]),
-          static_cast<dnnl::memory::dim>(kernel_.get_shape()[3])};
+          static_cast<dnnl::memory::dim>(kernel_->get_shape()[0] / group_),
+          static_cast<dnnl::memory::dim>(kernel_->get_shape()[1]),
+          static_cast<dnnl::memory::dim>(kernel_->get_shape()[2]),
+          static_cast<dnnl::memory::dim>(kernel_->get_shape()[3])};
       weights_format = dnnl::memory::format_tag::goihw;
     } else {
-      const auto& k_shape = kernel_.get_shape();
+      const auto& k_shape = kernel_->get_shape();
       kernel_dims = {static_cast<dnnl::memory::dim>(k_shape[0]),
                      static_cast<dnnl::memory::dim>(k_shape[1]),
                      static_cast<dnnl::memory::dim>(k_shape[2]),
@@ -219,13 +222,13 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
         dnnl::memory::desc(kernel_dims, dnnl_data_type, weights_format);
 
     dnnl::memory::desc bias_md;
-    bool has_bias = !bias_.empty();
-    if (!bias_.empty()) {
+    bool has_bias = !bias_->empty();
+    if (!bias_->empty()) {
       size_t bias_size;
       if (is_depthwise || group_ == 1) {
         bias_size = kernel_dims[0];
       } else {
-        bias_size = kernel_.get_shape()[0];
+        bias_size = kernel_->get_shape()[0];
       }
 
       bias_md =
@@ -246,11 +249,12 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
     src_memory_ = dnnl::memory(conv_pd.src_desc(), *engine_);
     weights_memory_ = dnnl::memory(conv_pd.weights_desc(), *engine_);
     dst_memory_ = dnnl::memory(conv_pd.dst_desc(), *engine_);
-    if (!bias_.empty())
+    if (!bias_->empty())
       bias_memory_ = dnnl::memory(conv_pd.bias_desc(), *engine_);
 
-    fill_memory_with_tensor(weights_memory_, kernel_, data_type);
-    if (!bias_.empty()) fill_memory_with_tensor(bias_memory_, bias_, data_type);
+    fill_memory_with_tensor(weights_memory_, *kernel_, data_type);
+    if (!bias_->empty())
+      fill_memory_with_tensor(bias_memory_, *bias_, data_type);
 
     conv_prim_ = std::make_unique<dnnl::convolution_forward>(conv_pd);
     initialized_ = true;
@@ -284,7 +288,7 @@ void ConvLayerOneDnn::fill_memory_with_tensor(dnnl::memory& memory,
 }
 
 dnnl::memory::dims ConvLayerOneDnn::get_kernel_dims() const {
-  const Shape& kernel_shape = kernel_.get_shape();
+  const Shape& kernel_shape = kernel_->get_shape();
 
   dnnl::memory::dims dims;
   for (size_t i = 0; i < kernel_shape.dims(); ++i) {
@@ -295,7 +299,7 @@ dnnl::memory::dims ConvLayerOneDnn::get_kernel_dims() const {
 }
 
 Shape ConvLayerOneDnn::get_output_shape(const Shape& input_shape) const {
-  const Shape& kernel_shape = kernel_.get_shape();
+  const Shape& kernel_shape = kernel_->get_shape();
 
   size_t kernel_out_channels;
   size_t kernel_height;
@@ -353,7 +357,7 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
     auto dst_md =
         dnnl::memory::desc(dst_dims, dt, dnnl::memory::format_tag::nchw);
 
-    const auto& k_shape = kernel_.get_shape();
+    const auto& k_shape = kernel_->get_shape();
 
     dnnl::memory::dims weights_dims = {
         static_cast<dnnl::memory::dim>(k_shape[3]),
@@ -365,10 +369,10 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
         dnnl::memory::desc(weights_dims, dt, dnnl::memory::format_tag::oihw);
 
     dnnl::memory::desc bias_md;
-    bool has_bias = !bias_.empty();
+    bool has_bias = !bias_->empty();
     if (has_bias) {
       bias_md = dnnl::memory::desc(
-          {static_cast<dnnl::memory::dim>(bias_.get_shape()[0])}, dt,
+          {static_cast<dnnl::memory::dim>(bias_->get_shape()[0])}, dt,
           dnnl::memory::format_tag::a);
     }
 
@@ -391,7 +395,7 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
     }
 
     if (data_type == Type::kFloat) {
-      const std::vector<float>& kernel_data = *kernel_.as<float>();
+      const std::vector<float>& kernel_data = *kernel_->as<float>();
 
       size_t kh = k_shape[0];
       size_t kw = k_shape[1];
@@ -416,7 +420,7 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
                   reordered.size() * sizeof(float));
 
     } else if (data_type == Type::kInt) {
-      const std::vector<int>& kernel_data_int = *kernel_.as<int>();
+      const std::vector<int>& kernel_data_int = *kernel_->as<int>();
       size_t kh = k_shape[0];
       size_t kw = k_shape[1];
       size_t kic = k_shape[2];
@@ -441,11 +445,11 @@ void ConvLayerOneDnn::initialize_special_conv(const Shape& input_shape,
 
     if (has_bias) {
       if (data_type == Type::kFloat) {
-        const std::vector<float>& bias_data = *bias_.as<float>();
+        const std::vector<float>& bias_data = *bias_->as<float>();
         std::memcpy(bias_memory_.get_data_handle(), bias_data.data(),
                     bias_data.size() * sizeof(float));
       } else if (data_type == Type::kInt) {
-        const std::vector<int>& bias_data_int = *bias_.as<int>();
+        const std::vector<int>& bias_data_int = *bias_->as<int>();
         std::vector<float> float_bias(bias_data_int.size());
         std::transform(bias_data_int.begin(), bias_data_int.end(),
                        float_bias.begin(),
@@ -501,7 +505,7 @@ void ConvLayerOneDnn::run_special_conv(const std::vector<Tensor>& input,
       {DNNL_ARG_WEIGHTS, weights_memory_},
       {DNNL_ARG_DST, dst_memory_}};
 
-  if (!bias_.empty()) {
+  if (!bias_->empty()) {
     args[DNNL_ARG_BIAS] = bias_memory_;
   }
 
