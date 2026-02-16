@@ -20,6 +20,12 @@ class ReduceLayerOneDnn : public Layer {
                              const std::vector<int64_t>& axes = {})
       : ReduceLayerOneDnn(ReduceLayer::Operation::kSum, keepdims, axes) {}
 
+  ReduceLayerOneDnn(const ReduceLayerOneDnn& c) : Layer(kReduce) {
+    this->op_ = c.op_;
+    this->keepdims_ = c.keepdims_;
+    this->axes_ = c.axes_;
+  }
+
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 

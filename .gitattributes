@@ -1,0 +1,6 @@
+# Normalize text files to LF in the repository and working tree.
+* text=auto eol=lf
+
+# Keep native Windows line endings for Windows command scripts.
+*.bat text eol=crlf
+*.cmd text eol=crlf

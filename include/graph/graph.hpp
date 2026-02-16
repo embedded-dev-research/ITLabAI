@@ -23,6 +23,9 @@ struct BranchState {
   std::vector<std::pair<int, int>> distribution;
 };
 
+std::shared_ptr<Layer> layer_based_shared_copy(
+    const std::shared_ptr<Layer>& layer, const RuntimeOptions& options);
+
 class Graph {
   int BiggestSize_;
   int V_;  // amount of ids
@@ -71,6 +74,9 @@ class Graph {
   Graph(Graph&&) noexcept = default;
   Graph& operator=(Graph&&) noexcept = default;
   ~Graph() = default;
+
+  void clone(Graph& result, Tensor& out,
+             const RuntimeOptions& options = RuntimeOptions()) const;
 
   void setSplitDistribution(
       std::vector<std::vector<std::pair<int, int>>> split_dist) {
