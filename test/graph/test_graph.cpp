@@ -864,7 +864,8 @@ TEST(graph_transformations, check_subgraphs_replace) {
   res_graph.makeConnection(lay, fcLayers[8]);
 
   Graph res;
-  changed_subgraphs(graph, subgraph, res, output);
+  std::shared_ptr<Layer> lay_to = std::make_shared<EWLayer>("relu");
+  changed_subgraphs(graph, subgraph, lay_to, res, output);
   ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
 }
 
@@ -898,7 +899,8 @@ TEST(graph_transformations, check_subgraphs_replace2) {
   res_graph.makeConnection(lay, fcLayers[7]);
 
   Graph res;
-  changed_subgraphs(graph, subgraph, res, output);
+  std::shared_ptr<Layer> lay_to = std::make_shared<EWLayer>("relu");
+  changed_subgraphs(graph, subgraph, lay_to, res, output);
   ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
 }
 
@@ -941,7 +943,8 @@ TEST(graph_transformations, check_subgraphs_replace3) {
   res_graph.makeConnection(fcLayers[9], lay);
 
   Graph res;
-  changed_subgraphs(graph, subgraph, res, output);
+  std::shared_ptr<Layer> lay_to = std::make_shared<EWLayer>("relu");
+  changed_subgraphs(graph, subgraph, lay_to, res, output);
   ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
 }
 
@@ -980,7 +983,8 @@ TEST(graph_transformations, check_subgraphs_replace4) {
   res_graph.makeConnection(ewLayer2, fcLayers[7]);
 
   Graph res;
-  changed_subgraphs(graph, subgraph, res, output);
+  std::shared_ptr<Layer> lay_to = std::make_shared<EWLayer>("relu");
+  changed_subgraphs(graph, subgraph, lay_to, res, output);
   ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
 }
 
@@ -1016,7 +1020,8 @@ TEST(graph_transformations, check_subgraphs_replace5) {
   }
 
   Graph res;
-  changed_subgraphs(graph, subgraph, res, output);
+  std::shared_ptr<Layer> lay_to = std::make_shared<EWLayer>("relu");
+  changed_subgraphs(graph, subgraph, lay_to, res, output);
   ASSERT_FALSE(find_subgraphs(res, res_graph).empty());
 }
 
@@ -1285,8 +1290,10 @@ TEST(graph_transformations, check_subgraphs_replace_s5) {
   res_graph.addSingleLayer(ewLayers[15]);
 
   Graph res;
-  changed_subgraphs(graph, subgraph, res, output);
+  std::shared_ptr<Layer> lay_to = std::make_shared<EWLayer>("relu");
+  changed_subgraphs(graph, subgraph, lay_to, res, output);
   Graph res2;
-  changed_subgraphs(res, subgraph2, res2, output);
+  std::shared_ptr<Layer> lay_to2 = std::make_shared<EWLayer>("relu");
+  changed_subgraphs(res, subgraph2, lay_to2, res2, output);
   ASSERT_FALSE(find_subgraphs(res2, res_graph).empty());
 }

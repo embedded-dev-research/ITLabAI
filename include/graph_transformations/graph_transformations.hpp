@@ -34,7 +34,8 @@ bool run_search(const Graph& graph, const Graph& subgraph,
 void change_ids(std::vector<std::vector<int>>& vec, int id);
 bool does_intersect(const std::vector<int>& vec1, const std::vector<int>& vec2);
 void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
-                       Graph& new_graph, Tensor& out,
+                       const std::shared_ptr<Layer>& layer_to, Graph& new_graph,
+                       Tensor& out,
                        const RuntimeOptions& options = RuntimeOptions());
 void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
                        const Graph& subgraph_to, Graph& new_graph, Tensor& out,

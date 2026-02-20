@@ -127,16 +127,16 @@ bool does_intersect(const std::vector<int>& vec1,
 }
 
 void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
-                       Graph& new_graph, Tensor& out,
-                       const RuntimeOptions& options) {
+                       const std::shared_ptr<Layer>& layer_to, Graph& new_graph,
+                       Tensor& out, const RuntimeOptions& options) {
   graph.clone(new_graph, out, options);
   std::vector<std::vector<int>> subs = find_subgraphs(graph, subgraph_from);
   std::vector<std::vector<int>> subs_c = subs;
   std::vector<bool> sub_used(subs.size(), true);
   std::vector<int> roots;
-  std::vector<int> leafs;
+  std::vector<int> leaves;
   std::vector<int> roots_inps_final;
-  std::vector<int> leafs_outs_final;
+  std::vector<int> leaves_outs_final;
   size_t amount_connected;
   size_t amount_connected_s;
   for (int v = 0; v < subgraph_from.getLayersCount(); v++) {
@@ -144,7 +144,7 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
       roots.push_back(v);
     }
     if (is_leaf(subgraph_from, v)) {
-      leafs.push_back(v);
+      leaves.push_back(v);
     }
   }
   for (size_t i = 0; i < subs.size(); i++) {
@@ -160,10 +160,10 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
       sub_used[i] = false;
       continue;
     }
-    std::shared_ptr<Layer> layer = std::make_shared<EWLayer>("relu");
+    std::shared_ptr<Layer> layer = layer_based_shared_copy(layer_to, options);
     std::vector<bool> is_root_special(roots.size(), false);
     roots_inps_final.clear();
-    leafs_outs_final.clear();
+    leaves_outs_final.clear();
     for (size_t j = 0; j < roots.size(); j++) {
       std::vector<int> root_inps = new_graph.getInLayers(subs[i][roots[j]]);
       // want subgraph -> single node
@@ -188,14 +188,14 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
         }
       }
     }
-    for (int leaf : leafs) {
+    for (int leaf : leaves) {
       amount_connected = new_graph.getOutputsSize(subs[i][leaf]);
       for (size_t k = 0; k < amount_connected; k++) {
         int id = new_graph.getOutLayers(subs[i][leaf])[k];
         auto it =
-            std::find(leafs_outs_final.begin(), leafs_outs_final.end(), id);
-        if (it == leafs_outs_final.end()) {
-          leafs_outs_final.push_back(id);
+            std::find(leaves_outs_final.begin(), leaves_outs_final.end(), id);
+        if (it == leaves_outs_final.end()) {
+          leaves_outs_final.push_back(id);
         }
       }
     }
@@ -211,8 +211,8 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
                        roots_inps_final.begin(), [&](int elem) {
                          return elem > subs[i][j] ? elem - 1 : elem;
                        });
-        std::transform(leafs_outs_final.begin(), leafs_outs_final.end(),
-                       leafs_outs_final.begin(), [&](int elem) {
+        std::transform(leaves_outs_final.begin(), leaves_outs_final.end(),
+                       leaves_outs_final.begin(), [&](int elem) {
                          return elem > subs[i][j] ? elem - 1 : elem;
                        });
       }
@@ -223,7 +223,7 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
     if (roots_inps_final.empty()) {
       new_graph.addSingleLayer(layer);
     }
-    for (int j : leafs_outs_final) {
+    for (int j : leaves_outs_final) {
       new_graph.makeConnection(layer, new_graph.getLayerFromID(j));
     }
   }
@@ -236,44 +236,44 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
   std::vector<std::vector<int>> subs = find_subgraphs(graph, subgraph_from);
   std::vector<std::vector<int>> subs_c = subs;
   std::vector<bool> sub_used(subs.size(), true);
-  std::vector<int> roots;
-  std::vector<int> leafs;
-  std::vector<int> roots2;
-  std::vector<int> leafs2;
+  std::vector<int> roots_from;
+  std::vector<int> leaves_from;
+  std::vector<int> roots_to;
+  std::vector<int> leaves_to;
   std::vector<std::vector<int>> roots_inps_final;
-  std::vector<std::vector<int>> leafs_outs_final;
+  std::vector<std::vector<int>> leaves_outs_final;
   size_t amount_connected;
   size_t amount_connected_s;
   for (int v = 0; v < subgraph_from.getLayersCount(); v++) {
     if (is_root(subgraph_from, v)) {
-      roots.push_back(v);
+      roots_from.push_back(v);
     }
     if (is_leaf(subgraph_from, v)) {
-      leafs.push_back(v);
+      leaves_from.push_back(v);
     }
   }
   for (int v = 0; v < subgraph_to.getLayersCount(); v++) {
     if (is_root(subgraph_to, v)) {
-      roots2.push_back(v);
+      roots_to.push_back(v);
     }
     if (is_leaf(subgraph_to, v)) {
-      leafs2.push_back(v);
+      leaves_to.push_back(v);
     }
   }
-  if (roots2.size() != roots.size()) {
+  if (roots_to.size() != roots_from.size()) {
     throw std::invalid_argument(
         "Subgraph_to and Subgraph_from roots amounts aren't same.");
   }
-  if (leafs2.size() != leafs.size()) {
+  if (leaves_to.size() != leaves_from.size()) {
     throw std::invalid_argument(
-        "Subgraph_to and Subgraph_from leafs amounts aren't same.");
+        "Subgraph_to and Subgraph_from leaves amounts aren't same.");
   }
-  order.fill_empty(roots.size(), leafs.size());
-  if (order.in_order.size() != roots.size()) {
+  order.fill_empty(roots_from.size(), leaves_from.size());
+  if (order.in_order.size() != roots_from.size()) {
     throw std::invalid_argument("Order for roots isn't complete");
   }
-  if (order.out_order.size() != leafs.size()) {
-    throw std::invalid_argument("Order for leafs isn't complete");
+  if (order.out_order.size() != leaves_from.size()) {
+    throw std::invalid_argument("Order for leaves isn't complete");
   }
   for (size_t i = 0; i < subs.size(); i++) {
     bool flag = false;
@@ -288,40 +288,40 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
       sub_used[i] = false;
       continue;
     }
-    std::vector<bool> is_root_special(roots.size(), false);
+    std::vector<bool> is_root_special(roots_from.size(), false);
     roots_inps_final =
-        std::vector<std::vector<int>>(roots.size(), std::vector<int>());
-    leafs_outs_final =
-        std::vector<std::vector<int>>(leafs.size(), std::vector<int>());
-    for (size_t j = 0; j < roots.size(); j++) {
-      roots_inps_final[j] = new_graph.getInLayers(subs[i][roots[j]]);
+        std::vector<std::vector<int>>(roots_from.size(), std::vector<int>());
+    leaves_outs_final =
+        std::vector<std::vector<int>>(leaves_from.size(), std::vector<int>());
+    for (size_t j = 0; j < roots_from.size(); j++) {
+      roots_inps_final[j] = new_graph.getInLayers(subs[i][roots_from[j]]);
       // recognize transformations we can apply with roots
-      amount_connected = new_graph.getOutputsSize(subs[i][roots[j]]);
-      amount_connected_s = subgraph_from.getOutputsSize(roots[j]);
+      amount_connected = new_graph.getOutputsSize(subs[i][roots_from[j]]);
+      amount_connected_s = subgraph_from.getOutputsSize(roots_from[j]);
       if (amount_connected == amount_connected_s) {
         continue;
       }
       for (size_t k = 0; k < amount_connected; k++) {
-        int id = new_graph.getOutLayers(subs[i][roots[j]])[k];
+        int id = new_graph.getOutLayers(subs[i][roots_from[j]])[k];
         auto it = std::find(subs[i].begin(), subs[i].end(), id);
         if (it == subs[i].end()) {
           is_root_special[j] = true;
         }
       }
     }
-    for (size_t j = 0; j < leafs.size(); j++) {
-      amount_connected = new_graph.getOutputsSize(subs[i][leafs[j]]);
+    for (size_t j = 0; j < leaves_from.size(); j++) {
+      amount_connected = new_graph.getOutputsSize(subs[i][leaves_from[j]]);
       for (size_t k = 0; k < amount_connected; k++) {
-        int id = new_graph.getOutLayers(subs[i][leafs[j]])[k];
-        leafs_outs_final[j].push_back(id);
+        int id = new_graph.getOutLayers(subs[i][leaves_from[j]])[k];
+        leaves_outs_final[j].push_back(id);
       }
     }
     for (size_t j = 0; j < subs[i].size(); j++) {
-      auto it = std::find(roots.begin(), roots.end(), j);
-      size_t index_for_root = std::distance(roots.begin(), it);
+      auto it = std::find(roots_from.begin(), roots_from.end(), j);
+      size_t index_for_root = std::distance(roots_from.begin(), it);
       // remove all nodes that isn't special roots
-      if (it == roots.end() ||
-          (it != roots.end() && !is_root_special[index_for_root])) {
+      if (it == roots_from.end() ||
+          (it != roots_from.end() && !is_root_special[index_for_root])) {
         new_graph.removeSingleLayer(subs[i][j]);
         change_ids(subs, subs[i][j]);
         for (auto& k : roots_inps_final) {
@@ -329,50 +329,50 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
             return elem > subs[i][j] ? elem - 1 : elem;
           });
         }
-        for (auto& k : leafs_outs_final) {
+        for (auto& k : leaves_outs_final) {
           std::transform(k.begin(), k.end(), k.begin(), [&](int elem) {
             return elem > subs[i][j] ? elem - 1 : elem;
           });
         }
       }
     }
-    std::vector<int> roots2_c = roots2;
-    std::vector<int> leafs2_c = leafs2;
+    std::vector<int> roots_to_c = roots_to;
+    std::vector<int> leaves_to_c = leaves_to;
     std::vector<std::shared_ptr<Layer>> layers;
     for (int j = 0; j < subgraph_to.getLayersCount(); j++) {
       std::shared_ptr<Layer> layer =
           layer_based_shared_copy(subgraph_to.getLayerFromID(j), options);
       layers.push_back(layer);
       new_graph.addSingleLayer(layer);
-      auto it = std::find(roots2_c.begin(), roots2_c.end(), j);
-      if (it != roots2_c.end()) {
-        size_t index_for_root = std::distance(roots2_c.begin(), it);
-        roots2[index_for_root] = layer->getID();
+      auto it = std::find(roots_to_c.begin(), roots_to_c.end(), j);
+      if (it != roots_to_c.end()) {
+        size_t index_for_root = std::distance(roots_to_c.begin(), it);
+        roots_to[index_for_root] = layer->getID();
       }
-      it = std::find(leafs2_c.begin(), leafs2_c.end(), j);
-      if (it != leafs2_c.end()) {
-        size_t index_for_leaf = std::distance(leafs2_c.begin(), it);
-        leafs2[index_for_leaf] = layer->getID();
+      it = std::find(leaves_to_c.begin(), leaves_to_c.end(), j);
+      if (it != leaves_to_c.end()) {
+        size_t index_for_leaf = std::distance(leaves_to_c.begin(), it);
+        leaves_to[index_for_leaf] = layer->getID();
       }
     }
     for (int j = 0; j < subgraph_to.getLayersCount(); j++) {
       std::vector<int> cur_outs = subgraph_to.getOutLayers(j);
-      for (size_t k = 0; k < cur_outs.size(); k++) {
-        new_graph.makeConnection(layers[j], layers[cur_outs[k]]);
+      for (int cur_out : cur_outs) {
+        new_graph.makeConnection(layers[j], layers[cur_out]);
       }
     }
     for (size_t j = 0; j < roots_inps_final.size(); j++) {
       for (size_t k = 0; k < roots_inps_final[j].size(); k++) {
         new_graph.makeConnection(
             new_graph.getLayerFromID(roots_inps_final[j][k]),
-            new_graph.getLayerFromID(roots2[order.in_order[j]]));
+            new_graph.getLayerFromID(roots_to[order.in_order[j]]));
       }
     }
-    for (size_t j = 0; j < leafs_outs_final.size(); j++) {
-      for (size_t k = 0; k < leafs_outs_final[j].size(); k++) {
+    for (size_t j = 0; j < leaves_outs_final.size(); j++) {
+      for (size_t k = 0; k < leaves_outs_final[j].size(); k++) {
         new_graph.makeConnection(
-            new_graph.getLayerFromID(leafs2[order.out_order[j]]),
-            new_graph.getLayerFromID(leafs_outs_final[j][k]));
+            new_graph.getLayerFromID(leaves_to[order.out_order[j]]),
+            new_graph.getLayerFromID(leaves_outs_final[j][k]));
       }
     }
   }
