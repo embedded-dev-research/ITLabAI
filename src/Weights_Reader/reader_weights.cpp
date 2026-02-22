@@ -78,7 +78,7 @@ json read_json(const std::string& filename) {
     throw std::runtime_error("File is empty: " + filename);
   }
 
-  char* data = (char*)mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  char* data = (char*)mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (data == MAP_FAILED) {
     close(fd);
     throw std::runtime_error("Cannot mmap file: " + filename);

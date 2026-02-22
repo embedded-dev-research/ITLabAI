@@ -482,7 +482,7 @@ class Graph {
     std::cout << std::left << std::setw(20) << "Layer Type" << std::right
               << std::setw(15) << "Total (ms)" << std::setw(12) << "Calls"
               << std::setw(15) << "Avg (ms)" << std::setw(15) << "Min (ms)"
-              << std::setw(15) << "Max (ms)" << std::endl;
+              << std::setw(15) << "Max (ms)" << '\n';
 
     for (const auto& [name, stats] : layer_stats_) {
       double avg = stats.total_time / stats.call_count;
@@ -490,7 +490,7 @@ class Graph {
                 << std::fixed << std::setprecision(3) << std::setw(15)
                 << stats.total_time << std::setw(12) << stats.call_count
                 << std::setw(15) << avg << std::setw(15) << stats.min_time
-                << std::setw(15) << stats.max_time << std::endl;
+                << std::setw(15) << stats.max_time << '\n';
     }
   }
 
