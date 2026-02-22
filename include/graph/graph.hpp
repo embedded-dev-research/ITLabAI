@@ -14,6 +14,24 @@
 #include "runtime_options.hpp"
 
 namespace it_lab_ai {
+static std::unordered_map<LayerType, std::string> label_map = {
+    {kInput, "Input"},
+    {kPooling, "Pooling"},
+    {kElementWise, "Element-wise"},
+    {kConvolution, "Convolution"},
+    {kFullyConnected, "Dense"},
+    {kFlatten, "Flatten"},
+    {kConcat, "Concat"},
+    {kDropout, "Dropout"},
+    {kSplit, "Split"},
+    {kBinaryOp, "BinaryOp"},
+    {kTranspose, "Transpose"},
+    {kMatmul, "MatMul"},
+    {kReshape, "Reshape"},
+    {kSoftmax, "Softmax"},
+    {kReduce, "Reduce"},
+    {kBatchNormalization, "Normalization"}};
+
 struct LayerTimeStats {
   std::string layer_name;
   double total_time = 0.0;
@@ -388,37 +406,14 @@ class Graph {
       time_layer_.push_back(layer_type);
 
       if (collect_layer_stats_) {
-        // Используем ту же label_map для конвертации в строку
-        static const std::unordered_map<LayerType, std::string> label_map = {
-            {kInput, "Input"},
-            {kPooling, "Pooling"},
-            {kElementWise, "Element-wise"},
-            {kConvolution, "Convolution"},
-            {kFullyConnected, "Dense"},
-            {kFlatten, "Flatten"},
-            {kConcat, "Concat"},
-            {kDropout, "Dropout"},
-            {kSplit, "Split"},
-            {kBinaryOp, "BinaryOp"},
-            {kTranspose, "Transpose"},
-            {kMatmul, "MatMul"},
-            {kReshape, "Reshape"},
-            {kSoftmax, "Softmax"},
-            {kReduce, "Reduce"},
-            {kBatchNormalization, "Normalization"}};
-
         auto it = label_map.find(layer_type);
         std::string layer_name_str =
             (it != label_map.end()) ? it->second : "Unknown";
 
         auto& stats = layer_stats_[layer_name_str];
-
-        // Обновляем статистику (предполагаем, что stats.total_time - это int
-        // или double)
         stats.total_time += elapsed_ms;
         stats.call_count++;
 
-        // Обновляем min/max
         if (stats.call_count == 1) {
           stats.min_time = elapsed_ms;
           stats.max_time = elapsed_ms;
@@ -450,25 +445,6 @@ class Graph {
 #ifdef ENABLE_STATISTIC_TIME
   std::vector<std::string> getTimeInfo() {
     std::vector<std::string> res;
-
-    std::unordered_map<LayerType, std::string> label_map = {
-        {kInput, "Input"},
-        {kPooling, "Pooling"},
-        {kElementWise, "Element-wise"},
-        {kConvolution, "Convolution"},
-        {kFullyConnected, "Dense"},
-        {kFlatten, "Flatten"},
-        {kConcat, "Concat"},
-        {kDropout, "Dropout"},
-        {kSplit, "Split"},
-        {kBinaryOp, "BinaryOp"},
-        {kTranspose, "Transpose"},
-        {kMatmul, "MatMul"},
-        {kReshape, "Reshape"},
-        {kSoftmax, "Softmax"},
-        {kReduce, "Reduce"},
-        {kBatchNormalization, "Normalization"}};
-
     for (size_t i = 0; i < time_.size(); i++) {
       auto it = label_map.find(time_layer_[i]);
       std::string layer_name = (it != label_map.end()) ? it->second : "Unknown";
@@ -502,6 +478,7 @@ class Graph {
 
     return result;
   }
+
   void printLayerStats() {
     std::cout << "\n========== LAYER PERFORMANCE STATISTICS ==========\n";
     std::cout << std::left << std::setw(20) << "Layer Type" << std::right
@@ -518,6 +495,7 @@ class Graph {
                 << std::setw(15) << stats.max_time << std::endl;
     }
   }
+
   [[nodiscard]] std::vector<int> getTraversalOrder() const {
     auto in_out_degrees = getInOutDegrees();
     std::vector<int> in_degree(V_);
