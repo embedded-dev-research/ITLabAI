@@ -32,6 +32,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
     if (comments) {
       std::cout << "Processing layer of type: " << layer_type << '\n';
     }
+
     it_lab_ai::Tensor tensor =
         it_lab_ai::create_tensor_from_json(layer_data, it_lab_ai::Type::kFloat);
 
@@ -266,6 +267,7 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
 ParseResult parse_json_model(RuntimeOptions options,
                              const std::string& json_path, bool comments) {
   ParseResult result;
+
   auto& layers = result.layers;
   auto& name_to_layer = result.name_to_layer;
   auto& connections = result.connections;
@@ -281,13 +283,8 @@ ParseResult parse_json_model(RuntimeOptions options,
   std::string last_constant_name;
   std::vector<int64_t> last_constant_value;
 
-  auto json_read_start = std::chrono::high_resolution_clock::now();
   const std::string& json_file = json_path;
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
-  auto json_read_end = std::chrono::high_resolution_clock::now();
-  double json_read_time =
-      std::chrono::duration<double, std::milli>(json_read_end - json_read_start)
-          .count();
   std::string input_layer_name = "images";
   for (const auto& layer_data : model_data) {
     std::string layer_type = layer_data["type"];
@@ -965,6 +962,7 @@ ParseResult parse_json_model(RuntimeOptions options,
       throw;
     }
   }
+
   return result;
 }
 

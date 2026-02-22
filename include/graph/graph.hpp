@@ -50,7 +50,6 @@ struct BranchState {
 
 class Graph {
   std::map<std::string, LayerTimeStats> layer_stats_;
-  bool collect_layer_stats_ = true;
   int BiggestSize_;
   int V_;  // amount of ids
   std::vector<std::shared_ptr<Layer>> layers_;
@@ -405,22 +404,20 @@ class Graph {
       LayerType layer_type = layers_[current_layer]->getName();
       time_layer_.push_back(layer_type);
 
-      if (collect_layer_stats_) {
-        auto it = label_map.find(layer_type);
-        std::string layer_name_str =
-            (it != label_map.end()) ? it->second : "Unknown";
+      auto it = label_map.find(layer_type);
+      std::string layer_name_str =
+          (it != label_map.end()) ? it->second : "Unknown";
 
-        auto& stats = layer_stats_[layer_name_str];
-        stats.total_time += elapsed_ms;
-        stats.call_count++;
+      auto& stats = layer_stats_[layer_name_str];
+      stats.total_time += elapsed_ms;
+      stats.call_count++;
 
-        if (stats.call_count == 1) {
-          stats.min_time = elapsed_ms;
-          stats.max_time = elapsed_ms;
-        } else {
-          if (elapsed_ms < stats.min_time) stats.min_time = elapsed_ms;
-          if (elapsed_ms > stats.max_time) stats.max_time = elapsed_ms;
-        }
+      if (stats.call_count == 1) {
+        stats.min_time = elapsed_ms;
+        stats.max_time = elapsed_ms;
+      } else {
+        if (elapsed_ms < stats.min_time) stats.min_time = elapsed_ms;
+        if (elapsed_ms > stats.max_time) stats.max_time = elapsed_ms;
       }
 #endif
     }
