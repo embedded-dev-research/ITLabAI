@@ -23,27 +23,80 @@ json read_json(const std::string& filename) {
 #ifdef _WIN32
   HANDLE file = CreateFileA(filename.c_str(), GENERIC_READ, FILE_SHARE_READ,
                             NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-  HANDLE mapping = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, NULL);
-  char* data = (char*)MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0);
-  size_t size = GetFileSize(file, NULL);
+  if (file == INVALID_HANDLE_VALUE) {
+    throw std::runtime_error("Cannot open file: " + filename);
+  }
 
-  json result = json::parse(data, data + size);
+  DWORD size = GetFileSize(file, NULL);
+  if (size == 0) {
+    CloseHandle(file);
+    throw std::runtime_error("File is empty: " + filename);
+  }
+
+  HANDLE mapping = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, NULL);
+  if (mapping == NULL) {
+    CloseHandle(file);
+    throw std::runtime_error("Cannot create file mapping: " + filename);
+  }
+
+  char* data = (char*)MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0);
+  if (data == NULL) {
+    CloseHandle(mapping);
+    CloseHandle(file);
+    throw std::runtime_error("Cannot map view of file: " + filename);
+  }
+
+  json result;
+  try {
+    result = json::parse(data, data + size);
+  } catch (...) {
+    UnmapViewOfFile(data);
+    CloseHandle(mapping);
+    CloseHandle(file);
+    throw;
+  }
 
   UnmapViewOfFile(data);
   CloseHandle(mapping);
   CloseHandle(file);
+  return result;
+
 #else
   int fd = open(filename.c_str(), O_RDONLY);
-  struct stat sb;
-  fstat(fd, &sb);
-  char* data = (char*)mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  if (fd == -1) {
+    throw std::runtime_error("Cannot open file: " + filename);
+  }
 
-  json result = json::parse(data, data + sb.st_size);
+  struct stat sb;
+  if (fstat(fd, &sb) == -1) {
+    close(fd);
+    throw std::runtime_error("Cannot stat file: " + filename);
+  }
+
+  if (sb.st_size == 0) {
+    close(fd);
+    throw std::runtime_error("File is empty: " + filename);
+  }
+
+  char* data = (char*)mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  if (data == MAP_FAILED) {
+    close(fd);
+    throw std::runtime_error("Cannot mmap file: " + filename);
+  }
+
+  json result;
+  try {
+    result = json::parse(data, data + sb.st_size);
+  } catch (...) {
+    munmap(data, sb.st_size);
+    close(fd);
+    throw;
+  }
 
   munmap(data, sb.st_size);
   close(fd);
-#endif
   return result;
+#endif
 }
 
 void extract_values_from_json(const json& j, std::vector<float>& values) {
