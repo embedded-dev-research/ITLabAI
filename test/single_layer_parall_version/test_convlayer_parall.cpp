@@ -111,6 +111,7 @@ TEST(convlayer_parall, parallel_depthwise_conv) {
   std::vector<float> kernelvec(32 * 1 * 3 * 3, 1.0f);
   Shape kernel_shape({32, 1, 3, 3});
   Tensor kernel = make_tensor(kernelvec, kernel_shape);
+  Tensor bias;
 
   size_t out_height = (56 + 2 * 1 - 1 * (3 - 1) - 1) / 1 + 1;
   size_t out_width = (56 + 2 * 1 - 1 * (3 - 1) - 1) / 1 + 1;
@@ -118,7 +119,7 @@ TEST(convlayer_parall, parallel_depthwise_conv) {
   std::vector<float> output_vec(batch_size * 32 * out_height * out_width, 0.0f);
   Tensor output = make_tensor(output_vec, output_shape);
 
-  ConvolutionalLayer layer(1, 1, 1, kernel, Tensor(), 32);
+  ConvolutionalLayer layer(1, 1, 1, kernel, bias, 32);
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 

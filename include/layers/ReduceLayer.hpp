@@ -1,9 +1,11 @@
 #pragma once
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 #include "layers/Layer.hpp"
 #include "layers/Tensor.hpp"
+#include "parallel/parallel.hpp"
 
 namespace it_lab_ai {
 
@@ -20,6 +22,8 @@ class ReduceLayer : public Layer {
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
+  void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
+           const RuntimeOptions& options) override;
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
   Tensor get_weights() override { return Tensor(); }
@@ -37,7 +41,8 @@ class ReduceLayer : public Layer {
 
   template <typename T>
   void compute(const Tensor& input, const Shape& output_shape,
-               const std::vector<int64_t>& axes, Tensor& output) const;
+               const std::vector<int64_t>& axes, Tensor& output,
+               ParBackend backend = ParBackend::kSeq) const;
 };
 
 }  // namespace it_lab_ai

@@ -1,6 +1,7 @@
 #include "layers/ReduceLayer.hpp"
 
 #include <algorithm>
+#include <functional>
 #include <limits>
 #include <numeric>
 
@@ -76,99 +77,121 @@ Shape ReduceLayer::calculate_output_shape(
 
 template <typename T>
 void ReduceLayer::compute(const Tensor& input, const Shape& output_shape,
-                          const std::vector<int64_t>& axes,
-                          Tensor& output) const {
+                          const std::vector<int64_t>& axes, Tensor& output,
+                          ParBackend backend) const {
   const auto& input_data = *input.as<T>();
-  std::vector<T> output_data(output_shape.count());
-  std::vector<size_t> counts(output_shape.count(), 0);
-
-  switch (op_) {
-    case Operation::kSum:
-    case Operation::kMean:
-      std::fill(output_data.begin(), output_data.end(), T(0));
-      break;
-    case Operation::kMult:
-      std::fill(output_data.begin(), output_data.end(), T(1));
-      break;
-    case Operation::kMax:
-      std::fill(output_data.begin(), output_data.end(),
-                std::numeric_limits<T>::lowest());
-      break;
-    case Operation::kMin:
-      std::fill(output_data.begin(), output_data.end(),
-                std::numeric_limits<T>::max());
-      break;
-  }
-
   const auto& input_shape = input.get_shape();
   const auto input_rank = static_cast<int64_t>(input_shape.dims());
 
-  std::vector<size_t> in_coords(input_rank, 0);
-  for (size_t in_idx = 0; in_idx < input_data.size(); ++in_idx) {
-    std::vector<size_t> out_coords;
-    if (keepdims_) {
-      out_coords.resize(input_rank, 0);
-      for (int64_t i = 0; i < input_rank; ++i) {
-        if (std::find(axes.begin(), axes.end(), i) == axes.end()) {
-          out_coords[i] = in_coords[i];
-        }
-      }
-    } else {
-      for (int64_t i = 0; i < input_rank; ++i) {
-        if (std::find(axes.begin(), axes.end(), i) == axes.end()) {
-          out_coords.push_back(in_coords[i]);
-        }
-      }
-    }
+  std::vector<T> output_data(output_shape.count());
 
-    size_t out_idx = 0;
-    size_t stride = 1;
-    for (size_t i = out_coords.size(); i-- > 0;) {
-      out_idx += out_coords[i] * stride;
-      stride *= output_shape[i];
-    }
+  parallel::Options options;
+  options.backend = backend;
 
-    switch (op_) {
-      case Operation::kSum:
-      case Operation::kMean:
-        output_data[out_idx] += input_data[in_idx];
-        counts[out_idx]++;
-        break;
-      case Operation::kMult:
-        output_data[out_idx] *= input_data[in_idx];
-        break;
-      case Operation::kMax:
-        if (input_data[in_idx] > output_data[out_idx]) {
-          output_data[out_idx] = input_data[in_idx];
+  parallel::parallel_for(
+      output_shape.count(),
+      [&](size_t out_idx) {
+        std::vector<size_t> out_coords(output_shape.dims(), 0);
+        size_t tmp = out_idx;
+        for (size_t i = output_shape.dims(); i-- > 0;) {
+          out_coords[i] = tmp % output_shape[i];
+          tmp /= output_shape[i];
         }
-        break;
-      case Operation::kMin:
-        if (input_data[in_idx] < output_data[out_idx]) {
-          output_data[out_idx] = input_data[in_idx];
+
+        T local_result;
+        size_t local_count = 0;
+
+        switch (op_) {
+          case Operation::kSum:
+          case Operation::kMean:
+            local_result = T(0);
+            break;
+          case Operation::kMult:
+            local_result = T(1);
+            break;
+          case Operation::kMax:
+            local_result = std::numeric_limits<T>::lowest();
+            break;
+          case Operation::kMin:
+            local_result = std::numeric_limits<T>::max();
+            break;
         }
-        break;
-    }
 
-    for (int64_t i = input_rank; i-- > 0;) {
-      ++in_coords[i];
-      if (in_coords[i] < input_shape[i]) break;
-      in_coords[i] = 0;
-    }
-  }
+        std::vector<size_t> in_coords(input_rank, 0);
 
-  if (op_ == Operation::kMean) {
-    for (size_t i = 0; i < output_data.size(); ++i) {
-      if (counts[i] != 0) {
-        output_data[i] /= static_cast<T>(counts[i]);
-      }
-    }
-  }
+        std::function<void(int64_t)> iterate_inputs = [&](int64_t axis_idx) {
+          if (axis_idx == input_rank) {
+            size_t in_idx = input_shape.get_index(in_coords);
+            const T& val = input_data[in_idx];
+
+            switch (op_) {
+              case Operation::kSum:
+              case Operation::kMean:
+                local_result += val;
+                local_count++;
+                break;
+              case Operation::kMult:
+                local_result *= val;
+                break;
+              case Operation::kMax:
+                if (local_count == 0 || val > local_result) {
+                  local_result = val;
+                }
+                local_count++;
+                break;
+              case Operation::kMin:
+                if (local_count == 0 || val < local_result) {
+                  local_result = val;
+                }
+                local_count++;
+                break;
+            }
+            return;
+          }
+
+          bool is_reduce_axis =
+              std::find(axes.begin(), axes.end(), axis_idx) != axes.end();
+
+          if (is_reduce_axis) {
+            for (size_t coord = 0; coord < input_shape[axis_idx]; ++coord) {
+              in_coords[axis_idx] = coord;
+              iterate_inputs(axis_idx + 1);
+            }
+          } else {
+            int64_t out_axis = 0;
+            for (int64_t i = 0; i < axis_idx; ++i) {
+              if (std::find(axes.begin(), axes.end(), i) == axes.end()) {
+                out_axis++;
+              }
+            }
+            in_coords[axis_idx] =
+                keepdims_ ? out_coords[axis_idx] : out_coords[out_axis];
+            iterate_inputs(axis_idx + 1);
+          }
+        };
+
+        iterate_inputs(0);
+
+        if (op_ == Operation::kMean && local_count > 0) {
+          output_data[out_idx] = local_result / static_cast<T>(local_count);
+        } else {
+          output_data[out_idx] = local_result;
+        }
+      },
+      options);
 
   output = make_tensor(output_data, output_shape);
 }
 
 void ReduceLayer::run(const std::vector<Tensor>& input,
                       std::vector<Tensor>& output) {
+  RuntimeOptions default_options;
+  run(input, output, default_options);
+}
+
+void ReduceLayer::run(const std::vector<Tensor>& input,
+                      std::vector<Tensor>& output,
+                      const RuntimeOptions& options) {
   if (input.size() != 1) {
     throw std::runtime_error("ReduceLayer: Input tensors not 1");
   }
@@ -184,12 +207,14 @@ void ReduceLayer::run(const std::vector<Tensor>& input,
   Shape output_shape =
       calculate_output_shape(input[0].get_shape(), axes_indices);
 
+  ParBackend backend = options.par_backend;
+
   switch (input[0].get_type()) {
     case Type::kFloat:
-      compute<float>(input[0], output_shape, axes_indices, output[0]);
+      compute<float>(input[0], output_shape, axes_indices, output[0], backend);
       break;
     case Type::kInt:
-      compute<int>(input[0], output_shape, axes_indices, output[0]);
+      compute<int>(input[0], output_shape, axes_indices, output[0], backend);
       break;
     default:
       throw std::runtime_error(
@@ -199,10 +224,10 @@ void ReduceLayer::run(const std::vector<Tensor>& input,
 }
 
 template void ReduceLayer::compute<float>(const Tensor&, const Shape&,
-                                          const std::vector<int64_t>&,
-                                          Tensor&) const;
+                                          const std::vector<int64_t>&, Tensor&,
+                                          ParBackend) const;
 template void ReduceLayer::compute<int>(const Tensor&, const Shape&,
-                                        const std::vector<int64_t>&,
-                                        Tensor&) const;
+                                        const std::vector<int64_t>&, Tensor&,
+                                        ParBackend) const;
 
 }  // namespace it_lab_ai

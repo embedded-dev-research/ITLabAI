@@ -17,6 +17,10 @@ class BinaryOpLayerOneDnn : public Layer {
   explicit BinaryOpLayerOneDnn(BinaryOpLayer::Operation op)
       : Layer(kBinaryOp), op_(op) {}
 
+  BinaryOpLayerOneDnn(const BinaryOpLayerOneDnn& c) : Layer(kBinaryOp) {
+    this->op_ = c.op_;
+  }
+
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 
