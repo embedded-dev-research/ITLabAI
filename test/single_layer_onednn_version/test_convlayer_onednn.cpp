@@ -111,8 +111,9 @@ TEST(convlayer_onednn, grouped_convolution) {
 
   Tensor input = make_tensor(input_data, Shape({1, 4, 6, 6}));
   Tensor kernel = make_tensor(kernel_data, Shape({8, 2, 3, 3}));
+  Tensor bias;
 
-  ConvLayerOneDnn layer(1, 0, 1, kernel, Tensor(), 2);
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 2);
 
   Tensor output;
   std::vector<Tensor> in{input};
@@ -130,8 +131,9 @@ TEST(convlayer_onednn, depthwise_convolution) {
 
   Tensor input = make_tensor(input_data, Shape({1, 3, 5, 5}));
   Tensor kernel = make_tensor(kernel_data, Shape({3, 1, 3, 3}));
+  Tensor bias;
 
-  ConvLayerOneDnn layer(1, 0, 1, kernel, Tensor(), 3, false);
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 3, false);
 
   Tensor output;
   std::vector<Tensor> in{input};
@@ -223,7 +225,8 @@ TEST(convlayer_onednn, special_conv_format) {
 
   Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));
   Tensor kernel = make_tensor(kernel_data, Shape({3, 3, 1, 2}));
-  ConvLayerOneDnn layer(1, 0, 1, kernel, Tensor(), 1, true);
+  Tensor bias;
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 1, true);
 
   Tensor output;
   std::vector<Tensor> in{input};
@@ -366,7 +369,8 @@ TEST(convlayer_onednn, group_validation_errors) {
   {
     std::vector<float> kernel_data(4 * 3 * 3 * 3, 1.0f);
     Tensor kernel = make_tensor(kernel_data, Shape({4, 3, 3, 3}));
-    ConvLayerOneDnn layer(1, 0, 1, kernel, Tensor(), 2);
+    Tensor bias;
+    ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 2);
 
     std::vector<float> input_data(1 * 5 * 6 * 6, 1.0f);
     Tensor input = make_tensor(input_data, Shape({1, 5, 6, 6}));
@@ -379,7 +383,8 @@ TEST(convlayer_onednn, group_validation_errors) {
   {
     std::vector<float> kernel_data(6 * 3 * 3 * 3, 1.0f);
     Tensor kernel = make_tensor(kernel_data, Shape({6, 3, 3, 3}));
-    ConvLayerOneDnn layer(1, 0, 1, kernel, Tensor(), 2);
+    Tensor bias;
+    ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 2);
 
     std::vector<float> input_data(1 * 4 * 6 * 6, 1.0f);
     Tensor input = make_tensor(input_data, Shape({1, 4, 6, 6}));
@@ -394,8 +399,9 @@ TEST(convlayer_onednn, group_validation_errors) {
 TEST(convlayer_onednn, depthwise_kernel_shape_validation) {
   std::vector<float> kernel_data(3 * 2 * 3 * 3, 1.0f);
   Tensor kernel = make_tensor(kernel_data, Shape({3, 2, 3, 3}));
+  Tensor bias;
 
-  ConvLayerOneDnn layer(1, 0, 1, kernel, Tensor(), 3, false);
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 3, false);
 
   std::vector<float> input_data(1 * 3 * 5 * 5, 1.0f);
   Tensor input = make_tensor(input_data, Shape({1, 3, 5, 5}));
@@ -484,8 +490,9 @@ TEST(convlayer_onednn, int_kernel_processing) {
                                   0, 1, 0,  0, 1, 0,  0, 1, 0};
 
   Tensor kernel = make_tensor(kernel_data, Shape({3, 3, 1, 2}));
+  Tensor bias;
 
-  ConvLayerOneDnn layer(1, 0, 1, kernel, Tensor(), 1, true);
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 1, true);
 
   std::vector<int> input_data(1 * 1 * 4 * 4, 1);
   Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));
@@ -504,8 +511,9 @@ TEST(convlayer_onednn, int_kernel_processing) {
 TEST(convlayer_onednn, special_conv_diagnostics) {
   std::vector<float> kernel_data(3 * 3 * 64 * 128, 1.0f);
   Tensor kernel = make_tensor(kernel_data, Shape({3, 3, 64, 128}));
+  Tensor bias;
 
-  ConvLayerOneDnn layer(2, 1, 2, kernel, Tensor(), 1, true);
+  ConvLayerOneDnn layer(2, 1, 2, kernel, bias, 1, true);
 
   std::vector<float> input_data(1 * 64 * 8 * 8, 1.0f);
   Tensor input = make_tensor(input_data, Shape({1, 64, 8, 8}));
@@ -525,8 +533,9 @@ TEST(convlayer_onednn, special_conv_diagnostics) {
 TEST(convlayer_onednn, int_input_processing_special_conv) {
   std::vector<int> kernel_data(3 * 3 * 1 * 2, 1);
   Tensor kernel = make_tensor(kernel_data, Shape({3, 3, 1, 2}));
+  Tensor bias;
 
-  ConvLayerOneDnn layer(1, 0, 1, kernel, Tensor(), 1, true);
+  ConvLayerOneDnn layer(1, 0, 1, kernel, bias, 1, true);
 
   std::vector<int> input_data(1 * 1 * 4 * 4, 2);
   Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));

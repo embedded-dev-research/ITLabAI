@@ -5,14 +5,109 @@
 #include "graph/graph.hpp"
 #include "graph_transformations/graph_transformations.hpp"
 #include "gtest/gtest.h"
+#include "layers/BatchNormalizationLayer.hpp"
+#include "layers/BinaryOpLayer.hpp"
 #include "layers/ConcatLayer.hpp"
+#include "layers/ConvLayer.hpp"
+#include "layers/DropOutLayer.hpp"
 #include "layers/EWLayer.hpp"
 #include "layers/FCLayer.hpp"
+#include "layers/FlattenLayer.hpp"
 #include "layers/InputLayer.hpp"
+#include "layers/MatmulLayer.hpp"
+#include "layers/OutputLayer.hpp"
+#include "layers/PoolingLayer.hpp"
+#include "layers/ReduceLayer.hpp"
+#include "layers/ReshapeLayer.hpp"
+#include "layers/SoftmaxLayer.hpp"
 #include "layers/SplitLayer.hpp"
+#include "layers/Tensor.hpp"
+#include "layers/TransposeLayer.hpp"
+#include "layers_oneDNN/BinaryOpLayer.hpp"
+#include "layers_oneDNN/ConvLayer.hpp"
+#include "layers_oneDNN/EWLayer.hpp"
+#include "layers_oneDNN/PoolingLayer.hpp"
+#include "layers_oneDNN/ReduceLayer.hpp"
 #include "perf/benchmarking.hpp"
 
 using namespace it_lab_ai;
+
+TEST(graph, test_deep_copy) {
+  Graph graph;
+  Graph graph2;
+  Graph graph_c;
+  Graph graph2_c;
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  auto lay1 = std::make_shared<InputLayer>();
+  Shape sh = {2, 2};
+  auto lay2 = std::make_shared<PoolingLayer>(sh, "average");
+  auto lay2_alt = std::make_shared<PoolingLayerOneDnn>(sh);
+  auto lay3 = std::make_shared<EWLayer>();
+  auto lay3_alt = std::make_shared<EwLayerOneDnn>();
+  auto lay4 = std::make_shared<ConvolutionalLayer>();
+  auto lay4_alt = std::make_shared<ConvLayerOneDnn>();
+  auto lay5 = std::make_shared<FCLayer>();
+  auto lay6 = std::make_shared<FlattenLayer>();
+  auto lay7 = std::make_shared<ConcatLayer>();
+  auto lay8 = std::make_shared<DropOutLayer>();
+  auto lay9 = std::make_shared<SplitLayer>(0, 2);
+  auto lay10 = std::make_shared<BinaryOpLayer>();
+  auto lay10_alt = std::make_shared<BinaryOpLayerOneDnn>();
+  auto lay11 = std::make_shared<TransposeLayer>();
+  auto lay12 = std::make_shared<MatmulLayer>();
+  auto lay13 = std::make_shared<ReshapeLayer>();
+  auto lay14 = std::make_shared<SoftmaxLayer>();
+  auto lay15 = std::make_shared<ReduceLayer>();
+  auto lay15_alt = std::make_shared<ReduceLayerOneDnn>();
+  Tensor scale = make_tensor<float>({1.0f}, {1});
+  Tensor bias = make_tensor<float>({0.0f}, {1});
+  Tensor mean = make_tensor<float>({0.0f}, {1});
+  Tensor var = make_tensor<float>({1.0f}, {1});
+  auto lay16 =
+      std::make_shared<BatchNormalizationLayer>(scale, bias, mean, var);
+  auto lay17 = std::make_shared<OutputLayer>();
+  graph.setInput(lay1, input);
+  graph2.setInput(lay1, input);
+  graph.makeConnection(lay1, lay2);
+  graph2.makeConnection(lay1, lay2_alt);
+  graph.makeConnection(lay1, lay3);
+  graph2.makeConnection(lay1, lay3_alt);
+  graph.makeConnection(lay2, lay4);
+  graph2.makeConnection(lay2_alt, lay4_alt);
+  graph.makeConnection(lay2, lay5);
+  graph2.makeConnection(lay2_alt, lay5);
+  graph.makeConnection(lay3, lay6);
+  graph2.makeConnection(lay3_alt, lay6);
+  graph.makeConnection(lay3, lay7);
+  graph2.makeConnection(lay3_alt, lay7);
+  graph.makeConnection(lay4, lay8);
+  graph2.makeConnection(lay4_alt, lay8);
+  graph.makeConnection(lay4, lay9);
+  graph2.makeConnection(lay4_alt, lay9);
+  graph.makeConnection(lay5, lay10);
+  graph2.makeConnection(lay5, lay10_alt);
+  graph.makeConnection(lay5, lay11);
+  graph2.makeConnection(lay5, lay11);
+  graph.makeConnection(lay6, lay12);
+  graph2.makeConnection(lay6, lay12);
+  graph.makeConnection(lay6, lay13);
+  graph2.makeConnection(lay6, lay13);
+  graph.makeConnection(lay7, lay14);
+  graph2.makeConnection(lay7, lay14);
+  graph.makeConnection(lay7, lay15);
+  graph2.makeConnection(lay7, lay15_alt);
+  graph.makeConnection(lay8, lay16);
+  graph2.makeConnection(lay8, lay16);
+  graph.makeConnection(lay8, lay17);
+  graph2.makeConnection(lay8, lay17);
+  graph.setOutput(lay17, output);
+  graph2.setOutput(lay17, output);
+  RuntimeOptions opt;
+  opt.backend = Backend::kOneDnn;
+  ASSERT_NO_THROW(graph.clone(graph_c, output));
+  ASSERT_NO_THROW(graph2.clone(graph2_c, output, opt));
+}
 
 TEST(graph, check_connection) {
   const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};

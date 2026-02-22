@@ -21,6 +21,12 @@ class EwLayerOneDnn : public Layer {
         alpha_(alpha),
         beta_(beta) {}
 
+  EwLayerOneDnn(const EwLayerOneDnn& c) : Layer(kElementWise) {
+    this->func_ = c.func_;
+    this->alpha_ = c.alpha_;
+    this->beta_ = c.beta_;
+  }
+
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
   static bool is_function_supported(const std::string& function);
