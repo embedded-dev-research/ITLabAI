@@ -30,31 +30,13 @@ json read_json(const std::string& filename) {
   DWORD size = GetFileSize(file, NULL);
   if (size == 0) {
     CloseHandle(file);
-    throw std::runtime_error("File is empty: " + filename);
+    return json{};
   }
 
   HANDLE mapping = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, NULL);
-  if (mapping == NULL) {
-    CloseHandle(file);
-    throw std::runtime_error("Cannot create file mapping: " + filename);
-  }
-
   char* data = (char*)MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0);
-  if (data == NULL) {
-    CloseHandle(mapping);
-    CloseHandle(file);
-    throw std::runtime_error("Cannot map view of file: " + filename);
-  }
 
-  json result;
-  try {
-    result = json::parse(data, data + size);
-  } catch (...) {
-    UnmapViewOfFile(data);
-    CloseHandle(mapping);
-    CloseHandle(file);
-    throw;
-  }
+  json result = json::parse(data, data + size);
 
   UnmapViewOfFile(data);
   CloseHandle(mapping);
@@ -68,30 +50,15 @@ json read_json(const std::string& filename) {
   }
 
   struct stat sb;
-  if (fstat(fd, &sb) == -1) {
-    close(fd);
-    throw std::runtime_error("Cannot stat file: " + filename);
-  }
+  fstat(fd, &sb);
 
   if (sb.st_size == 0) {
     close(fd);
-    throw std::runtime_error("File is empty: " + filename);
+    return json{};
   }
 
   char* data = (char*)mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (data == MAP_FAILED) {
-    close(fd);
-    throw std::runtime_error("Cannot mmap file: " + filename);
-  }
-
-  json result;
-  try {
-    result = json::parse(data, data + sb.st_size);
-  } catch (...) {
-    munmap(data, sb.st_size);
-    close(fd);
-    throw;
-  }
+  json result = json::parse(data, data + sb.st_size);
 
   munmap(data, sb.st_size);
   close(fd);
