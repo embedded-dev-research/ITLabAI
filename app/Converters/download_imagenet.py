@@ -5,7 +5,7 @@ from PIL import Image
 
 
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-output_dir = os.path.join(base_dir, 'docs', 'imagenet-paste', 'validation')
+output_dir = os.path.join(base_dir, 'docs', 'ImageNet', 'test')  # Изменено здесь
 os.makedirs(output_dir, exist_ok=True)
 
 print("Загрузка датасета helenqu/ImageNet-Paste...")
