@@ -13,6 +13,7 @@ using namespace it_lab_ai;
 int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
   RuntimeOptions options;
+  int numPhoto = 1000;
 
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
@@ -48,6 +49,18 @@ int main(int argc, char* argv[]) {
       }
     } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
       options.threads = std::stoi(argv[++i]);
+    } else {
+      try {
+        numPhoto = std::stoi(argv[i]);
+
+        if (numPhoto < 1 || numPhoto > 50000) {
+          std::cerr << "Warning: numPhoto should be between 1 and 10000 "
+                    << "Using value: " << numPhoto << std::endl;
+        }
+      } catch (const std::exception& e) {
+        std::cerr << "Error: Invalid numeric argument: " << argv[i]
+                  << ". Using default value: 1000" << e.what()<<std::endl;
+      }
     }
   }
 
@@ -98,7 +111,7 @@ int main(int argc, char* argv[]) {
           for (int j = 0; j < 28; ++j) {
             size_t a = ind;
             for (size_t n = 0; n < name; n++) a += counts[n] + 1;
-            res[(a) * 28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
+            res[(a)*28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
           }
         }
       }
@@ -153,33 +166,45 @@ int main(int argc, char* argv[]) {
             entry.path().extension() == ".jpg" ||
             entry.path().extension() == ".jpeg") {
           counts[class_id]++;
-          total_images++;
         }
       }
     }
   }
 
-  if (total_images == 0) {
-    std::cerr << "No images found in dataset path: " << dataset_path << '\n';
-    return 1;
-  }
+  size_t images_per_class_base = numPhoto / 1000;
+  size_t remaining = numPhoto % 1000;
 
   int channels = input_shape[1];
   int height = input_shape[2];
   int width = input_shape[3];
   size_t image_size = channels * height * width;
 
-  all_image_data.resize(total_images * image_size);
+  all_image_data.reserve(numPhoto * image_size);
+  image_paths.reserve(numPhoto);
+  true_labels.reserve(numPhoto);
 
   size_t current_index = 0;
+  total_images = 0;
+
   for (int class_id = 0; class_id < 1000; ++class_id) {
+    size_t need_from_class = images_per_class_base;
+    if (remaining > 0) {
+      need_from_class++;
+      remaining--;
+    }
+
+    if (need_from_class == 0) continue;
+
     std::ostringstream folder_oss;
     folder_oss << std::setw(5) << std::setfill('0') << class_id;
     std::string class_folder_path = dataset_path + "/" + folder_oss.str();
 
     if (!fs::exists(class_folder_path)) continue;
 
+    size_t taken = 0;
     for (const auto& entry : fs::directory_iterator(class_folder_path)) {
+      if (taken >= need_from_class) break;
+
       if (entry.path().extension() == ".png" ||
           entry.path().extension() == ".jpg" ||
           entry.path().extension() == ".jpeg") {
@@ -194,24 +219,37 @@ int main(int argc, char* argv[]) {
             prepare_image(image, input_shape, model_name);
         const std::vector<float>& image_data = *prepared_tensor.as<float>();
 
-        std::copy(image_data.begin(), image_data.end(),
-                  all_image_data.begin() + current_index * image_size);
+        all_image_data.insert(all_image_data.end(), image_data.begin(),
+                              image_data.end());
 
         image_paths.push_back(entry.path().string());
         true_labels.push_back(class_id);
-        current_index++;
+        taken++;
+        total_images++;
       }
+    }
+
+    if (taken < need_from_class) {
+      std::cout << "Warning: Class " << class_id << " has only " << taken
+                << " images (needed " << need_from_class << ")" << std::endl;
     }
   }
 
+  if (total_images != numPhoto) {
+    std::cout << "Warning: Requested " << numPhoto << " images but loaded "
+              << total_images << " due to insufficient data" << std::endl;
+    numPhoto = total_images;
+  }
+
   it_lab_ai::Shape input_shape_imagenet(
-      {total_images, static_cast<size_t>(channels), static_cast<size_t>(height),
-       static_cast<size_t>(width)});
+      {static_cast<size_t>(numPhoto), static_cast<size_t>(channels),
+       static_cast<size_t>(height), static_cast<size_t>(width)});
   it_lab_ai::Tensor input =
       it_lab_ai::make_tensor(all_image_data, input_shape_imagenet);
 
   size_t output_classes = 1000;
-  it_lab_ai::Shape output_shape({total_images, output_classes});
+  it_lab_ai::Shape output_shape(
+      {static_cast<size_t>(numPhoto), output_classes});
   it_lab_ai::Tensor output =
       it_lab_ai::Tensor(output_shape, it_lab_ai::Type::kFloat);
 
@@ -219,10 +257,11 @@ int main(int argc, char* argv[]) {
   build_graph(graph, input, output, json_path, options, false);
   graph.inference(options);
   print_time_stats(graph);
+
   std::vector<std::vector<float>> processed_outputs;
   const std::vector<float>& raw_output = *output.as<float>();
 
-  for (size_t i = 0; i < total_images; ++i) {
+  for (size_t i = 0; i < static_cast<size_t>(numPhoto); ++i) {
     std::vector<float> single_output(
         raw_output.begin() + i * output_classes,
         raw_output.begin() + (i + 1) * output_classes);
@@ -262,14 +301,14 @@ int main(int argc, char* argv[]) {
   }
 
   double final_accuracy_top1 =
-      (static_cast<double>(correct_predictions_top1) / total_images) * 100;
+      (static_cast<double>(correct_predictions_top1) / numPhoto) * 100;
   double final_accuracy_top5 =
-      (static_cast<double>(correct_predictions_top5) / total_images) * 100;
+      (static_cast<double>(correct_predictions_top5) / numPhoto) * 100;
 
   std::cout << "\nFinal Results:" << '\n';
   std::cout << "Model: " << model_name << '\n';
   std::cout << "Dataset: " << dataset_path << '\n';
-  std::cout << "Total images: " << total_images << '\n';
+  std::cout << "Total images: " << numPhoto << '\n';
   std::cout << "Correct predictions (Top-1): " << correct_predictions_top1
             << '\n';
   std::cout << "Correct predictions (Top-5): " << correct_predictions_top5
