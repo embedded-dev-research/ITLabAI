@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
         }
       } catch (const std::exception& e) {
         std::cerr << "Error: Invalid numeric argument: " << argv[i]
-                  << ". Using default value: 1000" << e.what()<<std::endl;
+                  << ". Using default value: 1000" << e.what() << std::endl;
       }
     }
   }
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
           for (int j = 0; j < 28; ++j) {
             size_t a = ind;
             for (size_t n = 0; n < name; n++) a += counts[n] + 1;
-            res[(a)*28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
+            res[(a) * 28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
           }
         }
       }
