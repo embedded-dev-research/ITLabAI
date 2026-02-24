@@ -13,7 +13,7 @@ using namespace it_lab_ai;
 int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
   RuntimeOptions options;
-  int numPhoto = 1000;
+  size_t numPhoto = 1000;
 
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
@@ -183,7 +183,6 @@ int main(int argc, char* argv[]) {
   image_paths.reserve(numPhoto);
   true_labels.reserve(numPhoto);
 
-  size_t current_index = 0;
   total_images = 0;
 
   for (int class_id = 0; class_id < 1000; ++class_id) {
