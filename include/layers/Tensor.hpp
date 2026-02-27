@@ -170,7 +170,7 @@ std::vector<T>* Tensor::as() {
 }
 
 template <typename T>
-const std::vector<T>* Tensor::as() const {
+[[nodiscard]] const std::vector<T>* Tensor::as() const {
   if (GetTypeEnum<T>() != type_) {
     throw std::invalid_argument("Template type doesn't fit this Tensor");
   }
