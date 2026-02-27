@@ -1,4 +1,5 @@
 #include "layers_fused/ConvRelu.hpp"
+
 #include "layers/ConvLayer.hpp"
 
 namespace it_lab_ai {
