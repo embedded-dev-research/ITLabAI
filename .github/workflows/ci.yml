@@ -333,6 +333,7 @@ jobs:
             parser: parser_onnx.py
             model_file: GoogLeNet.onnx
             model_path: docs/models/GoogLeNet.onnx
+            model_url: ''
             extra_args: "--onednn 10000"
           - model: densenet
             parser: parser_onnx.py
@@ -372,7 +373,8 @@ jobs:
         sudo apt-get install -y libgtk-3-0 libtbb12 libjpeg-dev libpng-dev libtiff-dev libopenjp2-7 libdnnl3
         sudo ldconfig
 
-    - name: Download model
+    - name: Download model (if URL provided)
+      if: matrix.model_url != ''
       run: |
         mkdir -p docs/models
         echo "Скачивание ${{ matrix.model_file }} из ${{ matrix.model_url }}"
