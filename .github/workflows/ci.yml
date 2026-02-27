@@ -401,9 +401,20 @@ jobs:
         echo "Сгенерированные JSON файлы:"
         ls -la docs/jsons/
 
+    - name: Cache ImageNet-Paste dataset
+      id: cache-imagenet
+      uses: actions/cache@v4
+      with:
+        path: docs/ImageNet
+        key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
+     restore-keys: |
+       imagenet-paste-v1-
+       imagenet-paste-
+
     - name: Download ImageNet-Paste dataset
+      if: steps.cache-imagenet.outputs.cache-hit != 'true'
       run: |
-        mkdir -p docs/ImageNet/test  # Изменено с imagenet-paste/validation на ImageNet/test
+        mkdir -p docs/ImageNet/test
         cd app/Converters
         python download_imagenet.py
         cd ../..
