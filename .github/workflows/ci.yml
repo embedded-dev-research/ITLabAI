@@ -229,7 +229,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: embedded-dev-research/ITLabAI
         
-  evaluate-model:
+  evaluate-model-alexnet:
     runs-on: ubuntu-latest
     needs: [build-linux]
     permissions:
@@ -317,5 +317,160 @@ jobs:
           echo "No changes to commit"
         else
           git commit -m "[CI] Update accuracy: $(cat accuracy_value.txt)"
+          git push origin master
+        fi
+
+  evaluate-models-onnx:
+    runs-on: ubuntu-latest
+    needs: [build-linux]
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        model: [googlenet, densenet, resnet, yolo]
+        include:
+          - model: googlenet
+            parser: parser_onnx.py
+            model_file: GoogLeNet.onnx
+            model_path: docs/models/GoogLeNet.onnx
+            model_url: ''
+            extra_args: "--onednn 10000"
+          - model: densenet
+            parser: parser_onnx.py
+            model_file: densenet121_Opset16.onnx
+            model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/densenet121_Opset16_timm/densenet121_Opset16.onnx?download=
+            extra_args: "--onednn 10000"
+          - model: resnet
+            parser: parser_onnx.py
+            model_file: resnest101e_Opset16.onnx
+            model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/resnest101e_Opset16_timm/resnest101e_Opset16.onnx?download=
+            extra_args: "--onednn 10000"
+          - model: yolo
+            parser: parser_onnx.py
+            model_file: yolo11x-cls.pt
+            model_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11x-cls.pt
+            extra_args: "--onednn 10000"
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+  
+    - name: Download binary and libs
+      uses: actions/download-artifact@v4
+      with:
+        name: mnist-RELEASE
+        path: build/
+      
+    - name: Set binary path
+      id: set_eval_binary
+      run: |
+        echo "EVAL_BINARY=build/bin/ACC" >> $GITHUB_OUTPUT
+      
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-0 libtbb12 libjpeg-dev libpng-dev libtiff-dev libopenjp2-7 libdnnl3
+        sudo ldconfig
+
+    - name: Download model (if URL provided)
+      if: matrix.model_url != ''
+      run: |
+        mkdir -p docs/models
+        echo "Скачивание ${{ matrix.model_file }} из ${{ matrix.model_url }}"
+        wget -O docs/models/${{ matrix.model_file }} ${{ matrix.model_url }}
+        ls -la docs/models/
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Python dependencies from requirements.txt
+      run: |
+        cd app/Converters
+        pip install -r requirements.txt
+        cd ../..
+
+    - name: Generate model JSON
+      run: |
+        mkdir -p docs/jsons
+        cd app/Converters
+        python ${{ matrix.parser }} ${{ matrix.model }}
+        cd ../..
+        echo "Сгенерированные JSON файлы:"
+        ls -la docs/jsons/
+
+    - name: Download ImageNet-Paste dataset
+      run: |
+        mkdir -p docs/ImageNet/test  # Изменено с imagenet-paste/validation на ImageNet/test
+        cd app/Converters
+        python download_imagenet.py
+        cd ../..
+        echo "Всего изображений: $(ls docs/ImageNet/test/*.jpg 2>/dev/null | wc -l)"
+
+    - name: Prepare environment
+      run: |
+        chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
+        echo "LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
+
+    - name: Run evaluation
+      run: |
+        DATASET_PATH="docs/ImageNet/test"  # Изменено с imagenet-paste/validation на ImageNet/test
+    
+        echo "Запуск оценки для модели ${{ matrix.model }}"
+        echo "Команда: ${{ steps.set_eval_binary.outputs.EVAL_BINARY }} --model ${{ matrix.model }} ${{ matrix.extra_args }}"
+    
+        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" \
+        --model ${{ matrix.model }} \
+        ${{ matrix.extra_args }} > accuracy_${{ matrix.model }}.txt 2>&1
+      
+        if [ $? -ne 0 ]; then
+          echo "Ошибка при оценке модели ${{ matrix.model }}"
+          cat accuracy_${{ matrix.model }}.txt
+          exit 1
+        fi
+      
+        echo "Результат оценки:"
+        cat accuracy_${{ matrix.model }}.txt
+
+    - name: Extract accuracy value
+      run: |
+        ACCURACY=$(grep -oE '[0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | head -1 || echo "0%")
+        echo "$ACCURACY" > accuracy_value_${{ matrix.model }}.txt
+        echo "Accuracy for ${{ matrix.model }}: $ACCURACY"
+
+    - name: Upload accuracy artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: accuracy-${{ matrix.model }}
+        path: |
+          accuracy_${{ matrix.model }}.txt
+          accuracy_value_${{ matrix.model }}.txt
+
+    - name: Update README for model (master only)
+      if: github.ref == 'refs/heads/master'
+      run: |
+        ACCURACY=$(cat accuracy_value_${{ matrix.model }}.txt | sed 's/%//g')
+        DATE=$(date '+%Y-%m-%d')
+      
+        if grep -q "<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->" README.md; then
+          sed -i "s/<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->.*<!--END_ACCURACY_${{ matrix.model }}-->/<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY_${{ matrix.model }}-->/" README.md
+          echo "Обновлена точность для ${{ matrix.model }} в README"
+        else
+          echo "Плейсхолдер для ${{ matrix.model }} не найден в README, добавляем в конец"
+          echo -e "\n## ${{ matrix.model }} Accuracy\n<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY_${{ matrix.model }}-->\n" >> README.md
+        fi
+
+    - name: Commit and push changes (master only)
+      if: github.ref == 'refs/heads/master'
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add README.md
+        if git diff-index --quiet HEAD --; then
+          echo "No changes to commit"
+        else
+          git commit -m "[CI] Update accuracy for ${{ matrix.model }}: $(cat accuracy_value_${{ matrix.model }}.txt)"
           git push origin master
         fi
