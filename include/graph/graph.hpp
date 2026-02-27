@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <chrono>
+#include <iomanip>
 #include <memory>
 #include <queue>
 #include <stdexcept>
@@ -14,6 +15,31 @@
 #include "runtime_options.hpp"
 
 namespace it_lab_ai {
+static std::unordered_map<LayerType, std::string> label_map = {
+    {kInput, "Input"},
+    {kPooling, "Pooling"},
+    {kElementWise, "Element-wise"},
+    {kConvolution, "Convolution"},
+    {kFullyConnected, "Dense"},
+    {kFlatten, "Flatten"},
+    {kConcat, "Concat"},
+    {kDropout, "Dropout"},
+    {kSplit, "Split"},
+    {kBinaryOp, "BinaryOp"},
+    {kTranspose, "Transpose"},
+    {kMatmul, "MatMul"},
+    {kReshape, "Reshape"},
+    {kSoftmax, "Softmax"},
+    {kReduce, "Reduce"},
+    {kBatchNormalization, "Normalization"}};
+
+struct LayerTimeStats {
+  std::string layer_name;
+  double total_time = 0.0;
+  int call_count = 0;
+  double min_time = std::numeric_limits<double>::max();
+  double max_time = 0.0;
+};
 
 struct BranchState {
   int ind_layer;
@@ -27,6 +53,7 @@ std::shared_ptr<Layer> layer_based_shared_copy(
     const std::shared_ptr<Layer>& layer, const RuntimeOptions& options);
 
 class Graph {
+  std::map<std::string, LayerTimeStats> layer_stats_;
   int BiggestSize_;
   int V_;  // amount of ids
   std::vector<std::shared_ptr<Layer>> layers_;
@@ -383,8 +410,27 @@ class Graph {
       auto end = std::chrono::high_resolution_clock::now();
       auto elapsed =
           std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-      time_.push_back(static_cast<int>(elapsed.count()));
-      time_layer_.push_back(layers_[current_layer]->getName());
+      int elapsed_ms = static_cast<int>(elapsed.count());
+      time_.push_back(elapsed_ms);
+
+      LayerType layer_type = layers_[current_layer]->getName();
+      time_layer_.push_back(layer_type);
+
+      auto it = label_map.find(layer_type);
+      std::string layer_name_str =
+          (it != label_map.end()) ? it->second : "Unknown";
+
+      auto& stats = layer_stats_[layer_name_str];
+      stats.total_time += elapsed_ms;
+      stats.call_count++;
+
+      if (stats.call_count == 1) {
+        stats.min_time = elapsed_ms;
+        stats.max_time = elapsed_ms;
+      } else {
+        if (elapsed_ms < stats.min_time) stats.min_time = elapsed_ms;
+        if (elapsed_ms > stats.max_time) stats.max_time = elapsed_ms;
+      }
 #endif
     }
   }
@@ -408,25 +454,6 @@ class Graph {
 #ifdef ENABLE_STATISTIC_TIME
   std::vector<std::string> getTimeInfo() {
     std::vector<std::string> res;
-
-    std::unordered_map<LayerType, std::string> label_map = {
-        {kInput, "Input"},
-        {kPooling, "Pooling"},
-        {kElementWise, "Element-wise"},
-        {kConvolution, "Convolution"},
-        {kFullyConnected, "Dense"},
-        {kFlatten, "Flatten"},
-        {kConcat, "Concat"},
-        {kDropout, "Dropout"},
-        {kSplit, "Split"},
-        {kBinaryOp, "BinaryOp"},
-        {kTranspose, "Transpose"},
-        {kMatmul, "MatMul"},
-        {kReshape, "Reshape"},
-        {kSoftmax, "Softmax"},
-        {kReduce, "Reduce"},
-        {kBatchNormalization, "Normalization"}};
-
     for (size_t i = 0; i < time_.size(); i++) {
       auto it = label_map.find(time_layer_[i]);
       std::string layer_name = (it != label_map.end()) ? it->second : "Unknown";
@@ -459,6 +486,23 @@ class Graph {
     }
 
     return result;
+  }
+
+  void printLayerStats() {
+    std::cout << "\n========== LAYER PERFORMANCE STATISTICS ==========\n";
+    std::cout << std::left << std::setw(20) << "Layer Type" << std::right
+              << std::setw(15) << "Total (ms)" << std::setw(12) << "Calls"
+              << std::setw(15) << "Avg (ms)" << std::setw(15) << "Min (ms)"
+              << std::setw(15) << "Max (ms)" << '\n';
+
+    for (const auto& [name, stats] : layer_stats_) {
+      double avg = stats.total_time / stats.call_count;
+      std::cout << std::left << std::setw(20) << name << std::right
+                << std::fixed << std::setprecision(3) << std::setw(15)
+                << stats.total_time << std::setw(12) << stats.call_count
+                << std::setw(15) << avg << std::setw(15) << stats.min_time
+                << std::setw(15) << stats.max_time << '\n';
+    }
   }
 
   [[nodiscard]] std::vector<int> getTraversalOrder() const {
