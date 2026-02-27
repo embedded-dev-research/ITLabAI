@@ -83,32 +83,36 @@ class Graph {
     split_distribution_ = std::move(split_dist);
   }
 
-  [[nodiscard]] int getVertexValue(size_t layerID) const {
-    if (layerID >= arrayV_.size()) {
-      throw std::invalid_argument("ArrayV does not contain this ID.");
-    }
-    return arrayV_[layerID];
-  }
-
-  [[nodiscard]] int getEdgeValue(size_t pos) const {
-    if (pos >= arrayE_.size()) {
-      throw std::invalid_argument("ArrayE does not contain this.");
-    }
-    return arrayE_[pos];
-  }
-
   [[nodiscard]] size_t getInputsSize(size_t layerID) const {
     if (layerID >= in_edges_.size()) {
-      throw std::invalid_argument("Input edges array do not contain this ID.");
+      throw std::invalid_argument(
+          "Input edges array does not contain this ID.");
     }
     return in_edges_[layerID].size();
   }
 
   [[nodiscard]] std::vector<int> getInLayers(size_t layerID) const {
     if (layerID >= in_edges_.size()) {
-      throw std::invalid_argument("Input edges array do not contain this ID.");
+      throw std::invalid_argument(
+          "Input edges array does not contain this ID.");
     }
     return in_edges_[layerID];
+  }
+
+  [[nodiscard]] size_t getOutputsSize(size_t layerID) const {
+    if (layerID >= layers_.size()) {
+      throw std::invalid_argument("Layers array does not contain this ID.");
+    }
+    return arrayV_[layerID + 1] - arrayV_[layerID];
+  }
+
+  [[nodiscard]] std::vector<int> getOutLayers(size_t layerID) const {
+    if (layerID >= layers_.size()) {
+      throw std::invalid_argument(
+          "Output edges array does not contain this ID.");
+    }
+    return std::vector<int>(arrayE_.begin() + arrayV_[layerID],
+                            arrayE_.begin() + arrayV_[layerID + 1]);
   }
 
   [[nodiscard]] int getLayersCount() const { return V_; }
@@ -237,8 +241,9 @@ class Graph {
     }
     // remove outputs
     int amount_connected = arrayV_[id + 1] - arrayV_[id];
+    std::vector<int> array_e_copy = arrayE_;
     for (int i = 0; i < amount_connected; i++) {
-      removeConnection(id, arrayE_[arrayV_[id] + i]);
+      removeConnection(id, array_e_copy[arrayV_[id] + i]);
     }
     // remove vertex
     in_edges_.erase(in_edges_.begin() + id);
