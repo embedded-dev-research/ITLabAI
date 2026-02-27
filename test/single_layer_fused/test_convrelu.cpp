@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "layers_fused/ConvRelu.hpp"
 #include "layers/EWLayer.hpp"
+#include "layers_fused/ConvRelu.hpp"
 
 using namespace it_lab_ai;
 
