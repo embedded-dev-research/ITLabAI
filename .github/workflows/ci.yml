@@ -410,12 +410,14 @@ jobs:
 
     - name: Download ImageNet-Paste dataset
       if: steps.cache-imagenet.outputs.cache-hit != 'true'
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         mkdir -p docs/ImageNet/test
         cd app/Converters
+        # Токен автоматически используется huggingface-hub библиотекой
         python download_imagenet.py
         cd ../..
-        echo "Всего изображений: $(ls docs/ImageNet/test/*.jpg 2>/dev/null | wc -l)"
 
     - name: Prepare environment
       run: |
