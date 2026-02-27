@@ -402,12 +402,11 @@ jobs:
 
   - name: Download ImageNet-Paste dataset
     run: |
-     mkdir -p docs/ImageNet/test  # Изменено с imagenet-paste/validation на ImageNet/test
-     cd app/Converters
-     python download_imagenet.py
-     cd ../..
-     echo "📊 Статистика датасета:"
-     echo "Всего изображений: $(ls docs/ImageNet/test/*.jpg 2>/dev/null | wc -l)"
+      mkdir -p docs/ImageNet/test  # Изменено с imagenet-paste/validation на ImageNet/test
+      cd app/Converters
+      python download_imagenet.py
+      cd ../..
+      echo "Всего изображений: $(ls docs/ImageNet/test/*.jpg 2>/dev/null | wc -l)"
 
   - name: Prepare environment
     run: |
@@ -416,23 +415,23 @@ jobs:
       
   - name: Run evaluation
     run: |
-     DATASET_PATH="docs/ImageNet/test"  # Изменено с imagenet-paste/validation на ImageNet/test
+      DATASET_PATH="docs/ImageNet/test"  # Изменено с imagenet-paste/validation на ImageNet/test
     
-     echo "Запуск оценки для модели ${{ matrix.model }}"
-     echo "Команда: ${{ steps.set_eval_binary.outputs.EVAL_BINARY }} --model ${{ matrix.model }} ${{ matrix.extra_args }}"
+      echo "Запуск оценки для модели ${{ matrix.model }}"
+      echo "Команда: ${{ steps.set_eval_binary.outputs.EVAL_BINARY }} --model ${{ matrix.model }} ${{ matrix.extra_args }}"
     
-     "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" \
-       --model ${{ matrix.model }} \
-       ${{ matrix.extra_args }} > accuracy_${{ matrix.model }}.txt 2>&1
+      "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" \
+      --model ${{ matrix.model }} \
+      ${{ matrix.extra_args }} > accuracy_${{ matrix.model }}.txt 2>&1
       
-       if [ $? -ne 0 ]; then
+      if [ $? -ne 0 ]; then
         echo "Ошибка при оценке модели ${{ matrix.model }}"
         cat accuracy_${{ matrix.model }}.txt
         exit 1
-       fi
+      fi
       
-       echo "Результат оценки:"
-       cat accuracy_${{ matrix.model }}.txt
+      echo "Результат оценки:"
+      cat accuracy_${{ matrix.model }}.txt
 
   - name: Extract accuracy value
     run: |
