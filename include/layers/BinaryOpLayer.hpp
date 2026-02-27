@@ -19,6 +19,8 @@ class BinaryOpLayer : public Layer {
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
+  void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
+           const RuntimeOptions& options) override;
   static bool is_scalar_tensor(const Tensor& t);
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
@@ -30,6 +32,7 @@ class BinaryOpLayer : public Layer {
 
  private:
   Operation op_;
+  ParBackend parallel_backend_ = ParBackend::kSeq;
 
   template <typename ValueType>
   void run_with_scalar_impl(const Tensor& input, ValueType scalar,

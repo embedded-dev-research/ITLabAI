@@ -80,6 +80,13 @@ void BinaryOpLayer::run(const std::vector<Tensor>& input,
   }
 }
 
+void BinaryOpLayer::run(const std::vector<Tensor>& input,
+                        std::vector<Tensor>& output,
+                        const RuntimeOptions& options) {
+  parallel_backend_ = options.par_backend;
+  run(input, output);
+}
+
 void BinaryOpLayer::run_with_scalar(const Tensor& input, float scalar,
                                     Tensor& output) const {
   switch (input.get_type()) {
@@ -101,12 +108,17 @@ template <typename ValueType>
 void BinaryOpLayer::run_with_scalar_impl(const Tensor& input, ValueType scalar,
                                          Tensor& output) const {
   const auto& input_data = *input.as<ValueType>();
-  std::vector<ValueType> result;
-  result.reserve(input_data.size());
+  std::vector<ValueType> result(input_data.size());
 
-  for (const auto& val : input_data) {
-    result.push_back(apply_binary_op(val, scalar, op_));
-  }
+  parallel::Options options;
+  options.backend = parallel_backend_;
+
+  parallel::parallel_for(
+      input_data.size(),
+      [&](size_t i) {
+        result[i] = apply_binary_op(input_data[i], scalar, op_);
+      },
+      options);
 
   output = make_tensor(result, input.get_shape());
 }
@@ -122,13 +134,19 @@ void BinaryOpLayer::run_broadcast_impl(const Tensor& A, const Tensor& B,
   const auto strides_b = get_strides(B.get_shape());
   const auto strides_output = get_strides(output_shape);
 
-  for (size_t i = 0; i < result.size(); ++i) {
-    size_t a_idx = get_broadcasted_index(i, A.get_shape(), output_shape,
-                                         strides_a, strides_output);
-    size_t b_idx = get_broadcasted_index(i, B.get_shape(), output_shape,
-                                         strides_b, strides_output);
-    result[i] = apply_binary_op(a_data[a_idx], b_data[b_idx], op_);
-  }
+  parallel::Options options;
+  options.backend = parallel_backend_;
+
+  parallel::parallel_for(
+      result.size(),
+      [&](size_t i) {
+        size_t a_idx = get_broadcasted_index(i, A.get_shape(), output_shape,
+                                             strides_a, strides_output);
+        size_t b_idx = get_broadcasted_index(i, B.get_shape(), output_shape,
+                                             strides_b, strides_output);
+        result[i] = apply_binary_op(a_data[a_idx], b_data[b_idx], op_);
+      },
+      options);
 
   output = make_tensor(result, output_shape);
 }
