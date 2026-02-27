@@ -407,9 +407,6 @@ jobs:
       with:
         path: docs/ImageNet
         key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
-     restore-keys: |
-       imagenet-paste-v1-
-       imagenet-paste-
 
     - name: Download ImageNet-Paste dataset
       if: steps.cache-imagenet.outputs.cache-hit != 'true'
