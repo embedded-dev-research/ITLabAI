@@ -403,26 +403,31 @@ jobs:
         ls -la docs/jsons/
 
     - name: Cache ImageNet-Paste dataset
-      id: cache-imagenet
-      uses: actions/cache@v4
+      id: cache-imagenet-restore
+      uses: actions/cache/restore@v4
       with:
         path: docs/ImageNet
         key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
         restore-keys: |
-          imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}-
           imagenet-paste-v1-
           imagenet-paste-
 
     - name: Download ImageNet-Paste dataset
-      if: steps.cache-imagenet.outputs.cache-hit != 'true'
+      if: steps.cache-imagenet-restore.outputs.cache-hit != 'true'
       env:
         HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         mkdir -p docs/ImageNet/test
         cd app/Converters
-        # Токен автоматически используется huggingface-hub библиотекой
         python download_imagenet.py
         cd ../..
+
+    - name: Save ImageNet-Paste dataset
+      if: steps.cache-imagenet-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: docs/ImageNet
+        key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
 
     - name: Prepare environment
       run: |
@@ -431,7 +436,7 @@ jobs:
 
     - name: Run evaluation
       run: |
-        DATASET_PATH="docs/ImageNet/test"  # Изменено с imagenet-paste/validation на ImageNet/test
+        DATASET_PATH="docs/ImageNet/test"
     
         echo "Запуск оценки для модели ${{ matrix.model }}"
         echo "Команда: ${{ steps.set_eval_binary.outputs.EVAL_BINARY }} --model ${{ matrix.model }} ${{ matrix.extra_args }}"
