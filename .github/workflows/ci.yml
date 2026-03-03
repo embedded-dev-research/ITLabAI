@@ -401,17 +401,6 @@ jobs:
         cd ../..
         echo "Сгенерированные JSON файлы:"
         ls -la docs/jsons/
-        
-    - name: Validate densenet model
-      run: |
-        echo "Проверка модели densenet:"
-        ls -la docs/models/densenet121_Opset16.onnx
-        file docs/models/densenet121_Opset16.onnx
-        echo "Размер: $(wc -c < docs/models/densenet121_Opset16.onnx) байт"
-    
-        echo "Проверка JSON:"
-        ls -la docs/jsons/densenet121_Opset16_onnx_model.json
-        head -20 docs/jsons/densenet121_Opset16_onnx_model.json
 
     - name: Cache ImageNet-Paste dataset
       id: cache-imagenet-restore
@@ -444,6 +433,7 @@ jobs:
       run: |
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
         echo "LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
+
     - name: Debug dataset before evaluation
       run: |
         echo "Проверка датасета:"
