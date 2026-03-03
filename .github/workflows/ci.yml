@@ -335,22 +335,22 @@ jobs:
             model_file: GoogLeNet.onnx
             model_path: docs/models/GoogLeNet.onnx
             model_url: ''
-            extra_args: "--onednn 10000"
+            extra_args: "--onednn 100"
           - model: densenet
             parser: parser_onnx.py
             model_file: densenet121_Opset16.onnx
             model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/densenet121_Opset16_timm/densenet121_Opset16.onnx?download=
-            extra_args: "--onednn 10000"
+            extra_args: "--onednn 100"
           - model: resnet
             parser: parser_onnx.py
             model_file: resnest101e_Opset16.onnx
             model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/resnest101e_Opset16_timm/resnest101e_Opset16.onnx?download=
-            extra_args: "--onednn 10000"
+            extra_args: "--onednn 100"
           - model: yolo
             parser: parser_onnx.py
             model_file: yolo11x-cls.pt
             model_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11x-cls.pt
-            extra_args: "--onednn 10000"
+            extra_args: "--onednn 100"
 
     steps:
     - uses: actions/checkout@v4
@@ -401,6 +401,17 @@ jobs:
         cd ../..
         echo "Сгенерированные JSON файлы:"
         ls -la docs/jsons/
+        
+    - name: Validate densenet model
+      run: |
+        echo "Проверка модели densenet:"
+        ls -la docs/models/densenet121_Opset16.onnx
+        file docs/models/densenet121_Opset16.onnx
+        echo "Размер: $(wc -c < docs/models/densenet121_Opset16.onnx) байт"
+    
+        echo "Проверка JSON:"
+        ls -la docs/jsons/densenet121_Opset16_onnx_model.json
+        head -20 docs/jsons/densenet121_Opset16_onnx_model.json
 
     - name: Cache ImageNet-Paste dataset
       id: cache-imagenet-restore
@@ -433,7 +444,17 @@ jobs:
       run: |
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
         echo "LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
-
+    - name: Debug dataset before evaluation
+      run: |
+        echo "Проверка датасета:"
+        echo "Путь: docs/ImageNet/test/"
+        ls -la docs/ImageNet/test/ | head -20
+        echo "Количество .jpg файлов: $(find docs/ImageNet/test/ -name "*.jpg" | wc -l)"
+        echo "Права доступа:"
+        ls -ld docs/ImageNet/test/
+        echo "Первый файл (если есть):"
+        find docs/ImageNet/test/ -name "*.jpg" | head -1 | xargs file || echo "Нет файлов"
+  
     - name: Run evaluation
       run: |
         DATASET_PATH="docs/ImageNet/test"
