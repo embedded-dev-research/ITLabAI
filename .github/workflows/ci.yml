@@ -442,6 +442,14 @@ jobs:
       run: |
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
         echo "LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
+        
+    - name: Increase system limits
+      run: |
+        sudo prlimit --pid $$ --as=unlimited
+        ulimit -s unlimited
+        ulimit -c unlimited
+        echo "Новые лимиты:"
+        ulimit -a
   
     - name: Run evaluation
       run: |
