@@ -446,22 +446,124 @@ jobs:
     - name: Run evaluation
       run: |
         DATASET_PATH="docs/ImageNet/test"
+        MODEL="${{ matrix.model }}"
+        EXTRA_ARGS="${{ matrix.extra_args }}"
     
-        echo "Запуск оценки для модели ${{ matrix.model }}"
-        echo "Команда: ${{ steps.set_eval_binary.outputs.EVAL_BINARY }} --model ${{ matrix.model }} ${{ matrix.extra_args }}"
+        echo "==================================="
+        echo "🚀 Запуск оценки для модели $MODEL"
+        echo "📋 Команда: ${{ steps.set_eval_binary.outputs.EVAL_BINARY }} --model $MODEL $EXTRA_ARGS"
+        echo "==================================="
     
+        echo "📊 Системная информация до запуска:"
+        echo "--- Память ---"
+        free -h
+        echo "--- CPU ---"
+        top -bn1 | head -5
+        echo "--- Диск ---"
+        df -h docs/ImageNet/test/
+    
+        # Запускаем процесс с мониторингом
+        TIMESTAMP=$(date +%s)
+        MONITOR_LOG="monitor_$MODEL.log"
+    
+        # Функция мониторинга
+        monitor_process() {
+          local pid=$1
+          local log_file=$2
+      
+          echo "📊 Мониторинг процесса $pid..."
+      
+          while kill -0 $pid 2>/dev/null; do
+            # Время
+            NOW=$(date '+%H:%M:%S')
+        
+            # Память процесса
+            MEM=$(ps -o rss= -p $pid 2>/dev/null | awk '{print $1/1024 " MB"}' || echo "N/A")
+        
+            # CPU процесса
+            CPU=$(ps -o pcpu= -p $pid 2>/dev/null || echo "N/A")
+        
+            # Общая память системы
+            TOTAL_MEM=$(free -m | awk 'NR==2{print $3 " MB / " $2 " MB"}')
+        
+            echo "[$NOW] PID: $pid | MEM: $MEM | CPU: $CPU% | System MEM: $TOTAL_MEM" >> $log_file
+        
+            sleep 2
+          done
+      
+         echo "📊 Процесс $pid завершен" >> $log_file
+         }
+    
+        # Запускаем основную программу в фоне
+        echo "▶️ Запуск ACC в фоновом режиме..."
         "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" \
-        --model ${{ matrix.model }} \
-        ${{ matrix.extra_args }} > accuracy_${{ matrix.model }}.txt 2>&1
-      
-        if [ $? -ne 0 ]; then
-          echo "Ошибка при оценке модели ${{ matrix.model }}"
-          cat accuracy_${{ matrix.model }}.txt
-          exit 1
+        --model $MODEL \
+        $EXTRA_ARGS > accuracy_$MODEL.txt 2>&1 &
+        ACC_PID=$!
+    
+        echo "📊 PID процесса: $ACC_PID"
+    
+        # Запускаем мониторинг в фоне
+        monitor_process $ACC_PID $MONITOR_LOG &
+        MONITOR_PID=$!
+    
+        # Ждем завершения ACC
+        wait $ACC_PID
+        EXIT_CODE=$?
+    
+        # Убиваем мониторинг
+        kill $MONITOR_PID 2>/dev/null || true
+    
+        echo "==================================="
+        echo "📊 Результаты мониторинга:"
+        if [ -f "$MONITOR_LOG" ]; then
+          cat "$MONITOR_LOG"
+        else
+         echo "Лог мониторинга не создан"
         fi
+    
+        echo "==================================="
+        echo "📊 Системная информация после запуска:"
+        free -h
+    
+        echo "==================================="
+        echo "📊 Код завершения: $EXIT_CODE"
+    
+        if [ $EXIT_CODE -eq 143 ]; then
+          echo "❌ Ошибка 143 (SIGTERM) - процесс убит системой"
+          echo "Возможные причины:"
+          echo "  - Нехватка памяти (OOM Killer)"
+          echo "  - Превышение лимитов CPU"
+          echo "  - Timeout от GitHub Actions"
       
-        echo "Результат оценки:"
-        cat accuracy_${{ matrix.model }}.txt
+          # Проверка OOM Killer
+          if sudo dmesg | tail -20 | grep -i "killed process" | grep -q "$ACC_PID"; then
+            echo "✅ Подтверждено: процесс убит OOM Killer"
+            sudo dmesg | tail -20 | grep -i "killed process" | tail -5
+          else
+            echo "❌ Не найдено подтверждение OOM Killer в логах"
+            sudo dmesg | tail -20
+          fi
+      
+        elif [ $EXIT_CODE -ne 0 ]; then
+          echo "❌ Ошибка при оценке модели $MODEL (код: $EXIT_CODE)"
+        else
+          echo "✅ Оценка успешно завершена"
+        fi
+    
+        # Всегда показываем лог ACC
+        echo "==================================="
+        echo "📋 Лог ACC:"
+        if [ -f "accuracy_$MODEL.txt" ]; then
+          cat "accuracy_$MODEL.txt"
+        else
+         echo "Файл лога не создан"
+        fi
+    
+        # Выход с ошибкой если нужно
+        if [ $EXIT_CODE -ne 0 ]; then
+          exit $EXIT_CODE
+        fi
 
     - name: Extract accuracy value
       run: |
