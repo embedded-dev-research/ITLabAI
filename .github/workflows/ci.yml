@@ -335,7 +335,7 @@ jobs:
             model_file: GoogLeNet.onnx
             model_path: docs/models/GoogLeNet.onnx
             model_url: ''
-            extra_args: "--onednn 100"
+            extra_args: "--onednn 1000"
           - model: densenet
             parser: parser_onnx.py
             model_file: densenet121_Opset16.onnx
@@ -345,7 +345,7 @@ jobs:
             parser: parser_onnx.py
             model_file: resnest101e_Opset16.onnx
             model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/resnest101e_Opset16_timm/resnest101e_Opset16.onnx?download=
-            extra_args: "--onednn 10"
+            extra_args: "--onednn 100"
           - model: yolo
             parser: parser_onnx.py
             model_file: yolo11x-cls.pt
