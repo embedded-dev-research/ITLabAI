@@ -345,7 +345,7 @@ jobs:
             parser: parser_onnx.py
             model_file: resnest101e_Opset16.onnx
             model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/resnest101e_Opset16_timm/resnest101e_Opset16.onnx?download=
-            extra_args: "--onednn 100"
+            extra_args: "--onednn 10"
           - model: yolo
             parser: parser_onnx.py
             model_file: yolo11x-cls.pt
@@ -393,14 +393,23 @@ jobs:
         pip install -r requirements.txt
         cd ../..
 
+    - name: Cache model JSON files
+      id: cache-model-json
+      uses: actions/cache@v4
+      with:
+        path: docs/jsons
+        key: model-json-${{ matrix.model }}-${{ hashFiles('app/Converters/parser_onnx.py', 'app/Converters/requirements.txt') }}
+        restore-keys: |
+          model-json-${{ matrix.model }}-
+          model-json-
+
     - name: Generate model JSON
+      if: steps.cache-model-json.outputs.cache-hit != 'true'
       run: |
         mkdir -p docs/jsons
         cd app/Converters
         python ${{ matrix.parser }} ${{ matrix.model }}
         cd ../..
-        echo "Сгенерированные JSON файлы:"
-        ls -la docs/jsons/
 
     - name: Cache ImageNet-Paste dataset
       id: cache-imagenet-restore
@@ -433,17 +442,6 @@ jobs:
       run: |
         chmod +x "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}"
         echo "LD_LIBRARY_PATH=$PWD/build/bin/all_libs:/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
-
-    - name: Debug dataset before evaluation
-      run: |
-        echo "Проверка датасета:"
-        echo "Путь: docs/ImageNet/test/"
-        ls -la docs/ImageNet/test/ | head -20
-        echo "Количество .jpg файлов: $(find docs/ImageNet/test/ -name "*.jpg" | wc -l)"
-        echo "Права доступа:"
-        ls -ld docs/ImageNet/test/
-        echo "Первый файл (если есть):"
-        find docs/ImageNet/test/ -name "*.jpg" | head -1 | xargs file || echo "Нет файлов"
   
     - name: Run evaluation
       run: |
