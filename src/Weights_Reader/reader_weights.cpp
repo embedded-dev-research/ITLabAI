@@ -6,24 +6,64 @@
 #include <stdexcept>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+
 namespace it_lab_ai {
 
 using json = nlohmann::json;
 
 json read_json(const std::string& filename) {
-  std::ifstream ifs(filename);
-  if (!ifs.is_open()) {
-    throw std::runtime_error("Failed to open JSON file: " + filename);
+#ifdef _WIN32
+  HANDLE file = CreateFileA(filename.c_str(), GENERIC_READ, FILE_SHARE_READ,
+                            NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (file == INVALID_HANDLE_VALUE) {
+    throw std::runtime_error("Cannot open file: " + filename);
   }
 
-  json model_data;
-  try {
-    ifs >> model_data;
-  } catch (const json::parse_error& e) {
-    throw std::runtime_error("JSON parse error: " + std::string(e.what()));
+  DWORD size = GetFileSize(file, NULL);
+  if (size == 0) {
+    CloseHandle(file);
+    return json{};
   }
 
-  return model_data;
+  HANDLE mapping = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, NULL);
+  char* data = (char*)MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0);
+
+  json result = json::parse(data, data + size);
+
+  UnmapViewOfFile(data);
+  CloseHandle(mapping);
+  CloseHandle(file);
+  return result;
+
+#else
+  int fd = open(filename.c_str(), O_RDONLY);
+  if (fd == -1) {
+    throw std::runtime_error("Cannot open file: " + filename);
+  }
+
+  struct stat sb;
+  fstat(fd, &sb);
+
+  if (sb.st_size == 0) {
+    close(fd);
+    return json{};
+  }
+
+  char* data = (char*)mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  json result = json::parse(data, data + sb.st_size);
+
+  munmap(data, sb.st_size);
+  close(fd);
+  return result;
+#endif
 }
 
 void extract_values_from_json(const json& j, std::vector<float>& values) {
