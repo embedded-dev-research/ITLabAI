@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "layers/Layer.hpp"
 #include "layers/ConvLayer.hpp"
+#include "layers/Layer.hpp"
 #include "layers/Tensor.hpp"
 
 namespace it_lab_ai {

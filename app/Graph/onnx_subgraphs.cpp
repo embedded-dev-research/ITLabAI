@@ -9,12 +9,13 @@
 
 #include "build.hpp"
 #include "graph_transformations/graph_transformations.hpp"
-#include "perf/benchmarking.hpp"
 #include "layers_fused/ConvRelu.hpp"
+#include "perf/benchmarking.hpp"
 
 using namespace it_lab_ai;
 
-void alexnet_inf_careless(Graph& graph, const RuntimeOptions& options, Tensor& input, Tensor& output) {
+void alexnet_inf_careless(Graph& graph, const RuntimeOptions& options,
+                          Tensor& input, Tensor& output) {
   Tensor* o = new Tensor(output);
   Tensor* i = new Tensor(input);
   graph.inference(options);
@@ -23,10 +24,8 @@ void alexnet_inf_careless(Graph& graph, const RuntimeOptions& options, Tensor& i
 }
 
 void alexnet_comparison() {
-
   std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
                                 891, 957,  1027, 973,  1008};
-  int stat = 0;
   size_t sum = std::accumulate(counts.begin(), counts.end(), size_t{0});
   int count_pic = static_cast<int>(sum) + 10;
   std::vector<float> res(count_pic * 28 * 28, 1.0f);
@@ -64,7 +63,6 @@ void alexnet_comparison() {
   std::cout << time1 << " for unchanged graph\n";
   std::cout << time2 << " for convrelu graph\n";
 }
-
 
 int main() {
   int type = 2;
