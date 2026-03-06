@@ -16,8 +16,8 @@ using namespace it_lab_ai;
 
 void alexnet_inf_careless(Graph& graph, const RuntimeOptions& options,
                           Tensor& input, Tensor& output) {
-  Tensor* o = new Tensor(output);
-  Tensor* i = new Tensor(input);
+  auto* o = new Tensor(output);
+  auto* i = new Tensor(input);
   graph.inference(options);
   graph.setOutput(*o);
   graph.setInput(*i);
@@ -28,7 +28,7 @@ void alexnet_comparison() {
                                 891, 957,  1027, 973,  1008};
   size_t sum = std::accumulate(counts.begin(), counts.end(), size_t{0});
   int count_pic = static_cast<int>(sum) + 10;
-  std::vector<float> res(count_pic * 28 * 28, 1.0f);
+  std::vector<float> res(count_pic * 28 * 28, 1.0F);
   Tensor input;
   Shape sh1({1, 5, 5, 3});
   std::vector<float> vec;
@@ -43,9 +43,9 @@ void alexnet_comparison() {
   input = t;
 
   RuntimeOptions options;
-  Graph graph1;
+  Graph graph;
   Graph graph2;
-  build_graph_linear(graph1, input, output, options, true);
+  build_graph_linear(graph, input, output, options, true);
   Graph subgraph;
   std::shared_ptr<Layer> layer_0 = std::make_shared<ConvolutionalLayer>();
   std::shared_ptr<Layer> layer_1 = std::make_shared<EWLayer>("relu");
@@ -53,11 +53,11 @@ void alexnet_comparison() {
   subgraph.makeConnection(layer_0, layer_1);
   std::shared_ptr<Layer> layer_to = std::make_shared<ConvReluLayer>(
       std::dynamic_pointer_cast<ConvolutionalLayer>(layer_0));
-  changed_subgraphs(graph1, subgraph, layer_to, graph2, input, options);
+  changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
   Tensor input_c = input;
   Tensor output_c = output;
   double time1 = elapsed_time_avg<double, std::milli>(
-      2, alexnet_inf_careless, graph1, options, input_c, output_c);
+      2, alexnet_inf_careless, graph, options, input_c, output_c);
   double time2 = elapsed_time_avg<double, std::milli>(
       2, alexnet_inf_careless, graph2, options, input_c, output_c);
   std::cout << time1 << " for unchanged graph\n";
@@ -74,7 +74,7 @@ int main() {
     build_graph(graph1, input, input, MODEL_PATH_DENSENET_ONNX, options, false);
 
     Graph subgraph;
-    Tensor scale = make_tensor(std::vector<float>({1.0}));
+    Tensor scale = make_tensor(std::vector<float>({1.0F}));
     std::shared_ptr<Layer> layer_0 =
         std::make_shared<BatchNormalizationLayer>(scale, scale, scale, scale);
     std::shared_ptr<Layer> layer_1 = std::make_shared<EWLayer>("relu");

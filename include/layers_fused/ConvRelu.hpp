@@ -61,8 +61,8 @@ class ConvReluLayer : public Layer {
   }
   ConvReluLayer(const std::shared_ptr<ConvolutionalLayer>& conv)
       : Layer(kConvRelu) {
-    auto numerics = conv->get_numeric_params();
-    auto tensors = conv->get_tensor_params();
+    auto numerics = conv->getNumericParams();
+    auto tensors = conv->getTensorParams();
     stride_ = numerics[0];
     pads_ = numerics[1];
     dilations_ = numerics[2];
