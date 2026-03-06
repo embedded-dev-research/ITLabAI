@@ -18,9 +18,9 @@ TEST(ConvolutionalLayerTest, Getters) {
   Tensor input2 = make_tensor<float>(vec, {2, 2});
   std::vector<Tensor> in{input1, input2};
   std::vector<Tensor> output{input1};
-  EXPECT_NO_THROW(layer.getLegacyImplBool());
-  EXPECT_NO_THROW(layer.getNumericParams());
-  EXPECT_NO_THROW(layer.getTensorParams());
+  EXPECT_NO_THROW(auto ret1 = layer.getLegacyImplBool());
+  EXPECT_NO_THROW(auto ret2 = layer.getNumericParams());
+  EXPECT_NO_THROW(auto ret3 = layer.getTensorParams());
 }
 
 TEST(ConvolutionalLayerTest, IncompatibleInput) {

@@ -69,7 +69,7 @@ class ConvolutionalLayer : public Layer {
     return res;
   }
 
-  bool getLegacyImplBool() const { return useLegacyImpl_; }
+  [[nodiscard]] bool getLegacyImplBool() const { return useLegacyImpl_; }
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
