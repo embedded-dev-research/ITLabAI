@@ -70,6 +70,28 @@ TEST(graph, test_new_setOutput) {
   ASSERT_NO_THROW(graph.setOutput(output));
 }
 
+TEST(graph, test_new_setInput_throw) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  Graph graph;
+
+  ASSERT_ANY_THROW(graph.setInput(input));
+}
+
+TEST(graph, test_new_setOutput_throw) {
+  const std::vector<float> vec1 = {2.0F, 1.5F, 0.1F, 1.9F, 0.0F, 5.5F};
+  Tensor weights = make_tensor<float>(vec1, {3, 2});
+  Tensor bias = make_tensor<float>({0.5F, 0.5F, 1.0F});
+  Tensor input = make_tensor<float>({1.0F, 2.0F}, {2});
+  Tensor output;
+  Graph graph;
+
+  ASSERT_ANY_THROW(graph.setOutput(output));
+}
+
 TEST(graph, test_deep_copy) {
   Graph graph;
   Graph graph2;
