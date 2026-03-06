@@ -58,6 +58,19 @@ class ConvolutionalLayer : public Layer {
     dilations_ = dilations;
     useLegacyImpl_ = useLegacyImpl;
   }
+
+  std::vector<size_t> get_numeric_params() {
+    std::vector<size_t> res = {stride_, pads_, dilations_, group_};
+    return res;
+  }
+
+  std::vector<std::shared_ptr<Tensor>> get_tensor_params() {
+    std::vector<std::shared_ptr<Tensor>> res = {kernel_, bias_};
+    return res;
+  }
+
+  bool getLegacyImplBool() { return useLegacyImpl_; }
+
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
   void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "layers/Layer.hpp"
+#include "layers/ConvLayer.hpp"
 #include "layers/Tensor.hpp"
 
 namespace it_lab_ai {
@@ -19,7 +20,7 @@ void relu(Tensor& t) {
   }
 }
 
-class ConvReluLayer : Layer {
+class ConvReluLayer : public Layer {
  private:
   size_t stride_;
   size_t pads_;
@@ -57,6 +58,18 @@ class ConvReluLayer : Layer {
     group_ = group;
     dilations_ = dilations;
     useLegacyImpl_ = useLegacyImpl;
+  }
+  ConvReluLayer(const std::shared_ptr<ConvolutionalLayer>& conv)
+      : Layer(kConvRelu) {
+    auto numerics = conv->get_numeric_params();
+    auto tensors = conv->get_tensor_params();
+    stride_ = numerics[0];
+    pads_ = numerics[1];
+    dilations_ = numerics[2];
+    group_ = numerics[3];
+    kernel_ = tensors[0];
+    bias_ = tensors[1];
+    useLegacyImpl_ = conv->getLegacyImplBool();
   }
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
