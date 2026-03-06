@@ -56,9 +56,9 @@ void alexnet_comparison() {
   changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
   Tensor input_c = input;
   Tensor output_c = output;
-  double time1 = elapsed_time_avg<double, std::milli>(
+  auto time1 = elapsed_time_avg<double, std::milli>(
       2, alexnet_inf_careless, graph, options, input_c, output_c);
-  double time2 = elapsed_time_avg<double, std::milli>(
+  auto time2 = elapsed_time_avg<double, std::milli>(
       2, alexnet_inf_careless, graph2, options, input_c, output_c);
   std::cout << time1 << " for unchanged graph\n";
   std::cout << time2 << " for convrelu graph\n";

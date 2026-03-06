@@ -59,12 +59,12 @@ class ConvolutionalLayer : public Layer {
     useLegacyImpl_ = useLegacyImpl;
   }
 
-  std::vector<size_t> getNumericParams() const {
+  [[nodiscard]] std::vector<size_t> getNumericParams() const {
     std::vector<size_t> res = {stride_, pads_, dilations_, group_};
     return res;
   }
 
-  std::vector<std::shared_ptr<Tensor>> getTensorParams() {
+  [[nodiscard]] std::vector<std::shared_ptr<Tensor>> getTensorParams() {
     std::vector<std::shared_ptr<Tensor>> res = {kernel_, bias_};
     return res;
   }
