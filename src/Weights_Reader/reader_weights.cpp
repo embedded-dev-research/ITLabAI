@@ -44,12 +44,13 @@ json read_json(const std::string& filename) {
   return result;
 
 #else
-  int fd = open(filename.c_str(), O_RDONLY);
+  int fd = open(filename.c_str(),
+                O_RDONLY);  // NOLINT(cppcoreguidelines-pro-type-vararg)
   if (fd == -1) {
     throw std::runtime_error("Cannot open file: " + filename);
   }
 
-  struct stat sb;
+  struct stat sb {};
   fstat(fd, &sb);
 
   if (sb.st_size == 0) {
