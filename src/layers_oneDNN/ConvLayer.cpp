@@ -249,12 +249,14 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
     src_memory_ = dnnl::memory(conv_pd.src_desc(), *engine_);
     weights_memory_ = dnnl::memory(conv_pd.weights_desc(), *engine_);
     dst_memory_ = dnnl::memory(conv_pd.dst_desc(), *engine_);
-    if (!bias_->empty())
+    if (!bias_->empty()) {
       bias_memory_ = dnnl::memory(conv_pd.bias_desc(), *engine_);
+    }
 
     fill_memory_with_tensor(weights_memory_, *kernel_, data_type);
-    if (!bias_->empty())
+    if (!bias_->empty()) {
       fill_memory_with_tensor(bias_memory_, *bias_, data_type);
+    }
 
     conv_prim_ = std::make_unique<dnnl::convolution_forward>(conv_pd);
     initialized_ = true;

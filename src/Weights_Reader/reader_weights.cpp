@@ -57,7 +57,8 @@ json read_json(const std::string& filename) {
     return json{};
   }
 
-  char* data = (char*)mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  char* data = static_cast<char*>(
+      mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
   json result = json::parse(data, data + sb.st_size);
 
   munmap(data, sb.st_size);
