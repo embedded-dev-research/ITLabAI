@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 #include "layers/Layer.hpp"
 
@@ -76,10 +77,8 @@ class InputLayer : public Layer {
               }
             }
           }
-          Shape sh1({static_cast<unsigned long long>(n),
-                     static_cast<unsigned long long>(h),
-                     static_cast<unsigned long long>(w),
-                     static_cast<unsigned long long>(c)});
+          Shape sh1({static_cast<uint64_t>(n), static_cast<uint64_t>(h),
+                     static_cast<uint64_t>(w), static_cast<uint64_t>(c)});
           output[0] = make_tensor<int>(res, sh1);
           break;
         }
@@ -103,10 +102,8 @@ class InputLayer : public Layer {
               }
             }
           }
-          Shape sh1({static_cast<unsigned long long>(n),
-                     static_cast<unsigned long long>(c),
-                     static_cast<unsigned long long>(h),
-                     static_cast<unsigned long long>(w)});
+          Shape sh1({static_cast<uint64_t>(n), static_cast<uint64_t>(c),
+                     static_cast<uint64_t>(h), static_cast<uint64_t>(w)});
           output[0] = make_tensor<int>(res, sh1);
           break;
         }
@@ -144,10 +141,8 @@ class InputLayer : public Layer {
               }
             }
           }
-          Shape sh1({static_cast<unsigned long long>(n),
-                     static_cast<unsigned long long>(h),
-                     static_cast<unsigned long long>(w),
-                     static_cast<unsigned long long>(c)});
+          Shape sh1({static_cast<uint64_t>(n), static_cast<uint64_t>(h),
+                     static_cast<uint64_t>(w), static_cast<uint64_t>(c)});
           output[0] = make_tensor<float>(res, sh1);
           break;
         }
@@ -171,10 +166,8 @@ class InputLayer : public Layer {
               }
             }
           }
-          Shape sh1({static_cast<unsigned long long>(n),
-                     static_cast<unsigned long long>(c),
-                     static_cast<unsigned long long>(h),
-                     static_cast<unsigned long long>(w)});
+          Shape sh1({static_cast<uint64_t>(n), static_cast<uint64_t>(c),
+                     static_cast<uint64_t>(h), static_cast<uint64_t>(w)});
           output[0] = make_tensor<float>(res, sh1);
           break;
         }

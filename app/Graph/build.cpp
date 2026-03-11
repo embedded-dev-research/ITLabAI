@@ -138,16 +138,18 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   if (comments) std::cout << "Input set in graph." << '\n';
 
   graph.makeConnection(a1, layers[0]);
-  if (comments)
+  if (comments) {
     std::cout << "Connection made between InputLayer and first layer." << '\n';
+  }
 
   for (size_t i = 0; i < layers.size() - 1; ++i) {
     if (layerpostop[i]) {
       layers[i - 1]->postops.layers.push_back(layers[i]);
       layers[i - 1]->postops.count++;
       graph.makeConnection(layers[i - 1], layers[i + 1]);
-    } else if (!layerpostop[i + 1])
+    } else if (!layerpostop[i + 1]) {
       graph.makeConnection(layers[i], layers[i + 1]);
+    }
   }
 
   graph.setOutput(layers.back(), output);
