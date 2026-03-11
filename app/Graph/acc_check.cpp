@@ -1,8 +1,9 @@
-﻿#ifndef WIN32_LEAN_AND_MEAN
+﻿
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <psapi.h>
 #include <windows.h>
+#include <psapi.h>
 #pragma comment(lib, "psapi.lib")
 #include <crtdbg.h>
 #include <algorithm>
@@ -85,7 +86,7 @@ int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
   RuntimeOptions options;
   size_t num_photo = 1000;
-  size_t batch_size = 32;
+  size_t batch_size = 50;
 
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
@@ -151,7 +152,7 @@ int main(int argc, char* argv[]) {
   std::vector<int> input_shape = get_input_shape_from_json(json_path);
 
   std::cout << '\n';
-  int batch_count = 0;
+
   if (model_name == "alexnet_mnist") {
     LOG_MEM("MNIST start");
 
@@ -188,7 +189,7 @@ int main(int argc, char* argv[]) {
           for (int j = 0; j < 28; ++j) {
             size_t a = ind;
             for (size_t n = 0; n < name; n++) a += counts[n] + 1;
-            res[(a) * 28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
+            res[(a)*28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
           }
         }
       }
@@ -335,9 +336,42 @@ int main(int argc, char* argv[]) {
   int correct_predictions_top1 = 0;
   int correct_predictions_top5 = 0;
 
+  LOG_MEM("Building master graph");
+
+  it_lab_ai::Shape full_shape({num_photo, static_cast<size_t>(channels),
+                               static_cast<size_t>(height),
+                               static_cast<size_t>(width)});
+  it_lab_ai::Tensor dummy_input = make_tensor(all_image_data, full_shape);
+
+  it_lab_ai::Shape full_output_shape({num_photo, output_classes});
+  it_lab_ai::Tensor dummy_output(full_output_shape, it_lab_ai::Type::kFloat);
+
+  Graph graph;
+  build_graph(graph, dummy_input, dummy_output, json_path, options, false);
+  LOG_MEM("Master graph built");
+
+  std::shared_ptr<Layer> input_layer = nullptr;
+  std::shared_ptr<Layer> output_layer = nullptr;
+
+  for (int i = 0; i < graph.getLayersCount(); ++i) {
+    auto layer = graph.getLayerFromID(i);
+    if (layer->getName() == kInput) {
+      input_layer = layer;
+    }
+    if (i == graph.getLayersCount() - 1) {
+      output_layer = layer;
+    }
+  }
+
+  if (!input_layer || !output_layer) {
+    std::cerr << "Error: Could not find input/output layers" << '\n';
+    return 1;
+  }
+
   LOG_MEM("Starting batch processing");
   auto total_start_time = std::chrono::high_resolution_clock::now();
   int total_inference_time = 0;
+  int batch_count = 0;
 
   for (size_t batch_start = 0; batch_start < num_photo;
        batch_start += batch_size) {
@@ -365,32 +399,20 @@ int main(int argc, char* argv[]) {
     it_lab_ai::Shape batch_output_shape({current_batch_size, output_classes});
     it_lab_ai::Tensor batch_output(batch_output_shape, it_lab_ai::Type::kFloat);
 
-    Graph graph;
-    build_graph(graph, batch_input, batch_output, json_path, options, false);
+    graph.setInput(input_layer, batch_input);
+    graph.setOutput(output_layer, batch_output);
 
     LOG_MEM("Batch inference");
-    // auto batch_start_time =
-    //     std::chrono::high_resolution_clock::now();
+    auto batch_start_time = std::chrono::high_resolution_clock::now();
     graph.inference(options);
-    total_inference_time += print_time_stats(graph);
-    // auto batch_end_time = std::chrono::high_resolution_clock::now();
-    // int batch_time =
-    //     static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
-    //                          batch_end_time - batch_start_time)
-    //                          .count());  // ← Добавлен static_cast
-    // total_inference_time += batch_time;
-    // batch_count++;
+    auto batch_end_time = std::chrono::high_resolution_clock::now();
 
-    // #ifdef ENABLE_STATISTIC_TIME
-    //          std::vector<int> elps_time = graph.getTime();
-    //          int batch_time = std::accumulate(elps_time.begin(),
-    //          elps_time.end(), 0); total_inference_time += batch_time;
-    //          batch_count++;
-    //
-    //          char time_log[100];
-    //          sprintf(time_log, "Batch %d time: %d ms", batch_count,
-    //          batch_time); LOG_MEM(time_log);
-    // #endif
+    int batch_time =
+        static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                             batch_end_time - batch_start_time)
+                             .count());
+    total_inference_time += batch_time;
+    batch_count++;
 
     const std::vector<float>& raw_batch_output = *batch_output.as<float>();
 
@@ -451,12 +473,6 @@ int main(int argc, char* argv[]) {
             << (batch_count > 0 ? total_inference_time / batch_count : 0)
             << " ms\n";
   std::cout << "!INFERENCE TIME INFO END!" << '\n';
-  /*std::cout << "\n!INFERENCE TIME INFO START!" << '\n';
-  std::cout << "Total inference time for all batches: " << total_inference_time
-            << " ms\n";
-  std::cout << "Number of batches: " << batch_count << '\n';
-  std::cout << "!INFERENCE TIME INFO END!" << '\n';
-  LOG_MEM("All batches processed");*/
 
   double final_accuracy_top1 =
       (static_cast<double>(correct_predictions_top1) / num_photo) * 100;
