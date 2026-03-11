@@ -340,17 +340,17 @@ jobs:
             parser: parser_onnx.py
             model_file: densenet121_Opset16.onnx
             model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/densenet121_Opset16_timm/densenet121_Opset16.onnx?download=
-            extra_args: "--onednn 100"
+            extra_args: "--onednn 1000"
           - model: resnet
             parser: parser_onnx.py
             model_file: resnest101e_Opset16.onnx
             model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/resnest101e_Opset16_timm/resnest101e_Opset16.onnx?download=
-            extra_args: "--onednn 100"
+            extra_args: "--onednn 1000"
           - model: yolo
             parser: parser_onnx.py
             model_file: yolo11x-cls.pt
             model_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11x-cls.pt
-            extra_args: "--onednn 100"
+            extra_args: "--onednn 1000"
 
     steps:
     - uses: actions/checkout@v4
@@ -579,8 +579,8 @@ jobs:
           echo -e "\n## ${{ matrix.model }} Accuracy\n<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY_${{ matrix.model }}-->\n" >> README.md
         fi
 
-    - name: Commit and push changes (master only)
-      if: github.ref == 'refs/heads/master'
+    - name: Commit and push changes (main only)
+      if: github.ref == 'refs/heads/main'
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
