@@ -76,7 +76,7 @@ it_lab_ai::Tensor prepare_image(const cv::Mat& image,
                                 const std::string& model_name = "");
 it_lab_ai::Tensor prepare_mnist_image(const cv::Mat& image);
 
-void print_time_stats(it_lab_ai::Graph& graph);
+int print_time_stats(it_lab_ai::Graph& graph);
 namespace it_lab_ai {
 class LayerFactory {
  public:
