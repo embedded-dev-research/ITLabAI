@@ -1,9 +1,8 @@
-﻿
-#ifndef WIN32_LEAN_AND_MEAN
+﻿#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <windows.h>
 #include <psapi.h>
+#include <windows.h>
 #pragma comment(lib, "psapi.lib")
 #include <crtdbg.h>
 #include <algorithm>

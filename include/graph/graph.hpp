@@ -318,11 +318,9 @@ class Graph {
 
     for (size_t i = 0; i < traversal.size(); ++i) {
       int current_layer = traversal[i];
-
 #ifdef ENABLE_STATISTIC_TIME
       auto start = std::chrono::high_resolution_clock::now();
 #endif
-
       if (i != 0) {
         inten_.clear();
 
@@ -345,19 +343,15 @@ class Graph {
             }
 
             it->second.count_used_ten--;
-
-            // Если тензор больше никому не нужен - удаляем
             if (it->second.count_used_ten < 1) {
               branch_map_.erase(it);
             }
           }
         }
       }
-
       if (outten_.empty()) {
         outten_.resize(1);
       }
-
       layers_[current_layer]->run(inten_, outten_, options);
 
 #ifdef ENABLE_STATISTIC_TENSORS
@@ -405,9 +399,7 @@ class Graph {
         }
         new_branch.distribution = dis;
       }
-
       branch_map_[current_layer] = std::move(new_branch);
-
       if (outtenres_ && current_layer == end_ &&
           !branch_map_[current_layer].give_for_all.empty() &&
           countinout[current_layer].second == 0) {
@@ -441,11 +433,6 @@ class Graph {
       }
 #endif
     }
-
-    // Финальная очистка
-    branch_map_.clear();
-    inten_.clear();
-    outten_.clear();
   }
 
   void setOutput(const std::shared_ptr<Layer>& layer, Tensor& vec) {

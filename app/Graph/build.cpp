@@ -1142,5 +1142,6 @@ int print_time_stats(Graph& graph) {
   return sum;
 #else
   (void)graph;
+  return 0;
 #endif
 }
