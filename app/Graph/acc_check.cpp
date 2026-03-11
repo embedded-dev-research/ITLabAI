@@ -1,12 +1,4 @@
-﻿
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-#include <psapi.h>
-#pragma comment(lib, "psapi.lib")
-#include <crtdbg.h>
-#include <algorithm>
+﻿#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <filesystem>
@@ -17,72 +9,10 @@
 
 #include "build.hpp"
 
-class MemoryLogger {
- private:
-  std::chrono::steady_clock::time_point start_time;
-  size_t peak_memory = 0;
-  size_t initial_memory = 0;
-
-  size_t getProcessMemory() {
-    HANDLE hProcess = GetCurrentProcess();
-    PROCESS_MEMORY_COUNTERS pmc;
-    pmc.cb = sizeof(PROCESS_MEMORY_COUNTERS);
-
-    if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc))) {
-      return pmc.WorkingSetSize / (1024 * 1024);
-    }
-    return 0;
-  }
-
- public:
-  MemoryLogger() {
-    start_time = std::chrono::steady_clock::now();
-    initial_memory = getProcessMemory();
-    log("START");
-  }
-
-  void log(const char* stage) {
-    auto now = std::chrono::steady_clock::now();
-    auto elapsed =
-        std::chrono::duration_cast<std::chrono::seconds>(now - start_time)
-            .count();
-
-    size_t current = getProcessMemory();
-    if (current > peak_memory) peak_memory = current;
-
-    std::cout << "[" << std::setw(4) << elapsed << "s] " << std::setw(30)
-              << stage << " | "
-              << "PROCESS MEM: " << std::setw(6) << current << " MB"
-              << " (PEAK: " << std::setw(6) << peak_memory << " MB)"
-              << " (DELTA: " << std::setw(4) << (current - initial_memory)
-              << " MB)\n";
-  }
-
-  ~MemoryLogger() {
-    log("END");
-    std::cout << "====================================\n";
-    std::cout << "PEAK PROCESS MEMORY: " << peak_memory << " MB\n";
-    std::cout << "INITIAL PROCESS MEMORY: " << initial_memory << " MB\n";
-    std::cout << "FINAL PROCESS MEMORY: " << getProcessMemory() << " MB\n";
-    if (getProcessMemory() > initial_memory + 10) {
-      std::cout << "WARNING: Process memory growth! (+"
-                << (getProcessMemory() - initial_memory) << " MB)\n";
-    } else {
-      std::cout << "OK: No significant process memory growth\n";
-    }
-  }
-};
-
-MemoryLogger g_memLogger;
-
-#define LOG_MEM(stage) g_memLogger.log(stage)
-
 namespace fs = std::filesystem;
 using namespace it_lab_ai;
 
 int main(int argc, char* argv[]) {
-  LOG_MEM("Program start");
-
   std::string model_name = "alexnet_mnist";
   RuntimeOptions options;
   size_t num_photo = 1000;
@@ -139,8 +69,6 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  LOG_MEM("After args parsing");
-
   std::string dataset_path;
   if (model_name == "alexnet_mnist") {
     dataset_path = MNIST_PATH;
@@ -154,8 +82,6 @@ int main(int argc, char* argv[]) {
   std::cout << '\n';
 
   if (model_name == "alexnet_mnist") {
-    LOG_MEM("MNIST start");
-
     std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
                                   891, 957,  1027, 973,  1008};
     int stat = 0;
@@ -189,7 +115,7 @@ int main(int argc, char* argv[]) {
           for (int j = 0; j < 28; ++j) {
             size_t a = ind;
             for (size_t n = 0; n < name; n++) a += counts[n] + 1;
-            res[(a)*28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
+            res[(a) * 28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
           }
         }
       }
@@ -223,12 +149,8 @@ int main(int argc, char* argv[]) {
         (static_cast<double>(stat) / static_cast<double>(sum + 10)) * 100;
     std::cout << "Stat: " << std::fixed << std::setprecision(2) << percentage
               << "%" << '\n';
-
-    LOG_MEM("MNIST end");
     return 0;
   }
-
-  LOG_MEM("ImageNet start");
 
   std::vector<size_t> counts(1000, 0);
   std::vector<std::string> image_paths;
@@ -236,7 +158,6 @@ int main(int argc, char* argv[]) {
   std::vector<float> all_image_data;
   size_t total_images = 0;
 
-  LOG_MEM("Counting classes");
   for (int class_id = 0; class_id < 1000; ++class_id) {
     std::ostringstream folder_oss;
     folder_oss << std::setw(5) << std::setfill('0') << class_id;
@@ -262,14 +183,12 @@ int main(int argc, char* argv[]) {
   size_t image_size = channels * height * width;
   size_t output_classes = 1000;
 
-  LOG_MEM("Reserving memory");
   all_image_data.reserve(num_photo * image_size);
   image_paths.reserve(num_photo);
   true_labels.reserve(num_photo);
 
   total_images = 0;
 
-  LOG_MEM("Loading images start");
   for (int class_id = 0; class_id < 1000; ++class_id) {
     size_t need_from_class = images_per_class_base;
     if (remaining > 0) {
@@ -317,15 +236,7 @@ int main(int argc, char* argv[]) {
       std::cout << "Warning: Class " << class_id << " has only " << taken
                 << " images (needed " << need_from_class << ")" << '\n';
     }
-
-    if (class_id % 100 == 0 && class_id > 0) {
-      char buf[50];
-      sprintf(buf, "Class %d", class_id);
-      LOG_MEM(buf);
-    }
   }
-
-  LOG_MEM("Images loaded");
 
   if (total_images != num_photo) {
     std::cout << "Warning: Requested " << num_photo << " images but loaded "
@@ -335,8 +246,6 @@ int main(int argc, char* argv[]) {
 
   int correct_predictions_top1 = 0;
   int correct_predictions_top5 = 0;
-
-  LOG_MEM("Building master graph");
 
   it_lab_ai::Shape full_shape({num_photo, static_cast<size_t>(channels),
                                static_cast<size_t>(height),
@@ -348,7 +257,6 @@ int main(int argc, char* argv[]) {
 
   Graph graph;
   build_graph(graph, dummy_input, dummy_output, json_path, options, false);
-  LOG_MEM("Master graph built");
 
   std::shared_ptr<Layer> input_layer = nullptr;
   std::shared_ptr<Layer> output_layer = nullptr;
@@ -368,7 +276,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  LOG_MEM("Starting batch processing");
   auto total_start_time = std::chrono::high_resolution_clock::now();
   int total_inference_time = 0;
   int batch_count = 0;
@@ -377,11 +284,6 @@ int main(int argc, char* argv[]) {
        batch_start += batch_size) {
     size_t batch_end = std::min(batch_start + batch_size, num_photo);
     size_t current_batch_size = batch_end - batch_start;
-
-    char batch_log[100];
-    sprintf(batch_log, "Batch %zu/%zu (size %zu)", batch_start / batch_size + 1,
-            (num_photo + batch_size - 1) / batch_size, current_batch_size);
-    LOG_MEM(batch_log);
 
     std::vector<float> batch_data;
     batch_data.reserve(current_batch_size * image_size);
@@ -402,7 +304,6 @@ int main(int argc, char* argv[]) {
     graph.setInput(input_layer, batch_input);
     graph.setOutput(output_layer, batch_output);
 
-    LOG_MEM("Batch inference");
     auto batch_start_time = std::chrono::high_resolution_clock::now();
     graph.inference(options);
     auto batch_end_time = std::chrono::high_resolution_clock::now();
@@ -493,13 +394,5 @@ int main(int argc, char* argv[]) {
   std::cout << "Top-5 Accuracy: " << std::fixed << std::setprecision(2)
             << final_accuracy_top5 << "%" << '\n';
 
-  all_image_data.clear();
-  all_image_data.shrink_to_fit();
-  image_paths.clear();
-  image_paths.shrink_to_fit();
-  true_labels.clear();
-  true_labels.shrink_to_fit();
-
-  LOG_MEM("Program end");
   return 0;
 }
