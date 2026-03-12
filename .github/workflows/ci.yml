@@ -335,7 +335,7 @@ jobs:
             model_file: GoogLeNet.onnx
             model_path: docs/models/GoogLeNet.onnx
             model_url: ''
-            extra_args: "--onednn 1000"
+            extra_args: "--onednn 10000"
           - model: densenet
             parser: parser_onnx.py
             model_file: densenet121_Opset16.onnx
@@ -568,15 +568,26 @@ jobs:
     - name: Update README for model (master only)
       if: github.ref == 'refs/heads/master'
       run: |
-        ACCURACY=$(cat accuracy_value_${{ matrix.model }}.txt | sed 's/%//g')
+        TOP1_ACC=$(grep -oE 'Top-1 Accuracy: [0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | grep -oE '[0-9]+\.?[0-9]*')
+        TOP5_ACC=$(grep -oE 'Top-5 Accuracy: [0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | grep -oE '[0-9]+\.?[0-9]*')
         DATE=$(date '+%Y-%m-%d')
-      
+    
+        if [ -z "$TOP1_ACC" ] || [ -z "$TOP5_ACC" ]; then
+          echo "Ошибка: Не удалось извлечь точность из файла accuracy_${{ matrix.model }}.txt"
+          cat accuracy_${{ matrix.model }}.txt
+          exit 1
+        fi
+    
+        UPDATE_TEXT="<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: Top-1: ${TOP1_ACC}% | Top-5: ${TOP5_ACC}% (updated: ${DATE})<!--END_ACCURACY_${{ matrix.model }}-->"
+    
         if grep -q "<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->" README.md; then
-          sed -i "s/<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->.*<!--END_ACCURACY_${{ matrix.model }}-->/<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY_${{ matrix.model }}-->/" README.md
+          sed -i "s|<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->.*<!--END_ACCURACY_${{ matrix.model }}-->|${UPDATE_TEXT}|" README.md
           echo "Обновлена точность для ${{ matrix.model }} в README"
         else
-          echo "Плейсхолдер для ${{ matrix.model }} не найден в README, добавляем в конец"
-          echo -e "\n## ${{ matrix.model }} Accuracy\n<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY_${{ matrix.model }}-->\n" >> README.md
+          echo "Ошибка: Плейсхолдер <!--ACCURACY_${{ matrix.model }}_PLACEHOLDER--> не найден в README.md"
+          echo "Содержимое README.md:"
+          cat README.md
+          exit 1
         fi
 
     - name: Commit and push changes (main only)
