@@ -179,18 +179,18 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
 
     size_t effective_kernel_size = (kernel_size - 1) * dilation + 1;
 
-    size_t output_size;
-    if (ceil_mode) {
-      output_size = static_cast<size_t>(
-                        std::ceil((input_size + pad - effective_kernel_size) /
-                                  static_cast<float>(stride))) +
-                    1;
-    } else {
-      output_size = static_cast<size_t>(
-                        std::floor((input_size + pad - effective_kernel_size) /
-                                   static_cast<float>(stride))) +
-                    1;
-    }
+    size_t output_size = [=]() {
+      if (ceil_mode) {
+        return static_cast<size_t>(
+                   std::ceil((input_size + pad - effective_kernel_size) /
+                             static_cast<float>(stride))) +
+               1;
+      }
+      return static_cast<size_t>(
+                 std::floor((input_size + pad - effective_kernel_size) /
+                            static_cast<float>(stride))) +
+             1;
+    }();
 
     this->outputShape_[input_shape.dims() - pooling_shape.dims() + i] =
         output_size;

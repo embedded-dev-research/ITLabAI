@@ -7,6 +7,7 @@
 #include <cmath>
 #include <numeric>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace it_lab_ai {
@@ -16,7 +17,7 @@ template <typename DurationContainerType, typename DurationType, class Function,
 DurationContainerType elapsed_time(Function&& func, Args&&... args) {
   auto duration = std::chrono::duration<DurationContainerType, DurationType>();
   auto start = std::chrono::high_resolution_clock::now();
-  func(args...);
+  std::forward<Function>(func)(std::forward<Args>(args)...);
   auto end = std::chrono::high_resolution_clock::now();
   duration = end - start;
   return duration.count();
@@ -26,7 +27,7 @@ DurationContainerType elapsed_time(Function&& func, Args&&... args) {
 template <class Function, typename... Args>
 double elapsed_time_omp(Function&& func, Args&&... args) {
   double start = omp_get_wtime();
-  func(args...);
+  std::forward<Function>(func)(std::forward<Args>(args)...);
   double end = omp_get_wtime();
   return end - start;
 }
@@ -38,7 +39,7 @@ DurationContainerType elapsed_time_avg(const size_t iters, Function&& func,
   auto duration = std::chrono::duration<DurationContainerType, DurationType>();
   auto start = std::chrono::high_resolution_clock::now();
   for (size_t i = 0; i < iters; i++) {
-    func(args...);
+    std::forward<Function>(func)(std::forward<Args>(args)...);
   }
   auto end = std::chrono::high_resolution_clock::now();
   duration = (end - start) / iters;
@@ -51,7 +52,7 @@ double elapsed_time_omp_avg(const size_t iters, Function&& func,
                             Args&&... args) {
   double start = omp_get_wtime();
   for (size_t i = 0; i < iters; i++) {
-    func(args...);
+    std::forward<Function>(func)(std::forward<Args>(args)...);
   }
   double end = omp_get_wtime();
   return (end - start) / iters;
@@ -61,12 +62,15 @@ template <typename ThroughputContainerType, typename DurationType,
           class Function, typename... Args>
 ThroughputContainerType throughput(Function&& func, Args&&... args) {
   return ThroughputContainerType(1) /
-         elapsed_time<ThroughputContainerType, DurationType>(func, args...);
+         elapsed_time<ThroughputContainerType, DurationType>(
+             std::forward<Function>(func), std::forward<Args>(args)...);
 }
 
 template <class Function, typename... Args>
 double throughput_omp(Function&& func, Args&&... args) {
-  return 1 / elapsed_time_omp(func, args...);
+  return 1 /
+         elapsed_time_omp(std::forward<Function>(func),
+                          std::forward<Args>(args)...);
 }
 
 template <typename ThroughputContainerType, typename DurationType,
@@ -74,13 +78,15 @@ template <typename ThroughputContainerType, typename DurationType,
 ThroughputContainerType throughput_avg(const size_t iters, Function&& func,
                                        Args&&... args) {
   return ThroughputContainerType(1) /
-         elapsed_time_avg<ThroughputContainerType, DurationType>(iters, func,
-                                                                 args...);
+         elapsed_time_avg<ThroughputContainerType, DurationType>(
+             iters, std::forward<Function>(func), std::forward<Args>(args)...);
 }
 
 template <class Function, typename... Args>
 double throughput_omp_avg(const size_t iters, Function&& func, Args&&... args) {
-  return 1 / elapsed_time_omp_avg(iters, func, args...);
+  return 1 /
+         elapsed_time_omp_avg(iters, std::forward<Function>(func),
+                              std::forward<Args>(args)...);
 }
 
 // as "Manhattan" norm of error-vector

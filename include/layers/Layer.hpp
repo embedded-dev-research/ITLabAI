@@ -78,6 +78,7 @@ class LayerImpl {
   LayerImpl() = default;
   LayerImpl(const Shape& inputShape, const Shape& outputShape)
       : inputShape_(inputShape), outputShape_(outputShape) {}
+  virtual ~LayerImpl() = default;
   LayerImpl(const LayerImpl& c) = default;
   LayerImpl& operator=(const LayerImpl& c) = default;
   [[nodiscard]] virtual std::vector<ValueType> run(
