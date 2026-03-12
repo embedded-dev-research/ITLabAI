@@ -171,7 +171,7 @@ def onnx_to_json(model_path, output_json_path):
 
 parser = argparse.ArgumentParser(description='Конвертация моделей в JSON формат')
 parser.add_argument('model_name', type=str,
-                        choices=['googlenet', 'densenet', 'resnet', 'yolo', 'alexnet'],
+                        choices=['googlenet', 'densenet', 'resnet', 'yolo'],
                         help='Имя модели для обработки')
 
 args = parser.parse_args()

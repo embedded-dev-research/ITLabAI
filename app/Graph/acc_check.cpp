@@ -16,13 +16,11 @@ int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
   RuntimeOptions options;
   size_t num_photo = 1000;
-  size_t batch_size = 50;
+  size_t batch_size = 32;
 
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
       model_name = argv[++i];
-    } else if (std::string(argv[i]) == "--batch" && i + 1 < argc) {
-      batch_size = std::stoi(argv[++i]);
     } else if (std::string(argv[i]) == "--onednn") {
       options.backend = Backend::kOneDnn;
       if (options.par_backend != ParBackend::kSeq) {
