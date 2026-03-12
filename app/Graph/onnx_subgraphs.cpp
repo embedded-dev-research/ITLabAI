@@ -19,8 +19,11 @@ void alexnet_inf_careless(Graph& graph, const RuntimeOptions& options,
   auto* o = new Tensor(output);
   auto* i = new Tensor(input);
   graph.inference(options);
-  graph.setOutput(*o);
-  graph.setInput(*i);
+  if (graph.getLayersCount() == 0) {
+    throw std::runtime_error("No layers");
+  }
+  graph.setOutput(graph.getLayerFromID(graph.getLayersCount() - 1), *o);
+  graph.setInput(graph.getLayerFromID(0), *i);
 }
 
 void alexnet_comparison() {
@@ -45,7 +48,7 @@ void alexnet_comparison() {
   RuntimeOptions options;
   Graph graph;
   Graph graph2;
-  build_graph_linear(graph, input, output, options, true);
+  build_graph_linear(graph, input, output, options, true, false);
   Graph subgraph;
   std::shared_ptr<Layer> layer_0 = std::make_shared<ConvolutionalLayer>();
   std::shared_ptr<Layer> layer_1 = std::make_shared<EWLayer>("relu");
@@ -57,9 +60,11 @@ void alexnet_comparison() {
   Tensor input_c = input;
   Tensor output_c = output;
   auto time1 = elapsed_time_avg<double, std::milli>(
-      2, alexnet_inf_careless, graph, options, input_c, output_c);
+      4, alexnet_inf_careless, graph, options, input_c, output_c);
+  print_time_stats(graph);
   auto time2 = elapsed_time_avg<double, std::milli>(
-      2, alexnet_inf_careless, graph2, options, input_c, output_c);
+      4, alexnet_inf_careless, graph2, options, input_c, output_c);
+  print_time_stats(graph2);
   std::cout << time1 << " for unchanged graph\n";
   std::cout << time2 << " for convrelu graph\n";
 }

@@ -176,16 +176,6 @@ class Graph {
     start_ = layer->getID();
   }
 
-  void setInput(Tensor& vec) {
-    if (layers_.empty()) {
-      throw std::invalid_argument("No layers in graph");
-    }
-    int id = layers_.front()->getID();
-
-    inten_ = {vec};
-    start_ = id;
-  }
-
   void addSingleLayer(const std::shared_ptr<Layer>& layer) {
     if (!layer) return;
 
@@ -451,19 +441,6 @@ class Graph {
       throw std::invalid_argument("Layer cannot be null");
     }
     end_ = layer->getID();
-    outtenres_ = &vec;
-    if (outten_.empty()) {
-      std::vector<int> vec1 = {1, 7, 1, 0};
-      Tensor start = make_tensor(vec1);
-      outten_.push_back(start);
-    }
-  }
-
-  void setOutput(Tensor& vec) {
-    if (layers_.empty()) {
-      throw std::invalid_argument("No layers in graph");
-    }
-    end_ = layers_.back()->getID();
     outtenres_ = &vec;
     if (outten_.empty()) {
       std::vector<int> vec1 = {1, 7, 1, 0};
