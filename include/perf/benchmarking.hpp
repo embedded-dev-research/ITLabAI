@@ -68,9 +68,8 @@ ThroughputContainerType throughput(Function&& func, Args&&... args) {
 
 template <class Function, typename... Args>
 double throughput_omp(Function&& func, Args&&... args) {
-  return 1 /
-         elapsed_time_omp(std::forward<Function>(func),
-                          std::forward<Args>(args)...);
+  return 1 / elapsed_time_omp(std::forward<Function>(func),
+                              std::forward<Args>(args)...);
 }
 
 template <typename ThroughputContainerType, typename DurationType,
@@ -84,9 +83,8 @@ ThroughputContainerType throughput_avg(const size_t iters, Function&& func,
 
 template <class Function, typename... Args>
 double throughput_omp_avg(const size_t iters, Function&& func, Args&&... args) {
-  return 1 /
-         elapsed_time_omp_avg(iters, std::forward<Function>(func),
-                              std::forward<Args>(args)...);
+  return 1 / elapsed_time_omp_avg(iters, std::forward<Function>(func),
+                                  std::forward<Args>(args)...);
 }
 
 // as "Manhattan" norm of error-vector

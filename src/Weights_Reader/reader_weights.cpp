@@ -44,8 +44,8 @@ json read_json(const std::string& filename) {
   return result;
 
 #else
-  int fd = open(filename.c_str(),
-                O_RDONLY);  // NOLINT(cppcoreguidelines-pro-type-vararg)
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
+  int fd = open(filename.c_str(), O_RDONLY);
   if (fd == -1) {
     throw std::runtime_error("Cannot open file: " + filename);
   }
