@@ -5,6 +5,8 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
+#include <tuple>
+#include <utility>
 
 namespace it_lab_ai {
 
@@ -73,18 +75,15 @@ void ConvLayerOneDnn::create_output_tensor(Tensor& output_tensor,
                                            Type data_type,
                                            dnnl::memory& dst_memory) {
   size_t output_size = output_shape.count();
+  auto* dst_data = static_cast<float*>(dst_memory.get_data_handle());
 
   if (data_type == Type::kFloat) {
     std::vector<float> output_data(output_size);
-    std::copy(static_cast<float*>(dst_memory.get_data_handle()),
-              static_cast<float*>(dst_memory.get_data_handle()) + output_size,
-              output_data.begin());
+    std::copy_n(dst_data, output_size, output_data.begin());
     output_tensor = make_tensor(output_data, output_shape);
   } else if (data_type == Type::kInt) {
     std::vector<float> float_output(output_size);
-    std::copy(static_cast<float*>(dst_memory.get_data_handle()),
-              static_cast<float*>(dst_memory.get_data_handle()) + output_size,
-              float_output.begin());
+    std::copy_n(dst_data, output_size, float_output.begin());
 
     std::vector<int> int_output(output_size);
     std::transform(float_output.begin(), float_output.end(), int_output.begin(),
@@ -194,29 +193,30 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
     auto dst_md = dnnl::memory::desc(dst_dims, dnnl_data_type,
                                      dnnl::memory::format_tag::any);
 
-    dnnl::memory::dims kernel_dims;
-    dnnl::memory::format_tag weights_format;
-    if (is_depthwise) {
-      kernel_dims = {static_cast<dnnl::memory::dim>(group_), 1, 1,
-                     static_cast<dnnl::memory::dim>(kernel_->get_shape()[2]),
-                     static_cast<dnnl::memory::dim>(kernel_->get_shape()[3])};
-      weights_format = dnnl::memory::format_tag::goihw;
-    } else if (group_ > 1) {
-      kernel_dims = {
-          static_cast<dnnl::memory::dim>(group_),
-          static_cast<dnnl::memory::dim>(kernel_->get_shape()[0] / group_),
-          static_cast<dnnl::memory::dim>(kernel_->get_shape()[1]),
-          static_cast<dnnl::memory::dim>(kernel_->get_shape()[2]),
-          static_cast<dnnl::memory::dim>(kernel_->get_shape()[3])};
-      weights_format = dnnl::memory::format_tag::goihw;
-    } else {
+    const auto [kernel_dims, weights_format] =
+        [&]() -> std::pair<dnnl::memory::dims, dnnl::memory::format_tag> {
+      if (is_depthwise) {
+        return {{static_cast<dnnl::memory::dim>(group_), 1, 1,
+                 static_cast<dnnl::memory::dim>(kernel_->get_shape()[2]),
+                 static_cast<dnnl::memory::dim>(kernel_->get_shape()[3])},
+                dnnl::memory::format_tag::goihw};
+      }
+      if (group_ > 1) {
+        return {
+            {static_cast<dnnl::memory::dim>(group_),
+             static_cast<dnnl::memory::dim>(kernel_->get_shape()[0] / group_),
+             static_cast<dnnl::memory::dim>(kernel_->get_shape()[1]),
+             static_cast<dnnl::memory::dim>(kernel_->get_shape()[2]),
+             static_cast<dnnl::memory::dim>(kernel_->get_shape()[3])},
+            dnnl::memory::format_tag::goihw};
+      }
       const auto& k_shape = kernel_->get_shape();
-      kernel_dims = {static_cast<dnnl::memory::dim>(k_shape[0]),
-                     static_cast<dnnl::memory::dim>(k_shape[1]),
-                     static_cast<dnnl::memory::dim>(k_shape[2]),
-                     static_cast<dnnl::memory::dim>(k_shape[3])};
-      weights_format = dnnl::memory::format_tag::oihw;
-    }
+      return {{static_cast<dnnl::memory::dim>(k_shape[0]),
+               static_cast<dnnl::memory::dim>(k_shape[1]),
+               static_cast<dnnl::memory::dim>(k_shape[2]),
+               static_cast<dnnl::memory::dim>(k_shape[3])},
+              dnnl::memory::format_tag::oihw};
+    }();
 
     auto weights_md =
         dnnl::memory::desc(kernel_dims, dnnl_data_type, weights_format);
@@ -224,12 +224,9 @@ void ConvLayerOneDnn::initialize_convolution(const Shape& input_shape,
     dnnl::memory::desc bias_md;
     bool has_bias = !bias_->empty();
     if (!bias_->empty()) {
-      size_t bias_size;
-      if (is_depthwise || group_ == 1) {
-        bias_size = kernel_dims[0];
-      } else {
-        bias_size = kernel_->get_shape()[0];
-      }
+      const size_t bias_size = (is_depthwise || group_ == 1)
+                                   ? static_cast<size_t>(kernel_dims[0])
+                                   : kernel_->get_shape()[0];
 
       bias_md =
           dnnl::memory::desc({static_cast<dnnl::memory::dim>(bias_size)},
@@ -303,20 +300,14 @@ dnnl::memory::dims ConvLayerOneDnn::get_kernel_dims() const {
 Shape ConvLayerOneDnn::get_output_shape(const Shape& input_shape) const {
   const Shape& kernel_shape = kernel_->get_shape();
 
-  size_t kernel_out_channels;
-  size_t kernel_height;
-  size_t kernel_width;
-
-  if (use_legacy_ ||
-      (kernel_shape.dims() == 4 && kernel_shape[3] > kernel_shape[2])) {
-    kernel_height = kernel_shape[0];
-    kernel_width = kernel_shape[1];
-    kernel_out_channels = kernel_shape[3];
-  } else {
-    kernel_out_channels = kernel_shape[0];
-    kernel_height = kernel_shape[2];
-    kernel_width = kernel_shape[3];
-  }
+  const auto [kernel_out_channels, kernel_height,
+              kernel_width] = [&]() -> std::tuple<size_t, size_t, size_t> {
+    if (use_legacy_ ||
+        (kernel_shape.dims() == 4 && kernel_shape[3] > kernel_shape[2])) {
+      return {kernel_shape[3], kernel_shape[0], kernel_shape[1]};
+    }
+    return {kernel_shape[0], kernel_shape[2], kernel_shape[3]};
+  }();
 
   size_t batch_size = input_shape[0];
   size_t input_height = input_shape[2];

@@ -137,8 +137,6 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
   std::vector<int> leaves;
   std::vector<int> roots_inps_final;
   std::vector<int> leaves_outs_final;
-  size_t amount_connected;
-  size_t amount_connected_s;
   for (int v = 0; v < subgraph_from.getLayersCount(); v++) {
     if (is_root(subgraph_from, v)) {
       roots.push_back(v);
@@ -183,8 +181,9 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
         }
       }
       // recognize transformations we can apply with roots
-      amount_connected = new_graph.getOutputsSize(subs[i][roots[j]]);
-      amount_connected_s = subgraph_from.getOutputsSize(roots[j]);
+      const size_t amount_connected =
+          new_graph.getOutputsSize(subs[i][roots[j]]);
+      const size_t amount_connected_s = subgraph_from.getOutputsSize(roots[j]);
       if (amount_connected == amount_connected_s) {
         continue;
       }
@@ -197,7 +196,7 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
       }
     }
     for (int leaf : leaves) {
-      amount_connected = new_graph.getOutputsSize(subs[i][leaf]);
+      const size_t amount_connected = new_graph.getOutputsSize(subs[i][leaf]);
       for (size_t k = 0; k < amount_connected; k++) {
         int id = new_graph.getOutLayers(subs[i][leaf])[k];
         auto it =
@@ -250,8 +249,6 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
   std::vector<int> leaves_to;
   std::vector<std::vector<int>> roots_inps_final;
   std::vector<std::vector<int>> leaves_outs_final;
-  size_t amount_connected;
-  size_t amount_connected_s;
   for (int v = 0; v < subgraph_from.getLayersCount(); v++) {
     if (is_root(subgraph_from, v)) {
       roots_from.push_back(v);
@@ -304,8 +301,10 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
     for (size_t j = 0; j < roots_from.size(); j++) {
       roots_inps_final[j] = new_graph.getInLayers(subs[i][roots_from[j]]);
       // recognize transformations we can apply with roots
-      amount_connected = new_graph.getOutputsSize(subs[i][roots_from[j]]);
-      amount_connected_s = subgraph_from.getOutputsSize(roots_from[j]);
+      const size_t amount_connected =
+          new_graph.getOutputsSize(subs[i][roots_from[j]]);
+      const size_t amount_connected_s =
+          subgraph_from.getOutputsSize(roots_from[j]);
       if (amount_connected == amount_connected_s) {
         continue;
       }
@@ -318,7 +317,8 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
       }
     }
     for (size_t j = 0; j < leaves_from.size(); j++) {
-      amount_connected = new_graph.getOutputsSize(subs[i][leaves_from[j]]);
+      const size_t amount_connected =
+          new_graph.getOutputsSize(subs[i][leaves_from[j]]);
       for (size_t k = 0; k < amount_connected; k++) {
         int id = new_graph.getOutLayers(subs[i][leaves_from[j]])[k];
         leaves_outs_final[j].push_back(id);
