@@ -31,7 +31,8 @@ static std::unordered_map<LayerType, std::string> label_map = {
     {kReshape, "Reshape"},
     {kSoftmax, "Softmax"},
     {kReduce, "Reduce"},
-    {kBatchNormalization, "Normalization"}};
+    {kBatchNormalization, "Normalization"},
+    {kConvRelu, "ConvRelu"}};
 
 struct LayerTimeStats {
   std::string layer_name;

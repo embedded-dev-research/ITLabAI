@@ -13,7 +13,7 @@ std::unordered_map<std::string, std::string> model_paths = {
 
 void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                         it_lab_ai::Tensor& output, RuntimeOptions options,
-                        bool comments) {
+                        bool comments, bool enable_postops) {
   if (comments) {
     for (size_t i = 0; i < input.get_shape().dims(); i++) {
       std::cout << input.get_shape()[i] << ' ';
@@ -75,7 +75,7 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
     if (layer_type.find("relu") != std::string::npos) {
       auto ew_layer = LayerFactory::createEwLayer("relu", options);
       layers.push_back(ew_layer);
-      layerpostop.push_back(true);
+      layerpostop.push_back(enable_postops);
       if (comments) {
         std::cout << "Element wise (relu) added to layers" << '\n';
       }

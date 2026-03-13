@@ -61,7 +61,8 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                  it_lab_ai::RuntimeOptions options, bool comments);
 void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
                         it_lab_ai::Tensor& output,
-                        it_lab_ai::RuntimeOptions options, bool comments);
+                        it_lab_ai::RuntimeOptions options, bool comments,
+                        bool enable_postops = true);
 std::unordered_map<int, std::string> load_class_names(
     const std::string& filename);
 

@@ -7,6 +7,26 @@ using namespace it_lab_ai;
 
 class ConvTestFixture : public BaseTestFixture {};
 
+TEST(ConvolutionalLayerTest, Getters) {
+  int step = 2;
+  std::vector<float> kernelvec = {1, 0, 1, 0, 1, 0, 1, 0, 1};
+  Shape sh2({3, 3});
+  Tensor kernel = make_tensor(kernelvec, sh2);
+  ConvolutionalLayer layer(step, 0, 1, kernel);
+  std::vector<float> vec = {1, 2, 3, 4};
+  Tensor input1 = make_tensor<float>(vec, {4});
+  Tensor input2 = make_tensor<float>(vec, {2, 2});
+  std::vector<Tensor> in{input1, input2};
+  std::vector<Tensor> output{input1};
+
+  bool is_legacy = layer.getLegacyImplBool();
+  std::vector<size_t> nums = layer.getNumericParams();
+  auto tens = layer.getTensorParams();
+  EXPECT_EQ(is_legacy, false);
+  EXPECT_FALSE(nums.empty());
+  EXPECT_FALSE(tens.empty());
+}
+
 TEST(ConvolutionalLayerTest, IncompatibleInput) {
   int step = 2;
   std::vector<float> kernelvec = {1, 0, 1, 0, 1, 0, 1, 0, 1};

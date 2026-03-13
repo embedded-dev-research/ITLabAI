@@ -160,7 +160,15 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
       sub_used[i] = false;
       continue;
     }
-    std::shared_ptr<Layer> layer = layer_based_shared_copy(layer_to, options);
+    std::shared_ptr<Layer> layer;
+    if (layer_to->getName() == kConvRelu &&
+        graph.getLayerFromID(subs_c[i][0])->getName() == kConvolution) {
+      layer = std::static_pointer_cast<Layer>(std::make_shared<ConvReluLayer>(
+          std::dynamic_pointer_cast<ConvolutionalLayer>(
+              graph.getLayerFromID(subs_c[i][0]))));  // convrelu case
+    } else {
+      layer = layer_based_shared_copy(layer_to, options);
+    }
     std::vector<bool> is_root_special(roots.size(), false);
     roots_inps_final.clear();
     leaves_outs_final.clear();
