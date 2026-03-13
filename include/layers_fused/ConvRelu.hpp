@@ -59,7 +59,7 @@ class ConvReluLayer : public Layer {
     dilations_ = dilations;
     useLegacyImpl_ = useLegacyImpl;
   }
-  ConvReluLayer(const std::shared_ptr<ConvolutionalLayer>& conv)
+  explicit ConvReluLayer(const std::shared_ptr<ConvolutionalLayer>& conv)
       : Layer(kConvRelu) {
     auto numerics = conv->getNumericParams();
     auto tensors = conv->getTensorParams();
