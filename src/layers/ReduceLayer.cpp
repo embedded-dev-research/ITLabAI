@@ -88,97 +88,94 @@ void ReduceLayer::compute(const Tensor& input, const Shape& output_shape,
   parallel::Options options;
   options.backend = backend;
 
-  parallel::parallel_for(
-      output_shape.count(),
-      [&](size_t out_idx) {
-        std::vector<size_t> out_coords(output_shape.dims(), 0);
-        size_t tmp = out_idx;
-        for (size_t i = output_shape.dims(); i-- > 0;) {
-          out_coords[i] = tmp % output_shape[i];
-          tmp /= output_shape[i];
-        }
+  parallel::parallel_for(output_shape.count(), [&](size_t out_idx) {
+    std::vector<size_t> out_coords(output_shape.dims(), 0);
+    size_t tmp = out_idx;
+    for (size_t i = output_shape.dims(); i-- > 0;) {
+      out_coords[i] = tmp % output_shape[i];
+      tmp /= output_shape[i];
+    }
 
-        T local_result;
-        size_t local_count = 0;
+    T local_result;
+    size_t local_count = 0;
+
+    switch (op_) {
+      case Operation::kSum:
+      case Operation::kMean:
+        local_result = T(0);
+        break;
+      case Operation::kMult:
+        local_result = T(1);
+        break;
+      case Operation::kMax:
+        local_result = std::numeric_limits<T>::lowest();
+        break;
+      case Operation::kMin:
+        local_result = std::numeric_limits<T>::max();
+        break;
+    }
+
+    std::vector<size_t> in_coords(input_rank, 0);
+
+    std::function<void(int64_t)> iterate_inputs = [&](int64_t axis_idx) {
+      if (axis_idx == input_rank) {
+        size_t in_idx = input_shape.get_index(in_coords);
+        const T& val = input_data[in_idx];
 
         switch (op_) {
           case Operation::kSum:
           case Operation::kMean:
-            local_result = T(0);
+            local_result += val;
+            local_count++;
             break;
           case Operation::kMult:
-            local_result = T(1);
+            local_result *= val;
             break;
           case Operation::kMax:
-            local_result = std::numeric_limits<T>::lowest();
+            if (local_count == 0 || val > local_result) {
+              local_result = val;
+            }
+            local_count++;
             break;
           case Operation::kMin:
-            local_result = std::numeric_limits<T>::max();
+            if (local_count == 0 || val < local_result) {
+              local_result = val;
+            }
+            local_count++;
             break;
         }
+        return;
+      }
 
-        std::vector<size_t> in_coords(input_rank, 0);
+      bool is_reduce_axis =
+          std::find(axes.begin(), axes.end(), axis_idx) != axes.end();
 
-        std::function<void(int64_t)> iterate_inputs = [&](int64_t axis_idx) {
-          if (axis_idx == input_rank) {
-            size_t in_idx = input_shape.get_index(in_coords);
-            const T& val = input_data[in_idx];
-
-            switch (op_) {
-              case Operation::kSum:
-              case Operation::kMean:
-                local_result += val;
-                local_count++;
-                break;
-              case Operation::kMult:
-                local_result *= val;
-                break;
-              case Operation::kMax:
-                if (local_count == 0 || val > local_result) {
-                  local_result = val;
-                }
-                local_count++;
-                break;
-              case Operation::kMin:
-                if (local_count == 0 || val < local_result) {
-                  local_result = val;
-                }
-                local_count++;
-                break;
-            }
-            return;
-          }
-
-          bool is_reduce_axis =
-              std::find(axes.begin(), axes.end(), axis_idx) != axes.end();
-
-          if (is_reduce_axis) {
-            for (size_t coord = 0; coord < input_shape[axis_idx]; ++coord) {
-              in_coords[axis_idx] = coord;
-              iterate_inputs(axis_idx + 1);
-            }
-          } else {
-            int64_t out_axis = 0;
-            for (int64_t i = 0; i < axis_idx; ++i) {
-              if (std::find(axes.begin(), axes.end(), i) == axes.end()) {
-                out_axis++;
-              }
-            }
-            in_coords[axis_idx] =
-                keepdims_ ? out_coords[axis_idx] : out_coords[out_axis];
-            iterate_inputs(axis_idx + 1);
-          }
-        };
-
-        iterate_inputs(0);
-
-        if (op_ == Operation::kMean && local_count > 0) {
-          output_data[out_idx] = local_result / static_cast<T>(local_count);
-        } else {
-          output_data[out_idx] = local_result;
+      if (is_reduce_axis) {
+        for (size_t coord = 0; coord < input_shape[axis_idx]; ++coord) {
+          in_coords[axis_idx] = coord;
+          iterate_inputs(axis_idx + 1);
         }
-      },
-      options);
+      } else {
+        int64_t out_axis = 0;
+        for (int64_t i = 0; i < axis_idx; ++i) {
+          if (std::find(axes.begin(), axes.end(), i) == axes.end()) {
+            out_axis++;
+          }
+        }
+        in_coords[axis_idx] =
+            keepdims_ ? out_coords[axis_idx] : out_coords[out_axis];
+        iterate_inputs(axis_idx + 1);
+      }
+    };
+
+    iterate_inputs(0);
+
+    if (op_ == Operation::kMean && local_count > 0) {
+      output_data[out_idx] = local_result / static_cast<T>(local_count);
+    } else {
+      output_data[out_idx] = local_result;
+    }
+  }, options);
 
   output = make_tensor(output_data, output_shape);
 }

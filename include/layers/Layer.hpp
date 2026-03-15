@@ -54,9 +54,15 @@ class Layer {
   explicit Layer(LayerType type) : type_(type) {}
   virtual ~Layer() = default;
   PostOperations postops;
-  [[nodiscard]] int getID() const { return id_; }
-  void setID(int id) { id_ = id; }
-  [[nodiscard]] LayerType getName() const { return type_; }
+  [[nodiscard]] int getID() const {
+    return id_;
+  }
+  void setID(int id) {
+    id_ = id;
+  }
+  [[nodiscard]] LayerType getName() const {
+    return type_;
+  }
   virtual void run(const std::vector<Tensor>& input,
                    std::vector<Tensor>& output) = 0;
   virtual void run(const std::vector<Tensor>& input,
@@ -84,8 +90,12 @@ class LayerImpl {
   LayerImpl& operator=(const LayerImpl& c) = default;
   [[nodiscard]] virtual std::vector<ValueType> run(
       const std::vector<ValueType>& input) const = 0;
-  [[nodiscard]] Shape get_input_shape() const { return inputShape_; }
-  [[nodiscard]] Shape get_output_shape() const { return outputShape_; }
+  [[nodiscard]] Shape get_input_shape() const {
+    return inputShape_;
+  }
+  [[nodiscard]] Shape get_output_shape() const {
+    return outputShape_;
+  }
   // weights width x height
   [[nodiscard]] std::pair<Shape, Shape> get_dims() const {
     return std::pair<Shape, Shape>(outputShape_, inputShape_);

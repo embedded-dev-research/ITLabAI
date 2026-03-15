@@ -147,7 +147,9 @@ std::vector<T> ReduceLayerOneDnn::remove_unit_dims(
 
     for (size_t dim = coords.size(); dim-- > 0;) {
       ++coords[dim];
-      if (coords[dim] < src_shape[dim]) break;
+      if (coords[dim] < src_shape[dim]) {
+        break;
+      }
       coords[dim] = 0;
     }
   }
@@ -267,9 +269,13 @@ void ReduceLayerOneDnn::initialize_onednn(const Tensor& input) {
   } catch (const dnnl::error& e) {
     std::cerr << "Error creating reduction primitive: " << e.what() << '\n';
     std::cerr << "Input dims: ";
-    for (auto d : src_dims) std::cerr << d << " ";
+    for (auto d : src_dims) {
+      std::cerr << d << " ";
+    }
     std::cerr << "\nOutput dims: ";
-    for (auto d : dst_dims) std::cerr << d << " ";
+    for (auto d : dst_dims) {
+      std::cerr << d << " ";
+    }
     std::cerr << "\nOperation: " << static_cast<int>(op_) << '\n';
 
     throw std::runtime_error("Failed to create oneDNN reduction primitive: " +

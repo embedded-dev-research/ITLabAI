@@ -216,12 +216,12 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
         change_ids(subs, subs[i][j]);
         std::transform(roots_inps_final.begin(), roots_inps_final.end(),
                        roots_inps_final.begin(), [&](int elem) {
-                         return elem > subs[i][j] ? elem - 1 : elem;
-                       });
+          return elem > subs[i][j] ? elem - 1 : elem;
+        });
         std::transform(leaves_outs_final.begin(), leaves_outs_final.end(),
                        leaves_outs_final.begin(), [&](int elem) {
-                         return elem > subs[i][j] ? elem - 1 : elem;
-                       });
+          return elem > subs[i][j] ? elem - 1 : elem;
+        });
       }
     }
     for (int j : roots_inps_final) {

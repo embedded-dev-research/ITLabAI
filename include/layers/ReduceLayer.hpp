@@ -26,7 +26,9 @@ class ReduceLayer : public Layer {
            const RuntimeOptions& options) override;
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return Tensor(); }
+  Tensor get_weights() override {
+    return Tensor();
+  }
 #endif
 
  private:

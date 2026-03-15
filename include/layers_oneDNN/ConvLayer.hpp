@@ -60,7 +60,9 @@ class ConvLayerOneDnn : public Layer {
            std::vector<Tensor>& output) override;
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return *kernel_; }
+  Tensor get_weights() override {
+    return *kernel_;
+  }
 #endif
 
  private:
