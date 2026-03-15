@@ -86,9 +86,9 @@ class Tensor {
     values_ = a;
   }
 
-  Tensor(const Tensor& t) noexcept = default;
+  Tensor(const Tensor& t) = default;
   Tensor(Tensor&& t) noexcept = default;
-  Tensor& operator=(const Tensor& t) noexcept = default;
+  Tensor& operator=(const Tensor& t) = default;
   Tensor& operator=(Tensor&& t) noexcept = default;
 
   [[nodiscard]] Shape get_shape() const { return shape_; }

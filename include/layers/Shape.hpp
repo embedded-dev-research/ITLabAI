@@ -19,6 +19,8 @@ class Shape {
   Shape(const std::initializer_list<size_t>& l) : dims_(l) {}
   Shape(const Shape& c) = default;
   Shape& operator=(const Shape& c) = default;
+  Shape(Shape&&) noexcept = default;
+  Shape& operator=(Shape&&) noexcept = default;
   size_t operator[](size_t i) const noexcept { return dims_[i]; }
   size_t& operator[](size_t i) noexcept { return dims_[i]; }
   [[nodiscard]] size_t at(size_t i) const {
