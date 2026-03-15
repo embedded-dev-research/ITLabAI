@@ -43,15 +43,20 @@ void Graph::clone(Graph& result, Tensor& out,
   result.arrayE_ = this->arrayE_;
   result.arrayV_ = this->arrayV_;
   result.BiggestSize_ = this->BiggestSize_;
-  result.branch_map_ = this->branch_map_;
-  result.count_used_split_distribution_ = this->count_used_split_distribution_;
-  result.end_ = this->end_;
   result.inten_ = this->inten_;
+  result.outten_ = this->outten_;
+  result.end_ = this->end_;
+  result.branch_states_.clear();
+  result.execution_plan_dirty_ = true;
+  result.in_out_degrees_.clear();
+  result.expected_input_count_.clear();
+  result.input_bindings_.clear();
   result.in_edges_ = this->in_edges_;
   result.outtenres_ = &out;
-  result.outten_ = this->outten_;
+  result.output_routes_.clear();
   result.split_distribution_ = this->split_distribution_;
   result.start_ = this->start_;
+  result.traversal_order_.clear();
   result.V_ = this->V_;
   result.layers_ = std::vector<std::shared_ptr<Layer>>();
   for (const auto& layer : this->layers_) {

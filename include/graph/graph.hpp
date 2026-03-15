@@ -1,9 +1,11 @@
 #pragma once
 #include <algorithm>
 #include <chrono>
+#include <functional>
 #include <iomanip>
+#include <limits>
+#include <map>
 #include <memory>
-#include <queue>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -43,32 +45,42 @@ struct LayerTimeStats {
 };
 
 struct BranchState {
-  int ind_layer;
-  std::vector<Tensor> give_for_all;
-  int count_used_ten;
-  bool split;
-  std::vector<std::pair<int, int>> distribution;
+  std::vector<Tensor> tensors;
+  int remaining_uses = 0;
+  bool active = false;
+};
+
+struct InputBinding {
+  int source_layer = -1;
+  std::vector<int> output_slots;
 };
 
 std::shared_ptr<Layer> layer_based_shared_copy(
     const std::shared_ptr<Layer>& layer, const RuntimeOptions& options);
 
 class Graph {
+  using Route = std::pair<int, int>;
+
   std::map<std::string, LayerTimeStats> layer_stats_;
-  int BiggestSize_;
-  int V_;  // amount of ids
+  int BiggestSize_ = 0;
+  int V_ = 0;  // amount of ids
   std::vector<std::shared_ptr<Layer>> layers_;
   std::vector<int> arrayV_;  // vertices (id -> vertex number)
   std::vector<int> arrayE_;  // edges (vertex number -> id)
   std::vector<Tensor> inten_;
   std::vector<Tensor> outten_;
-  Tensor* outtenres_;
-  int start_;
-  int end_;
-  std::unordered_map<int, BranchState> branch_map_;
+  Tensor* outtenres_ = nullptr;
+  int start_ = -1;
+  int end_ = -1;
   std::vector<std::vector<int>> in_edges_;  // next -> prev
   std::vector<std::vector<std::pair<int, int>>> split_distribution_;
-  int count_used_split_distribution_;
+  mutable bool execution_plan_dirty_ = true;
+  mutable std::vector<std::pair<int, int>> in_out_degrees_;
+  mutable std::vector<int> traversal_order_;
+  mutable std::vector<std::vector<Route>> output_routes_;
+  mutable std::vector<std::vector<InputBinding>> input_bindings_;
+  mutable std::vector<size_t> expected_input_count_;
+  mutable std::vector<BranchState> branch_states_;
 #ifdef ENABLE_STATISTIC_TENSORS
   std::vector<Tensor> tensors_;
 #endif
@@ -81,11 +93,7 @@ class Graph {
 #endif
 
  public:
-  Graph() {
-    arrayV_.push_back(0);
-    V_ = 0;
-    in_edges_.clear();
-  }
+  Graph() { arrayV_.push_back(0); }
 
   Graph(int vertices, std::vector<std::vector<std::pair<int, int>>> split)
       : BiggestSize_(vertices), split_distribution_(std::move(split)) {
@@ -93,8 +101,6 @@ class Graph {
       throw std::out_of_range("Vertices cannot be less than zero");
     }
     arrayV_.push_back(0);
-    V_ = 0;
-    in_edges_.clear();
   }
 
   Graph(const Graph&) = delete;
@@ -109,6 +115,7 @@ class Graph {
   void setSplitDistribution(
       std::vector<std::vector<std::pair<int, int>>> split_dist) {
     split_distribution_ = std::move(split_dist);
+    markExecutionPlanDirty();
   }
 
   [[nodiscard]] size_t getInputsSize(size_t layerID) const {
@@ -157,6 +164,7 @@ class Graph {
       throw std::invalid_argument("Layer cannot be null");
     }
 
+    int previous_start = start_;
     int id = layer->getID();
     bool layer_exists = (id >= 0 && id < V_ && layers_[id] == layer);
 
@@ -174,6 +182,9 @@ class Graph {
 
     inten_ = {vec};
     start_ = layer->getID();
+    if (!layer_exists || start_ != previous_start) {
+      markExecutionPlanDirty();
+    }
   }
 
   void addSingleLayer(const std::shared_ptr<Layer>& layer) {
@@ -192,6 +203,7 @@ class Graph {
       }
 
       V_++;
+      markExecutionPlanDirty();
     }
   }
 
@@ -227,6 +239,7 @@ class Graph {
     }
 
     in_edges_[layNext->getID()].push_back(layPrev->getID());
+    markExecutionPlanDirty();
   }
 
   void removeConnection(int idPrev, int idNext) {
@@ -252,12 +265,14 @@ class Graph {
     for (size_t i = static_cast<size_t>(idPrev) + 1; i < arrayV_.size(); ++i) {
       arrayV_[i]--;
     }
+    markExecutionPlanDirty();
   }
+
   void removeSingleLayer(int id) {
     if (id >= V_ || id < 0) {
       throw std::out_of_range("Layer ID out of range");
     }
-    // remove inputs
+
     for (int i = 0; i < V_; i++) {
       if (arrayV_[i] != arrayV_[i + 1]) {
         auto array_e_it = std::find(arrayE_.begin() + arrayV_[i],
@@ -267,24 +282,24 @@ class Graph {
         }
       }
     }
-    // remove outputs
+
     int amount_connected = arrayV_[id + 1] - arrayV_[id];
     std::vector<int> array_e_copy = arrayE_;
     for (int i = 0; i < amount_connected; i++) {
       removeConnection(id, array_e_copy[arrayV_[id] + i]);
     }
-    // remove vertex
+
     in_edges_.erase(in_edges_.begin() + id);
     arrayV_.erase(arrayV_.begin() + id);
-    for (int& i : arrayE_) {
-      if (i > id) {
-        i -= 1;
+    for (int& edge : arrayE_) {
+      if (edge > id) {
+        edge -= 1;
       }
     }
-    for (std::vector<int>& i : in_edges_) {
-      for (int& j : i) {
-        if (j > id) {
-          j--;
+    for (std::vector<int>& edges : in_edges_) {
+      for (int& edge : edges) {
+        if (edge > id) {
+          edge--;
         }
       }
     }
@@ -294,7 +309,9 @@ class Graph {
     layers_[id]->setID(-1);
     layers_.erase(layers_.begin() + id);
     V_--;
+    markExecutionPlanDirty();
   }
+
   bool areLayerNext(const std::shared_ptr<Layer>& layPrev,
                     const std::shared_ptr<Layer>& layNext) {
     if (!layPrev || !layNext) return false;
@@ -313,46 +330,53 @@ class Graph {
   }
 
   void inference(const RuntimeOptions& options) {
-    std::vector<std::pair<int, int>> countinout = getInOutDegrees();
-    std::vector<int> traversal = getTraversalOrder();
-    count_used_split_distribution_ = 0;
+    ensureExecutionPlan();
 
-    for (size_t i = 0; i < traversal.size(); ++i) {
-      int current_layer = traversal[i];
+    if (outten_.empty()) {
+      outten_.resize(1);
+    }
+
+    for (int layer_id : traversal_order_) {
+      auto& branch = branch_states_[layer_id];
+      branch.tensors.clear();
+      branch.remaining_uses = 0;
+      branch.active = false;
+    }
+
+    for (size_t order_index = 0; order_index < traversal_order_.size();
+         ++order_index) {
+      const int current_layer = traversal_order_[order_index];
 #ifdef ENABLE_STATISTIC_TIME
       auto start = std::chrono::high_resolution_clock::now();
 #endif
-      if (i != 0) {
+      if (order_index != 0) {
         inten_.clear();
+        inten_.reserve(expected_input_count_[current_layer]);
 
-        for (size_t k = 0; k < in_edges_[current_layer].size(); ++k) {
-          auto target_value = in_edges_[current_layer][k];
-          auto it = branch_map_.find(target_value);
+        for (const auto& binding : input_bindings_[current_layer]) {
+          auto& source_state = branch_states_[binding.source_layer];
+          if (!source_state.active) {
+            continue;
+          }
 
-          if (it != branch_map_.end()) {
-            for (size_t f = 0; f < it->second.distribution.size(); ++f) {
-              if (it->second.distribution[f].first == current_layer) {
-                bool last_use = (it->second.count_used_ten == 1);
-                auto& src =
-                    it->second.give_for_all[it->second.distribution[f].second];
-                if (last_use) {
-                  inten_.push_back(std::move(src));
-                } else {
-                  inten_.push_back(src);
-                }
-              }
+          const bool last_use = (source_state.remaining_uses == 1);
+          for (int output_slot : binding.output_slots) {
+            auto& src = source_state.tensors[static_cast<size_t>(output_slot)];
+            if (last_use) {
+              inten_.push_back(std::move(src));
+            } else {
+              inten_.push_back(src);
             }
+          }
 
-            it->second.count_used_ten--;
-            if (it->second.count_used_ten < 1) {
-              branch_map_.erase(it);
-            }
+          source_state.remaining_uses--;
+          if (source_state.remaining_uses < 1) {
+            source_state.tensors.clear();
+            source_state.active = false;
           }
         }
       }
-      if (outten_.empty()) {
-        outten_.resize(1);
-      }
+
       layers_[current_layer]->run(inten_, outten_, options);
 
 #ifdef ENABLE_STATISTIC_TENSORS
@@ -374,37 +398,17 @@ class Graph {
         inten_.swap(outten_);
       }
 
-      BranchState new_branch;
-      new_branch.give_for_all = std::move(inten_);
-      new_branch.count_used_ten = countinout[current_layer].second;
-      new_branch.ind_layer = current_layer;
-      new_branch.split = layers_[current_layer]->getName() == kSplit;
+      auto& current_branch = branch_states_[current_layer];
+      current_branch.tensors = std::move(inten_);
+      current_branch.remaining_uses = in_out_degrees_[current_layer].second;
+      current_branch.active = current_branch.remaining_uses > 0;
 
-      if (layers_[current_layer]->getName() == kSplit) {
-        if (static_cast<int>(split_distribution_.size()) == 0) {
-          std::vector<std::pair<int, int>> dis(
-              countinout[current_layer].second);
-          for (size_t m = 0; m < dis.size(); ++m) {
-            dis[m] = {arrayE_[arrayV_[current_layer] + m], static_cast<int>(m)};
-          }
-          new_branch.distribution = dis;
-        } else {
-          new_branch.distribution =
-              split_distribution_[count_used_split_distribution_];
-          count_used_split_distribution_++;
+      if (current_branch.remaining_uses == 0) {
+        if (outtenres_ && current_layer == end_ &&
+            !current_branch.tensors.empty()) {
+          *outtenres_ = std::move(current_branch.tensors[0]);
         }
-      } else {
-        std::vector<std::pair<int, int>> dis(countinout[current_layer].second);
-        for (size_t m = 0; m < dis.size(); ++m) {
-          dis[m] = {arrayE_[arrayV_[current_layer] + m], 0};
-        }
-        new_branch.distribution = dis;
-      }
-      branch_map_[current_layer] = std::move(new_branch);
-      if (outtenres_ && current_layer == end_ &&
-          !branch_map_[current_layer].give_for_all.empty() &&
-          countinout[current_layer].second == 0) {
-        *outtenres_ = std::move(branch_map_[current_layer].give_for_all[0]);
+        current_branch.tensors.clear();
       }
 
 #ifdef ENABLE_STATISTIC_TIME
@@ -442,11 +446,6 @@ class Graph {
     }
     end_ = layer->getID();
     outtenres_ = &vec;
-    if (outten_.empty()) {
-      std::vector<int> vec1 = {1, 7, 1, 0};
-      Tensor start = make_tensor(vec1);
-      outten_.push_back(start);
-    }
   }
 
 #ifdef ENABLE_STATISTIC_TENSORS
@@ -469,24 +468,8 @@ class Graph {
 #endif
 
   [[nodiscard]] std::vector<std::pair<int, int>> getInOutDegrees() const {
-    std::vector<int> in_degree(V_, 0);
-
-    for (int i = 0; i < V_; ++i) {
-      for (int j = arrayV_[i]; j < arrayV_[i + 1]; ++j) {
-        int target_vertex = arrayE_[j];
-        if (target_vertex >= 0 && target_vertex < V_) {
-          in_degree[target_vertex]++;
-        }
-      }
-    }
-
-    std::vector<std::pair<int, int>> result;
-    for (int i = 0; i < V_; ++i) {
-      int out_degree = arrayV_[i + 1] - arrayV_[i];
-      result.emplace_back(in_degree[i], out_degree);
-    }
-
-    return result;
+    ensureExecutionPlan();
+    return in_out_degrees_;
   }
 
   void printLayerStats() {
@@ -507,43 +490,141 @@ class Graph {
   }
 
   [[nodiscard]] std::vector<int> getTraversalOrder() const {
-    auto in_out_degrees = getInOutDegrees();
-    std::vector<int> in_degree(V_);
-    for (int i = 0; i < V_; ++i) {
-      in_degree[i] = in_out_degrees[i].first;
+    ensureExecutionPlan();
+    return traversal_order_;
+  }
+
+ private:
+  void markExecutionPlanDirty() { execution_plan_dirty_ = true; }
+
+  void ensureExecutionPlan() const {
+    if (execution_plan_dirty_) {
+      rebuildExecutionPlan();
+    }
+  }
+
+  [[nodiscard]] std::vector<Route> buildLayerRoutes(
+      int layer_id, size_t& split_distribution_index) const {
+    const int out_degree = arrayV_[layer_id + 1] - arrayV_[layer_id];
+    std::vector<Route> routes(static_cast<size_t>(out_degree));
+
+    if (layers_[layer_id]->getName() == kSplit) {
+      if (split_distribution_.empty()) {
+        for (int edge_index = 0; edge_index < out_degree; ++edge_index) {
+          routes[static_cast<size_t>(edge_index)] = {
+              arrayE_[arrayV_[layer_id] + edge_index], edge_index};
+        }
+      } else {
+        if (split_distribution_index >= split_distribution_.size()) {
+          throw std::out_of_range(
+              "Split distribution does not match split layer count");
+        }
+        routes = split_distribution_[split_distribution_index++];
+      }
+    } else {
+      for (int edge_index = 0; edge_index < out_degree; ++edge_index) {
+        routes[static_cast<size_t>(edge_index)] = {
+            arrayE_[arrayV_[layer_id] + edge_index], 0};
+      }
     }
 
-    std::vector<int> traversal;
-    std::vector<bool> visited(V_, false);
+    return routes;
+  }
 
-    std::function<void(int)> dfs = [&](int u) {
-      if (visited[u]) return;
-      visited[u] = true;
-      traversal.push_back(u);
+  void rebuildExecutionPlan() const {
+    in_out_degrees_.assign(static_cast<size_t>(V_), {0, 0});
+    std::vector<int> in_degree(static_cast<size_t>(V_), 0);
+
+    for (int layer_id = 0; layer_id < V_; ++layer_id) {
+      const int out_degree = arrayV_[layer_id + 1] - arrayV_[layer_id];
+      in_out_degrees_[static_cast<size_t>(layer_id)].second = out_degree;
+
+      for (int edge_index = arrayV_[layer_id];
+           edge_index < arrayV_[layer_id + 1]; ++edge_index) {
+        const int target_vertex = arrayE_[edge_index];
+        if (target_vertex >= 0 && target_vertex < V_) {
+          in_degree[static_cast<size_t>(target_vertex)]++;
+        }
+      }
+    }
+
+    for (int layer_id = 0; layer_id < V_; ++layer_id) {
+      in_out_degrees_[static_cast<size_t>(layer_id)].first =
+          in_degree[static_cast<size_t>(layer_id)];
+    }
+
+    traversal_order_.clear();
+    traversal_order_.reserve(static_cast<size_t>(V_));
+    std::vector<bool> visited(static_cast<size_t>(V_), false);
+    std::vector<int> traversal_in_degree = in_degree;
+
+    std::function<void(int)> dfs = [&](int vertex) {
+      if (visited[static_cast<size_t>(vertex)]) return;
+
+      visited[static_cast<size_t>(vertex)] = true;
+      traversal_order_.push_back(vertex);
 
       std::vector<int> children;
-      for (int j = arrayV_[u]; j < arrayV_[u + 1]; ++j) {
-        int v = arrayE_[j];
-        children.push_back(v);
+      children.reserve(
+          static_cast<size_t>(arrayV_[vertex + 1] - arrayV_[vertex]));
+      for (int edge_index = arrayV_[vertex]; edge_index < arrayV_[vertex + 1];
+           ++edge_index) {
+        children.push_back(arrayE_[edge_index]);
       }
 
       std::sort(children.begin(), children.end());
 
       for (int child : children) {
-        in_degree[child]--;
-        if (in_degree[child] == 0 && !visited[child]) {
+        traversal_in_degree[static_cast<size_t>(child)]--;
+        if (traversal_in_degree[static_cast<size_t>(child)] == 0 &&
+            !visited[static_cast<size_t>(child)]) {
           dfs(child);
         }
       }
     };
 
-    for (int i = 0; i < V_; ++i) {
-      if (in_degree[i] == 0 && !visited[i]) {
-        dfs(i);
+    for (int layer_id = 0; layer_id < V_; ++layer_id) {
+      if (traversal_in_degree[static_cast<size_t>(layer_id)] == 0 &&
+          !visited[static_cast<size_t>(layer_id)]) {
+        dfs(layer_id);
       }
     }
 
-    return traversal;
+    output_routes_.assign(static_cast<size_t>(V_), {});
+    size_t split_distribution_index = 0;
+    for (int layer_id : traversal_order_) {
+      output_routes_[static_cast<size_t>(layer_id)] =
+          buildLayerRoutes(layer_id, split_distribution_index);
+    }
+
+    input_bindings_.assign(static_cast<size_t>(V_), {});
+    expected_input_count_.assign(static_cast<size_t>(V_), 0);
+    branch_states_.assign(static_cast<size_t>(V_), {});
+
+    for (int layer_id = 0; layer_id < V_; ++layer_id) {
+      auto& layer_bindings = input_bindings_[static_cast<size_t>(layer_id)];
+      layer_bindings.reserve(in_edges_[static_cast<size_t>(layer_id)].size());
+
+      size_t input_count = 0;
+      for (int source_layer : in_edges_[static_cast<size_t>(layer_id)]) {
+        InputBinding binding;
+        binding.source_layer = source_layer;
+
+        for (const auto& route :
+             output_routes_[static_cast<size_t>(source_layer)]) {
+          if (route.first == layer_id) {
+            binding.output_slots.push_back(route.second);
+          }
+        }
+
+        input_count += binding.output_slots.size();
+        layer_bindings.push_back(std::move(binding));
+      }
+
+      expected_input_count_[static_cast<size_t>(layer_id)] = input_count;
+    }
+
+    execution_plan_dirty_ = false;
   }
 };
 }  // namespace it_lab_ai
