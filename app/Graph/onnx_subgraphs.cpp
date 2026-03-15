@@ -16,14 +16,12 @@ using namespace it_lab_ai;
 
 void alexnet_inf_careless(Graph& graph, const RuntimeOptions& options,
                           Tensor& input, Tensor& output) {
-  auto* o = new Tensor(output);
-  auto* i = new Tensor(input);
-  graph.inference(options);
   if (graph.getLayersCount() == 0) {
     throw std::runtime_error("No layers");
   }
-  graph.setOutput(graph.getLayerFromID(graph.getLayersCount() - 1), *o);
-  graph.setInput(graph.getLayerFromID(0), *i);
+  graph.setInput(graph.getLayerFromID(0), input);
+  graph.setOutput(graph.getLayerFromID(graph.getLayersCount() - 1), output);
+  graph.inference(options);
 }
 
 void alexnet_comparison() {
