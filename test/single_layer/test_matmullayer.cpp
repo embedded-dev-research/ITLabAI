@@ -92,8 +92,12 @@ TEST(MatmulLayerTest, ComplexBroadcastingExample) {
   std::vector<float> a_data;
   std::vector<float> b_data;
 
-  for (size_t i = 0; i < 4 * 2 * 5 * 4; ++i) a_data.push_back(1.0f);
-  for (size_t i = 0; i < 4 * 2 * 4 * 5; ++i) b_data.push_back(1.0f);
+  for (size_t i = 0; i < 4 * 2 * 5 * 4; ++i) {
+    a_data.push_back(1.0f);
+  }
+  for (size_t i = 0; i < 4 * 2 * 4 * 5; ++i) {
+    b_data.push_back(1.0f);
+  }
 
   Tensor input1 = make_tensor<float>(a_data, {4, 2, 5, 4});
   Tensor input2 = make_tensor<float>(b_data, {4, 2, 4, 5});
@@ -125,8 +129,9 @@ TEST(MatmulLayerTest, SingleElementTensors) {
 
 TEST(MatmulLayerTest, MixedDimensionsComplexCase) {
   std::vector<float> a_data;
-  for (size_t i = 0; i < 3 * 4 * 5; ++i)
+  for (size_t i = 0; i < 3 * 4 * 5; ++i) {
     a_data.push_back(static_cast<float>(i % 5 + 1));
+  }
   std::vector<float> b_data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
 
   Tensor input1 = make_tensor<float>(a_data, {3, 4, 5});

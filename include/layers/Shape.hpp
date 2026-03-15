@@ -21,8 +21,12 @@ class Shape {
   Shape& operator=(const Shape& c) = default;
   Shape(Shape&&) noexcept = default;
   Shape& operator=(Shape&&) noexcept = default;
-  size_t operator[](size_t i) const noexcept { return dims_[i]; }
-  size_t& operator[](size_t i) noexcept { return dims_[i]; }
+  size_t operator[](size_t i) const noexcept {
+    return dims_[i];
+  }
+  size_t& operator[](size_t i) noexcept {
+    return dims_[i];
+  }
   [[nodiscard]] size_t at(size_t i) const {
     if (i >= dims_.size()) {
       throw std::out_of_range("Invalid shape index");
@@ -35,33 +39,47 @@ class Shape {
     }
     return dims_[i];
   }
-  void resize(const std::vector<size_t>& new_size) { dims_ = new_size; }
+  void resize(const std::vector<size_t>& new_size) {
+    dims_ = new_size;
+  }
   [[nodiscard]] size_t count() const {
     return std::accumulate(dims_.begin(), dims_.end(), static_cast<size_t>(1),
                            std::multiplies<>());
   }
-  [[nodiscard]] size_t dims() const noexcept { return dims_.size(); }
+  [[nodiscard]] size_t dims() const noexcept {
+    return dims_.size();
+  }
   [[nodiscard]] size_t get_index(const std::vector<size_t>& coords) const;
   [[nodiscard]] std::string to_string() const {
     std::stringstream ss;
     ss << "(";
     for (size_t i = 0; i < dims_.size(); ++i) {
-      if (i > 0) ss << ", ";
+      if (i > 0) {
+        ss << ", ";
+      }
       ss << dims_[i];
     }
     ss << ")";
     return ss.str();
   }
   bool operator==(const Shape& other) const {
-    if (dims_.size() != other.dims_.size()) return false;
+    if (dims_.size() != other.dims_.size()) {
+      return false;
+    }
     for (size_t i = 0; i < dims_.size(); ++i) {
-      if (dims_[i] != other.dims_[i]) return false;
+      if (dims_[i] != other.dims_[i]) {
+        return false;
+      }
     }
     return true;
   }
-  void push_back(size_t value) { dims_.push_back(value); }
+  void push_back(size_t value) {
+    dims_.push_back(value);
+  }
 
-  bool operator!=(const Shape& other) const { return !(*this == other); }
+  bool operator!=(const Shape& other) const {
+    return !(*this == other);
+  }
   friend std::ostream& operator<<(std::ostream& os, const Shape& shape);
 
  private:

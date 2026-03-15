@@ -39,12 +39,18 @@ class PoolingLayer : public Layer {
         dilations_({1, 1}),
         ceil_mode_(false),
         poolingType_(std::move(pooling_type)) {}
-  void setStrides(size_t h, size_t w) { strides_ = {h, w}; }
+  void setStrides(size_t h, size_t w) {
+    strides_ = {h, w};
+  }
   void setPads(size_t top, size_t bottom, size_t left, size_t right) {
     pads_ = {top, bottom, left, right};
   }
-  void setDilations(size_t h, size_t w) { dilations_ = {h, w}; }
-  void setCeilMode(bool ceil_mode) { ceil_mode_ = ceil_mode; }
+  void setDilations(size_t h, size_t w) {
+    dilations_ = {h, w};
+  }
+  void setCeilMode(bool ceil_mode) {
+    ceil_mode_ = ceil_mode;
+  }
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
   void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
@@ -246,78 +252,77 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
   parallel::Options options;
   options.backend = parallel_backend_;
 
-  parallel::parallel_for(
-      total_work,
-      [&](size_t idx) {
-        size_t tmp = idx;
-        size_t w = 0;
-        if (spatial_dims > 1) {
-          w = tmp % out_w;
-          tmp /= out_w;
-        }
-        size_t h = tmp % out_h;
-        tmp /= out_h;
+  parallel::parallel_for(total_work, [&](size_t idx) {
+    size_t tmp = idx;
+    size_t w = 0;
+    if (spatial_dims > 1) {
+      w = tmp % out_w;
+      tmp /= out_w;
+    }
+    size_t h = tmp % out_h;
+    tmp /= out_h;
 
-        size_t c = 0;
-        if (channel_dim >= 0) {
-          c = tmp % out_c;
-          tmp /= out_c;
-        }
-        size_t n = batch_dim >= 0 ? tmp : 0;
+    size_t c = 0;
+    if (channel_dim >= 0) {
+      c = tmp % out_c;
+      tmp /= out_c;
+    }
+    size_t n = batch_dim >= 0 ? tmp : 0;
 
-        int start_h =
-            static_cast<int>(h * strides_[0]) - static_cast<int>(pads_[0]);
-        int start_w = spatial_dims > 1 ? static_cast<int>(w * strides_[1]) -
-                                             static_cast<int>(pads_[2])
-                                       : 0;
-        size_t input_base = n * input_batch_stride + c * input_channel_stride;
+    int start_h =
+        static_cast<int>(h * strides_[0]) - static_cast<int>(pads_[0]);
+    int start_w = spatial_dims > 1 ? static_cast<int>(w * strides_[1]) -
+                                         static_cast<int>(pads_[2])
+                                   : 0;
+    size_t input_base = n * input_batch_stride + c * input_channel_stride;
 
-        auto sum = ValueType(0);
-        ValueType max_val = std::numeric_limits<ValueType>::lowest();
-        size_t count = 0;
+    auto sum = ValueType(0);
+    ValueType max_val = std::numeric_limits<ValueType>::lowest();
+    size_t count = 0;
 
-        for (size_t kh = 0; kh < poolingShape_[0]; kh++) {
-          for (size_t kw = 0; kw < kernel_w; kw++) {
-            int pos_h = start_h + static_cast<int>(kh * dilations_[0]);
-            int pos_w = spatial_dims > 1
-                            ? start_w + static_cast<int>(kw * dilations_[1])
-                            : 0;
+    for (size_t kh = 0; kh < poolingShape_[0]; kh++) {
+      for (size_t kw = 0; kw < kernel_w; kw++) {
+        int pos_h = start_h + static_cast<int>(kh * dilations_[0]);
+        int pos_w = spatial_dims > 1
+                        ? start_w + static_cast<int>(kw * dilations_[1])
+                        : 0;
 
-            if (pos_h >= 0 && pos_h < input_h_limit &&
-                (spatial_dims <= 1 || (pos_w >= 0 && pos_w < input_w_limit))) {
-              size_t input_index =
-                  input_base + static_cast<size_t>(pos_h) * input_h_stride;
-              if (spatial_dims > 1) {
-                input_index += static_cast<size_t>(pos_w) * input_w_stride;
-              }
-              ValueType val = input[input_index];
-
-              if (this->poolingType_ == kMax) {
-                if (count == 0 || val > max_val) {
-                  max_val = val;
-                }
-              } else {
-                sum += val;
-              }
-              ++count;
-            }
+        if (pos_h >= 0 && pos_h < input_h_limit &&
+            (spatial_dims <= 1 || (pos_w >= 0 && pos_w < input_w_limit))) {
+          size_t input_index =
+              input_base + static_cast<size_t>(pos_h) * input_h_stride;
+          if (spatial_dims > 1) {
+            input_index += static_cast<size_t>(pos_w) * input_w_stride;
           }
-        }
+          ValueType val = input[input_index];
 
-        if (count == 0) return;
-
-        switch (this->poolingType_) {
-          case kAverage:
-            res[idx] = sum / static_cast<ValueType>(count);
-            break;
-          case kMax:
-            res[idx] = max_val;
-            break;
-          default:
-            throw std::runtime_error("Unknown pooling type");
+          if (this->poolingType_ == kMax) {
+            if (count == 0 || val > max_val) {
+              max_val = val;
+            }
+          } else {
+            sum += val;
+          }
+          ++count;
         }
-      },
-      options);
+      }
+    }
+
+    if (count == 0) {
+      return;
+    }
+
+    switch (this->poolingType_) {
+      case kAverage:
+        res[idx] = sum / static_cast<ValueType>(count);
+        break;
+      case kMax:
+        res[idx] = max_val;
+        break;
+      default:
+        throw std::runtime_error("Unknown pooling type");
+    }
+  }, options);
 
   return res;
 }

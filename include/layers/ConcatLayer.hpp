@@ -15,10 +15,14 @@ class ConcatLayer : public Layer {
 
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
-  void setInputOrder(const std::vector<int>& order) { input_order_ = order; }
+  void setInputOrder(const std::vector<int>& order) {
+    input_order_ = order;
+  }
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return Tensor(); }
+  Tensor get_weights() override {
+    return Tensor();
+  }
 #endif
 
  private:

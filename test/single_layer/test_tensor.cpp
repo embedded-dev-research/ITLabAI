@@ -10,8 +10,12 @@ using namespace it_lab_ai;
 struct TestClass {
  public:
   TestClass(float a) : b_(a) {}
-  char get_a() const { return a_; }
-  float get_b() const { return b_; }
+  char get_a() const {
+    return a_;
+  }
+  float get_b() const {
+    return b_;
+  }
 
  private:
   char a_{'1'};
