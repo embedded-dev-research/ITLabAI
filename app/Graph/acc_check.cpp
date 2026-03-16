@@ -54,15 +54,23 @@ int main(int argc, char* argv[]) {
       options.threads = std::stoi(argv[++i]);
     } else {
       try {
-        num_photo = std::stoi(argv[i]);
+        size_t input_value = std::stoul(argv[i]);
 
-        if (num_photo < 1 || num_photo > 50000) {
-          std::cerr << "Warning: num_photo should be between 1 and 0000 "
-                    << "Using value: " << num_photo << '\n';
+        if (input_value < 1) {
+          std::cerr << "Warning: num_photo cannot be less than 1. Using 1."
+                    << '\n';
+          num_photo = 1;
+        } else if (input_value > 50000) {
+          std::cerr << "Warning: num_photo cannot exceed 50000. Using 50000."
+                    << '\n';
+          num_photo = 50000;
+        } else {
+          num_photo = input_value;
         }
       } catch (const std::exception& e) {
-        std::cerr << "Error: Invalid numeric argument: " << argv[i]
-                  << ". Using default value: 1000" << e.what() << '\n';
+        std::cerr << "Error: Invalid numeric argument: " << e.what() << argv[i]
+                  << ". Using default value: 1000" << '\n';
+        num_photo = 1000;
       }
     }
   }
@@ -113,7 +121,7 @@ int main(int argc, char* argv[]) {
           for (int j = 0; j < 28; ++j) {
             size_t a = ind;
             for (size_t n = 0; n < name; n++) a += counts[n] + 1;
-            res[(a)*28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
+            res[(a) * 28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
           }
         }
       }
@@ -150,10 +158,11 @@ int main(int argc, char* argv[]) {
 
     return 0;
   }
+
   size_t output_classes = 1000;
   std::vector<size_t> counts(output_classes, 0);
 
-  for (int class_id = 0; class_id < output_classes; ++class_id) {
+  for (size_t class_id = 0; class_id < output_classes; ++class_id) {
     std::ostringstream folder_oss;
     folder_oss << std::setw(5) << std::setfill('0') << class_id;
     std::string class_folder_path = dataset_path + "/" + folder_oss.str();
@@ -168,7 +177,7 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-  
+
   size_t images_per_class_base = num_photo / output_classes;
   size_t remaining = num_photo % output_classes;
 
@@ -176,7 +185,6 @@ int main(int argc, char* argv[]) {
   int height = input_shape[2];
   int width = input_shape[3];
   size_t image_size = channels * height * width;
-  
 
   int correct_predictions_top1 = 0;
   int correct_predictions_top5 = 0;
@@ -196,9 +204,8 @@ int main(int argc, char* argv[]) {
   batch_data.reserve(batch_size * image_size);
   batch_labels.reserve(batch_size);
 
-  for (int class_id = 0;
-       class_id < output_classes && total_processed < num_photo;
-       ++class_id) {
+  for (size_t class_id = 0;
+       class_id < output_classes && total_processed < num_photo; ++class_id) {
     size_t need_from_class = images_per_class_base;
     if (remaining > 0) {
       need_from_class++;
@@ -236,7 +243,7 @@ int main(int argc, char* argv[]) {
       const auto& img_data = *prepared.as<float>();
 
       batch_data.insert(batch_data.end(), img_data.begin(), img_data.end());
-      batch_labels.push_back(class_id);
+      batch_labels.push_back(static_cast<int>(class_id));
       total_processed++;
 
       if (batch_labels.size() >= batch_size) {
@@ -295,15 +302,15 @@ int main(int argc, char* argv[]) {
           int true_label = batch_labels[i];
 
           std::vector<std::pair<float, int>> top5;
-          for (int j = 0; j < output_classes; ++j) {
+          for (size_t j = 0; j < output_classes; ++j) {
             float val = img_start[j];
 
             if (top5.size() < 5) {
-              top5.emplace_back(val, j);
+              top5.emplace_back(val, static_cast<int>(j));
               std::sort(top5.begin(), top5.end(),
                         [](auto& a, auto& b) { return a.first > b.first; });
             } else if (val > top5.back().first) {
-              top5.back() = {val, j};
+              top5.back() = {val, static_cast<int>(j)};
               std::sort(top5.begin(), top5.end(),
                         [](auto& a, auto& b) { return a.first > b.first; });
             }
@@ -367,14 +374,14 @@ int main(int argc, char* argv[]) {
       int true_label = batch_labels[i];
 
       std::vector<std::pair<float, int>> top5;
-      for (int j = 0; j < output_classes; ++j) {
+      for (size_t j = 0; j < output_classes; ++j) {
         float val = img_start[j];
         if (top5.size() < 5) {
-          top5.emplace_back(val, j);
+          top5.emplace_back(val, static_cast<int>(j));
           std::sort(top5.begin(), top5.end(),
                     [](auto& a, auto& b) { return a.first > b.first; });
         } else if (val > top5.back().first) {
-          top5.back() = {val, j};
+          top5.back() = {val, static_cast<int>(j)};
           std::sort(top5.begin(), top5.end(),
                     [](auto& a, auto& b) { return a.first > b.first; });
         }
@@ -391,16 +398,13 @@ int main(int argc, char* argv[]) {
   }
 
   auto total_end_time = std::chrono::high_resolution_clock::now();
-  int total_time =
-      static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
-                           total_end_time - total_start_time)
-                           .count());
 
-  std::cout << "\n========== TOTAL STATISTICS FOR ALL BATCHES ==========\n";
   std::cout << "Total inference time: " << total_inference_time << " ms\n";
   std::cout << "Number of batches: " << batch_count << '\n';
-  std::cout << "Average time per batch: " << total_inference_time / batch_count
-            << " ms\n";
+  if (batch_count > 0) {
+    std::cout << "Average time per batch: "
+              << total_inference_time / batch_count << " ms\n";
+  }
 
   double final_accuracy_top1 =
       (static_cast<double>(correct_predictions_top1) / num_photo) * 100;
