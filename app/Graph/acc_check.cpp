@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
         num_photo = std::stoi(argv[i]);
 
         if (num_photo < 1 || num_photo > 50000) {
-          std::cerr << "Warning: num_photo should be between 1 and 10000 "
+          std::cerr << "Warning: num_photo should be between 1 and 0000 "
                     << "Using value: " << num_photo << '\n';
         }
       } catch (const std::exception& e) {
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
           for (int j = 0; j < 28; ++j) {
             size_t a = ind;
             for (size_t n = 0; n < name; n++) a += counts[n] + 1;
-            res[(a) * 28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
+            res[(a)*28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
           }
         }
       }
@@ -147,16 +147,13 @@ int main(int argc, char* argv[]) {
         (static_cast<double>(stat) / static_cast<double>(sum + 10)) * 100;
     std::cout << "Stat: " << std::fixed << std::setprecision(2) << percentage
               << "%" << '\n';
+
     return 0;
   }
+  size_t output_classes = 1000;
+  std::vector<size_t> counts(output_classes, 0);
 
-  std::vector<size_t> counts(1000, 0);
-  std::vector<std::string> image_paths;
-  std::vector<int> true_labels;
-  std::vector<float> all_image_data;
-  size_t total_images = 0;
-
-  for (int class_id = 0; class_id < 1000; ++class_id) {
+  for (int class_id = 0; class_id < output_classes; ++class_id) {
     std::ostringstream folder_oss;
     folder_oss << std::setw(5) << std::setfill('0') << class_id;
     std::string class_folder_path = dataset_path + "/" + folder_oss.str();
@@ -171,23 +168,37 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-
-  size_t images_per_class_base = num_photo / 1000;
-  size_t remaining = num_photo % 1000;
+  
+  size_t images_per_class_base = num_photo / output_classes;
+  size_t remaining = num_photo % output_classes;
 
   int channels = input_shape[1];
   int height = input_shape[2];
   int width = input_shape[3];
   size_t image_size = channels * height * width;
-  size_t output_classes = 1000;
+  
 
-  all_image_data.reserve(num_photo * image_size);
-  image_paths.reserve(num_photo);
-  true_labels.reserve(num_photo);
+  int correct_predictions_top1 = 0;
+  int correct_predictions_top5 = 0;
 
-  total_images = 0;
+  Graph graph;
+  std::shared_ptr<Layer> input_layer = nullptr;
+  std::shared_ptr<Layer> output_layer = nullptr;
+  bool graph_built = false;
 
-  for (int class_id = 0; class_id < 1000; ++class_id) {
+  auto total_start_time = std::chrono::high_resolution_clock::now();
+  int total_inference_time = 0;
+  int batch_count = 0;
+  size_t total_processed = 0;
+
+  std::vector<float> batch_data;
+  std::vector<int> batch_labels;
+  batch_data.reserve(batch_size * image_size);
+  batch_labels.reserve(batch_size);
+
+  for (int class_id = 0;
+       class_id < output_classes && total_processed < num_photo;
+       ++class_id) {
     size_t need_from_class = images_per_class_base;
     if (remaining > 0) {
       need_from_class++;
@@ -202,158 +213,181 @@ int main(int argc, char* argv[]) {
 
     if (!fs::exists(class_folder_path)) continue;
 
-    size_t taken = 0;
+    std::vector<std::string> class_images;
     for (const auto& entry : fs::directory_iterator(class_folder_path)) {
-      if (taken >= need_from_class) break;
-
-      if (entry.path().extension() == ".png" ||
-          entry.path().extension() == ".jpg" ||
-          entry.path().extension() == ".jpeg") {
-        cv::Mat image = cv::imread(entry.path().string());
-        if (image.empty()) {
-          std::cerr << "Failed to load image: " << entry.path().string()
-                    << '\n';
-          continue;
-        }
-
-        it_lab_ai::Tensor prepared_tensor =
-            prepare_image(image, input_shape, model_name);
-        const std::vector<float>& image_data = *prepared_tensor.as<float>();
-
-        all_image_data.insert(all_image_data.end(), image_data.begin(),
-                              image_data.end());
-
-        image_paths.push_back(entry.path().string());
-        true_labels.push_back(class_id);
-        taken++;
-        total_images++;
+      if (entry.path().extension() == ".jpg" ||
+          entry.path().extension() == ".jpeg" ||
+          entry.path().extension() == ".png") {
+        class_images.push_back(entry.path().string());
       }
     }
 
-    if (taken < need_from_class) {
-      std::cout << "Warning: Class " << class_id << " has only " << taken
-                << " images (needed " << need_from_class << ")" << '\n';
+    size_t images_to_take = std::min(need_from_class, class_images.size());
+
+    for (size_t img_idx = 0; img_idx < images_to_take; ++img_idx) {
+      cv::Mat image = cv::imread(class_images[img_idx]);
+      if (image.empty()) {
+        std::cerr << "Failed to load image: " << class_images[img_idx] << '\n';
+        continue;
+      }
+
+      it_lab_ai::Tensor prepared =
+          prepare_image(image, input_shape, model_name);
+      const auto& img_data = *prepared.as<float>();
+
+      batch_data.insert(batch_data.end(), img_data.begin(), img_data.end());
+      batch_labels.push_back(class_id);
+      total_processed++;
+
+      if (batch_labels.size() >= batch_size) {
+        it_lab_ai::Shape batch_input_shape(
+            {batch_labels.size(), static_cast<size_t>(channels),
+             static_cast<size_t>(height), static_cast<size_t>(width)});
+        it_lab_ai::Tensor batch_input =
+            make_tensor(batch_data, batch_input_shape);
+
+        it_lab_ai::Shape batch_output_shape(
+            {batch_labels.size(), output_classes});
+        it_lab_ai::Tensor batch_output(batch_output_shape,
+                                       it_lab_ai::Type::kFloat);
+
+        if (!graph_built) {
+          build_graph(graph, batch_input, batch_output, json_path, options,
+                      false);
+
+          for (int i = 0; i < graph.getLayersCount(); ++i) {
+            auto layer = graph.getLayerFromID(i);
+            if (layer->getName() == kInput) {
+              input_layer = layer;
+            }
+            if (i == graph.getLayersCount() - 1) {
+              output_layer = layer;
+            }
+          }
+
+          if (!input_layer || !output_layer) {
+            std::cerr << "Error: Could not find input/output layers" << '\n';
+            return 1;
+          }
+
+          graph_built = true;
+        } else {
+          graph.setInput(input_layer, batch_input);
+          graph.setOutput(output_layer, batch_output);
+        }
+
+        auto batch_start = std::chrono::high_resolution_clock::now();
+        graph.inference(options);
+        auto batch_end = std::chrono::high_resolution_clock::now();
+        int batch_time = static_cast<int>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(batch_end -
+                                                                  batch_start)
+                .count());
+
+        total_inference_time += batch_time;
+        batch_count++;
+
+        const std::vector<float>& raw_batch_output = *batch_output.as<float>();
+        const float* data_ptr = raw_batch_output.data();
+
+        for (size_t i = 0; i < batch_labels.size(); ++i) {
+          const float* img_start = data_ptr + i * output_classes;
+          int true_label = batch_labels[i];
+
+          std::vector<std::pair<float, int>> top5;
+          for (int j = 0; j < output_classes; ++j) {
+            float val = img_start[j];
+
+            if (top5.size() < 5) {
+              top5.emplace_back(val, j);
+              std::sort(top5.begin(), top5.end(),
+                        [](auto& a, auto& b) { return a.first > b.first; });
+            } else if (val > top5.back().first) {
+              top5.back() = {val, j};
+              std::sort(top5.begin(), top5.end(),
+                        [](auto& a, auto& b) { return a.first > b.first; });
+            }
+          }
+
+          if (top5[0].second == true_label) correct_predictions_top1++;
+          for (int k = 0; k < 5; ++k) {
+            if (top5[k].second == true_label) {
+              correct_predictions_top5++;
+              break;
+            }
+          }
+        }
+
+        batch_data.clear();
+        batch_labels.clear();
+        batch_data.reserve(batch_size * image_size);
+        batch_labels.reserve(batch_size);
+      }
     }
   }
 
-  if (total_images != num_photo) {
-    std::cout << "Warning: Requested " << num_photo << " images but loaded "
-              << total_images << " due to insufficient data" << '\n';
-    num_photo = total_images;
-  }
-
-  int correct_predictions_top1 = 0;
-  int correct_predictions_top5 = 0;
-
-  it_lab_ai::Shape full_shape({num_photo, static_cast<size_t>(channels),
-                               static_cast<size_t>(height),
-                               static_cast<size_t>(width)});
-  it_lab_ai::Tensor dummy_input = make_tensor(all_image_data, full_shape);
-
-  it_lab_ai::Shape full_output_shape({num_photo, output_classes});
-  it_lab_ai::Tensor dummy_output(full_output_shape, it_lab_ai::Type::kFloat);
-
-  Graph graph;
-  build_graph(graph, dummy_input, dummy_output, json_path, options, false);
-
-  std::shared_ptr<Layer> input_layer = nullptr;
-  std::shared_ptr<Layer> output_layer = nullptr;
-
-  for (int i = 0; i < graph.getLayersCount(); ++i) {
-    auto layer = graph.getLayerFromID(i);
-    if (layer->getName() == kInput) {
-      input_layer = layer;
-    }
-    if (i == graph.getLayersCount() - 1) {
-      output_layer = layer;
-    }
-  }
-
-  if (!input_layer || !output_layer) {
-    std::cerr << "Error: Could not find input/output layers" << '\n';
-    return 1;
-  }
-
-  auto total_start_time = std::chrono::high_resolution_clock::now();
-  int total_inference_time = 0;
-  int batch_count = 0;
-
-  for (size_t batch_start = 0; batch_start < num_photo;
-       batch_start += batch_size) {
-    size_t batch_end = std::min(batch_start + batch_size, num_photo);
-    size_t current_batch_size = batch_end - batch_start;
-
-    std::vector<float> batch_data;
-    batch_data.reserve(current_batch_size * image_size);
-
-    size_t batch_offset = batch_start * image_size;
-    batch_data.insert(batch_data.end(), all_image_data.begin() + batch_offset,
-                      all_image_data.begin() + batch_offset +
-                          current_batch_size * image_size);
-
+  if (!batch_data.empty()) {
     it_lab_ai::Shape batch_input_shape(
-        {current_batch_size, static_cast<size_t>(channels),
+        {batch_labels.size(), static_cast<size_t>(channels),
          static_cast<size_t>(height), static_cast<size_t>(width)});
     it_lab_ai::Tensor batch_input = make_tensor(batch_data, batch_input_shape);
 
-    it_lab_ai::Shape batch_output_shape({current_batch_size, output_classes});
+    it_lab_ai::Shape batch_output_shape({batch_labels.size(), output_classes});
     it_lab_ai::Tensor batch_output(batch_output_shape, it_lab_ai::Type::kFloat);
 
-    graph.setInput(input_layer, batch_input);
-    graph.setOutput(output_layer, batch_output);
+    if (!graph_built) {
+      build_graph(graph, batch_input, batch_output, json_path, options, false);
 
-    auto batch_start_time = std::chrono::high_resolution_clock::now();
+      for (int i = 0; i < graph.getLayersCount(); ++i) {
+        auto layer = graph.getLayerFromID(i);
+        if (layer->getName() == kInput) input_layer = layer;
+        if (i == graph.getLayersCount() - 1) output_layer = layer;
+      }
+    } else {
+      graph.setInput(input_layer, batch_input);
+      graph.setOutput(output_layer, batch_output);
+    }
+
+    auto batch_start = std::chrono::high_resolution_clock::now();
     graph.inference(options);
-    auto batch_end_time = std::chrono::high_resolution_clock::now();
-
+    auto batch_end = std::chrono::high_resolution_clock::now();
     int batch_time =
         static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
-                             batch_end_time - batch_start_time)
+                             batch_end - batch_start)
                              .count());
+
     total_inference_time += batch_time;
     batch_count++;
 
     const std::vector<float>& raw_batch_output = *batch_output.as<float>();
+    const float* data_ptr = raw_batch_output.data();
 
-    for (size_t i = 0; i < current_batch_size; ++i) {
-      size_t global_idx = batch_start + i;
+    for (size_t i = 0; i < batch_labels.size(); ++i) {
+      const float* img_start = data_ptr + i * output_classes;
+      int true_label = batch_labels[i];
 
-      std::vector<float> single_output(
-          raw_batch_output.begin() + i * output_classes,
-          raw_batch_output.begin() + (i + 1) * output_classes);
-
-      float max_val =
-          *std::max_element(single_output.begin(), single_output.end());
-      float sum = 0.0f;
-      for (float& val : single_output) {
-        val = exp(val - max_val);
-        sum += val;
-      }
-      for (float& val : single_output) {
-        val /= sum;
-      }
-
-      std::vector<size_t> indices(single_output.size());
-      std::iota(indices.begin(), indices.end(), 0);
-      std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
-        return single_output[a] > single_output[b];
-      });
-
-      if (indices[0] == static_cast<size_t>(true_labels[global_idx])) {
-        correct_predictions_top1++;
+      std::vector<std::pair<float, int>> top5;
+      for (int j = 0; j < output_classes; ++j) {
+        float val = img_start[j];
+        if (top5.size() < 5) {
+          top5.emplace_back(val, j);
+          std::sort(top5.begin(), top5.end(),
+                    [](auto& a, auto& b) { return a.first > b.first; });
+        } else if (val > top5.back().first) {
+          top5.back() = {val, j};
+          std::sort(top5.begin(), top5.end(),
+                    [](auto& a, auto& b) { return a.first > b.first; });
+        }
       }
 
-      for (int top_k = 0; top_k < std::min(5, static_cast<int>(indices.size()));
-           ++top_k) {
-        if (indices[top_k] == static_cast<size_t>(true_labels[global_idx])) {
+      if (top5[0].second == true_label) correct_predictions_top1++;
+      for (int k = 0; k < 5; ++k) {
+        if (top5[k].second == true_label) {
           correct_predictions_top5++;
           break;
         }
       }
     }
-
-    batch_data.clear();
-    batch_data.shrink_to_fit();
   }
 
   auto total_end_time = std::chrono::high_resolution_clock::now();
@@ -362,16 +396,11 @@ int main(int argc, char* argv[]) {
                            total_end_time - total_start_time)
                            .count());
 
-  std::cout << "\n!INFERENCE TIME INFO START!" << '\n';
-  std::cout << "Total inference time (sum of batches): " << total_inference_time
-            << " ms\n";
-  std::cout << "Total wall-clock time for all batches: " << total_time
-            << " ms\n";
+  std::cout << "\n========== TOTAL STATISTICS FOR ALL BATCHES ==========\n";
+  std::cout << "Total inference time: " << total_inference_time << " ms\n";
   std::cout << "Number of batches: " << batch_count << '\n';
-  std::cout << "Average time per batch: "
-            << (batch_count > 0 ? total_inference_time / batch_count : 0)
+  std::cout << "Average time per batch: " << total_inference_time / batch_count
             << " ms\n";
-  std::cout << "!INFERENCE TIME INFO END!" << '\n';
 
   double final_accuracy_top1 =
       (static_cast<double>(correct_predictions_top1) / num_photo) * 100;
