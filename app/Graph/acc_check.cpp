@@ -194,7 +194,6 @@ int main(int argc, char* argv[]) {
   std::shared_ptr<Layer> output_layer = nullptr;
   bool graph_built = false;
 
-  auto total_start_time = std::chrono::high_resolution_clock::now();
   int total_inference_time = 0;
   int batch_count = 0;
   size_t total_processed = 0;
@@ -212,7 +211,9 @@ int main(int argc, char* argv[]) {
       remaining--;
     }
 
-    if (need_from_class == 0) continue;
+    if (need_from_class == 0) {
+      continue;
+    }
 
     std::ostringstream folder_oss;
     folder_oss << std::setw(5) << std::setfill('0') << class_id;
@@ -316,7 +317,9 @@ int main(int argc, char* argv[]) {
             }
           }
 
-          if (top5[0].second == true_label) correct_predictions_top1++;
+          if (top5[0].second == true_label) {
+            correct_predictions_top1++;
+          }
           for (int k = 0; k < 5; ++k) {
             if (top5[k].second == true_label) {
               correct_predictions_top5++;
@@ -347,8 +350,12 @@ int main(int argc, char* argv[]) {
 
       for (int i = 0; i < graph.getLayersCount(); ++i) {
         auto layer = graph.getLayerFromID(i);
-        if (layer->getName() == kInput) input_layer = layer;
-        if (i == graph.getLayersCount() - 1) output_layer = layer;
+        if (layer->getName() == kInput) {
+          input_layer = layer;
+        }
+        if (i == graph.getLayersCount() - 1) {
+          output_layer = layer;
+        }
       }
     } else {
       graph.setInput(input_layer, batch_input);
@@ -387,7 +394,9 @@ int main(int argc, char* argv[]) {
         }
       }
 
-      if (top5[0].second == true_label) correct_predictions_top1++;
+      if (top5[0].second == true_label) {
+        correct_predictions_top1++;
+      }
       for (int k = 0; k < 5; ++k) {
         if (top5[k].second == true_label) {
           correct_predictions_top5++;
@@ -396,8 +405,6 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-
-  auto total_end_time = std::chrono::high_resolution_clock::now();
 
   std::cout << "Total inference time: " << total_inference_time << " ms\n";
   std::cout << "Number of batches: " << batch_count << '\n';
