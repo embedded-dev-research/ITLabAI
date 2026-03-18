@@ -416,7 +416,7 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: docs/ImageNet
-        key: imagenet-paste-${{ hashFiles('app/Converters/download_imagenet.py') }}
+        key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
         restore-keys: |
           imagenet-paste-
 
