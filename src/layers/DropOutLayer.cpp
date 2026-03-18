@@ -26,7 +26,9 @@ void DropOutLayer::run(const std::vector<Tensor>& input,
     case Type::kInt: {
       std::vector<int> vec = *input[0].as<int>();
       for (int& i : vec) {
-        if (unif(rand_engine) < static_cast<float>(drop_rate_) * 100) i = 0;
+        if (unif(rand_engine) < static_cast<float>(drop_rate_) * 100) {
+          i = 0;
+        }
       }
       output[0] = make_tensor(vec, input[0].get_shape());
       break;
@@ -34,7 +36,9 @@ void DropOutLayer::run(const std::vector<Tensor>& input,
     case Type::kFloat: {
       std::vector<float> vec = *input[0].as<float>();
       for (float& i : vec) {
-        if (unif(rand_engine) < static_cast<float>(drop_rate_) * 100) i = 0;
+        if (unif(rand_engine) < static_cast<float>(drop_rate_) * 100) {
+          i = 0;
+        }
       }
       output[0] = make_tensor(vec, input[0].get_shape());
       break;

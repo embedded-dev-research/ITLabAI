@@ -25,12 +25,20 @@ class BatchNormalizationLayer : public Layer {
            std::vector<Tensor>& output) override;
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return Tensor(); }
+  Tensor get_weights() override {
+    return Tensor();
+  }
 #endif
 
-  void set_epsilon(float epsilon) { epsilon_ = epsilon; }
-  void set_momentum(float momentum) { momentum_ = momentum; }
-  void set_training_mode(bool training_mode) { training_mode_ = training_mode; }
+  void set_epsilon(float epsilon) {
+    epsilon_ = epsilon;
+  }
+  void set_momentum(float momentum) {
+    momentum_ = momentum;
+  }
+  void set_training_mode(bool training_mode) {
+    training_mode_ = training_mode;
+  }
 
  private:
   Tensor scale_;

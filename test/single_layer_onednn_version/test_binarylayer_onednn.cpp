@@ -168,9 +168,12 @@ TEST(binaryoplayer_onednn, different_shapes_3d) {
 
   std::vector<float> a_data(2 * 3 * 4);
   std::vector<float> b_data(1 * 3 * 4);
-  for (size_t i = 0; i < a_data.size(); i++)
+  for (size_t i = 0; i < a_data.size(); i++) {
     a_data[i] = static_cast<float>(i + 1);
-  for (size_t i = 0; i < b_data.size(); i++) b_data[i] = 2.0F;
+  }
+  for (size_t i = 0; i < b_data.size(); i++) {
+    b_data[i] = 2.0F;
+  }
 
   Tensor a = make_tensor(a_data, Shape({2, 3, 4}));
   Tensor b = make_tensor(b_data, Shape({1, 3, 4}));
@@ -194,8 +197,12 @@ TEST(binaryoplayer_onednn, different_shapes_4d) {
 
   std::vector<float> a_data(2 * 3 * 4 * 5);
   std::vector<float> b_data(1 * 1 * 4 * 5);
-  for (size_t i = 0; i < a_data.size(); i++) a_data[i] = static_cast<float>(i);
-  for (size_t i = 0; i < b_data.size(); i++) b_data[i] = 100.0F;
+  for (size_t i = 0; i < a_data.size(); i++) {
+    a_data[i] = static_cast<float>(i);
+  }
+  for (size_t i = 0; i < b_data.size(); i++) {
+    b_data[i] = 100.0F;
+  }
 
   Tensor a = make_tensor(a_data, Shape({2, 3, 4, 5}));
   Tensor b = make_tensor(b_data, Shape({1, 1, 4, 5}));
@@ -410,9 +417,12 @@ TEST(binaryoplayer_onednn, high_dimensional_tensors) {
 
   std::vector<float> a_data(2 * 3 * 4 * 5);
   std::vector<float> b_data(1 * 1 * 1 * 5);
-  for (size_t i = 0; i < a_data.size(); i++) a_data[i] = static_cast<float>(i);
-  for (size_t i = 0; i < b_data.size(); i++)
+  for (size_t i = 0; i < a_data.size(); i++) {
+    a_data[i] = static_cast<float>(i);
+  }
+  for (size_t i = 0; i < b_data.size(); i++) {
     b_data[i] = static_cast<float>(i * 10);
+  }
 
   Tensor a = make_tensor(a_data, Shape({2, 3, 4, 5}));
   Tensor b = make_tensor(b_data, Shape({1, 1, 1, 5}));

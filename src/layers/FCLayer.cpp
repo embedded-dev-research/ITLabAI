@@ -17,20 +17,18 @@ void FCLayer::run(const std::vector<Tensor>& input,
     throw std::invalid_argument("Bias and weights data type aren't same");
   }
 
-  size_t batch_size;
-  size_t output_size = bias_->get_shape()[0];
-  if (input[0].get_shape().dims() == 1) {
-    size_t total_elements = input[0].get_shape()[0];
-    size_t expected_input_size = weights_->get_shape()[0];
-
-    if (total_elements % expected_input_size == 0) {
-      batch_size = total_elements / expected_input_size;
-    } else {
-      batch_size = 1;
+  const size_t batch_size = [&]() -> size_t {
+    if (input[0].get_shape().dims() == 1) {
+      const size_t total_elements = input[0].get_shape()[0];
+      const size_t expected_input_size = weights_->get_shape()[0];
+      if (total_elements % expected_input_size == 0) {
+        return total_elements / expected_input_size;
+      }
+      return 1;
     }
-  } else {
-    batch_size = input[0].get_shape()[0];
-  }
+    return input[0].get_shape()[0];
+  }();
+  size_t output_size = bias_->get_shape()[0];
 
   switch (input[0].get_type()) {
     case Type::kInt: {

@@ -16,11 +16,17 @@ class ReshapeLayer : public Layer {
            std::vector<Tensor>& output) override;
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return Tensor(); }
+  Tensor get_weights() override {
+    return Tensor();
+  }
 #endif
 
-  void set_shape(const std::vector<int64_t>& shape) { shape_ = shape; }
-  void set_allowzero(bool allowzero) { allowzero_ = allowzero; }
+  void set_shape(const std::vector<int64_t>& shape) {
+    shape_ = shape;
+  }
+  void set_allowzero(bool allowzero) {
+    allowzero_ = allowzero;
+  }
 
  private:
   bool allowzero_;

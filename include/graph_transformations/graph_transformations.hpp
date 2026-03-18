@@ -2,8 +2,10 @@
 #include <vector>
 
 #include "graph/graph.hpp"
+#include "layers/ConvLayer.hpp"
 #include "layers/EWLayer.hpp"
 #include "layers/Layer.hpp"
+#include "layers_fused/ConvRelu.hpp"
 
 namespace it_lab_ai {
 

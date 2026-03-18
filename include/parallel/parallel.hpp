@@ -40,7 +40,9 @@ inline Backend select_backend(const Options& opt, std::size_t n) {
 template <typename Func>
 inline void parallel_for(std::size_t count, Func&& func,
                          const Options& opt = {}) {
-  if (count == 0) return;
+  if (count == 0) {
+    return;
+  }
 
   Backend backend = select_backend(opt, count);
 
@@ -72,7 +74,9 @@ inline void parallel_for(std::size_t count, Func&& func, Backend backend) {
 
 template <typename Func>
 inline void parallel_for(int count, Func&& func, const Options& opt = {}) {
-  if (count <= 0) return;
+  if (count <= 0) {
+    return;
+  }
   parallel_for(static_cast<std::size_t>(count), std::forward<Func>(func), opt);
 }
 

@@ -32,8 +32,12 @@ void MatmulLayer::run(const std::vector<Tensor>& input,
       } else if (same_row_count && b_cols == a_cols) {
         size_t a_batch = 1;
         size_t b_batch = 1;
-        for (size_t i = 0; i < a_shape.dims() - 2; ++i) a_batch *= a_shape[i];
-        for (size_t i = 0; i < b_shape.dims() - 2; ++i) b_batch *= b_shape[i];
+        for (size_t i = 0; i < a_shape.dims() - 2; ++i) {
+          a_batch *= a_shape[i];
+        }
+        for (size_t i = 0; i < b_shape.dims() - 2; ++i) {
+          b_batch *= b_shape[i];
+        }
 
         if (b_batch > a_batch) {
           should_swap = true;

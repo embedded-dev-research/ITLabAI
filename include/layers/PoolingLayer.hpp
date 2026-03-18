@@ -39,12 +39,18 @@ class PoolingLayer : public Layer {
         dilations_({1, 1}),
         ceil_mode_(false),
         poolingType_(std::move(pooling_type)) {}
-  void setStrides(size_t h, size_t w) { strides_ = {h, w}; }
+  void setStrides(size_t h, size_t w) {
+    strides_ = {h, w};
+  }
   void setPads(size_t top, size_t bottom, size_t left, size_t right) {
     pads_ = {top, bottom, left, right};
   }
-  void setDilations(size_t h, size_t w) { dilations_ = {h, w}; }
-  void setCeilMode(bool ceil_mode) { ceil_mode_ = ceil_mode; }
+  void setDilations(size_t h, size_t w) {
+    dilations_ = {h, w};
+  }
+  void setCeilMode(bool ceil_mode) {
+    ceil_mode_ = ceil_mode;
+  }
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
   void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
@@ -179,18 +185,18 @@ PoolingLayerImpl<ValueType>::PoolingLayerImpl(
 
     size_t effective_kernel_size = (kernel_size - 1) * dilation + 1;
 
-    size_t output_size;
-    if (ceil_mode) {
-      output_size = static_cast<size_t>(
-                        std::ceil((input_size + pad - effective_kernel_size) /
-                                  static_cast<float>(stride))) +
-                    1;
-    } else {
-      output_size = static_cast<size_t>(
-                        std::floor((input_size + pad - effective_kernel_size) /
-                                   static_cast<float>(stride))) +
-                    1;
-    }
+    size_t output_size = [=]() {
+      if (ceil_mode) {
+        return static_cast<size_t>(
+                   std::ceil((input_size + pad - effective_kernel_size) /
+                             static_cast<float>(stride))) +
+               1;
+      }
+      return static_cast<size_t>(
+                 std::floor((input_size + pad - effective_kernel_size) /
+                            static_cast<float>(stride))) +
+             1;
+    }();
 
     this->outputShape_[input_shape.dims() - pooling_shape.dims() + i] =
         output_size;
@@ -207,8 +213,18 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
   std::vector<ValueType> res(this->outputShape_.count(), ValueType(0));
 
   size_t spatial_dims = poolingShape_.dims();
+  auto make_strides = [](const Shape& shape) {
+    std::vector<size_t> strides(shape.dims(), 1);
+    for (size_t i = shape.dims(); i > 1; --i) {
+      strides[i - 2] = strides[i - 1] * shape[i - 1];
+    }
+    return strides;
+  };
+
+  const auto input_strides = make_strides(this->inputShape_);
   int batch_dim = this->inputShape_.dims() > spatial_dims ? 0 : -1;
   int channel_dim = this->inputShape_.dims() > spatial_dims + 1 ? 1 : -1;
+  size_t input_spatial_dim = this->inputShape_.dims() - spatial_dims;
 
   size_t out_h = this->outputShape_[this->outputShape_.dims() - spatial_dims];
   size_t out_w =
@@ -219,104 +235,94 @@ std::vector<ValueType> PoolingLayerImpl<ValueType>::run(
   size_t out_c = channel_dim >= 0 ? this->outputShape_[channel_dim] : 1;
 
   size_t total_work = out_n * out_c * out_h * out_w;
+  size_t kernel_w = spatial_dims > 1 ? poolingShape_[1] : 1;
+  int input_h_limit = static_cast<int>(this->inputShape_[input_spatial_dim]);
+  int input_w_limit =
+      spatial_dims > 1
+          ? static_cast<int>(this->inputShape_[input_spatial_dim + 1])
+          : 0;
+  size_t input_batch_stride =
+      batch_dim >= 0 ? input_strides[batch_dim] : static_cast<size_t>(0);
+  size_t input_channel_stride =
+      channel_dim >= 0 ? input_strides[channel_dim] : static_cast<size_t>(0);
+  size_t input_h_stride = input_strides[input_spatial_dim];
+  size_t input_w_stride =
+      spatial_dims > 1 ? input_strides[input_spatial_dim + 1] : 0;
 
   parallel::Options options;
   options.backend = parallel_backend_;
 
-  parallel::parallel_for(
-      total_work,
-      [&](size_t idx) {
-        size_t tmp = idx;
-        size_t w = 0;
-        if (spatial_dims > 1) {
-          w = tmp % out_w;
-          tmp /= out_w;
-        }
-        size_t h = tmp % out_h;
-        tmp /= out_h;
+  parallel::parallel_for(total_work, [&](size_t idx) {
+    size_t tmp = idx;
+    size_t w = 0;
+    if (spatial_dims > 1) {
+      w = tmp % out_w;
+      tmp /= out_w;
+    }
+    size_t h = tmp % out_h;
+    tmp /= out_h;
 
-        size_t c = 0;
-        if (channel_dim >= 0) {
-          c = tmp % out_c;
-          tmp /= out_c;
-        }
-        size_t n = batch_dim >= 0 ? tmp : 0;
+    size_t c = 0;
+    if (channel_dim >= 0) {
+      c = tmp % out_c;
+      tmp /= out_c;
+    }
+    size_t n = batch_dim >= 0 ? tmp : 0;
 
-        int start_h =
-            static_cast<int>(h * strides_[0]) - static_cast<int>(pads_[0]);
-        int start_w = spatial_dims > 1 ? static_cast<int>(w * strides_[1]) -
-                                             static_cast<int>(pads_[2])
-                                       : 0;
+    int start_h =
+        static_cast<int>(h * strides_[0]) - static_cast<int>(pads_[0]);
+    int start_w = spatial_dims > 1 ? static_cast<int>(w * strides_[1]) -
+                                         static_cast<int>(pads_[2])
+                                   : 0;
+    size_t input_base = n * input_batch_stride + c * input_channel_stride;
 
-        auto sum = ValueType(0);
-        ValueType max_val = std::numeric_limits<ValueType>::lowest();
-        size_t count = 0;
+    auto sum = ValueType(0);
+    ValueType max_val = std::numeric_limits<ValueType>::lowest();
+    size_t count = 0;
 
-        for (size_t kh = 0; kh < poolingShape_[0]; kh++) {
-          for (size_t kw = 0; kw < (spatial_dims > 1 ? poolingShape_[1] : 1);
-               kw++) {
-            int pos_h = start_h + static_cast<int>(kh * dilations_[0]);
-            int pos_w = spatial_dims > 1
-                            ? start_w + static_cast<int>(kw * dilations_[1])
-                            : 0;
+    for (size_t kh = 0; kh < poolingShape_[0]; kh++) {
+      for (size_t kw = 0; kw < kernel_w; kw++) {
+        int pos_h = start_h + static_cast<int>(kh * dilations_[0]);
+        int pos_w = spatial_dims > 1
+                        ? start_w + static_cast<int>(kw * dilations_[1])
+                        : 0;
 
-            if (pos_h >= 0 &&
-                pos_h < static_cast<int>(
-                            this->inputShape_[this->inputShape_.dims() -
-                                              spatial_dims]) &&
-                (spatial_dims <= 1 ||
-                 (pos_w >= 0 &&
-                  pos_w < static_cast<int>(
-                              this->inputShape_[this->inputShape_.dims() -
-                                                spatial_dims + 1])))) {
-              std::vector<size_t> input_coords(this->inputShape_.dims(), 0);
-              if (batch_dim >= 0) input_coords[batch_dim] = n;
-              if (channel_dim >= 0) input_coords[channel_dim] = c;
-              input_coords[this->inputShape_.dims() - spatial_dims] = pos_h;
-              if (spatial_dims > 1) {
-                input_coords[this->inputShape_.dims() - spatial_dims + 1] =
-                    pos_w;
-              }
-
-              size_t input_index = this->inputShape_.get_index(input_coords);
-              ValueType val = input[input_index];
-
-              if (this->poolingType_ == kMax) {
-                if (count == 0 || val > max_val) {
-                  max_val = val;
-                }
-              } else {
-                sum += val;
-              }
-              ++count;
-            }
+        if (pos_h >= 0 && pos_h < input_h_limit &&
+            (spatial_dims <= 1 || (pos_w >= 0 && pos_w < input_w_limit))) {
+          size_t input_index =
+              input_base + static_cast<size_t>(pos_h) * input_h_stride;
+          if (spatial_dims > 1) {
+            input_index += static_cast<size_t>(pos_w) * input_w_stride;
           }
+          ValueType val = input[input_index];
+
+          if (this->poolingType_ == kMax) {
+            if (count == 0 || val > max_val) {
+              max_val = val;
+            }
+          } else {
+            sum += val;
+          }
+          ++count;
         }
+      }
+    }
 
-        if (count == 0) return;
+    if (count == 0) {
+      return;
+    }
 
-        std::vector<size_t> output_coords(this->outputShape_.dims(), 0);
-        if (batch_dim >= 0) output_coords[batch_dim] = n;
-        if (channel_dim >= 0) output_coords[channel_dim] = c;
-        output_coords[this->outputShape_.dims() - spatial_dims] = h;
-        if (spatial_dims > 1) {
-          output_coords[this->outputShape_.dims() - spatial_dims + 1] = w;
-        }
-
-        size_t output_index = this->outputShape_.get_index(output_coords);
-
-        switch (this->poolingType_) {
-          case kAverage:
-            res[output_index] = sum / static_cast<ValueType>(count);
-            break;
-          case kMax:
-            res[output_index] = max_val;
-            break;
-          default:
-            throw std::runtime_error("Unknown pooling type");
-        }
-      },
-      options);
+    switch (this->poolingType_) {
+      case kAverage:
+        res[idx] = sum / static_cast<ValueType>(count);
+        break;
+      case kMax:
+        res[idx] = max_val;
+        break;
+      default:
+        throw std::runtime_error("Unknown pooling type");
+    }
+  }, options);
 
   return res;
 }

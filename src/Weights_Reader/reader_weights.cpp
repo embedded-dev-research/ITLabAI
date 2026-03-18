@@ -7,12 +7,12 @@
 #include <vector>
 
 #ifdef _WIN32
-#include <windows.h>
+#  include <windows.h>
 #else
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#  include <fcntl.h>
+#  include <sys/mman.h>
+#  include <sys/stat.h>
+#  include <unistd.h>
 #endif
 
 namespace it_lab_ai {
@@ -44,12 +44,13 @@ json read_json(const std::string& filename) {
   return result;
 
 #else
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
   int fd = open(filename.c_str(), O_RDONLY);
   if (fd == -1) {
     throw std::runtime_error("Cannot open file: " + filename);
   }
 
-  struct stat sb;
+  struct stat sb {};
   fstat(fd, &sb);
 
   if (sb.st_size == 0) {
@@ -57,7 +58,8 @@ json read_json(const std::string& filename) {
     return json{};
   }
 
-  char* data = (char*)mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  char* data = static_cast<char*>(
+      mmap(nullptr, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
   json result = json::parse(data, data + sb.st_size);
 
   munmap(data, sb.st_size);
@@ -79,7 +81,9 @@ void extract_values_from_json(const json& j, std::vector<float>& values) {
 void parse_json_shape(const json& j, std::vector<size_t>& shape,
                       size_t dim = 0) {
   if (!j.is_array()) {
-    if (dim == 0) shape.push_back(0);
+    if (dim == 0) {
+      shape.push_back(0);
+    }
     return;
   }
 

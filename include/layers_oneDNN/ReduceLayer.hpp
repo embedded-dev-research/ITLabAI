@@ -45,7 +45,9 @@ class ReduceLayerOneDnn : public Layer {
   }
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return Tensor(); }
+  Tensor get_weights() override {
+    return Tensor();
+  }
 #endif
 
  private:

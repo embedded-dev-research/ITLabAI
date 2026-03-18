@@ -10,9 +10,9 @@
 #define ENABLE_TIMING_OUTPUT 1
 
 #if ENABLE_TIMING_OUTPUT
-#define PRINT_TIMING(msg) std::cout << msg << std::endl
+#  define PRINT_TIMING(msg) std::cout << msg << std::endl
 #else
-#define PRINT_TIMING(msg) ((void)0)
+#  define PRINT_TIMING(msg) ((void)0)
 #endif
 
 using namespace it_lab_ai;

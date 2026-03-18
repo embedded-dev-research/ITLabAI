@@ -1,23 +1,26 @@
 #pragma once
-#include <cmath>
-#include <stdexcept>
+
+#include <memory>
+#include <string>
 #include <vector>
 
+#include "layers/ConvLayer.hpp"
 #include "layers/Layer.hpp"
+#include "layers/Tensor.hpp"
 
 namespace it_lab_ai {
 
-inline size_t ComputeConvOutputDim(size_t input_size, size_t kernel_size,
-                                   size_t stride, size_t padding,
-                                   size_t dilation) {
-  const size_t effective_kernel = dilation * (kernel_size - 1) + 1;
-  if (stride == 0 || input_size + 2 * padding < effective_kernel) {
-    return 0;
+template <typename T>
+void relu(Tensor& t) {
+  Shape sh = t.get_shape();
+  for (size_t i = 0; i < sh.count(); i++) {
+    if ((*t.as<T>())[i] < 0) {
+      (*t.as<T>())[i] = 0;
+    }
   }
-  return (input_size + 2 * padding - effective_kernel) / stride + 1;
 }
 
-class ConvolutionalLayer : public Layer {
+class ConvReluLayer : public Layer {
  private:
   size_t stride_;
   size_t pads_;
@@ -28,15 +31,15 @@ class ConvolutionalLayer : public Layer {
   bool useLegacyImpl_;
 
  public:
-  ConvolutionalLayer() : Layer(kConvolution), kernel_(nullptr), bias_(nullptr) {
+  ConvReluLayer() : Layer(kConvRelu), kernel_(nullptr), bias_(nullptr) {
     stride_ = 0;
     pads_ = 0;
     dilations_ = 0;
   }
-  ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
-                     const Tensor& kernel, const Tensor& bias = Tensor(),
-                     size_t group = 1, bool useLegacyImpl = false)
-      : Layer(kConvolution),
+  ConvReluLayer(size_t step, size_t pads, size_t dilations,
+                const Tensor& kernel, const Tensor& bias = Tensor(),
+                size_t group = 1, bool useLegacyImpl = false)
+      : Layer(kConvRelu),
         kernel_(std::make_shared<Tensor>(kernel)),
         bias_(std::make_shared<Tensor>(bias)) {
     stride_ = step;
@@ -45,34 +48,29 @@ class ConvolutionalLayer : public Layer {
     dilations_ = dilations;
     useLegacyImpl_ = useLegacyImpl;
   }
-  ConvolutionalLayer(size_t step, size_t pads, size_t dilations,
-                     std::shared_ptr<Tensor> kernel,
-                     std::shared_ptr<Tensor> bias = std::make_shared<Tensor>(),
-                     size_t group = 1, bool useLegacyImpl = false)
-      : Layer(kConvolution),
-        kernel_(std::move(kernel)),
-        bias_(std::move(bias)) {
+  ConvReluLayer(size_t step, size_t pads, size_t dilations,
+                std::shared_ptr<Tensor> kernel,
+                std::shared_ptr<Tensor> bias = std::make_shared<Tensor>(),
+                size_t group = 1, bool useLegacyImpl = false)
+      : Layer(kConvRelu), kernel_(std::move(kernel)), bias_(std::move(bias)) {
     stride_ = step;
     pads_ = pads;
     group_ = group;
     dilations_ = dilations;
     useLegacyImpl_ = useLegacyImpl;
   }
-
-  [[nodiscard]] std::vector<size_t> getNumericParams() const {
-    std::vector<size_t> res = {stride_, pads_, dilations_, group_};
-    return res;
+  explicit ConvReluLayer(const std::shared_ptr<ConvolutionalLayer>& conv)
+      : Layer(kConvRelu) {
+    auto numerics = conv->getNumericParams();
+    auto tensors = conv->getTensorParams();
+    stride_ = numerics[0];
+    pads_ = numerics[1];
+    dilations_ = numerics[2];
+    group_ = numerics[3];
+    kernel_ = tensors[0];
+    bias_ = tensors[1];
+    useLegacyImpl_ = conv->getLegacyImplBool();
   }
-
-  [[nodiscard]] std::vector<std::shared_ptr<Tensor>> getTensorParams() {
-    std::vector<std::shared_ptr<Tensor>> res = {kernel_, bias_};
-    return res;
-  }
-
-  [[nodiscard]] bool getLegacyImplBool() const {
-    return useLegacyImpl_;
-  }
-
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
   void run(const std::vector<Tensor>& input, std::vector<Tensor>& output,
@@ -84,109 +82,11 @@ class ConvolutionalLayer : public Layer {
 #endif
 };
 
-template <typename ValueType>
-class ConvImpl : public LayerImpl<ValueType> {
- private:
-  int input_width_;
-  int input_height_;
-  int input_flow_;
-  size_t stride_;
-  size_t pads_;
-  size_t dilations_;
-  size_t input_size_;
-  std::vector<ValueType> bias_;
-
- public:
-  ConvImpl() = delete;
-  ConvImpl(size_t stride, size_t pads, size_t dilations, int input_width,
-           int input_height, int input_flow, size_t input_size,
-           const std::vector<ValueType>& bias)
-      : input_width_(input_width),
-        input_height_(input_height),
-        input_flow_(input_flow),
-        stride_(stride),
-        pads_(pads),
-        dilations_(dilations),
-        input_size_(input_size),
-        bias_(bias) {}
-
-  ConvImpl(const ConvImpl& c) = default;
-
-  [[nodiscard]] std::vector<ValueType> run(
-      const std::vector<ValueType>& input) const override {
-    return input;
-  }
-
-  [[nodiscard]] std::vector<ValueType> run(std::vector<ValueType> startmatrix,
-                                           int new_rows, int new_cols,
-                                           std::vector<ValueType> startkernel,
-                                           size_t start_kernel_size,
-                                           size_t kernel_size,
-                                           int center_distance) const {
-    std::vector<ValueType> matrix(new_rows * new_cols * input_flow_, 0);
-    for (int i = 0; i < input_height_; ++i) {
-      for (int j = 0; j < input_width_; ++j) {
-        for (int f = 0; f < input_flow_; ++f) {
-          matrix[((i + pads_) * new_cols + j + pads_) * input_flow_ + f] =
-              startmatrix[(i * input_width_ + j) * input_flow_ + f];
-        }
-      }
-    }
-
-    std::vector<ValueType> kernel(kernel_size * kernel_size, 0);
-    for (int i = 0; i < static_cast<int>(start_kernel_size); ++i) {
-      for (int j = 0; j < static_cast<int>(start_kernel_size); ++j) {
-        kernel[(dilations_ + i) * static_cast<int>(kernel_size) + j +
-               (j + 1) * dilations_] =
-            startkernel[i * static_cast<int>(start_kernel_size) + j];
-      }
-    }
-
-    std::vector<ValueType> outputvec;
-    for (int i = input_width_ + center_distance;
-         i < static_cast<int>(input_size_); i += static_cast<int>(stride_)) {
-      for (int x = 0; x < input_flow_; ++x) {
-        ValueType color = 0;
-        for (int coloms = -input_width_; coloms < input_width_ + 1;
-             coloms += input_width_) {
-          for (int str = -1; str < 2; ++str) {
-            if (input_width_ == 0) {
-              throw std::out_of_range("Input = 0");
-            }
-            int kercol_index = coloms / input_width_ + 1;
-            if (kercol_index < 0) {
-              throw std::out_of_range("Kernel column index is negative");
-            }
-            auto kercol = static_cast<size_t>(kercol_index);
-            color +=
-                matrix.at((i + coloms + str) * input_flow_ + x) *
-                kernel[kercol * kernel_size + static_cast<size_t>(str + 1)];
-          }
-        }
-        if (!bias_.empty() && static_cast<size_t>(x) < bias_.size()) {
-          color += bias_[x];
-        }
-        outputvec.push_back(color);
-      }
-      if ((i + center_distance + 1) % input_width_ == 0) {
-        if (i + input_width_ + center_distance * 2 ==
-            static_cast<int>(input_size_)) {
-          i += input_width_ + center_distance * 2 + 1;
-        } else {
-          i += input_width_ * (static_cast<int>(stride_) - 1) +
-               (3 - static_cast<int>(stride_));
-        }
-      }
-    }
-    return outputvec;
-  }
-};
-
 // NCHW -> NCHW only
 template <typename ValueType>
-void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
-            Tensor& output, size_t stride_, size_t pads_, size_t group_,
-            size_t dilations_, ParBackend backend = ParBackend::kSeq) {
+void Conv4DRelu(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
+                Tensor& output, size_t stride_, size_t pads_, size_t group_,
+                size_t dilations_, ParBackend backend = ParBackend::kSeq) {
   size_t batch_size = input.get_shape()[0];
   size_t in_channels = input.get_shape()[1];
   size_t in_height = input.get_shape()[2];
@@ -296,7 +196,7 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
           value += bias_.get<ValueType>({oc});
         }
 
-        output_tensor[b][oc][oh][ow] = value;
+        output_tensor[b][oc][oh][ow] = value > 0 ? value : 0;
       }
     }
   }, options);
@@ -320,10 +220,10 @@ void Conv4D(const Tensor& input, const Tensor& kernel_, const Tensor& bias_,
 }
 
 template <typename ValueType>
-void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
-                     const Tensor& bias_, Tensor& output, size_t stride_,
-                     size_t pads_, size_t dilations_,
-                     ParBackend backend = ParBackend::kSeq) {
+void DepthwiseConv4DRelu(const Tensor& input, const Tensor& kernel_,
+                         const Tensor& bias_, Tensor& output, size_t stride_,
+                         size_t pads_, size_t dilations_,
+                         ParBackend backend = ParBackend::kSeq) {
   size_t batch_size = input.get_shape()[0];
   size_t channels = input.get_shape()[1];
   size_t in_height = input.get_shape()[2];
@@ -378,7 +278,7 @@ void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
           sum += bias_.get<ValueType>({c});
         }
 
-        output_tensor.set<ValueType>({b, c, oh, ow}, sum);
+        output_tensor.set<ValueType>({b, c, oh, ow}, sum > 0 ? sum : 0);
       }
     }
   }, options);
@@ -388,10 +288,10 @@ void DepthwiseConv4D(const Tensor& input, const Tensor& kernel_,
 
 // NCHW -> NCHW only (Legacy version)
 template <typename ValueType>
-void Conv4D_Legacy(const Tensor& input, const Tensor& kernel_,
-                   const Tensor& bias_, Tensor& output, size_t stride_,
-                   size_t pads_, size_t dilations_,
-                   ParBackend backend = ParBackend::kSeq) {
+void Conv4D_LegacyRelu(const Tensor& input, const Tensor& kernel_,
+                       const Tensor& bias_, Tensor& output, size_t stride_,
+                       size_t pads_, size_t dilations_,
+                       ParBackend backend = ParBackend::kSeq) {
   size_t batch_size = input.get_shape()[0];
   size_t in_height = input.get_shape()[2];
   size_t in_width = input.get_shape()[3];
@@ -474,9 +374,12 @@ void Conv4D_Legacy(const Tensor& input, const Tensor& kernel_,
           }
         }
         if (!bias_.empty()) {
-          output_tensor[b][c][i][j] = value + (*bias_.as<ValueType>())[c];
+          output_tensor[b][c][i][j] =
+              value + (*bias_.as<ValueType>())[c] > 0
+                  ? (value + (*bias_.as<ValueType>())[c])
+                  : 0;
         } else {
-          output_tensor[b][c][i][j] = value;
+          output_tensor[b][c][i][j] = value > 0 ? value : 0;
         }
       }
     }
@@ -499,5 +402,4 @@ void Conv4D_Legacy(const Tensor& input, const Tensor& kernel_,
 
   output = make_tensor<ValueType>(one_d_vector, sh);
 }
-
 }  // namespace it_lab_ai

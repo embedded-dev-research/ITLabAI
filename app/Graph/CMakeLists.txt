@@ -11,6 +11,7 @@ target_link_libraries(BuildGraph PUBLIC ${OpenCV_LIBS})
 target_link_libraries(BuildGraph PUBLIC reader_lib)
 target_link_libraries(BuildGraph PUBLIC TBB_unified)
 target_link_libraries(BuildGraph PUBLIC layers_lib)
+target_link_libraries(BuildGraph PUBLIC layers_fused_lib)
 target_link_libraries(BuildGraph PUBLIC layers_oneDNN_lib)
 target_link_libraries(BuildGraph PUBLIC gtest_main)
 
@@ -25,6 +26,7 @@ target_link_libraries(ACC BuildGraph)
 add_executable(onnx_subgraphs onnx_subgraphs.cpp)
 target_link_libraries(onnx_subgraphs BuildGraph)
 target_link_libraries(onnx_subgraphs OpenMP::OpenMP_CXX)
+target_link_libraries(onnx_subgraphs ${OpenCV_LIBS})
 target_link_libraries(onnx_subgraphs graphT_lib)
 
 file(DOWNLOAD

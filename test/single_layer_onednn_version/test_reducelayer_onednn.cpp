@@ -364,7 +364,9 @@ TEST(reducelayer_onednn, different_shapes_same_layer) {
 
   {
     std::vector<float> input_data(12);
-    for (size_t i = 0; i < 12; i++) input_data[i] = static_cast<float>(i);
+    for (size_t i = 0; i < 12; i++) {
+      input_data[i] = static_cast<float>(i);
+    }
 
     Tensor input = make_tensor(input_data, Shape({3, 4}));
     Tensor output;

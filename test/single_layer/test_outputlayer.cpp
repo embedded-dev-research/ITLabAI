@@ -29,7 +29,7 @@ void fill_from_file(const std::string& path_from, std::vector<std::string>& to,
 
 class OutputTestsParameterized
     : public ::testing::TestWithParam<
-          std::tuple<std::vector<float>, size_t, std::vector<float> > > {};
+          std::tuple<std::vector<float>, size_t, std::vector<float>>> {};
 // 1) input; 2) k for top_k; 3) expected_output.
 
 TEST_P(OutputTestsParameterized, output_layer_works_correctly) {
