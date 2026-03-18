@@ -11,7 +11,9 @@ std::ostream& operator<<(std::ostream& out, const Tensor& t) {
       out << (*t.as<float>())[i] << " ";
     }
     if (t.get_shape().dims() > 1) {
-      if ((i + 1) % t.get_shape()[1] == 0) out << '\n';
+      if ((i + 1) % t.get_shape()[1] == 0) {
+        out << '\n';
+      }
     }
   }
   return out;

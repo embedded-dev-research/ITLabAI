@@ -8,7 +8,7 @@ using namespace it_lab_ai;
 class FCTestsParameterized
     : public ::testing::TestWithParam<
           std::tuple<std::vector<double>, std::vector<double>, Shape,
-                     std::vector<double>, std::vector<double> > > {};
+                     std::vector<double>, std::vector<double>>> {};
 // 1) input; 2) weights; 3) weights_shape; 4) bias; 5) expected_output.
 
 TEST_P(FCTestsParameterized, fc_layer_works_correctly) {

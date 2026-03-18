@@ -13,7 +13,9 @@ T apply_binary_op(T a, T b, BinaryOpLayer::Operation op) {
     case BinaryOpLayer::Operation::kSub:
       return a - b;
     case BinaryOpLayer::Operation::kDiv:
-      if (b == 0) throw std::runtime_error("Division by zero");
+      if (b == 0) {
+        throw std::runtime_error("Division by zero");
+      }
       return a / b;
     default:
       throw std::runtime_error("Unsupported binary operation");
@@ -113,12 +115,9 @@ void BinaryOpLayer::run_with_scalar_impl(const Tensor& input, ValueType scalar,
   parallel::Options options;
   options.backend = parallel_backend_;
 
-  parallel::parallel_for(
-      input_data.size(),
-      [&](size_t i) {
-        result[i] = apply_binary_op(input_data[i], scalar, op_);
-      },
-      options);
+  parallel::parallel_for(input_data.size(), [&](size_t i) {
+    result[i] = apply_binary_op(input_data[i], scalar, op_);
+  }, options);
 
   output = make_tensor(result, input.get_shape());
 }
@@ -137,16 +136,13 @@ void BinaryOpLayer::run_broadcast_impl(const Tensor& A, const Tensor& B,
   parallel::Options options;
   options.backend = parallel_backend_;
 
-  parallel::parallel_for(
-      result.size(),
-      [&](size_t i) {
-        size_t a_idx = get_broadcasted_index(i, A.get_shape(), output_shape,
-                                             strides_a, strides_output);
-        size_t b_idx = get_broadcasted_index(i, B.get_shape(), output_shape,
-                                             strides_b, strides_output);
-        result[i] = apply_binary_op(a_data[a_idx], b_data[b_idx], op_);
-      },
-      options);
+  parallel::parallel_for(result.size(), [&](size_t i) {
+    size_t a_idx = get_broadcasted_index(i, A.get_shape(), output_shape,
+                                         strides_a, strides_output);
+    size_t b_idx = get_broadcasted_index(i, B.get_shape(), output_shape,
+                                         strides_b, strides_output);
+    result[i] = apply_binary_op(a_data[a_idx], b_data[b_idx], op_);
+  }, options);
 
   output = make_tensor(result, output_shape);
 }
@@ -184,7 +180,9 @@ Shape BinaryOpLayer::calculate_broadcasted_shape(const Shape& shape_A,
 
 std::vector<size_t> BinaryOpLayer::get_strides(const Shape& shape) {
   std::vector<size_t> strides(shape.dims());
-  if (strides.empty()) return strides;
+  if (strides.empty()) {
+    return strides;
+  }
 
   strides.back() = 1;
   for (int i = static_cast<int>(shape.dims()) - 2; i >= 0; --i) {
@@ -207,7 +205,9 @@ size_t BinaryOpLayer::get_broadcasted_index(
                            ? input_shape[i - (output_dims - input_dims)]
                            : 1;
 
-    if (input_dim == 1) continue;
+    if (input_dim == 1) {
+      continue;
+    }
 
     size_t pos_in_dim = (flat_index / output_strides[i]) % output_dim;
     if (i >= output_dims - input_dims) {
@@ -222,7 +222,9 @@ bool BinaryOpLayer::is_scalar_tensor(const Tensor& t) {
   const auto& shape = t.get_shape();
   const size_t dims = shape.dims();
 
-  if (dims == 0) return true;
+  if (dims == 0) {
+    return true;
+  }
 
   for (size_t i = 0; i < dims; ++i) {
     if (shape[i] != 1) {

@@ -287,7 +287,9 @@ TEST(poolinglayer_onednn, different_shapes_same_layer) {
 
   {
     std::vector<float> input_data(16);
-    for (size_t i = 0; i < 16; i++) input_data[i] = static_cast<float>(i);
+    for (size_t i = 0; i < 16; i++) {
+      input_data[i] = static_cast<float>(i);
+    }
 
     Tensor input = make_tensor(input_data, Shape({1, 1, 4, 4}));
     Tensor output;
@@ -346,7 +348,9 @@ TEST(poolinglayer_onednn, edge_cases) {
                              "max");
 
     std::vector<float> input_data(100);
-    for (size_t i = 0; i < 100; i++) input_data[i] = static_cast<float>(i);
+    for (size_t i = 0; i < 100; i++) {
+      input_data[i] = static_cast<float>(i);
+    }
 
     Tensor input = make_tensor(input_data, Shape({1, 1, 10, 10}));
     Tensor output;
@@ -363,7 +367,9 @@ TEST(poolinglayer_onednn, edge_cases) {
                              "max");
 
     std::vector<float> input_data(8);
-    for (size_t i = 0; i < 8; i++) input_data[i] = static_cast<float>(i);
+    for (size_t i = 0; i < 8; i++) {
+      input_data[i] = static_cast<float>(i);
+    }
 
     Tensor input = make_tensor(input_data, Shape({2, 1, 2, 2}));
     Tensor output;

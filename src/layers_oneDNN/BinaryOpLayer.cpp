@@ -30,10 +30,16 @@ void BinaryOpLayerOneDnn::run(const std::vector<Tensor>& input,
     const auto& src1_data = *b.as<float>();
     std::vector<float> dst_data(output_shape_.count());
 
-    dnnl::memory src0_mem(src0_md_, *engine_,
-                          const_cast<float*>(src0_data.data()));
-    dnnl::memory src1_mem(src1_md_, *engine_,
-                          const_cast<float*>(src1_data.data()));
+    dnnl::memory src0_mem(
+        src0_md_, *engine_,
+        const_cast<float*>(
+            src0_data
+                .data()));  // NOLINT(cppcoreguidelines-pro-type-const-cast)
+    dnnl::memory src1_mem(
+        src1_md_, *engine_,
+        const_cast<float*>(
+            src1_data
+                .data()));  // NOLINT(cppcoreguidelines-pro-type-const-cast)
     dnnl::memory dst_mem(dst_md_, *engine_, dst_data.data());
 
     binary_prim_->execute(*stream_, {{DNNL_ARG_SRC_0, src0_mem},
@@ -47,10 +53,16 @@ void BinaryOpLayerOneDnn::run(const std::vector<Tensor>& input,
     const auto& src1_data = *b.as<int>();
     std::vector<int> dst_data(output_shape_.count());
 
-    dnnl::memory src0_mem(src0_md_, *engine_,
-                          const_cast<int*>(src0_data.data()));
-    dnnl::memory src1_mem(src1_md_, *engine_,
-                          const_cast<int*>(src1_data.data()));
+    dnnl::memory src0_mem(
+        src0_md_, *engine_,
+        const_cast<int*>(
+            src0_data
+                .data()));  // NOLINT(cppcoreguidelines-pro-type-const-cast)
+    dnnl::memory src1_mem(
+        src1_md_, *engine_,
+        const_cast<int*>(
+            src1_data
+                .data()));  // NOLINT(cppcoreguidelines-pro-type-const-cast)
     dnnl::memory dst_mem(dst_md_, *engine_, dst_data.data());
 
     binary_prim_->execute(*stream_, {{DNNL_ARG_SRC_0, src0_mem},

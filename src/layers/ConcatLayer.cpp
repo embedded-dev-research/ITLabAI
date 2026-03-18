@@ -28,7 +28,9 @@ void ConcatLayer::run(const std::vector<Tensor>& input,
 }
 
 void ConcatLayer::validate_inputs(const std::vector<Tensor>& inputs) const {
-  if (inputs.empty()) return;
+  if (inputs.empty()) {
+    return;
+  }
 
   const Shape& first_shape = inputs[0].get_shape();
   Type first_type = inputs[0].get_type();
@@ -97,7 +99,9 @@ std::vector<Tensor> ConcatLayer::reorderInputs(
 
 Shape ConcatLayer::calculate_output_shape(
     const std::vector<Tensor>& inputs) const {
-  if (inputs.empty()) return Shape({});
+  if (inputs.empty()) {
+    return Shape({});
+  }
 
   const Shape& first_shape = inputs[0].get_shape();
   std::vector<size_t> output_dims(first_shape.dims());

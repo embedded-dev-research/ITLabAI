@@ -5,7 +5,9 @@
 
 namespace it_lab_ai {
 
-TEST(ReduceLayer, DefaultConstructor) { ASSERT_NO_THROW(ReduceLayer layer); }
+TEST(ReduceLayer, DefaultConstructor) {
+  ASSERT_NO_THROW(ReduceLayer layer);
+}
 
 TEST(ReduceLayer, SumAllAxesKeepDims) {
   ReduceLayer layer(1);

@@ -22,10 +22,10 @@ void PoolingLayerOneDnn::run(const std::vector<Tensor>& input,
 
   if (type == Type::kFloat) {
     const auto& src = *in.as<float>();
+    std::vector<float> src_copy(src.begin(), src.end());
     std::vector<float> dst(output_shape_.count());
 
-    dnnl::memory src_mem(src_memory_desc_, *engine_,
-                         const_cast<float*>(src.data()));
+    dnnl::memory src_mem(src_memory_desc_, *engine_, src_copy.data());
     dnnl::memory dst_mem(dst_memory_desc_, *engine_, dst.data());
 
     pool_prim_->execute(*stream_,
@@ -35,10 +35,10 @@ void PoolingLayerOneDnn::run(const std::vector<Tensor>& input,
     output[0] = make_tensor(dst, output_shape_);
   } else if (type == Type::kInt) {
     const auto& src = *in.as<int>();
+    std::vector<int> src_copy(src.begin(), src.end());
     std::vector<int> dst(output_shape_.count());
 
-    dnnl::memory src_mem(src_memory_desc_, *engine_,
-                         const_cast<int*>(src.data()));
+    dnnl::memory src_mem(src_memory_desc_, *engine_, src_copy.data());
     dnnl::memory dst_mem(dst_memory_desc_, *engine_, dst.data());
 
     pool_prim_->execute(*stream_,
@@ -91,20 +91,16 @@ Shape PoolingLayerOneDnn::calculate_output_shape(
 
     size_t effective_kernel_size = (kernel_size - 1) * dilation + 1;
 
-    size_t output_size;
-    if (ceil_mode_) {
-      output_size = static_cast<size_t>(std::ceil(
-                        static_cast<float>(input_size + pad_front + pad_back -
-                                           effective_kernel_size) /
-                        static_cast<float>(stride))) +
-                    1;
-    } else {
-      output_size = static_cast<size_t>(std::floor(
-                        static_cast<float>(input_size + pad_front + pad_back -
-                                           effective_kernel_size) /
-                        static_cast<float>(stride))) +
-                    1;
-    }
+    const size_t output_size = [&]() -> size_t {
+      const auto output_raw =
+          static_cast<float>(input_size + pad_front + pad_back -
+                             effective_kernel_size) /
+          static_cast<float>(stride);
+      if (ceil_mode_) {
+        return static_cast<size_t>(std::ceil(output_raw)) + 1;
+      }
+      return static_cast<size_t>(std::floor(output_raw)) + 1;
+    }();
 
     output_shape[input_idx] = output_size;
   }

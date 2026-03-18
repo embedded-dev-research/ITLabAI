@@ -54,10 +54,10 @@ void ReduceLayerOneDnn::run(const std::vector<Tensor>& input,
 
   if (type == Type::kFloat) {
     const auto& src_data = *in.as<float>();
+    std::vector<float> src_copy(src_data.begin(), src_data.end());
     std::vector<float> dst_data(one_dnn_output_shape.count());
 
-    dnnl::memory src_mem(src_md_, *engine_,
-                         const_cast<float*>(src_data.data()));
+    dnnl::memory src_mem(src_md_, *engine_, src_copy.data());
     dnnl::memory dst_mem(dst_md_, *engine_, dst_data.data());
 
     reduction_prim_->execute(
@@ -85,9 +85,10 @@ void ReduceLayerOneDnn::run(const std::vector<Tensor>& input,
 
   } else if (type == Type::kInt) {
     const auto& src_data = *in.as<int>();
+    std::vector<int> src_copy(src_data.begin(), src_data.end());
     std::vector<int> dst_data(one_dnn_output_shape.count());
 
-    dnnl::memory src_mem(src_md_, *engine_, const_cast<int*>(src_data.data()));
+    dnnl::memory src_mem(src_md_, *engine_, src_copy.data());
     dnnl::memory dst_mem(dst_md_, *engine_, dst_data.data());
 
     reduction_prim_->execute(
@@ -146,7 +147,9 @@ std::vector<T> ReduceLayerOneDnn::remove_unit_dims(
 
     for (size_t dim = coords.size(); dim-- > 0;) {
       ++coords[dim];
-      if (coords[dim] < src_shape[dim]) break;
+      if (coords[dim] < src_shape[dim]) {
+        break;
+      }
       coords[dim] = 0;
     }
   }
@@ -266,9 +269,13 @@ void ReduceLayerOneDnn::initialize_onednn(const Tensor& input) {
   } catch (const dnnl::error& e) {
     std::cerr << "Error creating reduction primitive: " << e.what() << '\n';
     std::cerr << "Input dims: ";
-    for (auto d : src_dims) std::cerr << d << " ";
+    for (auto d : src_dims) {
+      std::cerr << d << " ";
+    }
     std::cerr << "\nOutput dims: ";
-    for (auto d : dst_dims) std::cerr << d << " ";
+    for (auto d : dst_dims) {
+      std::cerr << d << " ";
+    }
     std::cerr << "\nOperation: " << static_cast<int>(op_) << '\n';
 
     throw std::runtime_error("Failed to create oneDNN reduction primitive: " +

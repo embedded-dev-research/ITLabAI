@@ -21,10 +21,10 @@ void EwLayerOneDnn::run(const std::vector<Tensor>& input,
 
   if (type == Type::kFloat) {
     const auto& src = *in.as<float>();
+    std::vector<float> src_copy(src.begin(), src.end());
     std::vector<float> dst(src.size());
 
-    dnnl::memory src_mem(memory_desc_, *engine_,
-                         const_cast<float*>(src.data()));
+    dnnl::memory src_mem(memory_desc_, *engine_, src_copy.data());
     dnnl::memory dst_mem(memory_desc_, *engine_, dst.data());
 
     eltwise_prim_->execute(*stream_,
@@ -34,9 +34,10 @@ void EwLayerOneDnn::run(const std::vector<Tensor>& input,
     output[0] = make_tensor(dst, in.get_shape());
   } else if (type == Type::kInt) {
     const auto& src = *in.as<int>();
+    std::vector<int> src_copy(src.begin(), src.end());
     std::vector<int> dst(src.size());
 
-    dnnl::memory src_mem(memory_desc_, *engine_, const_cast<int*>(src.data()));
+    dnnl::memory src_mem(memory_desc_, *engine_, src_copy.data());
     dnnl::memory dst_mem(memory_desc_, *engine_, dst.data());
 
     eltwise_prim_->execute(*stream_,

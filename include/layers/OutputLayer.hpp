@@ -18,7 +18,9 @@ class OutputLayer : public Layer {
            std::vector<Tensor>& output) override {
     output = input;
   }
-  [[nodiscard]] std::vector<std::string> get_labels() const { return labels_; }
+  [[nodiscard]] std::vector<std::string> get_labels() const {
+    return labels_;
+  }
   [[nodiscard]] std::pair<std::vector<std::string>, Tensor> top_k(
       const Tensor& input, size_t k) const;
 #ifdef ENABLE_STATISTIC_WEIGHTS
