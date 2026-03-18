@@ -66,20 +66,26 @@ class BaseTestFixture : public ::testing::Test {
     return {9.0f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f};
   }
 
-  static Shape basic1DShape() { return {8}; }
+  static Shape basic1DShape() {
+    return {8};
+  }
 
   static std::vector<float> basic2DData4x4() {
     return {9.0f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f,
             2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
   }
 
-  static Shape basic2DShape4x4() { return {4, 4}; }
+  static Shape basic2DShape4x4() {
+    return {4, 4};
+  }
 
   static std::vector<float> basic2DData3x3() {
     return {9.0f, 8.0f, 7.0f, 5.0f, 4.0f, 3.0f, 2.0f, 3.0f, 4.0f};
   }
 
-  static Shape basic2DShape3x3() { return {3, 3}; }
+  static Shape basic2DShape3x3() {
+    return {3, 3};
+  }
 
   static std::vector<float> activationTestData() {
     return {-3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f};
@@ -105,7 +111,9 @@ class BaseTestFixture : public ::testing::Test {
     return {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f};
   }
 
-  static Shape ascending1DShape() { return {10}; }
+  static Shape ascending1DShape() {
+    return {10};
+  }
 
   static std::vector<float> descending1DData() {
     return {10.0f, 9.0f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f};
@@ -119,7 +127,9 @@ class BaseTestFixture : public ::testing::Test {
     return {1.0f, 2.0f, 3.0f, 4.0f};
   }
 
-  static Shape small2DShape2x2() { return {2, 2}; }
+  static Shape small2DShape2x2() {
+    return {2, 2};
+  }
 
   static std::vector<float> medium2DData5x5() {
     return {1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f,  8.0f,  9.0f,
@@ -127,19 +137,25 @@ class BaseTestFixture : public ::testing::Test {
             19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 25.0f};
   }
 
-  static Shape medium2DShape5x5() { return {5, 5}; }
+  static Shape medium2DShape5x5() {
+    return {5, 5};
+  }
 
   static std::vector<float> zero2DData3x3() {
     return {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
   }
 
-  static Shape zero2DShape3x3() { return {3, 3}; }
+  static Shape zero2DShape3x3() {
+    return {3, 3};
+  }
 
   static std::vector<float> constant2DData4x4(float value = 5.0f) {
     return std::vector<float>(16, value);
   }
 
-  static Shape constant2DShape4x4() { return {4, 4}; }
+  static Shape constant2DShape4x4() {
+    return {4, 4};
+  }
 
   template <typename T>
   static void expectVectorsNear(const std::vector<T>& actual,

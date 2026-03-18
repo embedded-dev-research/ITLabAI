@@ -4,9 +4,8 @@ namespace it_lab_ai {
 
 std::vector<size_t> reorder(std::vector<size_t> order_vec,
                             std::vector<size_t> order) {
-  size_t min_ind;
-  for (size_t i = 0; i < order.size() - 1; i++) {
-    min_ind = i;
+  for (size_t i = 0; i + 1 < order.size(); i++) {
+    size_t min_ind = i;
     for (size_t j = i + 1; j < order.size(); j++) {
       if (order[j] < order[min_ind]) {
         min_ind = j;

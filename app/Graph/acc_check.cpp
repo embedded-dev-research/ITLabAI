@@ -97,7 +97,9 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < 28; ++i) {
           for (int j = 0; j < 28; ++j) {
             size_t a = ind;
-            for (size_t n = 0; n < name; n++) a += counts[n] + 1;
+            for (size_t n = 0; n < name; n++) {
+              a += counts[n] + 1;
+            }
             res[(a) * 28 * 28 + i * 28 + j] = channels[0].at<uchar>(j, i);
           }
         }
@@ -124,8 +126,12 @@ int main(int argc, char* argv[]) {
     for (size_t name = 0; name < 10; name++) {
       for (size_t ind = 0; ind < counts[name] + 1; ind++) {
         size_t a = ind;
-        for (size_t n = 0; n < name; n++) a += counts[n] + 1;
-        if (name == indices[a]) stat++;
+        for (size_t n = 0; n < name; n++) {
+          a += counts[n] + 1;
+        }
+        if (name == indices[a]) {
+          stat++;
+        }
       }
     }
     double percentage =
@@ -177,7 +183,9 @@ int main(int argc, char* argv[]) {
     folder_oss << std::setw(5) << std::setfill('0') << class_id;
     std::string class_folder_path = dataset_path + "/" + folder_oss.str();
 
-    if (!fs::exists(class_folder_path)) continue;
+    if (!fs::exists(class_folder_path)) {
+      continue;
+    }
 
     for (const auto& entry : fs::directory_iterator(class_folder_path)) {
       if (entry.path().extension() == ".png" ||

@@ -81,61 +81,43 @@ std::vector<ValueType> EWLayerImpl<ValueType>::run(
   options.backend = parallel_backend_;
 
   if (func_ == "relu") {
-    parallel::parallel_for(
-        input.size(),
-        [&](std::size_t i) {
-          res[i] = input[i] > ValueType(0) ? input[i] : ValueType(0);
-        },
-        options);
+    parallel::parallel_for(input.size(), [&](std::size_t i) {
+      res[i] = input[i] > ValueType(0) ? input[i] : ValueType(0);
+    }, options);
   } else if (func_ == "tanh") {
-    parallel::parallel_for(
-        input.size(),
-        [&](std::size_t i) {
-          res[i] = static_cast<ValueType>(std::tanh(input[i]));
-        },
-        options);
+    parallel::parallel_for(input.size(), [&](std::size_t i) {
+      res[i] = static_cast<ValueType>(std::tanh(input[i]));
+    }, options);
   } else if (func_ == "sin") {
-    parallel::parallel_for(
-        input.size(),
-        [&](std::size_t i) {
-          res[i] = static_cast<ValueType>(std::sin(input[i]));
-        },
-        options);
+    parallel::parallel_for(input.size(), [&](std::size_t i) {
+      res[i] = static_cast<ValueType>(std::sin(input[i]));
+    }, options);
   } else if (func_ == "minus") {
-    parallel::parallel_for(
-        input.size(), [&](std::size_t i) { res[i] = -input[i]; }, options);
+    parallel::parallel_for(input.size(),
+                           [&](std::size_t i) { res[i] = -input[i]; }, options);
   } else if (func_ == "linear") {
-    parallel::parallel_for(
-        input.size(),
-        [&](std::size_t i) {
-          res[i] = input[i] * static_cast<ValueType>(alpha_) +
-                   static_cast<ValueType>(beta_);
-        },
-        options);
+    parallel::parallel_for(input.size(), [&](std::size_t i) {
+      res[i] = input[i] * static_cast<ValueType>(alpha_) +
+               static_cast<ValueType>(beta_);
+    }, options);
   } else if (func_ == "sigmoid") {
     if constexpr (std::is_integral_v<ValueType>) {
-      parallel::parallel_for(
-          input.size(),
-          [&](std::size_t i) {
-            auto x_float = static_cast<float>(input[i]);
-            float result = 1.0F / (1.0F + std::exp(-x_float));
-            res[i] = static_cast<ValueType>(std::round(result));
-          },
-          options);
+      parallel::parallel_for(input.size(), [&](std::size_t i) {
+        auto x_float = static_cast<float>(input[i]);
+        float result = 1.0F / (1.0F + std::exp(-x_float));
+        res[i] = static_cast<ValueType>(std::round(result));
+      }, options);
     } else {
-      parallel::parallel_for(
-          input.size(),
-          [&](std::size_t i) {
-            ValueType x = input[i];
-            if (x >= ValueType(0)) {
-              ValueType z = std::exp(-x);
-              res[i] = ValueType(1) / (ValueType(1) + z);
-            } else {
-              ValueType z = std::exp(x);
-              res[i] = z / (ValueType(1) + z);
-            }
-          },
-          options);
+      parallel::parallel_for(input.size(), [&](std::size_t i) {
+        ValueType x = input[i];
+        if (x >= ValueType(0)) {
+          ValueType z = std::exp(-x);
+          res[i] = ValueType(1) / (ValueType(1) + z);
+        } else {
+          ValueType z = std::exp(x);
+          res[i] = z / (ValueType(1) + z);
+        }
+      }, options);
     }
   } else {
     throw std::invalid_argument("No such function for EWLayer");

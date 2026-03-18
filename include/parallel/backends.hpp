@@ -43,7 +43,9 @@ inline void impl_threads(std::size_t count,
   int num_threads = opt.max_threads > 0
                         ? opt.max_threads
                         : static_cast<int>(std::thread::hardware_concurrency());
-  if (num_threads == 0) num_threads = 4;
+  if (num_threads == 0) {
+    num_threads = 4;
+  }
 
   std::size_t min_chunk_size = std::max(opt.grain, count / (num_threads * 4));
   if (count / num_threads < min_chunk_size) {
@@ -60,7 +62,9 @@ inline void impl_threads(std::size_t count,
   for (int t = 0; t < num_threads; ++t) {
     std::size_t end =
         start + chunk_size + (t < static_cast<int>(remainder) ? 1 : 0);
-    if (start >= end) break;
+    if (start >= end) {
+      break;
+    }
 
     threads.emplace_back([start, end, &func]() {
       for (std::size_t i = start; i < end; ++i) {
@@ -82,18 +86,19 @@ inline void impl_tbb(std::size_t count,
   oneapi::tbb::parallel_for(
       oneapi::tbb::blocked_range<std::size_t>(0, count, opt.grain),
       [&](const oneapi::tbb::blocked_range<std::size_t>& range) {
-        for (std::size_t i = range.begin(); i < range.end(); ++i) {
-          func(i);
-        }
-      },
-      oneapi::tbb::auto_partitioner());
+    for (std::size_t i = range.begin(); i < range.end(); ++i) {
+      func(i);
+    }
+  }, oneapi::tbb::auto_partitioner());
 }
 
 #ifdef HAS_OPENMP
 inline void impl_omp(std::size_t count,
                      const std::function<void(std::size_t)>& func,
                      const Options& opt) {
-  if (count == 0) return;
+  if (count == 0) {
+    return;
+  }
 
   int num_threads = opt.max_threads > 0
                         ? opt.max_threads
@@ -106,7 +111,7 @@ inline void impl_omp(std::size_t count,
     impl_seq(count, func);
     return;
   }
-#pragma omp parallel for schedule(static) num_threads(num_threads)
+#  pragma omp parallel for schedule(static) num_threads(num_threads)
   for (int i = 0; i < int_count; ++i) {
     func(static_cast<std::size_t>(i));
   }
@@ -122,7 +127,9 @@ inline void impl_omp(std::size_t count,
 inline void impl_kokkos(std::size_t count,
                         const std::function<void(std::size_t)>& func,
                         const Options& opt) {
-  if (count == 0) return;
+  if (count == 0) {
+    return;
+  }
   static std::once_flag init_flag;
   std::call_once(init_flag, [&opt]() {
     int num_threads =

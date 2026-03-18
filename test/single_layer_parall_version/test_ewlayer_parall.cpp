@@ -10,9 +10,9 @@
 #define ENABLE_TIMING_OUTPUT 1
 
 #if ENABLE_TIMING_OUTPUT
-#define PRINT_TIMING(msg) std::cout << msg << std::endl
+#  define PRINT_TIMING(msg) std::cout << msg << std::endl
 #else
-#define PRINT_TIMING(msg) ((void)0)
+#  define PRINT_TIMING(msg) ((void)0)
 #endif
 
 using namespace it_lab_ai;
@@ -145,9 +145,9 @@ TEST(ewlayer_parall, parallel_for_direct) {
   }
 
   auto start = std::chrono::high_resolution_clock::now();
-  parallel::parallel_for(
-      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + matrix2[i]; },
-      ParBackend::kSeq);
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + matrix2[i];
+  }, ParBackend::kSeq);
 
   auto end = std::chrono::high_resolution_clock::now();
   auto total_duration =
@@ -155,46 +155,56 @@ TEST(ewlayer_parall, parallel_for_direct) {
 
   PRINT_TIMING(" time: " << total_duration.count() << " ms");
 
-  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
 
   start = std::chrono::high_resolution_clock::now();
-  parallel::parallel_for(
-      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + matrix2[i]; },
-      ParBackend::kThreads);
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + matrix2[i];
+  }, ParBackend::kThreads);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   PRINT_TIMING(" time: " << total_duration.count() << " ms");
-  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
 
   start = std::chrono::high_resolution_clock::now();
-  parallel::parallel_for(
-      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + matrix2[i]; },
-      ParBackend::kTbb);
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + matrix2[i];
+  }, ParBackend::kTbb);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   PRINT_TIMING(" time: " << total_duration.count() << " ms");
-  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
 
   start = std::chrono::high_resolution_clock::now();
-  parallel::parallel_for(
-      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + matrix2[i]; },
-      ParBackend::kOmp);
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + matrix2[i];
+  }, ParBackend::kOmp);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   PRINT_TIMING(" time: " << total_duration.count() << " ms");
-  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
   start = std::chrono::high_resolution_clock::now();
-  parallel::parallel_for(
-      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + matrix2[i]; },
-      ParBackend::kKokkos);
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + matrix2[i];
+  }, ParBackend::kKokkos);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   PRINT_TIMING(" time: " << total_duration.count() << " ms");
-  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
 }
 
 TEST(ewlayer_parall, parallel_for_notmatrix) {
@@ -207,54 +217,64 @@ TEST(ewlayer_parall, parallel_for_notmatrix) {
   }
 
   auto start = std::chrono::high_resolution_clock::now();
-  parallel::parallel_for(
-      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + 1; },
-      ParBackend::kSeq);
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + 1;
+  }, ParBackend::kSeq);
 
   auto end = std::chrono::high_resolution_clock::now();
   auto total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   PRINT_TIMING(" time: " << total_duration.count() << " ms");
 
-  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
 
   start = std::chrono::high_resolution_clock::now();
-  parallel::parallel_for(
-      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + 1; },
-      ParBackend::kThreads);
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + 1;
+  }, ParBackend::kThreads);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   PRINT_TIMING(" time: " << total_duration.count() << " ms");
-  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
 
   start = std::chrono::high_resolution_clock::now();
-  parallel::parallel_for(
-      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + 1; },
-      ParBackend::kTbb);
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + 1;
+  }, ParBackend::kTbb);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   PRINT_TIMING(" time: " << total_duration.count() << " ms");
-  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
 
   start = std::chrono::high_resolution_clock::now();
-  parallel::parallel_for(
-      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + 1; },
-      ParBackend::kOmp);
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + 1;
+  }, ParBackend::kOmp);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   PRINT_TIMING(" time: " << total_duration.count() << " ms");
-  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
 
   start = std::chrono::high_resolution_clock::now();
-  parallel::parallel_for(
-      SIZE * SIZE, [&](std::size_t i) { result[i] = matrix1[i] + 1; },
-      ParBackend::kKokkos);
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + 1;
+  }, ParBackend::kKokkos);
   end = std::chrono::high_resolution_clock::now();
   total_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   PRINT_TIMING(" time: " << total_duration.count() << " ms");
-  for (int i = 0; i < SIZE * SIZE; i++) ASSERT_EQ(result[i], 2);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
 }

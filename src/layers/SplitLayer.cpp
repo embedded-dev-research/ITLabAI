@@ -101,7 +101,9 @@ void SplitLayer::validate(const Tensor& input) const {
   if (splits_) {
     int64_t sum = 0;
     for (int64_t s : *splits_) {
-      if (s <= 0) throw std::runtime_error("Split size must be positive");
+      if (s <= 0) {
+        throw std::runtime_error("Split size must be positive");
+      }
       sum += s;
     }
     if (sum != axis_size) {

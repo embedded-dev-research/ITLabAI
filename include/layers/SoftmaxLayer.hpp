@@ -17,11 +17,17 @@ class SoftmaxLayer : public Layer {
            std::vector<Tensor>& output) override;
 
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return Tensor(); }
+  Tensor get_weights() override {
+    return Tensor();
+  }
 #endif
 
-  void set_axis(int axis) { axis_ = axis; }
-  [[nodiscard]] int get_axis() const { return axis_; }
+  void set_axis(int axis) {
+    axis_ = axis;
+  }
+  [[nodiscard]] int get_axis() const {
+    return axis_;
+  }
 
  private:
   int axis_;

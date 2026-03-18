@@ -42,9 +42,9 @@ TEST(throughput, matrix_operations_throughput_is_positive) {
     }
   }
   double tp;
-  tp = throughput<double, std::ratio<1, 1> >(matrix_sum<int>, a, b);
+  tp = throughput<double, std::ratio<1, 1>>(matrix_sum<int>, a, b);
   EXPECT_GE(tp, 0);
-  tp = throughput<double, std::ratio<1, 1> >(matrix_mul<int>, n, a, b);
+  tp = throughput<double, std::ratio<1, 1>>(matrix_mul<int>, n, a, b);
   EXPECT_GE(tp, 0);
 }
 TEST(throughput, matrix_operations_throughput_avg_is_positive) {
@@ -60,9 +60,9 @@ TEST(throughput, matrix_operations_throughput_avg_is_positive) {
     }
   }
   double tp;
-  tp = throughput_avg<double, std::ratio<1, 1> >(10, matrix_sum<int>, a, b);
+  tp = throughput_avg<double, std::ratio<1, 1>>(10, matrix_sum<int>, a, b);
   EXPECT_GE(tp, 0);
-  tp = throughput_avg<double, std::ratio<1, 1> >(10, matrix_mul<int>, n, a, b);
+  tp = throughput_avg<double, std::ratio<1, 1>>(10, matrix_mul<int>, n, a, b);
   EXPECT_GE(tp, 0);
 }
 TEST(throughput, matrix_operations_throughput_omp_is_positive) {

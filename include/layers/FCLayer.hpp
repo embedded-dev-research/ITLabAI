@@ -27,7 +27,9 @@ class FCLayer : public Layer {
   void run(const std::vector<Tensor>& input,
            std::vector<Tensor>& output) override;
 #ifdef ENABLE_STATISTIC_WEIGHTS
-  Tensor get_weights() override { return *weights_; }
+  Tensor get_weights() override {
+    return *weights_;
+  }
 #endif
 };
 

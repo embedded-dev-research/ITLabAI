@@ -86,13 +86,17 @@ class Tensor {
     values_ = a;
   }
 
-  Tensor(const Tensor& t) noexcept = default;
+  Tensor(const Tensor& t) = default;
   Tensor(Tensor&& t) noexcept = default;
-  Tensor& operator=(const Tensor& t) noexcept = default;
+  Tensor& operator=(const Tensor& t) = default;
   Tensor& operator=(Tensor&& t) noexcept = default;
 
-  [[nodiscard]] Shape get_shape() const { return shape_; }
-  [[nodiscard]] Type get_type() const noexcept { return type_; }
+  [[nodiscard]] Shape get_shape() const {
+    return shape_;
+  }
+  [[nodiscard]] Type get_type() const noexcept {
+    return type_;
+  }
 
   void set_bias(const std::vector<float>& bias) {
     if (bias.size() != shape_[shape_.dims() - 1]) {
@@ -102,19 +106,31 @@ class Tensor {
     bias_ = bias;
   }
 
-  [[nodiscard]] const std::vector<float>& get_bias() const { return bias_; }
+  [[nodiscard]] const std::vector<float>& get_bias() const {
+    return bias_;
+  }
   [[nodiscard]] const std::vector<uint8_t>& get_values() const {
     return values_;
   }
 
-  [[nodiscard]] bool empty() const { return values_.empty(); }
-  auto begin() { return values_.begin(); }
+  [[nodiscard]] bool empty() const {
+    return values_.empty();
+  }
+  auto begin() {
+    return values_.begin();
+  }
 
-  auto end() { return values_.end(); }
+  auto end() {
+    return values_.end();
+  }
 
-  [[nodiscard]] auto begin() const { return values_.begin(); }
+  [[nodiscard]] auto begin() const {
+    return values_.begin();
+  }
 
-  [[nodiscard]] auto end() const { return values_.end(); }
+  [[nodiscard]] auto end() const {
+    return values_.end();
+  }
 
   template <typename T>
   typename std::vector<T>::const_iterator begin() const {
@@ -170,7 +186,7 @@ std::vector<T>* Tensor::as() {
 }
 
 template <typename T>
-const std::vector<T>* Tensor::as() const {
+[[nodiscard]] const std::vector<T>* Tensor::as() const {
   if (GetTypeEnum<T>() != type_) {
     throw std::invalid_argument("Template type doesn't fit this Tensor");
   }

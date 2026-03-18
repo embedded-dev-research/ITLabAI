@@ -66,7 +66,9 @@ TEST(ReshapeLayerTest, ZeroDimensionCopy) {
 
 TEST(ReshapeLayerTest, FlattenTo1D) {
   std::vector<float> data;
-  for (int i = 0; i < 24; ++i) data.push_back(static_cast<float>(i));
+  for (int i = 0; i < 24; ++i) {
+    data.push_back(static_cast<float>(i));
+  }
 
   Tensor input = make_tensor(data, {2, 3, 4});
   Tensor output;
