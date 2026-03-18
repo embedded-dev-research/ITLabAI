@@ -35,12 +35,13 @@ void ConcatLayerOneDnn::run(const std::vector<Tensor>& input,
 
   if (type == Type::kFloat) {
     for (size_t i = 0; i < input.size(); ++i) {
-      if (last_type_ == Type::kFloat)
+      if (last_type_ == Type::kFloat) {
         src_mems_[i].set_data_handle(
             const_cast<float*>(input[i].as<float>()->data()));
-      else
+      } else {
         src_mems_[i].set_data_handle(
             const_cast<int*>(input[i].as<int>()->data()));
+      }
 
       args_[DNNL_ARG_MULTIPLE_SRC + i] = src_mems_[i];
     }
@@ -85,9 +86,12 @@ void ConcatLayerOneDnn::validate_input(const std::vector<Tensor>& input) {
 }
 
 void ConcatLayerOneDnn::initialize_onednn(const std::vector<Tensor>& input) {
-  if (!engine_)
+  if (!engine_) {
     engine_ = std::make_unique<dnnl::engine>(dnnl::engine::kind::cpu, 0);
-  if (!stream_) stream_ = std::make_unique<dnnl::stream>(*engine_);
+  }
+  if (!stream_) {
+    stream_ = std::make_unique<dnnl::stream>(*engine_);
+  }
 
   size_t rank = input[0].get_shape().dims();
   int64_t axis = normalize_axis(axis_, rank);
@@ -132,12 +136,15 @@ void ConcatLayerOneDnn::initialize_onednn(const std::vector<Tensor>& input) {
   }
 
   args_.clear();
-  for (size_t i = 0; i < n; ++i)
+  for (size_t i = 0; i < n; ++i) {
     args_[DNNL_ARG_MULTIPLE_SRC + i] = src_mems_[i];
+  }
   args_[DNNL_ARG_DST] = dst_mem_;
 
   last_shapes_.clear();
-  for (const auto& t : input) last_shapes_.push_back(t.get_shape());
+  for (const auto& t : input) {
+    last_shapes_.push_back(t.get_shape());
+  }
 
   initialized_ = true;
 }
@@ -201,7 +208,9 @@ Shape ConcatLayerOneDnn::calculate_output_shape(
 }
 
 int64_t ConcatLayerOneDnn::normalize_axis(int64_t axis, size_t rank) {
-  if (axis < 0) axis += rank;
+  if (axis < 0) {
+    axis += rank;
+  }
 
   if (axis < 0 || axis >= static_cast<int64_t>(rank)) {
     throw std::runtime_error("ConcatLayerOneDnn: axis out of range");

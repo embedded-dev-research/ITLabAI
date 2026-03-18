@@ -238,9 +238,12 @@ TEST(concatlayer_onednn, concat_4d_tensors_axis3) {
 
   std::vector<float> a_data(2 * 3 * 4 * 5);
   std::vector<float> b_data(2 * 3 * 4 * 3);
-  for (size_t i = 0; i < a_data.size(); i++) a_data[i] = static_cast<float>(i);
-  for (size_t i = 0; i < b_data.size(); i++)
+  for (size_t i = 0; i < a_data.size(); i++) {
+    a_data[i] = static_cast<float>(i);
+  }
+  for (size_t i = 0; i < b_data.size(); i++) {
     b_data[i] = static_cast<float>(i + 1000);
+  }
 
   Tensor a = make_tensor(a_data, Shape({2, 3, 4, 5}));
   Tensor b = make_tensor(b_data, Shape({2, 3, 4, 3}));
@@ -458,9 +461,12 @@ TEST(concatlayer_onednn, high_dimensional_tensors) {
 
   std::vector<float> a_data(2 * 3 * 4 * 5 * 6);
   std::vector<float> b_data(2 * 3 * 7 * 5 * 6);
-  for (size_t i = 0; i < a_data.size(); i++) a_data[i] = static_cast<float>(i);
-  for (size_t i = 0; i < b_data.size(); i++)
+  for (size_t i = 0; i < a_data.size(); i++) {
+    a_data[i] = static_cast<float>(i);
+  }
+  for (size_t i = 0; i < b_data.size(); i++) {
     b_data[i] = static_cast<float>(i + 1000);
+  }
 
   Tensor a = make_tensor(a_data, Shape({2, 3, 4, 5, 6}));
   Tensor b = make_tensor(b_data, Shape({2, 3, 7, 5, 6}));
