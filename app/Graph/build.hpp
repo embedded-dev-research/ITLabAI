@@ -33,6 +33,7 @@
 #include "layers/Tensor.hpp"
 #include "layers/TransposeLayer.hpp"
 #include "layers_oneDNN/BinaryOpLayer.hpp"
+#include "layers_oneDNN/ConcatLayer.hpp"
 #include "layers_oneDNN/ConvLayer.hpp"
 #include "layers_oneDNN/EWLayer.hpp"
 #include "layers_oneDNN/PoolingLayer.hpp"
@@ -133,6 +134,14 @@ class LayerFactory {
     }
     return std::make_shared<PoolingLayer>(shape, strides, pads, dilations,
                                           ceil_mode, PoolType);
+  }
+
+  static std::shared_ptr<Layer> createConcatLayer(
+      int64_t axis, const RuntimeOptions& options) {
+    if (options.backend == Backend::kOneDnn) {
+      return std::make_shared<ConcatLayerOneDnn>(axis);
+    }
+    return std::make_shared<ConcatLayer>(axis);
   }
 };
 
