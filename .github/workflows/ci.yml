@@ -333,6 +333,17 @@ jobs:
           restore-keys: |
             imagenet-paste-v1-
             imagenet-paste-
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Python dependencies from requirements.txt
+        run: |
+          cd app/Converters
+          pip install -r requirements.txt
+          cd ../..
       
       - name: Download ImageNet-Paste dataset
         if: steps.cache-imagenet.outputs.cache-hit != 'true'
