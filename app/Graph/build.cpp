@@ -519,7 +519,7 @@ ParseResult parse_json_model(RuntimeOptions options,
             concat_connections[layer_name].push_back(base_input_name);
           }
         }
-        auto concat_layer = std::make_shared<it_lab_ai::ConcatLayer>(axis);
+        auto concat_layer = LayerFactory::createConcatLayer(axis, options);
         layer = concat_layer;
         concat_connected_inputs[layer_name] = std::unordered_set<std::string>();
       } else if (layer_type == "Split") {

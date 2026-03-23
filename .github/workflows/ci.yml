@@ -432,7 +432,6 @@ jobs:
         cd ../..
 
     - name: Save ImageNet-Paste dataset
-      if: steps.cache-imagenet-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
         path: docs/ImageNet
