@@ -320,9 +320,52 @@ jobs:
           git push origin master
         fi
 
+  download-dataset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache ImageNet-Paste dataset
+        id: cache-imagenet
+        uses: actions/cache@v4
+        with:
+          path: docs/ImageNet
+          key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
+          restore-keys: |
+            imagenet-paste-v1-
+            imagenet-paste-
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Python dependencies from requirements.txt
+        run: |
+          cd app/Converters
+          pip install -r requirements.txt
+          cd ../..
+      
+      - name: Download ImageNet-Paste dataset
+        if: steps.cache-imagenet.outputs.cache-hit != 'true'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          mkdir -p docs/ImageNet/test
+          cd app/Converters
+          python download_imagenet.py
+          cd ../..
+      
+      - name: Upload dataset as artifact
+        if: steps.cache-imagenet.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: imagenet-dataset
+          path: docs/ImageNet
+          retention-days: 1
+
   evaluate-models-onnx:
     runs-on: ubuntu-latest
-    needs: [build-linux]
+    needs: [build-linux, download-dataset]
     permissions:
       contents: write
     strategy:
@@ -411,31 +454,11 @@ jobs:
         python ${{ matrix.parser }} ${{ matrix.model }}
         cd ../..
 
-    - name: Cache ImageNet-Paste dataset
-      id: cache-imagenet-restore
-      uses: actions/cache/restore@v4
+    - name: Download dataset artifact
+      uses: actions/download-artifact@v4
       with:
+        name: imagenet-dataset
         path: docs/ImageNet
-        key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
-        restore-keys: |
-          imagenet-paste-v1-
-          imagenet-paste-
-
-    - name: Download ImageNet-Paste dataset
-      if: steps.cache-imagenet-restore.outputs.cache-hit != 'true'
-      env:
-        HF_TOKEN: ${{ secrets.HF_TOKEN }}
-      run: |
-        mkdir -p docs/ImageNet/test
-        cd app/Converters
-        python download_imagenet.py
-        cd ../..
-
-    - name: Save ImageNet-Paste dataset
-      uses: actions/cache/save@v4
-      with:
-        path: docs/ImageNet
-        key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
 
     - name: Prepare environment
       run: |
