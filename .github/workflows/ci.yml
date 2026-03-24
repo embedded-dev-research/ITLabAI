@@ -354,14 +354,6 @@ jobs:
           cd app/Converters
           python download_imagenet.py
           cd ../..
-      
-      - name: Upload dataset as artifact
-        if: steps.cache-imagenet.outputs.cache-hit != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: imagenet-dataset
-          path: docs/ImageNet
-          retention-days: 1
 
   evaluate-models-onnx:
     runs-on: ubuntu-latest
@@ -454,11 +446,15 @@ jobs:
         python ${{ matrix.parser }} ${{ matrix.model }}
         cd ../..
 
-    - name: Download dataset artifact
-      uses: actions/download-artifact@v4
+    - name: Restore ImageNet-Paste dataset
+      id: cache-imagenet
+      uses: actions/cache/restore@v4
       with:
-        name: imagenet-dataset
         path: docs/ImageNet
+        key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
+        restore-keys: |
+          imagenet-paste-v1-
+          imagenet-paste-
 
     - name: Prepare environment
       run: |
