@@ -459,7 +459,7 @@ jobs:
 
     - name: Restore ImageNet-Paste dataset
       id: cache-imagenet
-      uses: actions/cache@v4
+      uses: actions/cache/restore@v4
       with:
         path: docs/ImageNet
         key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
