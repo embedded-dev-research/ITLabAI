@@ -354,6 +354,17 @@ jobs:
           cd app/Converters
           python download_imagenet.py
           cd ../..
+      - name: Debug cache info
+        run: |
+          echo "Cache hit: ${{ steps.cache-imagenet.outputs.cache-hit }}"
+          echo "Cache key: ${{ steps.cache-imagenet.outputs.cache-primary-key }}"
+          echo "Dataset size:"
+          du -sh docs/ImageNet
+      - name: Save ImageNet-Paste dataset
+        uses: actions/cache/save@v4
+        with:
+          path: docs/ImageNet
+          key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
 
   evaluate-models-onnx:
     runs-on: ubuntu-latest
@@ -448,7 +459,7 @@ jobs:
 
     - name: Restore ImageNet-Paste dataset
       id: cache-imagenet
-      uses: actions/cache/restore@v4
+      uses: actions/cache@v4
       with:
         path: docs/ImageNet
         key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
