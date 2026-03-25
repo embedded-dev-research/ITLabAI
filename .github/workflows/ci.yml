@@ -329,7 +329,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: docs/ImageNet
-          key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
+          key: imagenet-paste-v1
           restore-keys: |
             imagenet-paste-v1-
             imagenet-paste-
@@ -364,7 +364,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: docs/ImageNet
-          key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
+          key: imagenet-paste-v1
 
   evaluate-models-onnx:
     runs-on: ubuntu-latest
@@ -462,7 +462,7 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: docs/ImageNet
-        key: imagenet-paste-v1-${{ hashFiles('app/Converters/download_imagenet.py') }}
+        key: imagenet-paste-v1
         restore-keys: |
           imagenet-paste-v1-
           imagenet-paste-
