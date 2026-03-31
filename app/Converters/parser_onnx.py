@@ -1,9 +1,15 @@
+#!/usr/bin/env python3
 import json
-import onnx
 import os
+import sys
+import argparse
+import onnx
+import numpy as np
 from onnx import TensorProto
 from onnx import helper, numpy_helper
 from ultralytics import YOLO
+import tensorflow as tf
+from tensorflow.keras.models import load_model
 
 
 def convert_pt_to_onnx(pt_model_path, onnx_model_path=None):
@@ -163,10 +169,38 @@ def onnx_to_json(model_path, output_json_path):
 
     print(f"Модель успешно сохранена в {output_json_path}")
 
+parser = argparse.ArgumentParser(description='Конвертация моделей в JSON формат')
+parser.add_argument('model_name', type=str,
+                        choices=['googlenet', 'densenet', 'resnet', 'yolo'],
+                        help='Имя модели для обработки')
+
+args = parser.parse_args()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MODELS_DIR = os.path.join(BASE_DIR, 'docs', 'models')
+JSONS_DIR = os.path.join(BASE_DIR, 'docs', 'jsons')
 
-MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'resnest101e_Opset16.onnx')
-MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'resnest101e_Opset16_onnx_model.json')
+os.makedirs(MODELS_DIR, exist_ok=True)
+os.makedirs(JSONS_DIR, exist_ok=True)
 
-onnx_to_json(MODEL_PATH, MODEL_DATA_PATH)
+model_files = {
+        'googlenet': 'GoogLeNet.onnx',
+        'densenet': 'densenet121_Opset16.onnx',
+        'resnet': 'resnest101e_Opset16.onnx',
+        'yolo': 'yolo11x-cls.pt'
+}
+
+output_files = {
+        'googlenet': 'googlenet_onnx_model.json',
+        'densenet': 'densenet121_Opset16_onnx_model.json',
+        'resnet': 'resnest101e_Opset16_onnx_model.json',
+        'yolo': 'yolo11x-cls_onnx_model.json',
+}
+
+model_filename = model_files[args.model_name]
+output_filename = output_files[args.model_name]
+
+model_path = os.path.join(MODELS_DIR, model_filename)
+output_path = os.path.join(JSONS_DIR, output_filename)
+
+onnx_to_json(model_path, output_path)
