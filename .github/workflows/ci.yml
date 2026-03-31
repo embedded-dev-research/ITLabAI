@@ -510,3 +510,41 @@ jobs:
         path: |
           accuracy_${{ matrix.model }}_${EXTRA_ARGS// /_}.txt
           accuracy_value_${{ matrix.model }}_${EXTRA_ARGS// /_}.txt
+
+    # Дополнительная проверка для GoogLeNet с флагом --onednn 1000
+    - name: Run evaluation for GoogLeNet with --onednn 1000
+      if: matrix.model == 'googlenet'
+      run: |
+        MODEL="${{ matrix.model }}"
+        EXTRA_ARGS="--onednn 1000"
+    
+        echo "Запуск оценки для модели $MODEL с флагами: $EXTRA_ARGS"
+    
+        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" \
+        --model $MODEL \
+        $EXTRA_ARGS > accuracy_${MODEL}_onednn_1000.txt 2>&1
+    
+        if [ $? -ne 0 ]; then
+          echo "Ошибка при оценке модели $MODEL с флагами: $EXTRA_ARGS"
+          cat accuracy_${MODEL}_onednn_1000.txt
+          exit 1
+        fi
+    
+        echo "Результат оценки:"
+        cat accuracy_${MODEL}_onednn_1000.txt
+
+    - name: Extract accuracy value for GoogLeNet with --onednn 1000
+      if: matrix.model == 'googlenet'
+      run: |
+        ACCURACY=$(grep -oE '[0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}_onednn_1000.txt | head -1 || echo "0%")
+        echo "$ACCURACY" > accuracy_value_${{ matrix.model }}_onednn_1000.txt
+        echo "Accuracy for ${{ matrix.model }} (--onednn 1000): $ACCURACY"
+
+    - name: Upload accuracy artifacts for GoogLeNet with --onednn 1000
+      if: matrix.model == 'googlenet'
+      uses: actions/upload-artifact@v4
+      with:
+        name: accuracy-${{ matrix.model }}-onednn-1000
+        path: |
+          accuracy_${{ matrix.model }}_onednn_1000.txt
+          accuracy_value_${{ matrix.model }}_onednn_1000.txt
