@@ -303,9 +303,11 @@ jobs:
     - name: Update README (main only)
       if: github.ref == 'refs/heads/main'
       run: |
-        ACCURACY=$(cat accuracy_value.txt | sed 's/%//g')
+        ACCURACY=$(sed 's/%//g' accuracy_value.txt)
         DATE=$(date '+%Y-%m-%d')
-        sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->/" README.md
+        UPDATE_TEXT="<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->"
+        ESCAPED_UPDATE_TEXT=$(printf '%s\n' "$UPDATE_TEXT" | sed 's/[&|\\]/\\&/g')
+        sed -i "s|<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->|${ESCAPED_UPDATE_TEXT}|" README.md
 
     - name: Commit and push changes (main only)
       if: github.ref == 'refs/heads/main'
@@ -313,11 +315,16 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         git add README.md
-        if git diff-index --quiet HEAD --; then
+        if git diff --cached --quiet; then
           echo "No changes to commit"
         else
           git commit -m "[CI] Update accuracy: $(cat accuracy_value.txt)"
-          git push origin main
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && break
+            git rebase --abort || true
+            [ "$attempt" -eq 5 ] && { echo "Failed to push README update after ${attempt} attempts"; exit 1; }
+            sleep 5
+          done
         fi
 
   download-dataset:
@@ -509,11 +516,12 @@ jobs:
           cat accuracy_${{ matrix.model }}.txt
           exit 1
         fi
-    
+
         UPDATE_TEXT="<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: Top-1: ${TOP1_ACC}% | Top-5: ${TOP5_ACC}% (updated: ${DATE})<!--END_ACCURACY_${{ matrix.model }}-->"
-    
+        ESCAPED_UPDATE_TEXT=$(printf '%s\n' "$UPDATE_TEXT" | sed 's/[&|\\]/\\&/g')
+
         if grep -q "<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->" README.md; then
-          sed -i "s|<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->.*<!--END_ACCURACY_${{ matrix.model }}-->|${UPDATE_TEXT}|" README.md
+          sed -i "s|<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->.*<!--END_ACCURACY_${{ matrix.model }}-->|${ESCAPED_UPDATE_TEXT}|" README.md
         else
           echo "Ошибка: Плейсхолдер <!--ACCURACY_${{ matrix.model }}_PLACEHOLDER--> не найден в README.md"
           echo "Содержимое README.md:"
@@ -527,9 +535,14 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         git add README.md
-        if git diff-index --quiet HEAD --; then
+        if git diff --cached --quiet; then
           echo "No changes to commit"
         else
           git commit -m "[CI] Update accuracy for ${{ matrix.model }}: $(cat accuracy_value_${{ matrix.model }}.txt)"
-          git push origin main
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && break
+            git rebase --abort || true
+            [ "$attempt" -eq 5 ] && { echo "Failed to push README update after ${attempt} attempts"; exit 1; }
+            sleep 5
+          done
         fi
