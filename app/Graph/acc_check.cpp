@@ -167,6 +167,7 @@ int main(int argc, char* argv[]) {
 
   size_t output_classes = 1000;
   std::vector<size_t> counts(output_classes, 0);
+  size_t total_available = 0;
 
   for (size_t class_id = 0; class_id < output_classes; ++class_id) {
     std::ostringstream folder_oss;
@@ -179,9 +180,15 @@ int main(int argc, char* argv[]) {
             entry.path().extension() == ".jpg" ||
             entry.path().extension() == ".jpeg") {
           counts[class_id]++;
+          total_available++;
         }
       }
     }
+  }
+
+  if (total_available == 0) {
+    std::cerr << "No images found in dataset path: " << dataset_path << '\n';
+    return 1;
   }
 
   size_t images_per_class_base = num_photo / output_classes;
@@ -192,42 +199,26 @@ int main(int argc, char* argv[]) {
   int width = input_shape[3];
   size_t image_size = channels * height * width;
 
-  int correct_predictions_top1 = 0;
-  int correct_predictions_top5 = 0;
+  std::vector<float> all_image_data;
+  std::vector<int> true_labels;
+  all_image_data.reserve(num_photo * image_size);
+  true_labels.reserve(num_photo);
 
-  Graph graph;
-  std::shared_ptr<Layer> input_layer = nullptr;
-  std::shared_ptr<Layer> output_layer = nullptr;
-  bool graph_built = false;
+  size_t total_loaded = 0;
 
-  int total_inference_time = 0;
-  int batch_count = 0;
-  size_t total_processed = 0;
-
-  std::vector<float> batch_data;
-  std::vector<int> batch_labels;
-  batch_data.reserve(batch_size * image_size);
-  batch_labels.reserve(batch_size);
-
-  for (size_t class_id = 0;
-       class_id < output_classes && total_processed < num_photo; ++class_id) {
+  for (size_t class_id = 0; class_id < output_classes && total_loaded < num_photo; ++class_id) {
     size_t need_from_class = images_per_class_base;
     if (remaining > 0) {
       need_from_class++;
       remaining--;
     }
-
-    if (need_from_class == 0) {
-      continue;
-    }
+    if (need_from_class == 0) continue;
 
     std::ostringstream folder_oss;
     folder_oss << std::setw(5) << std::setfill('0') << class_id;
     std::string class_folder_path = dataset_path + "/" + folder_oss.str();
 
-    if (!fs::exists(class_folder_path)) {
-      continue;
-    }
+    if (!fs::exists(class_folder_path)) continue;
 
     std::vector<std::string> class_images;
     for (const auto& entry : fs::directory_iterator(class_folder_path)) {
@@ -247,178 +238,76 @@ int main(int argc, char* argv[]) {
         continue;
       }
 
-      it_lab_ai::Tensor prepared =
-          prepare_image(image, input_shape, model_name);
+      it_lab_ai::Tensor prepared = prepare_image(image, input_shape, model_name);
       const auto& img_data = *prepared.as<float>();
 
-      batch_data.insert(batch_data.end(), img_data.begin(), img_data.end());
-      batch_labels.push_back(static_cast<int>(class_id));
-      total_processed++;
-
-      if (batch_labels.size() >= batch_size) {
-        it_lab_ai::Shape batch_input_shape(
-            {batch_labels.size(), static_cast<size_t>(channels),
-             static_cast<size_t>(height), static_cast<size_t>(width)});
-        it_lab_ai::Tensor batch_input =
-            make_tensor(batch_data, batch_input_shape);
-
-        it_lab_ai::Shape batch_output_shape(
-            {batch_labels.size(), output_classes});
-        it_lab_ai::Tensor batch_output(batch_output_shape,
-                                       it_lab_ai::Type::kFloat);
-
-        if (!graph_built) {
-          build_graph(graph, batch_input, batch_output, json_path, options,
-                      false);
-
-          for (int i = 0; i < graph.getLayersCount(); ++i) {
-            auto layer = graph.getLayerFromID(i);
-            if (layer->getName() == kInput) {
-              input_layer = layer;
-            }
-            if (i == graph.getLayersCount() - 1) {
-              output_layer = layer;
-            }
-          }
-
-          if (!input_layer || !output_layer) {
-            std::cerr << "Error: Could not find input/output layers" << '\n';
-            return 1;
-          }
-
-          graph_built = true;
-        } else {
-          graph.setInput(input_layer, batch_input);
-          graph.setOutput(output_layer, batch_output);
-        }
-
-        auto batch_start = std::chrono::high_resolution_clock::now();
-        graph.inference(options);
-        auto batch_end = std::chrono::high_resolution_clock::now();
-        int batch_time = static_cast<int>(
-            std::chrono::duration_cast<std::chrono::milliseconds>(batch_end -
-                                                                  batch_start)
-                .count());
-
-        total_inference_time += batch_time;
-        batch_count++;
-
-        const std::vector<float>& raw_batch_output = *batch_output.as<float>();
-        const float* data_ptr = raw_batch_output.data();
-
-        for (size_t i = 0; i < batch_labels.size(); ++i) {
-          const float* img_start = data_ptr + i * output_classes;
-          int true_label = batch_labels[i];
-
-          std::vector<std::pair<float, int>> top5;
-          for (size_t j = 0; j < output_classes; ++j) {
-            float val = img_start[j];
-
-            if (top5.size() < 5) {
-              top5.emplace_back(val, static_cast<int>(j));
-              std::sort(top5.begin(), top5.end(),
-                        [](auto& a, auto& b) { return a.first > b.first; });
-            } else if (val > top5.back().first) {
-              top5.back() = {val, static_cast<int>(j)};
-              std::sort(top5.begin(), top5.end(),
-                        [](auto& a, auto& b) { return a.first > b.first; });
-            }
-          }
-
-          if (top5[0].second == true_label) {
-            correct_predictions_top1++;
-          }
-          for (int k = 0; k < 5; ++k) {
-            if (top5[k].second == true_label) {
-              correct_predictions_top5++;
-              break;
-            }
-          }
-        }
-
-        batch_data.clear();
-        batch_labels.clear();
-        batch_data.reserve(batch_size * image_size);
-        batch_labels.reserve(batch_size);
-      }
+      all_image_data.insert(all_image_data.end(), img_data.begin(), img_data.end());
+      true_labels.push_back(static_cast<int>(class_id));
+      total_loaded++;
     }
   }
 
-  if (!batch_data.empty()) {
-    it_lab_ai::Shape batch_input_shape(
-        {batch_labels.size(), static_cast<size_t>(channels),
-         static_cast<size_t>(height), static_cast<size_t>(width)});
-    it_lab_ai::Tensor batch_input = make_tensor(batch_data, batch_input_shape);
-
-    it_lab_ai::Shape batch_output_shape({batch_labels.size(), output_classes});
-    it_lab_ai::Tensor batch_output(batch_output_shape, it_lab_ai::Type::kFloat);
-
-    if (!graph_built) {
-      build_graph(graph, batch_input, batch_output, json_path, options, false);
-
-      for (int i = 0; i < graph.getLayersCount(); ++i) {
-        auto layer = graph.getLayerFromID(i);
-        if (layer->getName() == kInput) {
-          input_layer = layer;
-        }
-        if (i == graph.getLayersCount() - 1) {
-          output_layer = layer;
-        }
-      }
-    } else {
-      graph.setInput(input_layer, batch_input);
-      graph.setOutput(output_layer, batch_output);
-    }
-
-    auto batch_start = std::chrono::high_resolution_clock::now();
-    graph.inference(options);
-    auto batch_end = std::chrono::high_resolution_clock::now();
-    int batch_time =
-        static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
-                             batch_end - batch_start)
-                             .count());
-
-    total_inference_time += batch_time;
-    batch_count++;
-
-    const std::vector<float>& raw_batch_output = *batch_output.as<float>();
-    const float* data_ptr = raw_batch_output.data();
-
-    for (size_t i = 0; i < batch_labels.size(); ++i) {
-      const float* img_start = data_ptr + i * output_classes;
-      int true_label = batch_labels[i];
-
-      std::vector<std::pair<float, int>> top5;
-      for (size_t j = 0; j < output_classes; ++j) {
-        float val = img_start[j];
-        if (top5.size() < 5) {
-          top5.emplace_back(val, static_cast<int>(j));
-          std::sort(top5.begin(), top5.end(),
-                    [](auto& a, auto& b) { return a.first > b.first; });
-        } else if (val > top5.back().first) {
-          top5.back() = {val, static_cast<int>(j)};
-          std::sort(top5.begin(), top5.end(),
-                    [](auto& a, auto& b) { return a.first > b.first; });
-        }
-      }
-
-      if (top5[0].second == true_label) {
-        correct_predictions_top1++;
-      }
-      for (int k = 0; k < 5; ++k) {
-        if (top5[k].second == true_label) {
-          correct_predictions_top5++;
-          break;
-        }
-      }
-    }
+  if (total_loaded != num_photo) {
+    std::cout << "Warning: Requested " << num_photo << " images but loaded "
+              << total_loaded << " due to insufficient data" << '\n';
+    num_photo = total_loaded;
   }
 
-  std::cout << "Total inference time: " << total_inference_time << " ms\n";
-  std::cout << "Number of batches: " << batch_count << '\n';
-  if (batch_count > 0) {
-    std::cout << "Average time per batch: "
-              << total_inference_time / batch_count << " ms\n";
+  it_lab_ai::Shape input_shape_imagenet(
+      {num_photo, static_cast<size_t>(channels), static_cast<size_t>(height),
+       static_cast<size_t>(width)});
+  it_lab_ai::Tensor input = make_tensor(all_image_data, input_shape_imagenet);
+
+  it_lab_ai::Shape output_shape({num_photo, output_classes});
+  it_lab_ai::Tensor output(output_shape, it_lab_ai::Type::kFloat);
+
+  Graph graph;
+  build_graph(graph, input, output, json_path, options, false);
+
+  auto start = std::chrono::high_resolution_clock::now();
+  graph.inference(options);
+  auto end = std::chrono::high_resolution_clock::now();
+  int inference_time = static_cast<int>(
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+
+  std::vector<std::vector<float>> processed_outputs;
+  const std::vector<float>& raw_output = *output.as<float>();
+
+  for (size_t i = 0; i < num_photo; ++i) {
+    std::vector<float> single_output(
+        raw_output.begin() + i * output_classes,
+        raw_output.begin() + (i + 1) * output_classes);
+    std::vector<float> processed_output =
+        process_model_output(single_output, model_name);
+    processed_outputs.push_back(processed_output);
+  }
+
+  int correct_predictions_top1 = 0;
+  int correct_predictions_top5 = 0;
+  for (size_t i = 0; i < processed_outputs.size(); ++i) {
+    int true_label = true_labels[i];
+    const std::vector<float>& probabilities = processed_outputs[i];
+
+    std::vector<size_t> indices(probabilities.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+      return probabilities[a] > probabilities[b];
+    });
+
+    if (indices[0] == static_cast<size_t>(true_label)) {
+      correct_predictions_top1++;
+    }
+
+    bool found_in_top5 = false;
+    for (int top_k = 0; top_k < std::min(5, static_cast<int>(indices.size())); ++top_k) {
+      if (indices[top_k] == static_cast<size_t>(true_label)) {
+        found_in_top5 = true;
+        break;
+      }
+    }
+    if (found_in_top5) {
+      correct_predictions_top5++;
+    }
   }
 
   double final_accuracy_top1 =
@@ -430,11 +319,9 @@ int main(int argc, char* argv[]) {
   std::cout << "Model: " << model_name << '\n';
   std::cout << "Dataset: " << dataset_path << '\n';
   std::cout << "Total images: " << num_photo << '\n';
-  std::cout << "Batch size: " << batch_size << '\n';
-  std::cout << "Correct predictions (Top-1): " << correct_predictions_top1
-            << '\n';
-  std::cout << "Correct predictions (Top-5): " << correct_predictions_top5
-            << '\n';
+  std::cout << "Inference time: " << inference_time << " ms\n";
+  std::cout << "Correct predictions (Top-1): " << correct_predictions_top1 << '\n';
+  std::cout << "Correct predictions (Top-5): " << correct_predictions_top5 << '\n';
   std::cout << "Top-1 Accuracy: " << std::fixed << std::setprecision(2)
             << final_accuracy_top1 << "%" << '\n';
   std::cout << "Top-5 Accuracy: " << std::fixed << std::setprecision(2)
