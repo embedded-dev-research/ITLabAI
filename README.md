@@ -5,7 +5,7 @@
 ## Model Performance
 
 ### AlexNet-MNIST Accuracy
-<!--ACCURACY_PLACEHOLDER--><!--END_ACCURACY-->
+<!--ACCURACY_PLACEHOLDER-->Accuracy: 98.01% (updated: 2026-04-01)<!--END_ACCURACY-->
 
 ### GoogLeNet Accuracy
 <!--ACCURACY_googlenet_PLACEHOLDER--><!--END_ACCURACY_googlenet-->
