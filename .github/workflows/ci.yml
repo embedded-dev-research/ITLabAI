@@ -300,15 +300,15 @@ jobs:
         ACCURACY=$(grep -oE '[0-9]+\.?[0-9]*%' accuracy.txt | head -1 || echo "0%")
         echo "$ACCURACY" > accuracy_value.txt
         
-    - name: Update README (master only)
-      if: github.ref == 'refs/heads/master'
+    - name: Update README (main only)
+      if: github.ref == 'refs/heads/main'
       run: |
         ACCURACY=$(cat accuracy_value.txt | sed 's/%//g')
         DATE=$(date '+%Y-%m-%d')
         sed -i "s/<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->/<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->/" README.md
 
-    - name: Commit and push changes (master only)
-      if: github.ref == 'refs/heads/master'
+    - name: Commit and push changes (main only)
+      if: github.ref == 'refs/heads/main'
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
@@ -317,7 +317,7 @@ jobs:
           echo "No changes to commit"
         else
           git commit -m "[CI] Update accuracy: $(cat accuracy_value.txt)"
-          git push origin master
+          git push origin main
         fi
 
   download-dataset:
@@ -497,8 +497,8 @@ jobs:
           accuracy_${{ matrix.model }}.txt
           accuracy_value_${{ matrix.model }}.txt
 
-    - name: Update README for model (master only)
-      if: github.ref == 'refs/heads/master'
+    - name: Update README for model (main only)
+      if: github.ref == 'refs/heads/main'
       run: |
         TOP1_ACC=$(grep -oE 'Top-1 Accuracy: [0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | grep -oE '[0-9]+\.?[0-9]*')
         TOP5_ACC=$(grep -oE 'Top-5 Accuracy: [0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | grep -oE '[0-9]+\.?[0-9]*')
@@ -531,5 +531,5 @@ jobs:
           echo "No changes to commit"
         else
           git commit -m "[CI] Update accuracy for ${{ matrix.model }}: $(cat accuracy_value_${{ matrix.model }}.txt)"
-          git push origin master
+          git push origin main
         fi
