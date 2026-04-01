@@ -16,7 +16,6 @@ int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
   RuntimeOptions options;
   size_t num_photo = 1000;
-  size_t batch_size = 100;
 
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
@@ -206,19 +205,24 @@ int main(int argc, char* argv[]) {
 
   size_t total_loaded = 0;
 
-  for (size_t class_id = 0; class_id < output_classes && total_loaded < num_photo; ++class_id) {
+  for (size_t class_id = 0;
+       class_id < output_classes && total_loaded < num_photo; ++class_id) {
     size_t need_from_class = images_per_class_base;
     if (remaining > 0) {
       need_from_class++;
       remaining--;
     }
-    if (need_from_class == 0) continue;
+    if (need_from_class == 0) {
+      continue;
+    }
 
     std::ostringstream folder_oss;
     folder_oss << std::setw(5) << std::setfill('0') << class_id;
     std::string class_folder_path = dataset_path + "/" + folder_oss.str();
 
-    if (!fs::exists(class_folder_path)) continue;
+    if (!fs::exists(class_folder_path)) {
+      continue;
+    }
 
     std::vector<std::string> class_images;
     for (const auto& entry : fs::directory_iterator(class_folder_path)) {
@@ -238,10 +242,12 @@ int main(int argc, char* argv[]) {
         continue;
       }
 
-      it_lab_ai::Tensor prepared = prepare_image(image, input_shape, model_name);
+      it_lab_ai::Tensor prepared =
+          prepare_image(image, input_shape, model_name);
       const auto& img_data = *prepared.as<float>();
 
-      all_image_data.insert(all_image_data.end(), img_data.begin(), img_data.end());
+      all_image_data.insert(all_image_data.end(), img_data.begin(),
+                            img_data.end());
       true_labels.push_back(static_cast<int>(class_id));
       total_loaded++;
     }
@@ -268,7 +274,8 @@ int main(int argc, char* argv[]) {
   graph.inference(options);
   auto end = std::chrono::high_resolution_clock::now();
   int inference_time = static_cast<int>(
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+          .count());
 
   std::vector<std::vector<float>> processed_outputs;
   const std::vector<float>& raw_output = *output.as<float>();
@@ -299,7 +306,8 @@ int main(int argc, char* argv[]) {
     }
 
     bool found_in_top5 = false;
-    for (int top_k = 0; top_k < std::min(5, static_cast<int>(indices.size())); ++top_k) {
+    for (int top_k = 0; top_k < std::min(5, static_cast<int>(indices.size()));
+         ++top_k) {
       if (indices[top_k] == static_cast<size_t>(true_label)) {
         found_in_top5 = true;
         break;
@@ -320,12 +328,14 @@ int main(int argc, char* argv[]) {
   std::cout << "Dataset: " << dataset_path << '\n';
   std::cout << "Total images: " << num_photo << '\n';
   std::cout << "Inference time: " << inference_time << " ms\n";
-  std::cout << "Correct predictions (Top-1): " << correct_predictions_top1 << '\n';
-  std::cout << "Correct predictions (Top-5): " << correct_predictions_top5 << '\n';
+  std::cout << "Correct predictions (Top-1): " << correct_predictions_top1
+            << '\n';
+  std::cout << "Correct predictions (Top-5): " << correct_predictions_top5
+            << '\n';
   std::cout << "Top-1 Accuracy: " << std::fixed << std::setprecision(2)
             << final_accuracy_top1 << "%" << '\n';
   std::cout << "Top-5 Accuracy: " << std::fixed << std::setprecision(2)
             << final_accuracy_top5 << "%" << '\n';
 
   return 0;
-}
+  }
