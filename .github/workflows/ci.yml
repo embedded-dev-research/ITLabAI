@@ -301,7 +301,6 @@ jobs:
         echo "$ACCURACY" > accuracy_value.txt
         
     - name: Update README (main only)
-      if: github.ref == 'refs/heads/main'
       run: |
         ACCURACY=$(sed 's/%//g' accuracy_value.txt)
         DATE=$(date '+%Y-%m-%d')
@@ -310,7 +309,7 @@ jobs:
         sed -i "s|<!--ACCURACY_PLACEHOLDER-->.*<!--END_ACCURACY-->|${ESCAPED_UPDATE_TEXT}|" README.md
 
     - name: Commit and push changes (main only)
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' && github.repository == 'embedded-dev-research/itlab_2023'
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
@@ -529,7 +528,7 @@ jobs:
         fi
 
     - name: Commit and push changes (main only)
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' && github.repository == 'embedded-dev-research/ITLabAI'
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
