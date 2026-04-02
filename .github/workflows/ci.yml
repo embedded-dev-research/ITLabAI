@@ -504,11 +504,10 @@ jobs:
           accuracy_${{ matrix.model }}.txt
           accuracy_value_${{ matrix.model }}.txt
 
-    - name: Update README for model (main only)
-      if: github.ref == 'refs/heads/main'
+    - name: Update README for model
       run: |
-        TOP1_ACC=$(grep -oE 'Top-1 Accuracy: [0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | grep -oE '[0-9]+\.?[0-9]*')
-        TOP5_ACC=$(grep -oE 'Top-5 Accuracy: [0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | grep -oE '[0-9]+\.?[0-9]*')
+        TOP1_ACC=$(grep -oE 'Top-1 Accuracy: [0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | grep -oE '[0-9]+\.?[0-9]*' | head -n1)
+        TOP5_ACC=$(grep -oE 'Top-5 Accuracy: [0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | grep -oE '[0-9]+\.?[0-9]*' | head -n1)
         DATE=$(date '+%Y-%m-%d')
     
         if [ -z "$TOP1_ACC" ] || [ -z "$TOP5_ACC" ]; then
