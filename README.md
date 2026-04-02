@@ -17,7 +17,7 @@
 <!--ACCURACY_resnet_PLACEHOLDER--><!--END_ACCURACY_resnet-->
 
 ### YOLO Accuracy
-<!--ACCURACY_yolo_PLACEHOLDER--><!--END_ACCURACY_yolo-->
+<!--ACCURACY_yolo_PLACEHOLDER-->Accuracy: Top-1: 1% | Top-5: 5% (updated: 2026-04-02)<!--END_ACCURACY_yolo-->
 
 ## Short description
 A lightweight C++ library for performing high-performance inference on classification tasks. Designed for efficiency and educational purposes, this project demonstrates how classic CNNs can be optimized for small-scale tasks in native environments.
