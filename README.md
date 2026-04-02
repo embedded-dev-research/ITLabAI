@@ -11,7 +11,7 @@
 <!--ACCURACY_googlenet_PLACEHOLDER-->Accuracy: Top-1: 1% | Top-5: 5% (updated: 2026-04-02)<!--END_ACCURACY_googlenet-->
 
 ### DenseNet Accuracy
-<!--ACCURACY_densenet_PLACEHOLDER--><!--END_ACCURACY_densenet-->
+<!--ACCURACY_densenet_PLACEHOLDER-->Accuracy: Top-1: 1% | Top-5: 5% (updated: 2026-04-02)<!--END_ACCURACY_densenet-->
 
 ### ResNet Accuracy
 <!--ACCURACY_resnet_PLACEHOLDER--><!--END_ACCURACY_resnet-->
