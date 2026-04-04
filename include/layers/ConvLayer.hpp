@@ -246,7 +246,7 @@ void Conv4D(const Tensor &input, const Tensor &kernel_, const Tensor &bias_,
     size_t group_start_channel = group * in_channels_per_group;
     size_t group_end_channel = group_start_channel + in_channels_per_group;
     size_t kernel_oc_base = oc * kernel_output_stride;
-    ValueType bias_value = ValueType{};
+    auto bias_value = ValueType{};
     if (bias_data != nullptr && oc < bias_data->size()) {
       bias_value = (*bias_data)[oc];
     }
