@@ -303,6 +303,13 @@ jobs:
     - name: Update README (main only)
       run: |
         ACCURACY=$(sed 's/%//g' accuracy_value.txt)
+        CURRENT_ACCURACY=$(sed -nE 's/.*<!--ACCURACY_PLACEHOLDER-->Accuracy: ([0-9]+(\.[0-9]+)?)% \(updated: [0-9-]+\)<!--END_ACCURACY-->.*/\1/p' README.md | head -n1)
+
+        if [ -n "$CURRENT_ACCURACY" ] && [ "$CURRENT_ACCURACY" = "$ACCURACY" ]; then
+          echo "Accuracy unchanged; keeping existing README update date"
+          exit 0
+        fi
+
         DATE=$(date '+%Y-%m-%d')
         UPDATE_TEXT="<!--ACCURACY_PLACEHOLDER-->Accuracy: ${ACCURACY}% (updated: ${DATE})<!--END_ACCURACY-->"
         ESCAPED_UPDATE_TEXT=$(printf '%s\n' "$UPDATE_TEXT" | sed 's/[&|\\]/\\&/g')
@@ -507,13 +514,23 @@ jobs:
       run: |
         TOP1_ACC=$(sed -nE 's/^Top-1 Accuracy: ([0-9]+(\.[0-9]+)?)%$/\1/p' accuracy_${{ matrix.model }}.txt | head -n1)
         TOP5_ACC=$(sed -nE 's/^Top-5 Accuracy: ([0-9]+(\.[0-9]+)?)%$/\1/p' accuracy_${{ matrix.model }}.txt | head -n1)
-        DATE=$(date '+%Y-%m-%d')
     
         if [ -z "$TOP1_ACC" ] || [ -z "$TOP5_ACC" ]; then
           echo "Ошибка: Не удалось извлечь точность из файла accuracy_${{ matrix.model }}.txt"
           cat accuracy_${{ matrix.model }}.txt
           exit 1
         fi
+
+        CURRENT_TOP1=$(sed -nE "s/.*<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: Top-1: ([0-9]+(\\.[0-9]+)?)% \\| Top-5: ([0-9]+(\\.[0-9]+)?)% \\(updated: [0-9-]+\\)<!--END_ACCURACY_${{ matrix.model }}-->.*/\\1/p" README.md | head -n1)
+        CURRENT_TOP5=$(sed -nE "s/.*<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: Top-1: ([0-9]+(\\.[0-9]+)?)% \\| Top-5: ([0-9]+(\\.[0-9]+)?)% \\(updated: [0-9-]+\\)<!--END_ACCURACY_${{ matrix.model }}-->.*/\\3/p" README.md | head -n1)
+
+        if [ -n "$CURRENT_TOP1" ] && [ -n "$CURRENT_TOP5" ] && \
+           [ "$CURRENT_TOP1" = "$TOP1_ACC" ] && [ "$CURRENT_TOP5" = "$TOP5_ACC" ]; then
+          echo "Accuracy for ${{ matrix.model }} unchanged; keeping existing README update date"
+          exit 0
+        fi
+
+        DATE=$(date '+%Y-%m-%d')
 
         UPDATE_TEXT="<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: Top-1: ${TOP1_ACC}% | Top-5: ${TOP5_ACC}% (updated: ${DATE})<!--END_ACCURACY_${{ matrix.model }}-->"
         ESCAPED_UPDATE_TEXT=$(printf '%s\n' "$UPDATE_TEXT" | sed 's/[&|\\]/\\&/g')
