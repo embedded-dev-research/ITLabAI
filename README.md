@@ -11,7 +11,7 @@
 <!--ACCURACY_googlenet_PLACEHOLDER-->Accuracy: Top-1: 44.05% | Top-5: 68.80% (updated: 2026-04-04)<!--END_ACCURACY_googlenet-->
 
 ### DenseNet Accuracy
-<!--ACCURACY_densenet_PLACEHOLDER-->Accuracy: Top-1: 65.79% | Top-5: 86.92% (updated: 2026-04-03)<!--END_ACCURACY_densenet-->
+<!--ACCURACY_densenet_PLACEHOLDER-->Accuracy: Top-1: 65.79% | Top-5: 86.92% (updated: 2026-04-04)<!--END_ACCURACY_densenet-->
 
 ### ResNet Accuracy
 <!--ACCURACY_resnet_PLACEHOLDER-->Accuracy: Top-1: 78.12% | Top-5: 94.10% (updated: 2026-04-03)<!--END_ACCURACY_resnet-->
