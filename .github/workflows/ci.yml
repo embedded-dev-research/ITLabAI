@@ -375,25 +375,28 @@ jobs:
       fail-fast: false
       matrix:
         model: [googlenet, densenet, resnet, yolo]
-        parallel_flag: ["--parallel tbb 1000", "--parallel tbb 10000"]
         include:
           - model: googlenet
             parser: parser_onnx.py
             model_file: GoogLeNet.onnx
             model_path: docs/models/GoogLeNet.onnx
             model_url: ''
+            extra_args: "32"
           - model: densenet
             parser: parser_onnx.py
             model_file: densenet121_Opset16.onnx
             model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/densenet121_Opset16_timm/densenet121_Opset16.onnx?download=
+            extra_args: "32"
           - model: resnet
             parser: parser_onnx.py
             model_file: resnest101e_Opset16.onnx
             model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/resnest101e_Opset16_timm/resnest101e_Opset16.onnx?download=
+            extra_args: "32"
           - model: yolo
             parser: parser_onnx.py
             model_file: yolo11x-cls.pt
             model_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11x-cls.pt
+            extra_args: "32"
 
     steps:
     - uses: actions/checkout@v4
@@ -479,72 +482,152 @@ jobs:
   
     - name: Run evaluation
       run: |
+        DATASET_PATH="docs/ImageNet/test"
         MODEL="${{ matrix.model }}"
-        EXTRA_ARGS="${{ matrix.parallel_flag }}"
+        EXTRA_ARGS="${{ matrix.extra_args }}"
     
-        echo "Запуск оценки для модели $MODEL с флагами: $EXTRA_ARGS"
+        echo "Запуск оценки для модели $MODEL"
+        echo "Команда: ${{ steps.set_eval_binary.outputs.EVAL_BINARY }} --model $MODEL $EXTRA_ARGS"
     
+        echo "Системная информация до запуска:"
+        echo "--- Память ---"
+        free -h
+        echo "--- CPU ---"
+        top -bn1 | head -5
+        echo "--- Диск ---"
+        df -h docs/ImageNet/test/
+    
+        TIMESTAMP=$(date +%s)
+        MONITOR_LOG="monitor_$MODEL.log"
+    
+        monitor_process() {
+          local pid=$1
+          local log_file=$2
+      
+          echo "Мониторинг процесса $pid..."
+      
+          while kill -0 $pid 2>/dev/null; do
+            NOW=$(date '+%H:%M:%S')
+        
+            MEM=$(ps -o rss= -p $pid 2>/dev/null | awk '{print $1/1024 " MB"}' || echo "N/A")
+        
+            CPU=$(ps -o pcpu= -p $pid 2>/dev/null || echo "N/A")
+        
+            TOTAL_MEM=$(free -m | awk 'NR==2{print $3 " MB / " $2 " MB"}')
+        
+            echo "[$NOW] PID: $pid | MEM: $MEM | CPU: $CPU% | System MEM: $TOTAL_MEM" >> $log_file
+        
+            sleep 2
+          done
+      
+         echo "Процесс $pid завершен" >> $log_file
+         }
+    
+        echo "Запуск ACC в фоновом режиме..."
         "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" \
         --model $MODEL \
-        $EXTRA_ARGS > accuracy_${MODEL}_${EXTRA_ARGS// /_}.txt 2>&1
+        $EXTRA_ARGS > accuracy_$MODEL.txt 2>&1 &
+        ACC_PID=$!
     
-        if [ $? -ne 0 ]; then
-          echo "Ошибка при оценке модели $MODEL с флагами: $EXTRA_ARGS"
-          cat accuracy_${MODEL}_${EXTRA_ARGS// /_}.txt
-          exit 1
+        echo "PID процесса: $ACC_PID"
+    
+        monitor_process $ACC_PID $MONITOR_LOG &
+        MONITOR_PID=$!
+    
+        wait $ACC_PID
+        EXIT_CODE=$?
+    
+        kill $MONITOR_PID 2>/dev/null || true
+  
+        echo "Результаты мониторинга:"
+        if [ -f "$MONITOR_LOG" ]; then
+          cat "$MONITOR_LOG"
+        else
+         echo "Лог мониторинга не создан"
         fi
     
-        echo "Результат оценки:"
-        cat accuracy_${MODEL}_${EXTRA_ARGS// /_}.txt
+        echo "Системная информация после запуска:"
+        free -h
+    
+        echo "Код завершения: $EXIT_CODE"
+    
+        if [ $EXIT_CODE -eq 143 ]; then
+          echo "Ошибка 143 (SIGTERM) - процесс убит системой"
+      
+          if sudo dmesg | tail -20 | grep -i "killed process" | grep -q "$ACC_PID"; then
+            echo "Подтверждено: процесс убит OOM Killer"
+            sudo dmesg | tail -20 | grep -i "killed process" | tail -5
+          else
+            echo "Не найдено подтверждение OOM Killer в логах"
+            sudo dmesg | tail -20
+          fi
+      
+        elif [ $EXIT_CODE -ne 0 ]; then
+          echo "Ошибка при оценке модели $MODEL (код: $EXIT_CODE)"
+        else
+          echo "Оценка успешно завершена"
+        fi
+    
+        echo "Лог ACC:"
+        if [ -f "accuracy_$MODEL.txt" ]; then
+          cat "accuracy_$MODEL.txt"
+        else
+         echo "Файл лога не создан"
+        fi
+    
+        # Выход с ошибкой если нужно
+        if [ $EXIT_CODE -ne 0 ]; then
+          exit $EXIT_CODE
+        fi
 
     - name: Extract accuracy value
       run: |
-        ACCURACY=$(grep -oE '[0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}_${EXTRA_ARGS// /_}.txt | head -1 || echo "0%")
-        echo "$ACCURACY" > accuracy_value_${{ matrix.model }}_${EXTRA_ARGS// /_}.txt
-        echo "Accuracy for ${{ matrix.model }} (${{ matrix.parallel_flag }}): $ACCURACY"
+        ACCURACY=$(grep -oE '[0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | head -1 || echo "0%")
+        echo "$ACCURACY" > accuracy_value_${{ matrix.model }}.txt
+        echo "Accuracy for ${{ matrix.model }}: $ACCURACY"
 
     - name: Upload accuracy artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: accuracy-${{ matrix.model }}-${{ matrix.parallel_flag }}
+        name: accuracy-${{ matrix.model }}
         path: |
-          accuracy_${{ matrix.model }}_${EXTRA_ARGS// /_}.txt
-          accuracy_value_${{ matrix.model }}_${EXTRA_ARGS// /_}.txt
+          accuracy_${{ matrix.model }}.txt
+          accuracy_value_${{ matrix.model }}.txt
 
-    # Дополнительная проверка для GoogLeNet с флагом --onednn 1000
-    - name: Run evaluation for GoogLeNet with --onednn 1000
-      if: matrix.model == 'googlenet'
+    - name: Update README for model (master only)
+      if: github.ref == 'refs/heads/master'
       run: |
-        MODEL="${{ matrix.model }}"
-        EXTRA_ARGS="--onednn 1000"
+        TOP1_ACC=$(grep -oE 'Top-1 Accuracy: [0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | grep -oE '[0-9]+\.?[0-9]*')
+        TOP5_ACC=$(grep -oE 'Top-5 Accuracy: [0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}.txt | grep -oE '[0-9]+\.?[0-9]*')
+        DATE=$(date '+%Y-%m-%d')
     
-        echo "Запуск оценки для модели $MODEL с флагами: $EXTRA_ARGS"
-    
-        "${{ steps.set_eval_binary.outputs.EVAL_BINARY }}" \
-        --model $MODEL \
-        $EXTRA_ARGS > accuracy_${MODEL}_onednn_1000.txt 2>&1
-    
-        if [ $? -ne 0 ]; then
-          echo "Ошибка при оценке модели $MODEL с флагами: $EXTRA_ARGS"
-          cat accuracy_${MODEL}_onednn_1000.txt
+        if [ -z "$TOP1_ACC" ] || [ -z "$TOP5_ACC" ]; then
+          echo "Ошибка: Не удалось извлечь точность из файла accuracy_${{ matrix.model }}.txt"
+          cat accuracy_${{ matrix.model }}.txt
           exit 1
         fi
     
-        echo "Результат оценки:"
-        cat accuracy_${MODEL}_onednn_1000.txt
+        UPDATE_TEXT="<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->Accuracy: Top-1: ${TOP1_ACC}% | Top-5: ${TOP5_ACC}% (updated: ${DATE})<!--END_ACCURACY_${{ matrix.model }}-->"
+    
+        if grep -q "<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->" README.md; then
+          sed -i "s|<!--ACCURACY_${{ matrix.model }}_PLACEHOLDER-->.*<!--END_ACCURACY_${{ matrix.model }}-->|${UPDATE_TEXT}|" README.md
+          echo "Обновлена точность для ${{ matrix.model }} в README"
+        else
+          echo "Ошибка: Плейсхолдер <!--ACCURACY_${{ matrix.model }}_PLACEHOLDER--> не найден в README.md"
+          echo "Содержимое README.md:"
+          cat README.md
+          exit 1
+        fi
 
-    - name: Extract accuracy value for GoogLeNet with --onednn 1000
-      if: matrix.model == 'googlenet'
+    - name: Commit and push changes (main only)
+      if: github.ref == 'refs/heads/main'
       run: |
-        ACCURACY=$(grep -oE '[0-9]+\.?[0-9]*%' accuracy_${{ matrix.model }}_onednn_1000.txt | head -1 || echo "0%")
-        echo "$ACCURACY" > accuracy_value_${{ matrix.model }}_onednn_1000.txt
-        echo "Accuracy for ${{ matrix.model }} (--onednn 1000): $ACCURACY"
-
-    - name: Upload accuracy artifacts for GoogLeNet with --onednn 1000
-      if: matrix.model == 'googlenet'
-      uses: actions/upload-artifact@v4
-      with:
-        name: accuracy-${{ matrix.model }}-onednn-1000
-        path: |
-          accuracy_${{ matrix.model }}_onednn_1000.txt
-          accuracy_value_${{ matrix.model }}_onednn_1000.txt
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add README.md
+        if git diff-index --quiet HEAD --; then
+          echo "No changes to commit"
+        else
+          git commit -m "[CI] Update accuracy for ${{ matrix.model }}: $(cat accuracy_value_${{ matrix.model }}.txt)"
+          git push origin master
+        fi
