@@ -381,22 +381,22 @@ jobs:
             model_file: GoogLeNet.onnx
             model_path: docs/models/GoogLeNet.onnx
             model_url: ''
-            extra_args: "--onednn 32"
+            extra_args: "--parallel tbb 32"
           - model: densenet
             parser: parser_onnx.py
             model_file: densenet121_Opset16.onnx
             model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/densenet121_Opset16_timm/densenet121_Opset16.onnx?download=
-            extra_args: "--onednn 32"
+            extra_args: "--parallel tbb 32"
           - model: resnet
             parser: parser_onnx.py
             model_file: resnest101e_Opset16.onnx
             model_url: https://github.com/onnx/models/raw/refs/heads/main/Computer_Vision/resnest101e_Opset16_timm/resnest101e_Opset16.onnx?download=
-            extra_args: "--onednn 32"
+            extra_args: "--parallel tbb 32"
           - model: yolo
             parser: parser_onnx.py
             model_file: yolo11x-cls.pt
             model_url: https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11x-cls.pt
-            extra_args: "--onednn 32"
+            extra_args: "--parallel tbb 32"
 
     steps:
     - uses: actions/checkout@v4
