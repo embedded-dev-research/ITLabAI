@@ -3,8 +3,6 @@
 #include <oneapi/tbb/info.h>
 #include <oneapi/tbb/parallel_for.h>
 
-// NOLINTNEXTLINE(misc-header-include-cycle)
-#include <Kokkos_Core.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -19,8 +17,7 @@ enum class Backend : std::uint8_t {
   kSeq = 0,
   kThreads = 1,
   kTbb = 2,
-  kOmp = 3,
-  kKokkos = 4
+  kOmp = 3
 };
 
 struct Options {
@@ -118,29 +115,6 @@ inline void impl_omp(std::size_t count,
   impl_seq(count, func);
 }
 #endif
-
-inline void impl_kokkos(std::size_t count,
-                        const std::function<void(std::size_t)>& func,
-                        const Options& opt) {
-  if (count == 0) return;
-  static std::once_flag init_flag;
-  std::call_once(init_flag, [&opt]() {
-    int num_threads =
-        opt.max_threads > 0
-            ? opt.max_threads
-            : static_cast<int>(std::thread::hardware_concurrency());
-
-    Kokkos::InitializationSettings args;
-    args.set_num_threads(num_threads);
-    Kokkos::initialize(args);
-
-    std::atexit([]() { Kokkos::finalize(); });
-  });
-
-  auto kokkos_func = [&func](const std::size_t i) { func(i); };
-  Kokkos::parallel_for("parallel_for", count, kokkos_func);
-  Kokkos::fence();
-}
 
 }  // namespace parallel
 }  // namespace it_lab_ai

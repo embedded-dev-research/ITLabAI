@@ -195,23 +195,21 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   }
 
   try {
-    std::sort(connection_list.begin(), connection_list.end(),
-              [&](const auto& a, const auto& b) {
-                if (!name_to_layer.contains(a.first) ||
-                    !name_to_layer.contains(b.first)) {
-                  return false;
-                }
-                return name_to_layer[a.first]->getID() <
-                       name_to_layer[b.first]->getID();
-              });
-
+    std::sort(
+        connection_list.begin(), connection_list.end(),
+        [&](const auto& a, const auto& b) {
+          if (!name_to_layer.count(a.first) || !name_to_layer.count(b.first)) {
+            return false;
+          }
+          return name_to_layer[a.first]->getID() <
+                 name_to_layer[b.first]->getID();
+        });
   } catch (const std::exception& e) {
     std::cerr << "ERROR during sorting: " << e.what() << '\n';
   }
 
   for (const auto& [source_name, target_name] : connection_list) {
-    if (name_to_layer.contains(source_name) &&
-        name_to_layer.contains(target_name)) {
+    if (name_to_layer.count(source_name) && name_to_layer.count(target_name)) {
       if (target_name.find("Concat") != std::string::npos ||
           name_to_layer[target_name]->getName() == it_lab_ai::kConcat) {
         if (concat_connections.find(target_name) != concat_connections.end()) {
@@ -514,7 +512,7 @@ ParseResult parse_json_model(RuntimeOptions options,
             std::string constant_name = inputs[1].get<std::string>();
             constant_name = get_base_layer_name(constant_name);
 
-            if (layer_parameters.contains(constant_name)) {
+            if (layer_parameters.count(constant_name)) {
               splits = layer_parameters[constant_name];
             } else if (constant_name.find("onnx::") != std::string::npos) {
               splits = last_constant_value;
@@ -717,7 +715,7 @@ ParseResult parse_json_model(RuntimeOptions options,
             std::string constant_name = inputs[1].get<std::string>();
             constant_name = get_base_layer_name(constant_name);
 
-            if (layer_parameters.contains(constant_name)) {
+            if (layer_parameters.count(constant_name)) {
               shape = layer_parameters[constant_name];
             }
           }
@@ -779,7 +777,7 @@ ParseResult parse_json_model(RuntimeOptions options,
             std::string constant_name = inputs[1].get<std::string>();
             constant_name = get_base_layer_name(constant_name);
 
-            if (layer_parameters.contains(constant_name)) {
+            if (layer_parameters.count(constant_name)) {
               axes = layer_parameters[constant_name];
             } else if (constant_name.find("onnx::") != std::string::npos) {
               axes = last_constant_value;

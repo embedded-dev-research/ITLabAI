@@ -10,7 +10,6 @@ target_link_libraries( ACCLib ${OpenCV_LIBS} )
 target_link_libraries( ACCLib TBB_unified)
 target_link_libraries( ACCLib layers_lib)
 target_link_libraries( ACCLib gtest_main)
-target_link_libraries( ACCLib Kokkos_imported)
 
 add_executable(Accuracy_Check accuracy_check.cpp)
 target_link_libraries(Accuracy_Check ACCLib)
