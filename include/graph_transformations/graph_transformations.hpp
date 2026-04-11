@@ -6,6 +6,7 @@
 #include "layers/EWLayer.hpp"
 #include "layers/Layer.hpp"
 #include "layers_fused/ConvRelu.hpp"
+#include "perf/benchmarking.hpp"
 
 namespace it_lab_ai {
 
@@ -29,6 +30,16 @@ std::vector<std::vector<int>> find_subgraphs(const Graph& graph,
 bool has_edge(const Graph& graph, int id_from, int id_to);
 bool is_root(const Graph& graph, int id);
 bool is_leaf(const Graph& graph, int id);
+void fill_possible_assignments(
+    const Graph& graph, const Graph& subgraph,
+    std::vector<std::vector<int>>& possible_assignments);
+bool update_refinement(const Graph& graph, const Graph& subgraph,
+                       std::vector<std::vector<int>>& possible_assignments);
+bool run_search_refined(const Graph& graph, const Graph& subgraph,
+                        std::vector<int>& assignments,
+                        std::vector<std::vector<int>>& results,
+                        std::vector<std::vector<int>>& possible_assignments);
+
 bool run_search(const Graph& graph, const Graph& subgraph,
                 std::vector<int>& assignments,
                 std::vector<std::vector<int>>& results);

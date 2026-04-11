@@ -19,8 +19,102 @@ std::vector<std::vector<int>> find_subgraphs(const Graph& graph,
   // can't be connected from outside, except IO for input and O for output
   std::vector<int> assignments;  // cur assumption for graph
   std::vector<std::vector<int>> results;
-  run_search(graph, subgraph, assignments, results);
+  bool refined = false;
+  for (int i = 0; i < subgraph.getLayersCount(); i++) {
+    if (subgraph.getOutLayers(i).size() > 1 || subgraph.getInLayers(i).size() > 1) {
+      refined = true;
+      break;
+    }
+  }
+  if (refined) {
+    std::vector<std::vector<int>> possible_assignments;
+    fill_possible_assignments(graph, subgraph, possible_assignments);
+    bool res = update_refinement(graph, subgraph, possible_assignments);
+    if (res) {
+      run_search_refined(graph, subgraph, assignments, results,
+                         possible_assignments);
+    }
+  } else {
+    run_search(graph, subgraph, assignments, results);
+  }
   return results;
+}
+
+void fill_possible_assignments(
+    const Graph& graph, const Graph& subgraph,
+    std::vector<std::vector<int>>& possible_assignments) {
+  possible_assignments.assign(subgraph.getLayersCount(), std::vector<int>());
+  for (size_t i = 0; i < possible_assignments.size(); i++) {
+    for (size_t j = 0; j < graph.getLayersCount(); j++) {
+      if (graph.getOutputsSize(j) < subgraph.getOutputsSize(i) || graph.getInputsSize(j) < subgraph.getInputsSize(i)) {
+        continue;
+      }
+      possible_assignments[i].push_back(j);
+    }
+  }
+}
+
+bool update_refinement(const Graph& graph, const Graph& subgraph,
+                       std::vector<std::vector<int>>& possible_assignments) {
+  bool has_changed = true;
+  while (has_changed) {
+    has_changed = false;
+    for (size_t i = 0; i < possible_assignments.size(); i++) {
+      for (int j = 0; j < static_cast<int>(possible_assignments[i].size());
+           j++) {
+        bool is_erased = false;
+        for (size_t k = 0; k < subgraph.getOutputsSize(i); k++) {
+          bool match = false;
+          for (int x : possible_assignments[subgraph.getOutLayers(i)[k]]) {
+            // candidate for i #j should be connected with at least one of
+            // candidates of i's output nodes
+            //std::cerr << i << " " << j << " " << k << " "
+             //         << has_edge(graph, possible_assignments[i][j], x) << std::endl;
+            if (has_edge(graph, possible_assignments[i][j], x)) {
+              match = true;
+              break;
+            }
+          }
+          if (!match) {
+            possible_assignments[i].erase(possible_assignments[i].begin() + j);
+            has_changed = true;
+            is_erased = true;
+            j--;
+            break;
+          }
+        }
+        if (is_erased) {
+          continue;
+        }
+        for (size_t k = 0; k < subgraph.getInputsSize(i); k++) {
+          bool match = false;
+          for (int x : possible_assignments[subgraph.getInLayers(i)[k]]) {
+            // candidate for i #j should be connected with at least one of
+            // candidates of i's input nodes
+            // std::cerr << i << " " << j << " " << k << " "
+            //         << has_edge(graph, possible_assignments[i][j], x) <<
+            //         std::endl;
+            if (has_edge(graph, x, possible_assignments[i][j])) {
+              match = true;
+              break;
+            }
+          }
+          if (!match) {
+            possible_assignments[i].erase(possible_assignments[i].begin() + j);
+            has_changed = true;
+            j--;
+            break;
+          }
+        }
+      }
+    }
+    for (size_t i = 0; i < possible_assignments.size(); i++) {
+      if (possible_assignments[i].empty()) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 bool has_edge(const Graph& graph, int id_from, int id_to) {
@@ -35,6 +129,98 @@ bool is_root(const Graph& graph, int id) {
 
 bool is_leaf(const Graph& graph, int id) {
   return graph.getOutputsSize(id) == 0;
+}
+
+bool run_search_refined(const Graph& graph, const Graph& subgraph,
+                std::vector<int>& assignments,
+                std::vector<std::vector<int>>& results,
+                std::vector<std::vector<int>>& possible_assignments) {
+  size_t cur_size = assignments.size();
+  for (int prev_id = 0; prev_id < static_cast<int>(cur_size); prev_id++) {
+    size_t amount_connected_s = subgraph.getOutputsSize(prev_id);
+    for (size_t j = 0; j < amount_connected_s; j++) {
+      int next_id = subgraph.getOutLayers(prev_id)[j];
+      if (next_id < static_cast<int>(cur_size)) {
+        if (!has_edge(graph, assignments[prev_id], assignments[next_id])) {
+          return false;
+        }
+        std::vector<int> ids = {prev_id, next_id};
+        for (int k = 0; k < 2; k++) {
+          if (!layer_conditions(subgraph.getLayerFromID(ids[k]),
+                                graph.getLayerFromID(assignments[ids[k]]))) {
+            return false;
+          }
+          // input node shouldn't be checked for it's inputs
+          if (!is_root(subgraph, ids[k]) &&
+              subgraph.getInputsSize(ids[k]) !=
+                  graph.getInputsSize(assignments[ids[k]])) {
+            return false;
+          }
+          // input & output node shouldn't be checked for it's outputs
+          if (!is_leaf(subgraph, ids[k]) && !is_root(subgraph, ids[k])) {
+            size_t amount_connected_s1 = subgraph.getOutputsSize(ids[k]);
+            size_t amount_connected_1 =
+                graph.getOutputsSize(assignments[ids[k]]);
+            if (amount_connected_1 != amount_connected_s1) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // assumption is good -> return true
+  if (static_cast<int>(cur_size) == subgraph.getLayersCount()) {
+    // special root->root case
+    std::vector<int> roots;
+    for (int v = 0; v < subgraph.getLayersCount(); v++) {
+      if (is_root(subgraph, v)) {
+        roots.push_back(assignments[v]);
+      }
+    }
+    for (int root : roots) {
+      std::vector<int> outs = graph.getOutLayers(root);
+      for (int out : outs) {
+        auto it = std::find(roots.begin(), roots.end(), out);
+        if (it != roots.end()) {
+          return false;
+        }
+      }
+    }
+    //
+    return true;
+  }
+
+  // add new nodes for assumption and try recursion
+  for (int i = 0;
+       i < static_cast<int>(possible_assignments[cur_size].size());
+       i++) {
+    int id = possible_assignments[cur_size][i];
+    auto it = std::find(assignments.begin(), assignments.end(), id);
+    if (it == assignments.end()) {
+      assignments.push_back(id);
+      //auto possible_assignments_copy = possible_assignments;
+      //possible_assignments_copy[cur_size] = {id};
+      //if (run_search_refined(graph, subgraph, assignments, results,
+      //                       possible_assignments_copy)) {
+      //  results.emplace_back(assignments);
+      //}
+      if (run_search_refined(graph, subgraph, assignments, results,
+                             possible_assignments)) {
+        results.emplace_back(assignments);
+      }
+      assignments.pop_back();
+    }
+    //possible_assignments[cur_size].erase(
+    //    possible_assignments[cur_size].begin() + i);
+    //i--;
+    //bool ret = update_refinement(graph, subgraph, possible_assignments);
+    //if (!ret) {
+    //  break;
+    //}
+  }
+  return false;
 }
 
 bool run_search(const Graph& graph, const Graph& subgraph,

@@ -26,54 +26,83 @@ void alexnet_inf_careless(Graph& graph, const RuntimeOptions& options,
   graph.setInput(graph.getLayerFromID(0), *i);
 }
 
-void alexnet_comparison() {
-  std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
-                                891, 957,  1027, 973,  1008};
-  size_t sum = std::accumulate(counts.begin(), counts.end(), size_t{0});
-  int count_pic = static_cast<int>(sum) + 10;
-  std::vector<float> res(count_pic * 28 * 28, 1.0F);
-  Tensor input;
-  Shape sh1({1, 5, 5, 3});
-  std::vector<float> vec;
-  vec.reserve(75);
-  for (int i = 0; i < 75; ++i) {
-    vec.push_back(3);
+void alexnet_comparison(int type = 3) {
+  if (type == 2) {
+    Tensor input = make_tensor(std::vector<float>(3 * 224 * 224, 200.0F),
+                               Shape({1, 3, 224, 224}));
+    Tensor output = make_tensor(std::vector<int>({0}));
+    Tensor input_c = input;
+    Tensor output_c = make_tensor(std::vector<int>({0}));
+    RuntimeOptions options;
+    Graph graph;
+    Graph graph2;
+    build_graph(graph, input, output, MODEL_PATH_GOOGLENET_ONNX, options,
+                true);
+    Graph subgraph;
+    std::shared_ptr<Layer> layer_0 = std::make_shared<ConvolutionalLayer>();
+    std::shared_ptr<Layer> layer_1 = std::make_shared<EWLayer>("relu");
+    subgraph.setInput(layer_0, input);
+    subgraph.makeConnection(layer_0, layer_1);
+    std::shared_ptr<Layer> layer_to = std::make_shared<ConvReluLayer>(
+        std::dynamic_pointer_cast<ConvolutionalLayer>(layer_0));
+    changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
+    auto time1 = elapsed_time_avg<double, std::milli>(
+        10, alexnet_inf_careless, graph, options, input_c, output_c);
+    print_time_stats(graph);
+    auto time2 = elapsed_time_avg<double, std::milli>(
+        10, alexnet_inf_careless, graph2, options, input_c, output_c);
+    print_time_stats(graph2);
+    std::cout << time1 << " for unchanged graph\n";
+    std::cout << time2 << " for convrelu graph\n";
+  } else if (type == 3) {
+    std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
+                                  891, 957,  1027, 973,  1008};
+    size_t sum = std::accumulate(counts.begin(), counts.end(), size_t{0});
+    int count_pic = static_cast<int>(sum) + 10;
+    std::vector<float> res(count_pic * 28 * 28, 1.0F);
+    Tensor input;
+    Shape sh1({1, 5, 5, 3});
+    std::vector<float> vec;
+    vec.reserve(75);
+    for (int i = 0; i < 75; ++i) {
+      vec.push_back(3);
+    }
+    Tensor output = make_tensor(vec, sh1);
+
+    Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
+    Tensor t = make_tensor<float>(res, sh);
+    input = t;
+
+    RuntimeOptions options;
+    Graph graph;
+    Graph graph2;
+    build_graph_linear(graph, input, output, options, true, false);
+    Graph subgraph;
+    std::shared_ptr<Layer> layer_0 = std::make_shared<ConvolutionalLayer>();
+    std::shared_ptr<Layer> layer_1 = std::make_shared<EWLayer>("relu");
+    subgraph.setInput(layer_0, input);
+    subgraph.makeConnection(layer_0, layer_1);
+    std::shared_ptr<Layer> layer_to = std::make_shared<ConvReluLayer>(
+        std::dynamic_pointer_cast<ConvolutionalLayer>(layer_0));
+    changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
+    Tensor input_c = input;
+    Tensor output_c = output;
+    auto time1 = elapsed_time_avg<double, std::milli>(
+        2, alexnet_inf_careless, graph, options, input_c, output_c);
+    print_time_stats(graph);
+    auto time2 = elapsed_time_avg<double, std::milli>(
+        2, alexnet_inf_careless, graph2, options, input_c, output_c);
+    print_time_stats(graph2);
+    std::cout << time1 << " for unchanged graph\n";
+    std::cout << time2 << " for convrelu graph\n";
   }
-  Tensor output = make_tensor(vec, sh1);
-
-  Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
-  Tensor t = make_tensor<float>(res, sh);
-  input = t;
-
-  RuntimeOptions options;
-  Graph graph;
-  Graph graph2;
-  build_graph_linear(graph, input, output, options, true, false);
-  Graph subgraph;
-  std::shared_ptr<Layer> layer_0 = std::make_shared<ConvolutionalLayer>();
-  std::shared_ptr<Layer> layer_1 = std::make_shared<EWLayer>("relu");
-  subgraph.setInput(layer_0, input);
-  subgraph.makeConnection(layer_0, layer_1);
-  std::shared_ptr<Layer> layer_to = std::make_shared<ConvReluLayer>(
-      std::dynamic_pointer_cast<ConvolutionalLayer>(layer_0));
-  changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
-  Tensor input_c = input;
-  Tensor output_c = output;
-  auto time1 = elapsed_time_avg<double, std::milli>(
-      4, alexnet_inf_careless, graph, options, input_c, output_c);
-  print_time_stats(graph);
-  auto time2 = elapsed_time_avg<double, std::milli>(
-      4, alexnet_inf_careless, graph2, options, input_c, output_c);
-  print_time_stats(graph2);
-  std::cout << time1 << " for unchanged graph\n";
-  std::cout << time2 << " for convrelu graph\n";
 }
 
-int main() {
-  int type = 2;
+int main(int argc, char* argv[]) {
+  int type = (argc > 1) ? (int)(argv[1][0]-'0') : 0;
   Tensor input = make_tensor(std::vector<int>({0}));
   RuntimeOptions options;
-  alexnet_comparison();
+  //alexnet_comparison(type);
   if (type == 0) {
     Graph graph1;
     build_graph(graph1, input, input, MODEL_PATH_DENSENET_ONNX, options, false);
@@ -104,6 +133,27 @@ int main() {
 
     auto vec = find_subgraphs(graph1, subgraph);
     auto vec2 = find_subgraphs(graph1, subgraph2);
+
+    auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
+                                                     subgraph);
+    auto time2 = elapsed_time_avg<double, std::milli>(10, find_subgraphs,
+                                                      graph1, subgraph2);
+
+    for (auto& i : vec) {
+      for (int j : i) {
+        std::cerr << j << ' ';
+      }
+      std::cerr << '\n';
+    }
+    std::cerr << "Time for path5:" << time << '\n';
+
+    for (auto& i : vec2) {
+      for (int j : i) {
+        std::cerr << j << ' ';
+      }
+      std::cerr << '\n';
+    }
+    std::cerr << "Time for concat:" << time2 << '\n';
   } else if (type == 1) {
     Graph graph1;
     build_graph(graph1, input, input, MODEL_PATH_RESNET_ONNX, options, false);
@@ -121,6 +171,16 @@ int main() {
     subgraph.makeConnection(layer_3, layer_4);
 
     auto vec = find_subgraphs(graph1, subgraph);
+
+    auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
+                                                     subgraph);
+    for (auto& i : vec) {
+      for (int j : i) {
+        std::cerr << j << ' ';
+      }
+      std::cerr << '\n';
+    }
+    std::cerr << "Time for path5:" << time << '\n';
   } else if (type == 2) {
     Graph graph1;
     build_graph(graph1, input, input, MODEL_PATH_GOOGLENET_ONNX, options,
@@ -145,6 +205,16 @@ int main() {
     subgraph.makeConnection(layer_5, layer_3);
 
     auto vec = find_subgraphs(graph1, subgraph);
+
+    auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs, graph1,
+                                                     subgraph);
+    for (auto& i : vec) {
+      for (int j : i) {
+        std::cerr << j << ' ';
+      }
+      std::cerr << '\n';
+    }
+    std::cerr << "Time for concat:" << time << '\n';
   }
   return 0;
 }
