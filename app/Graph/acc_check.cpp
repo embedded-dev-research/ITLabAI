@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
   RuntimeOptions options;
   size_t num_photo = 1000;
-  size_t batch_size = 250;
+  size_t batch_size = 32;
 
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
