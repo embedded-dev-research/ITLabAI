@@ -2,10 +2,12 @@
 #include <vector>
 
 #include "graph/graph.hpp"
+#include "layers/BatchNormalizationLayer.hpp"
 #include "layers/ConvLayer.hpp"
 #include "layers/EWLayer.hpp"
 #include "layers/Layer.hpp"
 #include "layers_fused/ConvRelu.hpp"
+#include "layers_fused/DenseNetPath.hpp"
 #include "perf/benchmarking.hpp"
 
 namespace it_lab_ai {

@@ -32,6 +32,18 @@ class BatchNormalizationLayer : public Layer {
   void set_momentum(float momentum) { momentum_ = momentum; }
   void set_training_mode(bool training_mode) { training_mode_ = training_mode; }
 
+  [[nodiscard]] std::vector<float> getNumericParams() const {
+    std::vector<float> res = {epsilon_, momentum_};
+    return res;
+  }
+
+  [[nodiscard]] std::vector<Tensor> getTensorParams() const {
+    std::vector<Tensor> res = {scale_, bias_, mean_, var_};
+    return res;
+  }
+
+  [[nodiscard]] bool getTrainingMode() const { return training_mode_; }
+
  private:
   Tensor scale_;
   Tensor bias_;

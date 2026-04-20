@@ -667,8 +667,7 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::Values(BaseTestFixture::setTBBOptions(),
                           BaseTestFixture::setOmpOptions(),
                           BaseTestFixture::setSeqOptions(),
-                          BaseTestFixture::setSTLOptions(),
-                          BaseTestFixture::setKokkosOptions())),
+                          BaseTestFixture::setSTLOptions())),
     [](const ::testing::TestParamInfo<
         std::tuple<PoolingTestParams, RuntimeOptions>>& info) {
       const auto& params = std::get<0>(info.param);
@@ -681,8 +680,6 @@ INSTANTIATE_TEST_SUITE_P(
         name += "OMP";
       } else if (options.par_backend == ParBackend::kThreads) {
         name += "STL";
-      } else if (options.par_backend == ParBackend::kKokkos) {
-        name += "Kokkos";
       } else {
         name += "Seq";
       }

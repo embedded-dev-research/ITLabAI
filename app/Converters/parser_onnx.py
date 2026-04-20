@@ -166,7 +166,7 @@ def onnx_to_json(model_path, output_json_path):
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'resnest101e_Opset16.onnx')
-MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'resnest101e_Opset16_onnx_model.json')
+MODEL_PATH = os.path.join(BASE_DIR, 'docs\\models', 'yolo11x-cls.pt')
+MODEL_DATA_PATH = os.path.join(BASE_DIR, 'docs\\jsons', 'yolo11x-cls_onnx_model.json')
 
 onnx_to_json(MODEL_PATH, MODEL_DATA_PATH)

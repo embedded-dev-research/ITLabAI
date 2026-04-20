@@ -1285,8 +1285,7 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::Values(ConvTestFixture::setTBBOptions(),
                           ConvTestFixture::setOmpOptions(),
                           ConvTestFixture::setSeqOptions(),
-                          ConvTestFixture::setSTLOptions(),
-                          ConvTestFixture::setKokkosOptions())),
+                          ConvTestFixture::setSTLOptions())),
     [](const ::testing::TestParamInfo<
         std::tuple<ConvTestParams, RuntimeOptions>>& info) {
       const auto& params = std::get<0>(info.param);
@@ -1299,8 +1298,6 @@ INSTANTIATE_TEST_SUITE_P(
         name += "OMP";
       } else if (options.par_backend == ParBackend::kThreads) {
         name += "STL";
-      } else if (options.par_backend == ParBackend::kKokkos) {
-        name += "Kokkos";
       } else {
         name += "Seq";
       }

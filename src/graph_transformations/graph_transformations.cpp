@@ -49,7 +49,7 @@ void fill_possible_assignments(
       if (graph.getOutputsSize(j) < subgraph.getOutputsSize(i) || graph.getInputsSize(j) < subgraph.getInputsSize(i)) {
         continue;
       }
-      possible_assignments[i].push_back(j);
+      possible_assignments[i].push_back(static_cast<int>(j));
     }
   }
 }
@@ -352,6 +352,18 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
       layer = std::static_pointer_cast<Layer>(std::make_shared<ConvReluLayer>(
           std::dynamic_pointer_cast<ConvolutionalLayer>(
               graph.getLayerFromID(subs_c[i][0]))));  // convrelu case
+    } else if (layer_to->getName() == kDenseNetPath && subs_c[i].size() == 5 &&
+               graph.getLayerFromID(subs_c[i][0])->getName() ==
+                   kBatchNormalization &&
+               graph.getLayerFromID(subs_c[i][2])->getName() == kConvolution &&
+               graph.getLayerFromID(subs_c[i][4])->getName() == kConvolution) {
+      layer = std::static_pointer_cast<Layer>(std::make_shared<DenseNetPath>(
+          std::dynamic_pointer_cast<BatchNormalizationLayer>(
+              graph.getLayerFromID(subs_c[i][0])),
+          std::dynamic_pointer_cast<ConvolutionalLayer>(
+              graph.getLayerFromID(subs_c[i][2])),
+          std::dynamic_pointer_cast<ConvolutionalLayer>(
+              graph.getLayerFromID(subs_c[i][4]))));  // densenetpath case
     } else {
       layer = layer_based_shared_copy(layer_to, options);
     }

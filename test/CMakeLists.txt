@@ -1,5 +1,7 @@
 file(GLOB_RECURSE TEST_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
+list(FILTER TEST_SRC_FILES EXCLUDE REGEX "/single_layer_parall_version/")
+
 add_executable(run_test ${TEST_SRC_FILES})
 
 target_link_libraries(run_test PUBLIC OpenMP::OpenMP_CXX)

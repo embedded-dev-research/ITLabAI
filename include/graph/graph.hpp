@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
+#include <map>
 #include <memory>
 #include <queue>
 #include <stdexcept>
@@ -32,7 +33,8 @@ static std::unordered_map<LayerType, std::string> label_map = {
     {kSoftmax, "Softmax"},
     {kReduce, "Reduce"},
     {kBatchNormalization, "Normalization"},
-    {kConvRelu, "ConvRelu"}};
+    {kConvRelu, "ConvRelu"},
+    {kDenseNetPath, "DenseNetPath"}};
 
 struct LayerTimeStats {
   std::string layer_name;

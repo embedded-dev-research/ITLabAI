@@ -25,7 +25,9 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   std::string json_file = MODEL_PATH_H5;
   it_lab_ai::json model_data = it_lab_ai::read_json(json_file);
 
-  if (comments) std::cout << "Loaded model data from JSON." << '\n';
+  if (comments) {
+    std::cout << "Loaded model data from JSON." << '\n';
+  }
 
   for (const auto& layer_data : model_data) {
     std::string layer_type = layer_data["type"];
@@ -70,7 +72,9 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
           options, 1, pads, 1, tmp_values, tmp_bias, 1, true);
       layers.push_back(conv_layer);
       layerpostop.push_back(false);
-      if (comments) std::cout << "ConvLayer added to layers." << '\n';
+      if (comments) {
+        std::cout << "ConvLayer added to layers." << '\n';
+      }
     }
     if (layer_type.find("relu") != std::string::npos) {
       auto ew_layer = LayerFactory::createEwLayer("relu", options);
@@ -85,7 +89,9 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       auto fc_layer = std::make_shared<it_lab_ai::FCLayer>(tensor, tmp_bias);
       layers.push_back(fc_layer);
       layerpostop.push_back(false);
-      if (comments) std::cout << "DenseLayer added to layers." << '\n';
+      if (comments) {
+        std::cout << "DenseLayer added to layers." << '\n';
+      }
     }
 
     if (layer_type.find("Pool") != std::string::npos) {
@@ -105,7 +111,9 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
 
       layers.push_back(pool_layer);
       layerpostop.push_back(false);
-      if (comments) std::cout << "PoolingLayer added to layers." << '\n';
+      if (comments) {
+        std::cout << "PoolingLayer added to layers." << '\n';
+      }
     }
 
     if (layer_type.find("Flatten") != std::string::npos) {
@@ -113,7 +121,9 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
           std::vector<size_t>({0, 3, 2, 1}));
       layers.push_back(flatten_layer);
       layerpostop.push_back(false);
-      if (comments) std::cout << "FlattenLayer added to layers." << '\n';
+      if (comments) {
+        std::cout << "FlattenLayer added to layers." << '\n';
+      }
     }
 
     if (layer_type.find("Dropout") != std::string::npos) {
@@ -128,26 +138,34 @@ void build_graph_linear(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
       }
     }
   }
-  if (comments) std::cout << "number of layers - " << layers.size() + 1 << '\n';
+  if (comments) {
+    std::cout << "number of layers - " << layers.size() + 1 << '\n';
+  }
   auto a1 = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                     it_lab_ai::kNchw);
 
-  if (comments) std::cout << "InputLayer created." << '\n';
+  if (comments) {
+    std::cout << "InputLayer created." << '\n';
+  }
 
   graph.setInput(a1, input);
-  if (comments) std::cout << "Input set in graph." << '\n';
+  if (comments) {
+    std::cout << "Input set in graph." << '\n';
+  }
 
   graph.makeConnection(a1, layers[0]);
-  if (comments)
+  if (comments) {
     std::cout << "Connection made between InputLayer and first layer." << '\n';
+  }
 
   for (size_t i = 0; i < layers.size() - 1; ++i) {
     if (layerpostop[i]) {
       layers[i - 1]->postops.layers.push_back(layers[i]);
       layers[i - 1]->postops.count++;
       graph.makeConnection(layers[i - 1], layers[i + 1]);
-    } else if (!layerpostop[i + 1])
+    } else if (!layerpostop[i + 1]) {
       graph.makeConnection(layers[i], layers[i + 1]);
+    }
   }
 
   graph.setOutput(layers.back(), output);
@@ -195,21 +213,22 @@ void build_graph(it_lab_ai::Graph& graph, it_lab_ai::Tensor& input,
   }
 
   try {
-    std::sort(
-        connection_list.begin(), connection_list.end(),
-        [&](const auto& a, const auto& b) {
-          if (!name_to_layer.count(a.first) || !name_to_layer.count(b.first)) {
-            return false;
-          }
-          return name_to_layer[a.first]->getID() <
-                 name_to_layer[b.first]->getID();
-        });
+    std::sort(connection_list.begin(), connection_list.end(),
+              [&](const auto& a, const auto& b) {
+      if (!name_to_layer.contains(a.first) ||
+          !name_to_layer.contains(b.first)) {
+        return false;
+      }
+      return name_to_layer[a.first]->getID() < name_to_layer[b.first]->getID();
+    });
+
   } catch (const std::exception& e) {
     std::cerr << "ERROR during sorting: " << e.what() << '\n';
   }
 
   for (const auto& [source_name, target_name] : connection_list) {
-    if (name_to_layer.count(source_name) && name_to_layer.count(target_name)) {
+    if (name_to_layer.contains(source_name) &&
+        name_to_layer.contains(target_name)) {
       if (target_name.find("Concat") != std::string::npos ||
           name_to_layer[target_name]->getName() == it_lab_ai::kConcat) {
         if (concat_connections.find(target_name) != concat_connections.end()) {
@@ -294,7 +313,9 @@ ParseResult parse_json_model(RuntimeOptions options,
     }
   }
 
-  if (comments) std::cout << "Loaded model data from JSON." << '\n';
+  if (comments) {
+    std::cout << "Loaded model data from JSON." << '\n';
+  }
 
   auto input_layer = std::make_shared<it_lab_ai::InputLayer>(it_lab_ai::kNchw,
                                                              it_lab_ai::kNchw);
@@ -307,7 +328,9 @@ ParseResult parse_json_model(RuntimeOptions options,
     try {
       std::string layer_type = layer_data["type"];
 
-      if (layer_type == "InputLayer") continue;
+      if (layer_type == "InputLayer") {
+        continue;
+      }
       std::string layer_name = layer_data["name"];
       int layer_index = layer_data["index"];
       if (comments) {
@@ -512,7 +535,7 @@ ParseResult parse_json_model(RuntimeOptions options,
             std::string constant_name = inputs[1].get<std::string>();
             constant_name = get_base_layer_name(constant_name);
 
-            if (layer_parameters.count(constant_name)) {
+            if (layer_parameters.contains(constant_name)) {
               splits = layer_parameters[constant_name];
             } else if (constant_name.find("onnx::") != std::string::npos) {
               splits = last_constant_value;
@@ -701,7 +724,9 @@ ParseResult parse_json_model(RuntimeOptions options,
           std::cout << "TransposeLayer added with perm: [";
           for (size_t i = 0; i < perm.size(); ++i) {
             std::cout << perm[i];
-            if (i < perm.size() - 1) std::cout << ", ";
+            if (i < perm.size() - 1) {
+              std::cout << ", ";
+            }
           }
           std::cout << "]" << '\n';
         }
@@ -715,7 +740,7 @@ ParseResult parse_json_model(RuntimeOptions options,
             std::string constant_name = inputs[1].get<std::string>();
             constant_name = get_base_layer_name(constant_name);
 
-            if (layer_parameters.count(constant_name)) {
+            if (layer_parameters.contains(constant_name)) {
               shape = layer_parameters[constant_name];
             }
           }
@@ -777,7 +802,7 @@ ParseResult parse_json_model(RuntimeOptions options,
             std::string constant_name = inputs[1].get<std::string>();
             constant_name = get_base_layer_name(constant_name);
 
-            if (layer_parameters.count(constant_name)) {
+            if (layer_parameters.contains(constant_name)) {
               axes = layer_parameters[constant_name];
             } else if (constant_name.find("onnx::") != std::string::npos) {
               axes = last_constant_value;

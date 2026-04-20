@@ -38,8 +38,6 @@ int main(int argc, char* argv[]) {
         options.par_backend = ParBackend::kThreads;
       } else if (backend_str == "omp") {
         options.par_backend = ParBackend::kOmp;
-      } else if (backend_str == "kokkos") {
-        options.par_backend = ParBackend::kKokkos;
       } else {
         std::cerr << "Unknown parallel backend: " << backend_str
                   << ". Using default (Threads)." << '\n';

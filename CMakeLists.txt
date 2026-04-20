@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(ITLabAI)
 
-set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+# set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
 
@@ -22,7 +22,7 @@ if(ENABLE_STATISTIC_WEIGHTS)
     add_definitions(-DENABLE_STATISTIC_WEIGHTS)
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 enable_testing()
 
