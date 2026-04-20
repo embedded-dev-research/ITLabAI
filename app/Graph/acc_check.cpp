@@ -15,66 +15,83 @@ using namespace it_lab_ai;
 int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
   RuntimeOptions options;
-  size_t num_photo = 1000;
-  size_t batch_size = 32;
+  // По умолчанию
+size_t num_photo = 1000;
+size_t batch_size = 32;
 
-  for (int i = 1; i < argc; ++i) {
-    if (std::string(argv[i]) == "--model" && i + 1 < argc) {
-      model_name = argv[++i];
-    } else if (std::string(argv[i]) == "--onednn") {
-      options.backend = Backend::kOneDnn;
-      if (options.par_backend != ParBackend::kSeq) {
-        std::cout << "Warning: oneDNN backend is not compatible with parallel "
-                     "execution. Disabling parallelism."
-                  << '\n';
-        options.par_backend = ParBackend::kSeq;
-      }
-    } else if (std::string(argv[i]) == "--parallel" && i + 1 < argc) {
-      if (options.backend == Backend::kOneDnn) {
-        std::cout << "Warning: Parallel execution is not compatible with "
-                     "oneDNN backend. Ignoring --parallel option."
-                  << '\n';
-        i++;
-        continue;
-      }
+// Сначала соберём все аргументы, не являющиеся ключами
+std::vector<size_t> numeric_args;
 
-      std::string backend_str = argv[++i];
-      if (backend_str == "tbb") {
-        options.par_backend = ParBackend::kTbb;
-      } else if (backend_str == "threads" || backend_str == "stl") {
-        options.par_backend = ParBackend::kThreads;
-      } else if (backend_str == "omp") {
-        options.par_backend = ParBackend::kOmp;
-      } else {
-        std::cerr << "Unknown parallel backend: " << backend_str
-                  << ". Using default (Threads)." << '\n';
-        options.par_backend = ParBackend::kThreads;
-      }
-    } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
-      options.threads = std::stoi(argv[++i]);
-    } else {
-      try {
-        size_t input_value = std::stoul(argv[i]);
-
-        if (input_value < 1) {
-          std::cerr << "Warning: num_photo cannot be less than 1. Using 1."
-                    << '\n';
-          num_photo = 1;
-        } else if (input_value > 50000) {
-          std::cerr << "Warning: num_photo cannot exceed 50000. Using 50000."
-                    << '\n';
-          num_photo = 50000;
-        } else {
-          num_photo = input_value;
+for (int i = 1; i < argc; ++i) {
+    std::string arg = argv[i];
+    if (arg == "--model" && i + 1 < argc) {
+        model_name = argv[++i];
+    } 
+    else if (arg == "--onednn") {
+        options.backend = Backend::kOneDnn;
+        if (options.par_backend != ParBackend::kSeq) {
+            std::cout << "Warning: oneDNN backend is not compatible with parallel execution. Disabling parallelism.\n";
+            options.par_backend = ParBackend::kSeq;
         }
-      } catch (const std::exception& e) {
-        std::cerr << "Error: Invalid numeric argument: " << e.what() << argv[i]
-                  << ". Using default value: 1000" << '\n';
-        num_photo = 1000;
-      }
+    } 
+    else if (arg == "--parallel" && i + 1 < argc) {
+        if (options.backend == Backend::kOneDnn) {
+            std::cout << "Warning: Parallel execution is not compatible with oneDNN backend. Ignoring --parallel option.\n";
+            ++i; // пропускаем следующий аргумент (название бэкенда)
+            continue;
+        }
+        std::string backend_str = argv[++i];
+        if (backend_str == "tbb")
+            options.par_backend = ParBackend::kTbb;
+        else if (backend_str == "threads" || backend_str == "stl")
+            options.par_backend = ParBackend::kThreads;
+        else if (backend_str == "omp")
+            options.par_backend = ParBackend::kOmp;
+        else {
+            std::cerr << "Unknown parallel backend: " << backend_str << ". Using default (Threads).\n";
+            options.par_backend = ParBackend::kThreads;
+        }
+    } 
+    else if (arg == "--threads" && i + 1 < argc) {
+        options.threads = std::stoi(argv[++i]);
+    } 
+    else {
+        // Попробуем преобразовать аргумент в число
+        try {
+            size_t val = std::stoul(arg);
+            numeric_args.push_back(val);
+        } catch (...) {
+            std::cerr << "Warning: unknown argument ignored: " << arg << "\n";
+        }
     }
-  }
+}
 
+// Интерпретируем собранные числа:
+// первое (или единственное) -> num_photo
+// второе (если есть) -> batch_size
+if (!numeric_args.empty()) {
+    size_t val = numeric_args[0];
+    if (val < 1) {
+        std::cerr << "Warning: num_photo cannot be less than 1. Using 1.\n";
+        num_photo = 1;
+    } else if (val > 50000) {
+        std::cerr << "Warning: num_photo cannot exceed 50000. Using 50000.\n";
+        num_photo = 50000;
+    } else {
+        num_photo = val;
+    }
+
+    if (numeric_args.size() >= 2) {
+        batch_size = numeric_args[1];
+        if (batch_size < 1) {
+            std::cerr << "Warning: batch_size cannot be less than 1. Using 1.\n";
+            batch_size = 1;
+        }
+        // Можно добавить верхнее ограничение, например, 2048
+    }
+}
+
+  std::cout<< "batch = " << batch_size <<'\n';
   std::string dataset_path;
   if (model_name == "alexnet_mnist") {
     dataset_path = MNIST_PATH;
