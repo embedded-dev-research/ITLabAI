@@ -15,8 +15,6 @@ void ConvSigmMulLayer::run(const std::vector<Tensor>& input,
                            const RuntimeOptions& options) {
   std::vector<Tensor> temp_output(2, Tensor());
 
-  ParBackend backend = options.par_backend;
-
   ConvolutionalLayer conv(stride_, pads_, dilations_, kernel_, bias_, group_,
                           useLegacyImpl_);
 

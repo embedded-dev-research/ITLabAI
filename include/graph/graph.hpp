@@ -309,7 +309,7 @@ class Graph {
       start_--;
     }
     for (auto& i : split_distribution_) {
-      for (int j = 0; j < i.size(); j++) {
+      for (int j = 0; j < static_cast<int>(i.size()); j++) {
         if (i[j].first > id) {
           i[j].first--;
         }
