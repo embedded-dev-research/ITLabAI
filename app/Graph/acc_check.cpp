@@ -21,6 +21,18 @@ int main(int argc, char* argv[]) {
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
       model_name = argv[++i];
+    } else if (std::string(argv[i]) == "--batch" && i + 1 < argc) {
+      try {
+        batch_size = std::stoul(argv[++i]);
+        if (batch_size < 1) {
+          std::cerr << "Warning: batch_size cannot be less than 1. Using 1.\n";
+          batch_size = 1;
+        }
+      } catch (const std::exception&) {
+        std::cerr << "Error: Invalid batch size: " << argv[i] 
+                  << ". Using default value: 32\n";
+        batch_size = 32;
+      }
     } else if (std::string(argv[i]) == "--onednn") {
       options.backend = Backend::kOneDnn;
       if (options.par_backend != ParBackend::kSeq) {
@@ -67,8 +79,8 @@ int main(int argc, char* argv[]) {
         } else {
           num_photo = input_value;
         }
-      } catch (const std::exception& e) {
-        std::cerr << "Error: Invalid numeric argument: " << e.what() << argv[i]
+      } catch (const std::exception&) {
+        std::cerr << "Error: Invalid numeric argument: " << argv[i]
                   << ". Using default value: 1000" << '\n';
         num_photo = 1000;
       }
@@ -85,7 +97,6 @@ int main(int argc, char* argv[]) {
   std::string json_path = model_paths[model_name];
   std::vector<int> input_shape = get_input_shape_from_json(json_path);
 
-  std::cout << '\n';
 
   if (model_name == "alexnet_mnist") {
     std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
