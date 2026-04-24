@@ -364,6 +364,11 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
               graph.getLayerFromID(subs_c[i][2])),
           std::dynamic_pointer_cast<ConvolutionalLayer>(
               graph.getLayerFromID(subs_c[i][4]))));  // densenetpath case
+    } else if (layer_to->getName() == kConvSigmMul) {
+      layer =
+          std::static_pointer_cast<Layer>(std::make_shared<ConvSigmMulLayer>(
+              std::dynamic_pointer_cast<ConvolutionalLayer>(
+                  graph.getLayerFromID(subs_c[i][0]))));  // convsigmmul case
     } else {
       layer = layer_based_shared_copy(layer_to, options);
     }
@@ -405,10 +410,22 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
         }
       }
     }
+    std::vector<std::pair<int, int>> split_vec;
     for (size_t j = 0; j < subs[i].size(); j++) {
       auto it = std::find(roots.begin(), roots.end(), j);
       size_t index_for_root = std::distance(roots.begin(), it);
       // remove all nodes that isn't special roots
+      if (it != roots.end()) {
+        auto sd = new_graph.getSplitDistribution();
+        for (size_t sdi = 0; sdi < sd.size(); sdi++) {
+          for (size_t sdj = 0; sdj < sd[sdi].size(); sdj++) {
+            if (sd[sdi][sdj].first == subs[i][j]) {
+              split_vec.push_back(
+                  std::make_pair(static_cast<int>(sdi), sd[sdi][sdj].second));
+            }
+          }
+        }
+      }
       if (it == roots.end() ||
           (it != roots.end() && !is_root_special[index_for_root])) {
         new_graph.removeSingleLayer(subs[i][j]);
@@ -431,6 +448,10 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
     }
     for (int j : leaves_outs_final) {
       new_graph.makeConnection(layer, new_graph.getLayerFromID(j));
+    }
+    for (int j = 0; j < split_vec.size(); j++) {
+      new_graph.addForSplit(split_vec[j].first, layer->getID(),
+                            split_vec[j].second);
     }
   }
 }

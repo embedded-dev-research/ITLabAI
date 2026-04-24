@@ -15,17 +15,29 @@
 
 using namespace it_lab_ai;
 
+void print_split_dist(const Graph& graph) {
+  auto split_dist = graph.getSplitDistribution();
+  for (int i = 0; i < split_dist.size(); i++) {
+    std::cout << "Split #" << i + 1 << ": ";
+    for (int j = 0; j < split_dist[i].size(); j++) {
+      std::cout << "(" << split_dist[i][j].first << ", "
+                << split_dist[i][j].second << ") ";
+    }
+    std::cout << std::endl;
+  }
+}
+
 void alexnet_inf_careless(Graph& graph, const RuntimeOptions& options,
                           Tensor& input, Tensor& output) {
   auto* o = new Tensor(output);
   auto* i = new Tensor(input);
+  graph.setOutput(*o);
+  graph.setInput(graph.getLayerFromID(0), *i);
   graph.inference(options);
   if (graph.getLayersCount() == 0) {
     throw std::runtime_error("No layers");
   }
-  std::cerr << *o;
-  graph.setOutput(graph.getLayerFromID(graph.getLayersCount() - 1), *o);
-  graph.setInput(graph.getLayerFromID(0), *i);
+  //std::cout << *o;
 }
 
 void create_def_graph(Graph& graph) {
@@ -52,17 +64,19 @@ void create_def_graph(Graph& graph) {
 }
 
 void create_def_graph_gn(Graph& graph) {
-  Tensor input = make_tensor(std::vector<float>(3 * 224 * 224, 200.0F),
-                             Shape({1, 3, 224, 224}));
-  Tensor output = make_tensor(std::vector<int>({0}));
+  Tensor input = prepare_image(
+      cv::imread(IMAGENET_PATH + std::string("1.png")),
+      get_input_shape_from_json(MODEL_PATH_GOOGLENET_ONNX), "google");
+  Tensor output = make_tensor(std::vector<float>({0.0F}));
   RuntimeOptions options;
   build_graph(graph, input, output, MODEL_PATH_GOOGLENET_ONNX, options, true);
 }
 
 void create_def_graph_yolo(Graph& graph) {
-  Tensor input = make_tensor(std::vector<float>(3 * 224 * 224, 200.0F),
-                             Shape({1, 3, 224, 224}));
-  Tensor output = make_tensor(std::vector<int>({0}));
+  Tensor input = prepare_image(
+      cv::imread(IMAGENET_PATH + std::string("1.png")),
+      get_input_shape_from_json(MODEL_PATH_YOLO11NET_ONNX), "yolo");
+  Tensor output = make_tensor(std::vector<float>({0.0F}));
   RuntimeOptions options;
   build_graph(graph, input, output, MODEL_PATH_YOLO11NET_ONNX, options, true);
 }
@@ -100,9 +114,10 @@ void create_changed_graph(Graph& graph2) {
 }
 
 void create_changed_graph_gn(Graph& graph2) {
-  Tensor input = make_tensor(std::vector<float>(3 * 224 * 224, 200.0F),
-                             Shape({1, 3, 224, 224}));
-  Tensor output = make_tensor(std::vector<int>({0}));
+  Tensor input = prepare_image(
+      cv::imread(IMAGENET_PATH + std::string("1.png")),
+      get_input_shape_from_json(MODEL_PATH_GOOGLENET_ONNX), "google");
+  Tensor output = make_tensor(std::vector<float>({0.0F}));
   RuntimeOptions options;
   Graph graph;
   graph2.clone(graph, output, options);
@@ -116,17 +131,40 @@ void create_changed_graph_gn(Graph& graph2) {
   changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
 }
 
-void alexnet_comparison(int type = 3) {
+void create_changed_graph_yolo(Graph& graph2) {
+  Tensor input = prepare_image(
+      cv::imread(IMAGENET_PATH + std::string("1.png")),
+      get_input_shape_from_json(MODEL_PATH_YOLO11NET_ONNX), "yolo");
+  Tensor output = make_tensor(std::vector<float>({0.0F}));
+  RuntimeOptions options;
+  Graph graph;
+  graph2.clone(graph, output, options);
+  Graph subgraph;
+  std::shared_ptr<Layer> layer_0 = std::make_shared<ConvolutionalLayer>();
+  std::shared_ptr<Layer> layer_1 = std::make_shared<EWLayer>("sigmoid");
+  std::shared_ptr<Layer> layer_2 =
+      std::make_shared<BinaryOpLayer>(BinaryOpLayer::Operation::kMul);
+  subgraph.setInput(layer_0, input);
+  subgraph.makeConnection(layer_0, layer_1);
+  subgraph.makeConnection(layer_1, layer_2);
+  subgraph.makeConnection(layer_0, layer_2);
+  std::shared_ptr<Layer> layer_to = std::make_shared<ConvSigmMulLayer>(
+      std::dynamic_pointer_cast<ConvolutionalLayer>(layer_0));
+  changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
+}
+
+void alexnet_comparison(int type = 3, int whoonly = 3) {
   if (type == 0) {
-    Tensor input = make_tensor(std::vector<float>(3 * 224 * 224, 200.0F),
-                               Shape({1, 3, 224, 224}));
-    Tensor output = make_tensor(std::vector<int>({0}));
+    Tensor input =
+        prepare_image(cv::imread(IMAGENET_PATH + std::string("1.png")),
+                      get_input_shape_from_json(MODEL_PATH_DENSENET_ONNX));
+    Tensor output = make_tensor(std::vector<float>({0.0F}));
     Tensor input_c = input;
-    Tensor output_c = make_tensor(std::vector<int>({0}));
+    Tensor output_c = make_tensor(std::vector<float>({0.0F}));
     RuntimeOptions options;
     Graph graph;
     Graph graph2;
-    build_graph(graph, input, input, MODEL_PATH_DENSENET_ONNX, options, false);
+    build_graph(graph, input, output, MODEL_PATH_DENSENET_ONNX, options, false);
     Graph subgraph;
     Tensor scale = make_tensor(std::vector<float>({1.0F}));
     std::shared_ptr<Layer> layer_0 =
@@ -142,20 +180,27 @@ void alexnet_comparison(int type = 3) {
     subgraph.makeConnection(layer_3, layer_4);
     std::shared_ptr<Layer> layer_to = std::make_shared<DenseNetPath>();
     changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
-    auto time1 = elapsed_time_avg<double, std::milli>(
-        10, alexnet_inf_careless, graph, options, input_c, output_c);
-    print_time_stats(graph);
-    auto time2 = elapsed_time_avg<double, std::milli>(
-        10, alexnet_inf_careless, graph2, options, input_c, output_c);
-    print_time_stats(graph2);
+    double time1 = 0.0;
+    double time2 = 0.0;
+    if (whoonly == 1 || whoonly == 3) {
+      time1 = elapsed_time_avg<double, std::milli>(
+          10, alexnet_inf_careless, graph, options, input_c, output_c);
+      print_time_stats(graph);
+    }
+    if (whoonly == 2 || whoonly == 3) {
+      time2 = elapsed_time_avg<double, std::milli>(
+          10, alexnet_inf_careless, graph2, options, input_c, output_c);
+      print_time_stats(graph2);
+    }
     std::cout << time1 << " for unchanged graph\n";
     std::cout << time2 << " for convrelu graph\n";
   } else if (type == 2) {
-    Tensor input = make_tensor(std::vector<float>(3 * 224 * 224, 200.0F),
-                               Shape({1, 3, 224, 224}));
-    Tensor output = make_tensor(std::vector<int>({0}));
+    Tensor input = prepare_image(
+        cv::imread(IMAGENET_PATH + std::string("1.png")),
+        get_input_shape_from_json(MODEL_PATH_GOOGLENET_ONNX), "google");
+    Tensor output = make_tensor(std::vector<float>({0.0F}));
     Tensor input_c = input;
-    Tensor output_c = make_tensor(std::vector<int>({0}));
+    Tensor output_c = make_tensor(std::vector<float>({0.0F}));
     RuntimeOptions options;
     Graph graph;
     Graph graph2;
@@ -168,12 +213,18 @@ void alexnet_comparison(int type = 3) {
     std::shared_ptr<Layer> layer_to = std::make_shared<ConvReluLayer>(
         std::dynamic_pointer_cast<ConvolutionalLayer>(layer_0));
     changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
-    auto time1 = elapsed_time_avg<double, std::milli>(
-        10, alexnet_inf_careless, graph, options, input_c, output_c);
-    print_time_stats(graph);
-    auto time2 = elapsed_time_avg<double, std::milli>(
-        10, alexnet_inf_careless, graph2, options, input_c, output_c);
-    print_time_stats(graph2);
+    double time1 = 0.0;
+    double time2 = 0.0;
+    if (whoonly == 1 || whoonly == 3) {
+      time1 = elapsed_time_avg<double, std::milli>(
+          10, alexnet_inf_careless, graph, options, input_c, output_c);
+      print_time_stats(graph);
+    }
+    if (whoonly == 2 || whoonly == 3) {
+      time2 = elapsed_time_avg<double, std::milli>(
+          10, alexnet_inf_careless, graph2, options, input_c, output_c);
+      print_time_stats(graph2);
+    }
     std::cout << time1 << " for unchanged graph\n";
     std::cout << time2 << " for convrelu graph\n";
   } else if (type == 3) {
@@ -210,20 +261,27 @@ void alexnet_comparison(int type = 3) {
     changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
     Tensor input_c = input;
     Tensor output_c = output;
-    auto time1 = elapsed_time_avg<double, std::milli>(
-        2, alexnet_inf_careless, graph, options, input_c, output_c);
-    print_time_stats(graph);
-    auto time2 = elapsed_time_avg<double, std::milli>(
-        2, alexnet_inf_careless, graph2, options, input_c, output_c);
-    print_time_stats(graph2);
+    double time1 = 0.0;
+    double time2 = 0.0;
+    if (whoonly == 1 || whoonly == 3) {
+      time1 = elapsed_time_avg<double, std::milli>(
+          10, alexnet_inf_careless, graph, options, input_c, output_c);
+      print_time_stats(graph);
+    }
+    if (whoonly == 2 || whoonly == 3) {
+      time2 = elapsed_time_avg<double, std::milli>(
+          10, alexnet_inf_careless, graph2, options, input_c, output_c);
+      print_time_stats(graph2);
+    }
     std::cout << time1 << " for unchanged graph\n";
     std::cout << time2 << " for convrelu graph\n";
   } else if (type == 4) {
-    Tensor input = make_tensor(std::vector<float>(3 * 224 * 224, 200.0F),
-                               Shape({1, 3, 224, 224}));
-    Tensor output = make_tensor(std::vector<int>({0}));
+    Tensor input = prepare_image(
+        cv::imread(IMAGENET_PATH + std::string("1.png")),
+        get_input_shape_from_json(MODEL_PATH_YOLO11NET_ONNX), "yolo");
+    Tensor output = make_tensor(std::vector<float>({0.0F}));
     Tensor input_c = input;
-    Tensor output_c = make_tensor(std::vector<int>({0}));
+    Tensor output_c = make_tensor(std::vector<float>({0.0F}));
     RuntimeOptions options;
     Graph graph;
     Graph graph2;
@@ -231,19 +289,35 @@ void alexnet_comparison(int type = 3) {
     Graph subgraph;
     std::shared_ptr<Layer> layer_0 = std::make_shared<ConvolutionalLayer>();
     std::shared_ptr<Layer> layer_1 = std::make_shared<EWLayer>("sigmoid");
-    subgraph.setInput(layer_0, input);
+    //std::shared_ptr<Layer> layer_2 =
+    //    std::make_shared<BinaryOpLayer>(BinaryOpLayer::Operation::kMul);
+    //subgraph.setInput(layer_0, input);
     subgraph.makeConnection(layer_0, layer_1);
+    //subgraph.makeConnection(layer_1, layer_2);
+    //subgraph.makeConnection(layer_0, layer_2);
     std::shared_ptr<Layer> layer_to = std::make_shared<ConvReluLayer>(
-        std::dynamic_pointer_cast<ConvolutionalLayer>(layer_0)); // changes results, test purpose
+        std::dynamic_pointer_cast<ConvolutionalLayer>(layer_0));
     changed_subgraphs(graph, subgraph, layer_to, graph2, input, options);
-    auto time1 = elapsed_time_avg<double, std::milli>(
-        10, alexnet_inf_careless, graph, options, input_c, output_c);
-    print_time_stats(graph);
-    auto time2 = elapsed_time_avg<double, std::milli>(
-        10, alexnet_inf_careless, graph2, options, input_c, output_c);
-    print_time_stats(graph2);
+    print_split_dist(graph);
+    print_split_dist(graph2);
+    double time1 = 0.0;
+    double time2 = 0.0;
+    try {
+      if (whoonly == 1 || whoonly == 3) {
+        time1 = elapsed_time_avg<double, std::milli>(
+            5, alexnet_inf_careless, graph, options, input_c, output_c);
+        print_time_stats(graph);
+      }
+      if (whoonly == 2 || whoonly == 3) {
+        time2 = elapsed_time_avg<double, std::milli>(
+            5, alexnet_inf_careless, graph2, options, input_c, output_c);
+        print_time_stats(graph2);
+      }
+    } catch (std::exception& e) {
+      std::cout << e.what();
+    }
     std::cout << time1 << " for unchanged graph\n";
-    std::cout << time2 << " for convrelu graph\n";
+    std::cout << time2 << " for convsigmmul graph\n";
   }
 }
 
@@ -252,10 +326,15 @@ int main(int argc, char* argv[]) {
   if (argc > 1) {
     argv;
   }
-  int type;
-  int type2;
-  std::cout << "Type of network (0 - densenet, 1 - resnet, 2 - googlenet, 3 - alexnet, 4 - yolo): ";
+  int type = 1;
+  int type2 = 2;
+  int whoonly = 3;
+  std::cout << "Type of network (1 - densenet, 2 - resnet, 3 - googlenet, 4 - alexnet, 5 - yolo): ";
   std::cin >> type;
+  type--;
+  std::cout << "Type of analyze (1 - unchanged graph only, 2 - changed graph "
+               "only, 3 - both): ";
+  std::cin >> whoonly;
   std::cout << "(1) Test subgraph search algorithm\n";
   if (type != 1) {
     std::cout
@@ -266,26 +345,28 @@ int main(int argc, char* argv[]) {
         << "(3) Compare memory usage for unchanged and changed subgraphs\n";
   }
   std::cin >> type2;
-  Tensor input = make_tensor(std::vector<int>({0}));
+  Tensor input = make_tensor(std::vector<float>({0.0F}));
   RuntimeOptions options;
   if (type2 == 2) {
-    alexnet_comparison(type);
+    alexnet_comparison(type, whoonly);
   }
   if (type2 == 3 && type >= 2) {
     Graph graph;
-    if (type == 2) {
+    if (type == 2 || type == 4) {
       create_def_graph_gn(graph);
     } else if (type == 3) {
       create_def_graph(graph);
-    } else if (type == 4) {
+    } /*else if (type == 4) {
       create_def_graph_yolo(graph);
-    }
+    }*/
     std::cout << "End of graph creation: def\n";
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    if (type == 2 || type == 4) {
+    if (type == 2) {
       create_changed_graph_gn(graph);
     } else if (type == 3) {
       create_changed_graph(graph);
+    } else if (type == 4) {
+      create_changed_graph_yolo(graph);
     }
     std::cout << "End of graph creation: changed\n";
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
@@ -335,7 +416,7 @@ int main(int argc, char* argv[]) {
         }
         std::cout << '\n';
       }
-      std::cout << "Time for DenseNet BN -> ReLU -> Conv -> ReLU -> Conv:" << time << '\n';
+      std::cout << "Time for DenseNet BN -> ReLU -> Conv -> ReLU -> Conv: " << time << '\n';
 
       for (int i = 0; i < vec2.size(); i++) {
         std::cout << i + 1 << ") ";
@@ -344,7 +425,7 @@ int main(int argc, char* argv[]) {
         }
         std::cout << '\n';
       }
-      std::cout << "Time for DenseNet Concat with Pool and Conv:" << time2 << '\n';
+      std::cout << "Time for DenseNet Concat with Pool and Conv: " << time2 << '\n';
     } else if (type == 1) {
       Graph graph1;
       build_graph(graph1, input, input, MODEL_PATH_RESNET_ONNX, options, false);
@@ -372,7 +453,7 @@ int main(int argc, char* argv[]) {
         }
         std::cout << '\n';
       }
-      std::cout << "Time for ResNet Transpose -> SoftMax -> Reshape -> Reshape -> Reshape:" << time << '\n';
+      std::cout << "Time for ResNet Transpose -> SoftMax -> Reshape -> Reshape -> Reshape: " << time << '\n';
     } else if (type == 2) {
       Graph graph1;
       build_graph(graph1, input, input, MODEL_PATH_GOOGLENET_ONNX, options,
@@ -407,7 +488,7 @@ int main(int argc, char* argv[]) {
         }
         std::cout << '\n';
       }
-      std::cout << "Time for GoogleNet Big concat:" << time << '\n';
+      std::cout << "Time for GoogleNet Big concat: " << time << '\n';
     } else if (type == 3) {
       Graph graph1;
       std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
@@ -415,7 +496,6 @@ int main(int argc, char* argv[]) {
       size_t sum = std::accumulate(counts.begin(), counts.end(), size_t{0});
       int count_pic = static_cast<int>(sum) + 10;
       std::vector<float> res(count_pic * 28 * 28, 1.0F);
-      Tensor input;
       Shape sh1({1, 5, 5, 3});
       std::vector<float> vec;
       vec.reserve(75);
@@ -427,8 +507,6 @@ int main(int argc, char* argv[]) {
       Shape sh({static_cast<size_t>(count_pic), 1, 28, 28});
       Tensor t = make_tensor<float>(res, sh);
       input = t;
-
-      RuntimeOptions options;
       build_graph_linear(graph1, input, output, options, false, false);
       Graph subgraph;
       std::shared_ptr<Layer> layer_0 = std::make_shared<ConvolutionalLayer>();
@@ -446,7 +524,7 @@ int main(int argc, char* argv[]) {
         }
         std::cout << '\n';
       }
-      std::cout << "Time for AlexNet Conv -> ReLU:" << time << '\n';
+      std::cout << "Time for AlexNet Conv -> ReLU: " << time << '\n';
     } else if (type == 4) {
       Graph graph1;
       build_graph(graph1, input, input, MODEL_PATH_YOLO11NET_ONNX, options,
@@ -455,8 +533,12 @@ int main(int argc, char* argv[]) {
       Graph subgraph;
       std::shared_ptr<Layer> layer_0 = std::make_shared<ConvolutionalLayer>();
       std::shared_ptr<Layer> layer_1 = std::make_shared<EWLayer>("sigmoid");
+      std::shared_ptr<Layer> layer_2 =
+          std::make_shared<BinaryOpLayer>(BinaryOpLayer::Operation::kMul);
       subgraph.setInput(layer_0, input);
       subgraph.makeConnection(layer_0, layer_1);
+      subgraph.makeConnection(layer_1, layer_2);
+      subgraph.makeConnection(layer_0, layer_2);
 
       auto vec = find_subgraphs(graph1, subgraph);
 
@@ -469,7 +551,7 @@ int main(int argc, char* argv[]) {
         }
         std::cout << '\n';
       }
-      std::cout << "Time for YoloNet Conv -> Sigmoid:" << time << '\n';
+      std::cout << "Time for YoloNet (Conv -> Sigmoid, Conv) -> Mul: " << time << '\n';
     }
   }
   std::string temp;

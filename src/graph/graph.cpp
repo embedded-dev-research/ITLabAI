@@ -31,7 +31,7 @@ void Graph::clone(Graph& result, Tensor& out,
   result.arrayE_ = this->arrayE_;
   result.arrayV_ = this->arrayV_;
   result.BiggestSize_ = this->BiggestSize_;
-  result.branch_map_ = this->branch_map_;
+  result.branch_map_ = std::unordered_map<int, BranchState>();
   result.count_used_split_distribution_ = this->count_used_split_distribution_;
   result.end_ = this->end_;
   result.inten_ = this->inten_;

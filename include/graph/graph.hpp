@@ -34,7 +34,8 @@ static std::unordered_map<LayerType, std::string> label_map = {
     {kReduce, "Reduce"},
     {kBatchNormalization, "Normalization"},
     {kConvRelu, "ConvRelu"},
-    {kDenseNetPath, "DenseNetPath"}};
+    {kDenseNetPath, "DenseNetPath"},
+    {kConvSigmMul, "ConvSigmMul"}};
 
 struct LayerTimeStats {
   std::string layer_name;
@@ -111,6 +112,14 @@ class Graph {
   void setSplitDistribution(
       std::vector<std::vector<std::pair<int, int>>> split_dist) {
     split_distribution_ = std::move(split_dist);
+  }
+
+  std::vector<std::vector<std::pair<int, int>>> getSplitDistribution() const {
+    return split_distribution_;
+  }
+
+  void addForSplit(int splitID, int id, int splitNum) {
+    split_distribution_[splitID].push_back(std::make_pair(id, splitNum));
   }
 
   [[nodiscard]] size_t getInputsSize(size_t layerID) const {
@@ -293,6 +302,23 @@ class Graph {
     for (size_t i = id + 1; i < layers_.size(); i++) {
       layers_[i]->setID(layers_[i]->getID() - 1);
     }
+    if (id < end_) {
+      end_--;
+    }
+    if (id < start_) {
+      start_--;
+    }
+    for (auto& i : split_distribution_) {
+      for (int j = 0; j < i.size(); j++) {
+        if (i[j].first > id) {
+          i[j].first--;
+        }
+        if (i[j].first == id) {
+          i.erase(i.begin() + j);
+          j--;
+        }
+      }
+    }
     layers_[id]->setID(-1);
     layers_.erase(layers_.begin() + id);
     V_--;
@@ -443,6 +469,15 @@ class Graph {
       throw std::invalid_argument("Layer cannot be null");
     }
     end_ = layer->getID();
+    outtenres_ = &vec;
+    if (outten_.empty()) {
+      std::vector<int> vec1 = {1, 7, 1, 0};
+      Tensor start = make_tensor(vec1);
+      outten_.push_back(start);
+    }
+  }
+
+  void setOutput(Tensor& vec) {
     outtenres_ = &vec;
     if (outten_.empty()) {
       std::vector<int> vec1 = {1, 7, 1, 0};

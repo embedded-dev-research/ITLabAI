@@ -7,6 +7,7 @@
 #include "layers/EWLayer.hpp"
 #include "layers/Layer.hpp"
 #include "layers_fused/ConvRelu.hpp"
+#include "layers_fused/ConvSigmMul.hpp"
 #include "layers_fused/DenseNetPath.hpp"
 #include "perf/benchmarking.hpp"
 

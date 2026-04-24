@@ -36,7 +36,8 @@ enum LayerType : uint8_t {
   kMatmul,
   kBatchNormalization,
   kConvRelu,
-  kDenseNetPath
+  kDenseNetPath,
+  kConvSigmMul
 };
 
 enum ImplType : uint8_t { kDefault, kTBB, kSTL };
