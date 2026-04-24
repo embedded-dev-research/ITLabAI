@@ -1,6 +1,7 @@
 #pragma once
 
 #include <dnnl.hpp>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
