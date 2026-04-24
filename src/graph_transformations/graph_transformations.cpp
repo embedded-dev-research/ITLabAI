@@ -45,8 +45,9 @@ void fill_possible_assignments(
     std::vector<std::vector<int>>& possible_assignments) {
   possible_assignments.assign(subgraph.getLayersCount(), std::vector<int>());
   for (size_t i = 0; i < possible_assignments.size(); i++) {
-    for (size_t j = 0; j < graph.getLayersCount(); j++) {
-      if (graph.getOutputsSize(j) < subgraph.getOutputsSize(i) || graph.getInputsSize(j) < subgraph.getInputsSize(i)) {
+    for (size_t j = 0; j < static_cast<size_t>(graph.getLayersCount()); j++) {
+      if (graph.getOutputsSize(j) < subgraph.getOutputsSize(i) ||
+          graph.getInputsSize(j) < subgraph.getInputsSize(i)) {
         continue;
       }
       possible_assignments[i].push_back(static_cast<int>(j));
@@ -449,7 +450,7 @@ void changed_subgraphs(const Graph& graph, const Graph& subgraph_from,
     for (int j : leaves_outs_final) {
       new_graph.makeConnection(layer, new_graph.getLayerFromID(j));
     }
-    for (int j = 0; j < split_vec.size(); j++) {
+    for (size_t j = 0; j < split_vec.size(); j++) {
       new_graph.addForSplit(split_vec[j].first, layer->getID(),
                             split_vec[j].second);
     }
