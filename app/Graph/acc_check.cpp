@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
           batch_size = 1;
         }
       } catch (const std::exception&) {
-        std::cerr << "Error: Invalid batch size: " << argv[i] 
+        std::cerr << "Error: Invalid batch size: " << argv[i]
                   << ". Using default value: 32\n";
         batch_size = 32;
       }
@@ -96,7 +96,6 @@ int main(int argc, char* argv[]) {
 
   std::string json_path = model_paths[model_name];
   std::vector<int> input_shape = get_input_shape_from_json(json_path);
-
 
   if (model_name == "alexnet_mnist") {
     std::vector<size_t> counts = {979, 1134, 1031, 1009, 981,
