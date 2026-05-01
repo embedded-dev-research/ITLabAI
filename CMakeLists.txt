@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(ITLabAI)
 
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+option(ITLABAI_ENABLE_SYCL "Build SYCL example and helper targets" OFF)
 
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
 
@@ -83,4 +84,7 @@ endforeach()
 add_subdirectory(app)
 add_subdirectory(include)
 add_subdirectory(src)
+if(ITLABAI_ENABLE_SYCL)
+    add_subdirectory(app/SYCL)
+endif()
 add_subdirectory(test)

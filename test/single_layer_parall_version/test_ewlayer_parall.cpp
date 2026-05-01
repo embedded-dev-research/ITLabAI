@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
+#include "parallel_backends.hpp"
 
 #define ENABLE_TIMING_OUTPUT 1
 
@@ -26,9 +27,7 @@ TEST(ewlayer_parall, parallel_for_ew_relu) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     RuntimeOptions options;
@@ -55,9 +54,7 @@ TEST(ewlayer_parall, parallel_for_sigmoid) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     RuntimeOptions options;
@@ -84,9 +81,7 @@ TEST(ewlayer_parall, parallel_for_minus) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     RuntimeOptions options;
@@ -113,9 +108,7 @@ TEST(ewlayer_parall, parallel_for_linear) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     RuntimeOptions options;
@@ -205,6 +198,20 @@ TEST(ewlayer_parall, parallel_for_direct) {
   for (int i = 0; i < SIZE * SIZE; i++) {
     ASSERT_EQ(result[i], 2);
   }
+
+#ifdef ITLABAI_HAS_SYCL
+  start = std::chrono::high_resolution_clock::now();
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + matrix2[i];
+  }, ParBackend::kSycl);
+  end = std::chrono::high_resolution_clock::now();
+  total_duration =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  PRINT_TIMING(" time: " << total_duration.count() << " ms");
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
+#endif
 }
 
 TEST(ewlayer_parall, parallel_for_notmatrix) {
@@ -277,4 +284,18 @@ TEST(ewlayer_parall, parallel_for_notmatrix) {
   for (int i = 0; i < SIZE * SIZE; i++) {
     ASSERT_EQ(result[i], 2);
   }
+
+#ifdef ITLABAI_HAS_SYCL
+  start = std::chrono::high_resolution_clock::now();
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + 1;
+  }, ParBackend::kSycl);
+  end = std::chrono::high_resolution_clock::now();
+  total_duration =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  PRINT_TIMING(" time: " << total_duration.count() << " ms");
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
+#endif
 }

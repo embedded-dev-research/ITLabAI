@@ -2,6 +2,7 @@
 
 #include "fixture.hpp"
 #include "layers/ConvLayer.hpp"
+#include "parallel_backends.hpp"
 
 using namespace it_lab_ai;
 
@@ -1282,28 +1283,14 @@ INSTANTIATE_TEST_SUITE_P(
                            .output_shape = {1, 3, 2, 2},
                            .expected_output = std::vector<float>(12, 5.0f),
                            .description = "2D_Kernel_Stride_2"}),
-        ::testing::Values(ConvTestFixture::setTBBOptions(),
-                          ConvTestFixture::setOmpOptions(),
-                          ConvTestFixture::setSeqOptions(),
-                          ConvTestFixture::setSTLOptions(),
-                          ConvTestFixture::setKokkosOptions())),
+        ::testing::ValuesIn(test_support::all_parallel_options())),
     [](const ::testing::TestParamInfo<
         std::tuple<ConvTestParams, RuntimeOptions>>& info) {
       const auto& params = std::get<0>(info.param);
       const auto& options = std::get<1>(info.param);
 
       std::string name = params.description + "_";
-      if (options.par_backend == ParBackend::kTbb) {
-        name += "TBB";
-      } else if (options.par_backend == ParBackend::kOmp) {
-        name += "OMP";
-      } else if (options.par_backend == ParBackend::kThreads) {
-        name += "STL";
-      } else if (options.par_backend == ParBackend::kKokkos) {
-        name += "Kokkos";
-      } else {
-        name += "Seq";
-      }
+      name += test_support::parallel_backend_name(options.par_backend);
 
       std::replace(name.begin(), name.end(), ' ', '_');
       std::replace(name.begin(), name.end(), '-', '_');

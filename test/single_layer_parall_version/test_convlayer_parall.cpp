@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "layers/ConvLayer.hpp"
+#include "parallel_backends.hpp"
 
 #define ENABLE_TIMING_OUTPUT 1
 
@@ -37,9 +38,7 @@ TEST(convlayer_parall, parallel_conv_basic) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     RuntimeOptions options;
@@ -79,9 +78,7 @@ TEST(convlayer_parall, parallel_conv_stride2) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     RuntimeOptions options;
@@ -123,9 +120,7 @@ TEST(convlayer_parall, parallel_depthwise_conv) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     RuntimeOptions options;
@@ -169,9 +164,7 @@ TEST(convlayer_parall, parallel_conv_with_bias) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     RuntimeOptions options;
@@ -213,9 +206,7 @@ TEST(convlayer_parall, parallel_conv_large_kernel) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     RuntimeOptions options;
@@ -255,9 +246,7 @@ TEST(convlayer_parall, parallel_conv_single_image) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     RuntimeOptions options;

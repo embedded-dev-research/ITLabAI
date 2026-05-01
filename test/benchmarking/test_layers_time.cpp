@@ -44,6 +44,15 @@ TEST(pooling_test, is_pooling_tbb_ok) {
   double count2 = elapsed_time<double, std::milli>(test_func, p2, input, output,
                                                    options_tbb);
   std::cout << count1 << " vs. " << count2 << " (parallel)\n";
+
+#ifdef ITLABAI_HAS_SYCL
+  RuntimeOptions options_sycl;
+  options_sycl.par_backend = ParBackend::kSycl;
+  PoolingLayer p3(Shape({2, 2}), "max");
+  double count3 = elapsed_time<double, std::milli>(test_func, p3, input, output,
+                                                   options_sycl);
+  std::cout << count1 << " vs. " << count3 << " (sycl)\n";
+#endif
 }
 
 TEST(conv_test, is_conv_stl_ok) {
@@ -79,4 +88,13 @@ TEST(conv_test, is_conv_stl_ok) {
   double count2 = elapsed_time<double, std::milli>(test_func, p2, input, output,
                                                    options_stl);
   std::cout << count1 << " vs. " << count2 << " (parallel)\n";
+
+#ifdef ITLABAI_HAS_SYCL
+  RuntimeOptions options_sycl;
+  options_sycl.par_backend = ParBackend::kSycl;
+  ConvolutionalLayer p3(1, 1, 2, kernel);
+  double count3 = elapsed_time<double, std::milli>(test_func, p3, input, output,
+                                                   options_sycl);
+  std::cout << count1 << " vs. " << count3 << " (sycl)\n";
+#endif
 }

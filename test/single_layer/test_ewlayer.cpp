@@ -6,6 +6,7 @@
 #include "fixture.hpp"
 #include "gtest/gtest.h"
 #include "layers/EWLayer.hpp"
+#include "parallel_backends.hpp"
 
 using namespace it_lab_ai;
 
@@ -229,8 +230,7 @@ TEST_F(EWLayerTest_F, parallel_for_ew) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     auto options = createOptionsWithBackend(backend);
@@ -256,11 +256,10 @@ TEST(ewlayer, parallel_for_ew_sigmoid_compact) {
   std::vector<Tensor> in{input};
   std::vector<Tensor> out{output};
 
-  std::vector<std::pair<ParBackend, std::string>> backends = {
-      {ParBackend::kSeq, "Sequential"},
-      {ParBackend::kThreads, "Threads"},
-      {ParBackend::kTbb, "TBB"},
-      {ParBackend::kOmp, "OpenMP"}};
+  std::vector<std::pair<ParBackend, std::string>> backends;
+  for (auto backend : test_support::all_parallel_backends()) {
+    backends.emplace_back(backend, test_support::parallel_backend_name(backend));
+  }
 
   std::vector<int> reference_result;
   bool first = true;
@@ -354,6 +353,19 @@ TEST(ewlayer, parallel_for_direct) {
   for (int i = 0; i < SIZE * SIZE; i++) {
     ASSERT_EQ(result[i], 2);
   }
+
+#ifdef ITLABAI_HAS_SYCL
+  start = std::chrono::high_resolution_clock::now();
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + matrix2[i];
+  }, ParBackend::kSycl);
+  end = std::chrono::high_resolution_clock::now();
+  total_duration =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
+#endif
 }
 
 TEST(ewlayer, parallel_for_notmatrix) {
@@ -410,6 +422,19 @@ TEST(ewlayer, parallel_for_notmatrix) {
   for (int i = 0; i < SIZE * SIZE; i++) {
     ASSERT_EQ(result[i], 2);
   }
+
+#ifdef ITLABAI_HAS_SYCL
+  start = std::chrono::high_resolution_clock::now();
+  parallel::parallel_for(SIZE * SIZE, [&](std::size_t i) {
+    result[i] = matrix1[i] + 1;
+  }, ParBackend::kSycl);
+  end = std::chrono::high_resolution_clock::now();
+  total_duration =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  for (int i = 0; i < SIZE * SIZE; i++) {
+    ASSERT_EQ(result[i], 2);
+  }
+#endif
 }
 
 struct EWLayerTestParams {
@@ -503,28 +528,14 @@ INSTANTIATE_TEST_SUITE_P(
                 {9.0f, 0.0f, 7.0f, 0.0f, 0.0f, 4.0f, 0.0f, 2.0f, 2.0f, 0.0f,
                  4.0f, 0.0f, 6.0f, 0.0f, 8.0f, 0.0f},
                 "ReLU_2D_Mixed"}),
-        ::testing::Values(BaseTestFixture::setTBBOptions(),
-                          BaseTestFixture::setSeqOptions(),
-                          BaseTestFixture::setOmpOptions(),
-                          BaseTestFixture::setKokkosOptions(),
-                          BaseTestFixture::setSTLOptions())),
+        ::testing::ValuesIn(test_support::all_parallel_options())),
     [](const ::testing::TestParamInfo<
         std::tuple<EWLayerTestParams, RuntimeOptions>>& info) {
       const auto& params = std::get<0>(info.param);
       const auto& options = std::get<1>(info.param);
 
       std::string name = params.description + "_";
-      if (options.par_backend == ParBackend::kTbb) {
-        name += "TBB";
-      } else if (options.par_backend == ParBackend::kThreads) {
-        name += "STL";
-      } else if (options.par_backend == ParBackend::kOmp) {
-        name += "OMP";
-      } else if (options.par_backend == ParBackend::kKokkos) {
-        name += "Kokkos";
-      } else {
-        name += "Seq";
-      }
+      name += test_support::parallel_backend_name(options.par_backend);
 
       std::replace(name.begin(), name.end(), ' ', '_');
       std::replace(name.begin(), name.end(), '-', '_');
