@@ -1,7 +1,11 @@
-#include <string>
+#ifdef ITLABAI_HAS_SYCL
 
-#include "parallel/parallel.hpp"
+#  include <string>
+
+#  include "parallel/parallel.hpp"
 
 std::string sycl_device_name() {
   return it_lab_ai::parallel::sycl_device_name();
 }
+
+#endif

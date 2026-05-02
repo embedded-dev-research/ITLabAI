@@ -3,7 +3,7 @@
 
 #ifdef ITLABAI_HAS_SYCL
 
-#include <vector>
+#  include <vector>
 
 namespace it_lab_ai {
 namespace {
@@ -12,12 +12,9 @@ TEST(sycl_parallel, parallel_for_writes_expected_values) {
   constexpr std::size_t kSize = 1024;
   std::vector<int> values(kSize, 0);
 
-  parallel::parallel_for(
-      kSize,
-      [&](std::size_t i) {
-        values[i] = static_cast<int>(i * 2);
-      },
-      parallel::Backend::kSycl);
+  parallel::parallel_for(kSize, [&](std::size_t i) {
+    values[i] = static_cast<int>(i * 2);
+  }, parallel::Backend::kSycl);
 
   for (std::size_t i = 0; i < values.size(); ++i) {
     EXPECT_EQ(values[i], static_cast<int>(i * 2));

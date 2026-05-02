@@ -258,7 +258,8 @@ TEST(ewlayer, parallel_for_ew_sigmoid_compact) {
 
   std::vector<std::pair<ParBackend, std::string>> backends;
   for (auto backend : test_support::all_parallel_backends()) {
-    backends.emplace_back(backend, test_support::parallel_backend_name(backend));
+    backends.emplace_back(backend,
+                          test_support::parallel_backend_name(backend));
   }
 
   std::vector<int> reference_result;
