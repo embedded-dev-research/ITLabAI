@@ -6,8 +6,7 @@ target_link_libraries(layers_lib PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(layers_lib PUBLIC dnnl)
 target_link_libraries(layers_lib PUBLIC Kokkos_imported)
 
-if(ITLABAI_ENABLE_SYCL)
-    find_package(AdaptiveCpp CONFIG REQUIRED)
+if(TARGET AdaptiveCpp::acpp-rt)
     target_compile_definitions(layers_lib PUBLIC ITLABAI_HAS_SYCL)
     if(WIN32)
         target_compile_definitions(layers_lib PUBLIC

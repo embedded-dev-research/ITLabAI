@@ -123,7 +123,6 @@ jobs:
           -DCMAKE_CXX_COMPILER="${ITLABAI_CXX}" \
           -DCMAKE_PREFIX_PATH="${ITLABAI_CMAKE_PREFIX_PATH}" \
           -DOpenMP_ROOT="${ITLABAI_OPENMP_ROOT}" \
-          -DITLABAI_ENABLE_SYCL=ON \
           -DACPP_TARGETS="${ACPP_TARGETS}" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -137,7 +136,6 @@ jobs:
           "-DCMAKE_C_COMPILER=$env:ITLABAI_CC" `
           "-DCMAKE_CXX_COMPILER=$env:ITLABAI_CXX" `
           "-DCMAKE_PREFIX_PATH=$env:ITLABAI_CMAKE_PREFIX_PATH" `
-          "-DITLABAI_ENABLE_SYCL=ON" `
           "-DACPP_TARGETS=$env:ACPP_TARGETS" `
           "-DACPP_CPU_CXX=$env:ITLABAI_ACPP_CPU_CXX" `
           -DCMAKE_C_COMPILER_LAUNCHER=ccache `

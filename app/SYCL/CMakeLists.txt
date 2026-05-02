@@ -1,5 +1,3 @@
-find_package(AdaptiveCpp CONFIG REQUIRED)
-
 add_executable(SYCL_Example
     sycl_example.cpp
 )

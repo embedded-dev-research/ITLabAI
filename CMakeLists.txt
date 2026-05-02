@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.20)
 project(ITLabAI)
 
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
-option(ITLABAI_ENABLE_SYCL "Build SYCL example and helper targets" OFF)
 
 option(ENABLE_STATISTIC_TENSORS "Enable statistic tensors" OFF)
 
@@ -40,6 +39,11 @@ endif()
 include_directories("include")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+find_package(AdaptiveCpp CONFIG QUIET)
+if(TARGET AdaptiveCpp::acpp-rt)
+    message(STATUS "AdaptiveCpp found - enabling SYCL parallel support")
+endif()
 
 add_subdirectory(3rdparty)
 
@@ -84,7 +88,7 @@ endforeach()
 add_subdirectory(app)
 add_subdirectory(include)
 add_subdirectory(src)
-if(ITLABAI_ENABLE_SYCL)
+if(TARGET AdaptiveCpp::acpp-rt)
     add_subdirectory(app/SYCL)
 endif()
 add_subdirectory(test)
