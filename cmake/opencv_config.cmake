@@ -1,6 +1,11 @@
 set(OPENCV_BUILD_DIR "${CMAKE_BINARY_DIR}/3rdparty/opencv_build")
 file(MAKE_DIRECTORY "${OPENCV_BUILD_DIR}")
 
+set(OPENCV_SYCL_TOOLCHAIN_ARGS)
+if(TARGET AdaptiveCpp::acpp-rt AND MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    list(APPEND OPENCV_SYCL_TOOLCHAIN_ARGS -DWITH_WEBP=OFF)
+endif()
+
 execute_process(
     COMMAND ${CMAKE_COMMAND} 
         -S "${CMAKE_SOURCE_DIR}/3rdparty/opencv" 
@@ -14,6 +19,7 @@ execute_process(
         -DBUILD_TESTS=OFF 
         -DBUILD_opencv_apps=OFF
         -DBUILD_JAVA=OFF
+        ${OPENCV_SYCL_TOOLCHAIN_ARGS}
     WORKING_DIRECTORY "${OPENCV_BUILD_DIR}"
 )
 
