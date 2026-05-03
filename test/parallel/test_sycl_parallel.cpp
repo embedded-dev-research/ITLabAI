@@ -1,13 +1,16 @@
+#include <stdexcept>
+
 #include "gtest/gtest.h"
 #include "parallel/parallel.hpp"
 
 #ifdef ITLABAI_HAS_SYCL
-
 #  include <vector>
+#endif
 
 namespace it_lab_ai {
 namespace {
 
+#ifdef ITLABAI_HAS_SYCL
 TEST(sycl_parallel, parallel_for_writes_expected_values) {
   constexpr std::size_t kSize = 1024;
   std::vector<int> values(kSize, 0);
@@ -25,7 +28,15 @@ TEST(sycl_parallel, reports_selected_device) {
   EXPECT_FALSE(parallel::sycl_device_name().empty());
 }
 
-}  // namespace
-}  // namespace it_lab_ai
+#else
+
+TEST(sycl_parallel, throws_when_backend_is_unavailable) {
+  EXPECT_THROW(parallel::parallel_for(1024, [](std::size_t) {},
+                                      parallel::Backend::kSycl),
+               std::runtime_error);
+}
 
 #endif
+
+}  // namespace
+}  // namespace it_lab_ai

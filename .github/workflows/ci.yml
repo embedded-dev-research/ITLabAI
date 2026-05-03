@@ -2,8 +2,6 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
   pull_request:
   schedule:
     - cron: '0 8 * * *'
@@ -228,6 +226,8 @@ jobs:
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
+        files: coverage.xml
+        fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: embedded-dev-research/ITLabAI
         

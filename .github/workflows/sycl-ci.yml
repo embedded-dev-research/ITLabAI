@@ -147,3 +147,74 @@ jobs:
 
     - name: Test
       run: ctest --test-dir "build/${{ matrix.build_type }}" --output-on-failure -R '^(UnitTests|SYCL\.Example)$'
+
+  codecov-sycl:
+    name: codecov sycl
+    needs: prepare-sycl-toolchain
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ccache-${{ github.job }}-linux-x86_64
+        max-size: 4G
+
+    - name: Restore AdaptiveCpp toolchain cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ${{ runner.temp }}/AdaptiveCpp
+          ${{ runner.temp }}/AdaptiveCpp-build
+          ${{ runner.temp }}/adaptivecpp-install
+          ${{ runner.temp }}/archives
+        key: sycl-toolchain-linux-x86_64-${{ env.ADAPTIVECPP_TAG }}-${{ env.ADAPTIVECPP_CACHE_VERSION }}
+        fail-on-cache-miss: true
+
+    - name: Setup SYCL toolchain
+      uses: ./.github/actions/setup-sycl-toolchain
+      with:
+        phase: build
+
+    - name: Install coverage tools
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y gcovr
+
+    - name: Configure
+      shell: bash
+      run: |
+        cmake -S . -B build/sycl-coverage -G Ninja \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_C_COMPILER="${ITLABAI_CC}" \
+          -DCMAKE_CXX_COMPILER="${ITLABAI_CXX}" \
+          -DCMAKE_PREFIX_PATH="${ITLABAI_CMAKE_PREFIX_PATH}" \
+          -DOpenMP_ROOT="${ITLABAI_OPENMP_ROOT}" \
+          -DACPP_TARGETS="${ACPP_TARGETS}" \
+          -DCMAKE_C_FLAGS="--coverage" \
+          -DCMAKE_CXX_FLAGS="--coverage" \
+          -DCMAKE_EXE_LINKER_FLAGS="--coverage" \
+          -DCMAKE_SHARED_LINKER_FLAGS="--coverage" \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+    - name: Build
+      run: cmake --build build/sycl-coverage --target SYCL_Example run_test --parallel
+
+    - name: Test
+      run: ctest --test-dir build/sycl-coverage --output-on-failure -R '^(UnitTests|SYCL\.Example)$'
+
+    - name: Generate SYCL coverage data
+      run: gcovr -r . --xml -o sycl-coverage.xml --gcov-executable "llvm-cov-18 gcov" --gcov-ignore-parse-errors
+
+    - name: Upload SYCL coverage report to Codecov
+      uses: codecov/codecov-action@v4.0.1
+      with:
+        files: sycl-coverage.xml
+        flags: sycl
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: embedded-dev-research/ITLabAI
