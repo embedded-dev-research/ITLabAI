@@ -212,8 +212,7 @@ jobs:
         gcovr -r . --xml -o sycl-coverage.xml \
           --gcov-executable "llvm-cov-18 gcov" \
           --gcov-ignore-parse-errors \
-          --exclude-throw-branches \
-          --exclude-unreachable-branches \
+          --exclude-branches-by-pattern ".*" \
           --filter "include/.*" \
           --filter "src/.*" \
           --filter "app/.*" \
