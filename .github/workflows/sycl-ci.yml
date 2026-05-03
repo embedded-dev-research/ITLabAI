@@ -208,12 +208,22 @@ jobs:
       run: ctest --test-dir build/sycl-coverage --output-on-failure -R '^(UnitTests|SYCL\.Example)$'
 
     - name: Generate SYCL coverage data
-      run: gcovr -r . --xml -o sycl-coverage.xml --gcov-executable "llvm-cov-18 gcov" --gcov-ignore-parse-errors
+      run: |
+        gcovr -r . --xml -o sycl-coverage.xml \
+          --gcov-executable "llvm-cov-18 gcov" \
+          --gcov-ignore-parse-errors \
+          --exclude-throw-branches \
+          --exclude-unreachable-branches \
+          --filter "include/.*" \
+          --filter "src/.*" \
+          --filter "app/.*" \
+          --filter "test/.*"
 
     - name: Upload SYCL coverage report to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
         files: sycl-coverage.xml
+        disable_search: true
         flags: sycl
         fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}

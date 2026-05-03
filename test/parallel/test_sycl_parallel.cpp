@@ -24,6 +24,13 @@ TEST(sycl_parallel, parallel_for_writes_expected_values) {
   }
 }
 
+TEST(sycl_parallel, zero_count_does_not_invoke_kernel) {
+  bool invoked = false;
+  parallel::impl_sycl(std::size_t{0}, [&](std::size_t) { invoked = true; },
+                      parallel::Options{});
+  EXPECT_FALSE(invoked);
+}
+
 TEST(sycl_parallel, reports_selected_device) {
   EXPECT_FALSE(parallel::sycl_device_name().empty());
 }
