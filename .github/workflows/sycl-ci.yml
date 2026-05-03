@@ -222,7 +222,7 @@ jobs:
     - name: Upload SYCL coverage report to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
-        files: sycl-coverage.xml
+        file: sycl-coverage.xml
         disable_search: true
         flags: sycl
         fail_ci_if_error: true
