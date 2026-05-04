@@ -42,8 +42,7 @@ Run selected models and variants:
 ```bash
 python3 benchmarks/model_performance.py \
   --model googlenet,resnet \
-  --variant seq \
-  --variant parallel-tbb \
+  --variant target \
   --repeat 3 \
   --warmup 1
 ```
@@ -51,6 +50,11 @@ python3 benchmarks/model_performance.py \
 The JSON report includes `memory_samples` for every run. PNG plots are written
 to `benchmark_results/memory_plots` by default. Use `--samples-csv-out` to export
 the memory timeline to CSV and `--plots-dir` to choose another plot directory.
+
+Use `--variant target` for the full target matrix: every supported parallel
+backend with fusion off/on, plus oneDNN with fusion off/on. Fusion-on uses the
+existing `Conv+Relu` fused layer for naive/parallel backends and existing
+post-ops mode for oneDNN.
 
 Use `--strict-assets` to fail when a model JSON or input image directory is
 missing instead of skipping that model.

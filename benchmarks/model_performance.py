@@ -57,6 +57,46 @@ VARIANT_ARGS = {
     "parallel-threads": ["--parallel", "threads"],
     "parallel-omp": ["--parallel", "omp"],
     "parallel-kokkos": ["--parallel", "kokkos"],
+    "seq-fusion-off": ["--fusion", "off"],
+    "seq-fusion-on": ["--fusion", "convrelu"],
+    "parallel-tbb-fusion-off": ["--parallel", "tbb", "--fusion", "off"],
+    "parallel-tbb-fusion-on": ["--parallel", "tbb", "--fusion", "convrelu"],
+    "parallel-threads-fusion-off": ["--parallel", "threads", "--fusion", "off"],
+    "parallel-threads-fusion-on": [
+        "--parallel",
+        "threads",
+        "--fusion",
+        "convrelu",
+    ],
+    "parallel-omp-fusion-off": ["--parallel", "omp", "--fusion", "off"],
+    "parallel-omp-fusion-on": ["--parallel", "omp", "--fusion", "convrelu"],
+    "parallel-kokkos-fusion-off": ["--parallel", "kokkos", "--fusion", "off"],
+    "parallel-kokkos-fusion-on": [
+        "--parallel",
+        "kokkos",
+        "--fusion",
+        "convrelu",
+    ],
+    "onednn-fusion-off": ["--onednn", "--fusion", "off"],
+    "onednn-fusion-on": ["--onednn", "--fusion", "postops"],
+}
+
+VARIANT_GROUPS = {
+    "all": list(VARIANT_ARGS),
+    "target": [
+        "seq-fusion-off",
+        "seq-fusion-on",
+        "parallel-tbb-fusion-off",
+        "parallel-tbb-fusion-on",
+        "parallel-threads-fusion-off",
+        "parallel-threads-fusion-on",
+        "parallel-omp-fusion-off",
+        "parallel-omp-fusion-on",
+        "parallel-kokkos-fusion-off",
+        "parallel-kokkos-fusion-on",
+        "onednn-fusion-off",
+        "onednn-fusion-on",
+    ],
 }
 
 
@@ -142,10 +182,15 @@ def expand_choices(values: Sequence[str], choices: dict[str, object], default: s
                 continue
             if item == "all":
                 expanded.extend(choices)
+            elif item in VARIANT_GROUPS and choices is VARIANT_ARGS:
+                expanded.extend(VARIANT_GROUPS[item])
             elif item in choices:
                 expanded.append(item)
             else:
-                raise SystemExit(f"Unknown value '{item}'. Valid: all, {', '.join(choices)}")
+                valid = ["all", *choices]
+                if choices is VARIANT_ARGS:
+                    valid.extend(name for name in VARIANT_GROUPS if name != "all")
+                raise SystemExit(f"Unknown value '{item}'. Valid: {', '.join(valid)}")
     return dedupe(expanded)
 
 
