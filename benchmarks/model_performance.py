@@ -19,6 +19,8 @@ import time
 from pathlib import Path
 from typing import Iterable, Sequence
 
+import matplotlib.pyplot as plt
+
 try:
     import psutil  # type: ignore
 except ImportError:  # pragma: no cover - optional dependency
@@ -67,6 +69,7 @@ class Phase:
 
 @dataclasses.dataclass
 class Sample:
+    timestamp_s: float
     stage: str
     rss_bytes: int
 
@@ -83,7 +86,9 @@ class Result:
     compile: Phase
     inference: Phase
     marker_split: bool
+    samples: list[Sample]
     stdout_tail: list[str]
+    plot_path: str = ""
     error: str = ""
 
     def row(self) -> dict[str, object]:
@@ -254,15 +259,16 @@ def powershell_rss(pid: int) -> int:
 
 def sample_memory(
     pid: int,
+    started_at: float,
     stage: dict[str, str],
     samples: list[Sample],
     stop: threading.Event,
     interval_s: float,
 ) -> None:
     while not stop.is_set():
-        samples.append(Sample(stage["name"], rss_tree(pid)))
+        samples.append(Sample(time.perf_counter() - started_at, stage["name"], rss_tree(pid)))
         stop.wait(interval_s)
-    samples.append(Sample(stage["name"], rss_tree(pid)))
+    samples.append(Sample(time.perf_counter() - started_at, stage["name"], rss_tree(pid)))
 
 
 def record_line(
@@ -406,7 +412,7 @@ def run_command(command: list[str], timeout_s: float, interval_s: float) -> Resu
 
     monitor = threading.Thread(
         target=sample_memory,
-        args=(proc.pid, stage, samples, stop, interval_s),
+        args=(proc.pid, start, stage, samples, stop, interval_s),
         daemon=True,
     )
     monitor.start()
@@ -444,6 +450,7 @@ def run_command(command: list[str], timeout_s: float, interval_s: float) -> Resu
         compile=compile_phase,
         inference=inference_phase,
         marker_split=compile_phase.markers > 0 and inference_phase.markers > 0,
+        samples=samples,
         stdout_tail=lines[-80:],
         error=error or (f"process exited with {proc.returncode}" if proc.returncode else ""),
     )
@@ -471,6 +478,68 @@ def report_path(suffix: str) -> Path:
     return ROOT / "benchmark_results" / f"model_performance-{timestamp}.{suffix}"
 
 
+def sample_rows(row: Result) -> list[dict[str, object]]:
+    return [
+        {
+            "timestamp_s": round(sample.timestamp_s, 6),
+            "stage": sample.stage,
+            "rss_mib": bytes_to_mib(sample.rss_bytes),
+        }
+        for sample in row.samples
+    ]
+
+
+def safe_name(value: str) -> str:
+    return "".join(ch if ch.isalnum() or ch in {"-", "_"} else "_" for ch in value)
+
+
+def plot_memory(row: Result, output_dir: Path) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plot_path = output_dir / (
+        f"{safe_name(row.model)}-{safe_name(row.variant)}-r{row.repeat}-memory.png"
+    )
+    times = [sample.timestamp_s for sample in row.samples]
+    rss = [bytes_to_mib(sample.rss_bytes) for sample in row.samples]
+    compile_times = [sample.timestamp_s for sample in row.samples if sample.stage == "compile"]
+    compile_rss = [bytes_to_mib(sample.rss_bytes) for sample in row.samples if sample.stage == "compile"]
+    inference_times = [sample.timestamp_s for sample in row.samples if sample.stage == "inference"]
+    inference_rss = [bytes_to_mib(sample.rss_bytes) for sample in row.samples if sample.stage == "inference"]
+
+    _, axis = plt.subplots(figsize=(10, 5))
+    axis.plot(times, rss, color="#1f2937", linewidth=1.2, label="rss")
+    if compile_times:
+        axis.scatter(compile_times, compile_rss, color="#2563eb", s=8, label="compile")
+    if inference_times:
+        axis.scatter(inference_times, inference_rss, color="#dc2626", s=8, label="inference")
+    axis.set_title(f"{row.model} / {row.variant} / repeat {row.repeat}")
+    axis.set_xlabel("time, s")
+    axis.set_ylabel("RSS, MiB")
+    axis.grid(True, alpha=0.25)
+    axis.legend()
+    plt.tight_layout()
+    plt.savefig(plot_path, dpi=140)
+    plt.close()
+    row.plot_path = str(plot_path)
+
+
+def write_samples_csv(path: Path, rows: list[Result]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        fieldnames = ["model", "variant", "repeat", "timestamp_s", "stage", "rss_mib"]
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            for sample in sample_rows(row):
+                writer.writerow(
+                    {
+                        "model": row.model,
+                        "variant": row.variant,
+                        "repeat": row.repeat,
+                        **sample,
+                    }
+                )
+
+
 def write_json(path: Path, args: argparse.Namespace, rows: list[Result]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -482,14 +551,38 @@ def write_json(path: Path, args: argparse.Namespace, rows: list[Result]) -> None
             "graph_build": str(args.graph_build),
             "sample_interval_s": args.sample_interval,
         },
-        "results": [{**row.row(), "stdout_tail": row.stdout_tail} for row in rows],
+        "results": [
+            {
+                **row.row(),
+                "memory_plot": row.plot_path,
+                "memory_samples": sample_rows(row),
+                "stdout_tail": row.stdout_tail,
+            }
+            for row in rows
+        ],
     }
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
 def write_csv(path: Path, rows: list[Result]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(Result("", "", 0, [], 0, 0, 0, Phase(), Phase(), False, []).row())
+    fieldnames = [
+        "model",
+        "variant",
+        "repeat",
+        "returncode",
+        "total_s",
+        "compile_s",
+        "inference_s",
+        "peak_rss_mib",
+        "compile_peak_rss_mib",
+        "inference_peak_rss_mib",
+        "compile_markers",
+        "inference_markers",
+        "marker_split",
+        "command",
+        "error",
+    ]
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -528,6 +621,8 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--strict-assets", action="store_true")
     parser.add_argument("--json-out", type=Path)
     parser.add_argument("--csv-out", type=Path)
+    parser.add_argument("--samples-csv-out", type=Path)
+    parser.add_argument("--plots-dir", type=Path)
     return parser.parse_args(argv)
 
 
@@ -577,13 +672,21 @@ def main(argv: Sequence[str]) -> int:
                     )
                 )
 
-    print_summary(results)
     json_out = args.json_out or report_path("json")
+    plots_dir = args.plots_dir or json_out.parent / "memory_plots"
+    for row in results:
+        plot_memory(row, plots_dir)
+
+    print_summary(results)
     write_json(json_out, args, results)
     print(f"JSON report: {json_out}")
     if args.csv_out:
         write_csv(args.csv_out, results)
         print(f"CSV report: {args.csv_out}")
+    if args.samples_csv_out:
+        write_samples_csv(args.samples_csv_out, results)
+        print(f"Samples CSV report: {args.samples_csv_out}")
+    print(f"Memory plots: {plots_dir}")
     return 1 if any(row.returncode != 0 for row in results) else 0
 
 
