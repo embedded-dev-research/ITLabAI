@@ -1,0 +1,185 @@
+name: Setup SYCL toolchain
+description: Prepare AdaptiveCpp and compiler settings for ITLabAI SYCL CI.
+
+inputs:
+  phase:
+    description: Either prepare or build.
+    required: true
+  cache-hit:
+    description: actions/cache cache-hit output for the AdaptiveCpp toolchain.
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+  - name: Setup MSVC environment
+    if: ${{ runner.os == 'Windows' }}
+    uses: ilammy/msvc-dev-cmd@v1
+
+  - name: Install macOS toolchain dependencies
+    if: ${{ runner.os == 'macOS' && inputs.phase == 'build' }}
+    shell: bash
+    run: brew install adaptivecpp libomp ninja
+
+  - name: Configure macOS toolchain environment
+    if: ${{ runner.os == 'macOS' && inputs.phase == 'build' }}
+    shell: bash
+    run: |
+      {
+        echo "ITLABAI_CC=$(xcrun --find clang)"
+        echo "ITLABAI_CXX=$(xcrun --find clang++)"
+        echo "ITLABAI_CMAKE_PREFIX_PATH=$(brew --prefix adaptivecpp);$(brew --prefix libomp)"
+        echo "ITLABAI_OPENMP_ROOT=$(brew --prefix libomp)"
+      } >> "${GITHUB_ENV}"
+
+  - name: Install Linux toolchain dependencies
+    if: ${{ runner.os == 'Linux' && (inputs.phase == 'build' || inputs.cache-hit != 'true') }}
+    shell: bash
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y \
+        build-essential \
+        ccache \
+        clang-18 \
+        cmake \
+        libboost-context-dev \
+        libboost-fiber-dev \
+        libboost-filesystem-dev \
+        libboost-system-dev \
+        libboost-test-dev \
+        libclang-18-dev \
+        libomp-18-dev \
+        llvm-18-dev \
+        ninja-build \
+        python3
+
+  - name: Build Linux AdaptiveCpp
+    if: ${{ runner.os == 'Linux' && inputs.phase == 'prepare' && inputs.cache-hit != 'true' }}
+    shell: bash
+    env:
+      ACPP_INSTALL_DIR: ${{ runner.temp }}/adaptivecpp-install
+      ACPP_SOURCE_DIR: ${{ runner.temp }}/AdaptiveCpp
+      ACPP_BUILD_DIR: ${{ runner.temp }}/AdaptiveCpp-build
+      ACPP_ARCHIVE_DIR: ${{ runner.temp }}/archives
+    run: |
+      mkdir -p "${ACPP_ARCHIVE_DIR}" "${ACPP_BUILD_DIR}" "${ACPP_INSTALL_DIR}"
+      archive="${ACPP_ARCHIVE_DIR}/AdaptiveCpp-${ADAPTIVECPP_TAG}.tar.gz"
+      curl -L "https://github.com/AdaptiveCpp/AdaptiveCpp/archive/refs/tags/${ADAPTIVECPP_TAG}.tar.gz" -o "${archive}"
+
+      tar -xzf "${archive}" -C "${RUNNER_TEMP}"
+      extracted_dir="$(find "${RUNNER_TEMP}" -maxdepth 2 -type f -path '*/AdaptiveCpp-*/CMakeLists.txt' -print | head -n 1)"
+      rm -rf "${ACPP_SOURCE_DIR}" "${ACPP_BUILD_DIR}"
+      mv "$(dirname "${extracted_dir}")" "${ACPP_SOURCE_DIR}"
+      mkdir -p "${ACPP_BUILD_DIR}"
+
+      cmake -S "${ACPP_SOURCE_DIR}" -B "${ACPP_BUILD_DIR}" -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX="${ACPP_INSTALL_DIR}" \
+        -DCMAKE_C_COMPILER=/usr/bin/clang-18 \
+        -DCMAKE_CXX_COMPILER=/usr/bin/clang++-18 \
+        -DLLVM_DIR=/usr/lib/llvm-18/lib/cmake/llvm \
+        -DClang_DIR=/usr/lib/llvm-18/lib/cmake/clang \
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      cmake --build "${ACPP_BUILD_DIR}" --target install --parallel
+
+  - name: Configure Linux toolchain environment
+    if: ${{ runner.os == 'Linux' && inputs.phase == 'build' }}
+    shell: bash
+    run: |
+      {
+        echo "ITLABAI_CC=/usr/bin/clang-18"
+        echo "ITLABAI_CXX=/usr/bin/clang++-18"
+        echo "ITLABAI_CMAKE_PREFIX_PATH=${RUNNER_TEMP}/adaptivecpp-install"
+        echo "ITLABAI_OPENMP_ROOT=/usr/lib/llvm-18"
+      } >> "${GITHUB_ENV}"
+      echo "${RUNNER_TEMP}/adaptivecpp-install/bin" >> "${GITHUB_PATH}"
+
+  - name: Locate Windows LLVM toolchain
+    if: ${{ runner.os == 'Windows' }}
+    shell: pwsh
+    run: |
+      function Get-ShortPath($Path) {
+        $resolvedPath = (Resolve-Path $Path).Path
+        $shortPath = & $env:ComSpec /d /c "for %I in (`"$resolvedPath`") do @echo %~sI"
+        if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($shortPath)) {
+          throw "Failed to resolve short path for $resolvedPath"
+        }
+        return $shortPath.Trim()
+      }
+
+      $clangCl = Get-Command clang-cl.exe -ErrorAction SilentlyContinue
+      if (-not $clangCl -and $env:ProgramFiles) {
+        $programFilesClang = Join-Path $env:ProgramFiles 'LLVM/bin/clang-cl.exe'
+        if (Test-Path $programFilesClang) {
+          $clangCl = Get-Item $programFilesClang
+        }
+      }
+      if (-not $clangCl -and $env:VCToolsInstallDir) {
+        $vcToolsRoot = Resolve-Path (Join-Path $env:VCToolsInstallDir '../..')
+        $vsClang = Join-Path $vcToolsRoot 'Llvm/x64/bin/clang-cl.exe'
+        if (Test-Path $vsClang) {
+          $clangCl = Get-Item $vsClang
+        }
+      }
+      if (-not $clangCl) {
+        throw 'clang-cl.exe was not found. Install the Visual Studio LLVM/Clang toolset on the Windows runner.'
+      }
+
+      $clangClPath = $clangCl.Source
+      if (-not $clangClPath) {
+        $clangClPath = $clangCl.FullName
+      }
+      $clangBin = Split-Path $clangClPath -Parent
+      $clangClShortPath = Get-ShortPath $clangClPath
+
+      "ITLABAI_CC=$clangClShortPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      "ITLABAI_CXX=$clangClShortPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      "ITLABAI_ACPP_CPU_CXX=$clangClShortPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      "$clangBin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+  - name: Configure Windows toolchain environment
+    if: ${{ runner.os == 'Windows' && inputs.phase == 'build' }}
+    shell: pwsh
+    run: |
+      "ITLABAI_CMAKE_PREFIX_PATH=$env:RUNNER_TEMP\adaptivecpp-install" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      "$env:RUNNER_TEMP\adaptivecpp-install\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+  - name: Install Windows Ninja
+    if: ${{ runner.os == 'Windows' && (inputs.phase == 'build' || inputs.cache-hit != 'true') }}
+    shell: pwsh
+    run: |
+      if (-not (Get-Command ninja.exe -ErrorAction SilentlyContinue)) {
+        choco install ninja --yes --no-progress
+      }
+
+  - name: Build Windows AdaptiveCpp
+    if: ${{ runner.os == 'Windows' && inputs.phase == 'prepare' && inputs.cache-hit != 'true' }}
+    shell: pwsh
+    env:
+      ACPP_INSTALL_DIR: ${{ runner.temp }}\adaptivecpp-install
+      ACPP_SOURCE_DIR: ${{ runner.temp }}\AdaptiveCpp
+      ACPP_BUILD_DIR: ${{ runner.temp }}\AdaptiveCpp-build
+      ACPP_ARCHIVE_DIR: ${{ runner.temp }}\archives
+    run: |
+      New-Item -ItemType Directory -Force -Path $env:ACPP_ARCHIVE_DIR,$env:ACPP_BUILD_DIR,$env:ACPP_INSTALL_DIR | Out-Null
+      $archive = Join-Path $env:ACPP_ARCHIVE_DIR "AdaptiveCpp-$env:ADAPTIVECPP_TAG.tar.gz"
+      Invoke-WebRequest "https://github.com/AdaptiveCpp/AdaptiveCpp/archive/refs/tags/$env:ADAPTIVECPP_TAG.tar.gz" -OutFile $archive
+
+      Remove-Item $env:ACPP_SOURCE_DIR,$env:ACPP_BUILD_DIR -Recurse -Force -ErrorAction SilentlyContinue
+      tar -xzf $archive -C $env:RUNNER_TEMP
+      $extractedAcpp = Get-ChildItem $env:RUNNER_TEMP -Directory | Where-Object { $_.Name -like 'AdaptiveCpp-*' } | Select-Object -First 1
+      Move-Item $extractedAcpp.FullName $env:ACPP_SOURCE_DIR
+      New-Item -ItemType Directory -Force -Path $env:ACPP_BUILD_DIR | Out-Null
+
+      cmake -S $env:ACPP_SOURCE_DIR -B $env:ACPP_BUILD_DIR -G Ninja `
+        "-DCMAKE_BUILD_TYPE=Release" `
+        "-DCMAKE_INSTALL_PREFIX=$env:ACPP_INSTALL_DIR" `
+        "-DCMAKE_C_COMPILER=$env:ITLABAI_CC" `
+        "-DCMAKE_CXX_COMPILER=$env:ITLABAI_CXX" `
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache `
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      cmake --build $env:ACPP_BUILD_DIR --target install --parallel
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

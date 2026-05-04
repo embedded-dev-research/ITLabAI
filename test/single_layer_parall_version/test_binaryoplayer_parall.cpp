@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "layers/BinaryOpLayer.hpp"
+#include "parallel_backends.hpp"
 
 #define ENABLE_TIMING_OUTPUT 1
 
@@ -64,9 +65,7 @@ static Tensor RunBinary(BinaryOpLayer& layer, const Tensor& a, const Tensor& b,
 static void RunAllBackendsAndCompare(BinaryOpLayer& layer, const Tensor& a,
                                      const Tensor& b, const std::string& label,
                                      float tolerance = 1e-5f) {
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   Tensor baseline = RunBinary(layer, a, b, ParBackend::kSeq);
 

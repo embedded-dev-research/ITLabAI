@@ -40,6 +40,11 @@ include_directories("include")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+find_package(AdaptiveCpp CONFIG QUIET)
+if(TARGET AdaptiveCpp::acpp-rt)
+    message(STATUS "AdaptiveCpp found - enabling SYCL parallel support")
+endif()
+
 add_subdirectory(3rdparty)
 
 include(cmake/opencv_config.cmake)
@@ -83,4 +88,7 @@ endforeach()
 add_subdirectory(app)
 add_subdirectory(include)
 add_subdirectory(src)
+if(TARGET AdaptiveCpp::acpp-rt)
+    add_subdirectory(app/SYCL)
+endif()
 add_subdirectory(test)

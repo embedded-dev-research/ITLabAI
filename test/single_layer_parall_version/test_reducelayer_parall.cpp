@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "layers/ReduceLayer.hpp"
+#include "parallel_backends.hpp"
 
 #define ENABLE_TIMING_OUTPUT 1
 
@@ -53,9 +54,7 @@ static Tensor RunReduce(ReduceLayer& layer, const Tensor& input,
 static void RunBackendsAndCompare(ReduceLayer& layer, const Tensor& input,
                                   const std::string& label,
                                   float tolerance = 1e-5f) {
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   Tensor baseline = RunReduce(layer, input, ParBackend::kSeq);
 

@@ -4,6 +4,7 @@
 #include "fixture.hpp"
 #include "gtest/gtest.h"
 #include "layers/PoolingLayer.hpp"
+#include "parallel_backends.hpp"
 
 using namespace it_lab_ai;
 
@@ -664,28 +665,14 @@ INSTANTIATE_TEST_SUITE_P(
                               "max",
                               {9.0f, 8.0f, 8.0f, 9.0f},
                               "2D_Max_Dilation2"}),
-        ::testing::Values(BaseTestFixture::setTBBOptions(),
-                          BaseTestFixture::setOmpOptions(),
-                          BaseTestFixture::setSeqOptions(),
-                          BaseTestFixture::setSTLOptions(),
-                          BaseTestFixture::setKokkosOptions())),
+        ::testing::ValuesIn(test_support::all_parallel_options())),
     [](const ::testing::TestParamInfo<
         std::tuple<PoolingTestParams, RuntimeOptions>>& info) {
       const auto& params = std::get<0>(info.param);
       const auto& options = std::get<1>(info.param);
 
       std::string name = params.description + "_";
-      if (options.par_backend == ParBackend::kTbb) {
-        name += "TBB";
-      } else if (options.par_backend == ParBackend::kOmp) {
-        name += "OMP";
-      } else if (options.par_backend == ParBackend::kThreads) {
-        name += "STL";
-      } else if (options.par_backend == ParBackend::kKokkos) {
-        name += "Kokkos";
-      } else {
-        name += "Seq";
-      }
+      name += test_support::parallel_backend_name(options.par_backend);
 
       std::replace(name.begin(), name.end(), ' ', '_');
       std::replace(name.begin(), name.end(), '-', '_');

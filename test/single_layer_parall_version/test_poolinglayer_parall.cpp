@@ -7,6 +7,7 @@
 
 #include "gtest/gtest.h"
 #include "layers/PoolingLayer.hpp"
+#include "parallel_backends.hpp"
 
 #define ENABLE_TIMING_OUTPUT 1
 
@@ -61,9 +62,7 @@ TEST(poolinglayer_parall, max_pooling_single_image_float) {
   PoolingLayer layer(Shape({2, 2}), {2, 2}, {0, 0, 0, 0}, {1, 1}, false, "max");
   Tensor baseline = RunPooling(layer, input, ParBackend::kSeq);
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     Tensor result = RunPooling(layer, input, backend);
@@ -82,9 +81,7 @@ TEST(poolinglayer_parall, avg_pooling_single_image_float) {
                      "average");
   Tensor baseline = RunPooling(layer, input, ParBackend::kSeq);
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     Tensor result = RunPooling(layer, input, backend);
@@ -101,9 +98,7 @@ TEST(poolinglayer_parall, max_pooling_single_image_int) {
   PoolingLayer layer(Shape({2, 2}), {2, 2}, {0, 0, 0, 0}, {1, 1}, false, "max");
   Tensor baseline = RunPooling(layer, input, ParBackend::kSeq);
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     Tensor result = RunPooling(layer, input, backend);
@@ -120,9 +115,7 @@ TEST(poolinglayer_parall, pooling_with_padding_and_stride) {
                      "average");
   Tensor baseline = RunPooling(layer, input, ParBackend::kSeq);
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     Tensor result = RunPooling(layer, input, backend);
@@ -141,9 +134,7 @@ TEST(poolinglayer_parall, pooling_with_dilation) {
   PoolingLayer layer(Shape({2, 2}), {1, 1}, {0, 0, 0, 0}, {2, 2}, false, "max");
   Tensor baseline = RunPooling(layer, input, ParBackend::kSeq);
 
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (auto backend : backends) {
     Tensor result = RunPooling(layer, input, backend);
@@ -153,9 +144,7 @@ TEST(poolinglayer_parall, pooling_with_dilation) {
 
 TEST(poolinglayer_parall, max_pooling_batch_scaling) {
   std::vector<size_t> batch_sizes = {1, 16, 32, 64};
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (size_t batch_size : batch_sizes) {
     Shape input_shape({batch_size, 16, 56, 56});
@@ -185,9 +174,7 @@ TEST(poolinglayer_parall, max_pooling_batch_scaling) {
 
 TEST(poolinglayer_parall, avg_pooling_batch_scaling) {
   std::vector<size_t> batch_sizes = {1, 16, 32, 64};
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (size_t batch_size : batch_sizes) {
     Shape input_shape({batch_size, 32, 28, 28});
@@ -217,9 +204,7 @@ TEST(poolinglayer_parall, avg_pooling_batch_scaling) {
 
 TEST(poolinglayer_parall, multichannel_max_pooling) {
   std::vector<size_t> batch_sizes = {8, 32, 128};
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (size_t batch_size : batch_sizes) {
     Shape input_shape({batch_size, 64, 14, 14});
@@ -255,9 +240,7 @@ TEST(poolinglayer_parall, multichannel_max_pooling) {
 
 TEST(poolinglayer_parall, large_kernel_pooling) {
   std::vector<size_t> batch_sizes = {4, 16, 32};
-  std::vector<ParBackend> backends = {ParBackend::kSeq, ParBackend::kThreads,
-                                      ParBackend::kTbb, ParBackend::kOmp,
-                                      ParBackend::kKokkos};
+  auto backends = test_support::all_parallel_backends();
 
   for (size_t batch_size : batch_sizes) {
     Shape input_shape({batch_size, 3, 224, 224});

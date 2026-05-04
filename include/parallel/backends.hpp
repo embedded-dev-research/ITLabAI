@@ -9,8 +9,15 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
+#include <stdexcept>
+#include <string>
 #include <thread>
+#include <utility>
 #include <vector>
+
+#ifdef ITLABAI_HAS_SYCL
+#  include <sycl/sycl.hpp>
+#endif
 
 namespace it_lab_ai {
 namespace parallel {
@@ -20,7 +27,8 @@ enum class Backend : std::uint8_t {
   kThreads = 1,
   kTbb = 2,
   kOmp = 3,
-  kKokkos = 4
+  kKokkos = 4,
+  kSycl = 5
 };
 
 struct Options {
@@ -148,6 +156,38 @@ inline void impl_kokkos(std::size_t count,
   Kokkos::parallel_for("parallel_for", count, kokkos_func);
   Kokkos::fence();
 }
+
+#ifdef ITLABAI_HAS_SYCL
+inline sycl::queue& sycl_queue() {
+  static auto* queue = new sycl::queue{sycl::default_selector_v};
+  return *queue;
+}
+
+inline std::string sycl_device_name() {
+  return sycl_queue().get_device().get_info<sycl::info::device::name>();
+}
+
+template <typename Func>
+inline void impl_sycl(std::size_t count, Func&& func, const Options&) {
+  if (count == 0) {
+    return;
+  }
+
+  auto& queue = sycl_queue();
+  queue.parallel_for(sycl::range<1>(count),
+                     [func = std::forward<Func>(func)](sycl::id<1> index) {
+    func(static_cast<std::size_t>(index[0]));
+  });
+  queue.wait_and_throw();
+}
+#else
+template <typename Func>
+[[noreturn]] inline void impl_sycl(std::size_t, const Func&, const Options&) {
+  throw std::runtime_error(
+      "SYCL parallel backend was requested, but this target was not built with "
+      "ITLABAI_HAS_SYCL");
+}
+#endif
 
 }  // namespace parallel
 }  // namespace it_lab_ai
