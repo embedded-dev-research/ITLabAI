@@ -17,9 +17,9 @@ using namespace it_lab_ai;
 
 void print_split_dist(const Graph& graph) {
   auto split_dist = graph.getSplitDistribution();
-  for (int i = 0; i < split_dist.size(); i++) {
+  for (size_t i = 0; i < split_dist.size(); i++) {
     std::cout << "Split #" << i + 1 << ": ";
-    for (int j = 0; j < split_dist[i].size(); j++) {
+    for (size_t j = 0; j < split_dist[i].size(); j++) {
       std::cout << "(" << split_dist[i][j].first << ", "
                 << split_dist[i][j].second << ") ";
     }
@@ -321,11 +321,8 @@ void alexnet_comparison(int type = 3, int whoonly = 3) {
   }
 }
 
-int main(int argc, char* argv[]) {
+int main() {
   //int type = (argc > 1) ? (int)(argv[1][0]-'0') : 0;
-  if (argc > 1) {
-    argv;
-  }
   int type = 1;
   int type2 = 2;
   int whoonly = 3;
@@ -409,7 +406,7 @@ int main(int argc, char* argv[]) {
       auto time2 = elapsed_time_avg<double, std::milli>(10, find_subgraphs,
                                                         graph1, subgraph2);
 
-      for (int i = 0; i < vec.size(); i++) {
+      for (size_t i = 0; i < vec.size(); i++) {
         std::cout << i + 1 << ") ";
         for (int j : vec[i]) {
           std::cout << j << ' ';
@@ -418,7 +415,7 @@ int main(int argc, char* argv[]) {
       }
       std::cout << "Time for DenseNet BN -> ReLU -> Conv -> ReLU -> Conv: " << time << '\n';
 
-      for (int i = 0; i < vec2.size(); i++) {
+      for (size_t i = 0; i < vec2.size(); i++) {
         std::cout << i + 1 << ") ";
         for (int j : vec2[i]) {
           std::cout << j << ' ';
@@ -446,7 +443,7 @@ int main(int argc, char* argv[]) {
 
       auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs,
                                                        graph1, subgraph);
-      for (int i = 0; i < vec.size(); i++) {
+      for (size_t i = 0; i < vec.size(); i++) {
         std::cout << i + 1 << ") ";
         for (int j : vec[i]) {
           std::cout << j << ' ';
@@ -481,7 +478,7 @@ int main(int argc, char* argv[]) {
 
       auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs,
                                                        graph1, subgraph);
-      for (int i = 0; i < vec.size(); i++) {
+      for (size_t i = 0; i < vec.size(); i++) {
         std::cout << i + 1 << ") ";
         for (int j : vec[i]) {
           std::cout << j << ' ';
@@ -517,7 +514,7 @@ int main(int argc, char* argv[]) {
 
       auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs,
                                                        graph1, subgraph);
-      for (int i = 0; i < vec1.size(); i++) {
+      for (size_t i = 0; i < vec1.size(); i++) {
         std::cout << i + 1 << ") ";
         for (int j : vec1[i]) {
           std::cout << j << ' ';
@@ -544,7 +541,7 @@ int main(int argc, char* argv[]) {
 
       auto time = elapsed_time_avg<double, std::milli>(10, find_subgraphs,
                                                        graph1, subgraph);
-      for (int i = 0; i < vec.size(); i++) {
+      for (size_t i = 0; i < vec.size(); i++) {
         std::cout << i + 1 << ") ";
         for (int j : vec[i]) {
           std::cout << j << ' ';
