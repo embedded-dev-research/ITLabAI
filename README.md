@@ -14,7 +14,7 @@
 <!--ACCURACY_densenet_PLACEHOLDER-->Accuracy: Top-1: 66.45% | Top-5: 86.86% (updated: 2026-05-14)<!--END_ACCURACY_densenet-->
 
 ### ResNet Accuracy
-<!--ACCURACY_resnet_PLACEHOLDER-->Accuracy: Top-1: 78.03% | Top-5: 94.03% (updated: 2026-04-29)<!--END_ACCURACY_resnet-->
+<!--ACCURACY_resnet_PLACEHOLDER-->Accuracy: Top-1: 78.01% | Top-5: 94.09% (updated: 2026-05-14)<!--END_ACCURACY_resnet-->
 
 ### YOLO Accuracy
 <!--ACCURACY_yolo_PLACEHOLDER-->Accuracy: Top-1: 55.31% | Top-5: 79.12% (updated: 2026-05-14)<!--END_ACCURACY_yolo-->
