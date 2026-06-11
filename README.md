@@ -8,7 +8,7 @@
 <!--ACCURACY_PLACEHOLDER-->Accuracy: 98.01% (updated: 2026-04-02)<!--END_ACCURACY-->
 
 ### GoogLeNet Accuracy
-<!--ACCURACY_googlenet_PLACEHOLDER-->Accuracy: Top-1: 43.65% | Top-5: 69.44% (updated: 2026-05-28)<!--END_ACCURACY_googlenet-->
+<!--ACCURACY_googlenet_PLACEHOLDER-->Accuracy: Top-1: 43.84% | Top-5: 68.56% (updated: 2026-06-11)<!--END_ACCURACY_googlenet-->
 
 ### DenseNet Accuracy
 <!--ACCURACY_densenet_PLACEHOLDER-->Accuracy: Top-1: 65.86% | Top-5: 86.91% (updated: 2026-05-28)<!--END_ACCURACY_densenet-->
