@@ -19,6 +19,7 @@ target_include_directories(BuildGraph PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/Json/i
 
 add_executable(Graph_Build graph_build.cpp)
 target_link_libraries(Graph_Build BuildGraph)
+target_link_libraries(Graph_Build graphT_lib)
 
 add_executable(ACC acc_check.cpp)
 target_link_libraries(ACC BuildGraph)

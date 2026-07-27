@@ -3,13 +3,55 @@
 #include <unordered_map>
 
 #include "build.hpp"
+#include "graph_transformations/graph_transformations.hpp"
+#include "layers_fused/ConvRelu.hpp"
 
 namespace fs = std::filesystem;
 using namespace it_lab_ai;
 
+namespace {
+
+enum class FusionMode { kOff, kPostops, kConvRelu };
+
+FusionMode parse_fusion_mode(const std::string& value) {
+  if (value == "off") {
+    return FusionMode::kOff;
+  }
+  if (value == "postops") {
+    return FusionMode::kPostops;
+  }
+  if (value == "convrelu") {
+    return FusionMode::kConvRelu;
+  }
+  throw std::invalid_argument("Unknown fusion mode: " + value);
+}
+
+void apply_conv_relu_fusion(Graph& graph, Tensor& output,
+                            const RuntimeOptions& options) {
+  if (options.backend == Backend::kOneDnn) {
+    throw std::invalid_argument(
+        "convrelu fusion is not supported with oneDNN backend");
+  }
+
+  Graph subgraph;
+  Tensor dummy_input = make_tensor(std::vector<int>({0}));
+  auto conv = std::make_shared<ConvolutionalLayer>();
+  auto relu = std::make_shared<EWLayer>("relu");
+  subgraph.setInput(conv, dummy_input);
+  subgraph.makeConnection(conv, relu);
+
+  Graph fused_graph;
+  auto fused_layer = std::make_shared<ConvReluLayer>();
+  changed_subgraphs(graph, subgraph, fused_layer, fused_graph, output, options);
+  graph = std::move(fused_graph);
+}
+
+}  // namespace
+
 int main(int argc, char* argv[]) {
   std::string model_name = "alexnet_mnist";
   RuntimeOptions options;
+  FusionMode fusion_mode = FusionMode::kPostops;
 
   for (int i = 1; i < argc; ++i) {
     if (std::string(argv[i]) == "--model" && i + 1 < argc) {
@@ -49,6 +91,8 @@ int main(int argc, char* argv[]) {
       }
     } else if (std::string(argv[i]) == "--threads" && i + 1 < argc) {
       options.threads = std::stoi(argv[++i]);
+    } else if (std::string(argv[i]) == "--fusion" && i + 1 < argc) {
+      fusion_mode = parse_fusion_mode(argv[++i]);
     }
   }
 
@@ -94,7 +138,11 @@ int main(int argc, char* argv[]) {
         std::vector<float> vec(75, 3);
         it_lab_ai::Tensor output = it_lab_ai::make_tensor(vec, sh1);
         Graph graph;
-        build_graph_linear(graph, input, output, options, true);
+        build_graph_linear(graph, input, output, options, true,
+                           fusion_mode == FusionMode::kPostops);
+        if (fusion_mode == FusionMode::kConvRelu) {
+          apply_conv_relu_fusion(graph, output, options);
+        }
 
         std::cout << "Starting inference..." << '\n';
         try {
@@ -135,6 +183,9 @@ int main(int argc, char* argv[]) {
 
         Graph graph;
         build_graph(graph, input, output, json_path, options, false);
+        if (fusion_mode == FusionMode::kConvRelu) {
+          apply_conv_relu_fusion(graph, output, options);
+        }
 
         std::cout << "Starting inference..." << '\n';
         try {
